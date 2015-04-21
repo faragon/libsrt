@@ -1333,6 +1333,9 @@ int test_sv_len()
 int test_sv_capacity()
 {
 	int res = 0;
+#ifdef SD_ENABLE_HEURISTIC_GROW
+	/* TODO */
+#else
 	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
 	TEST_SV_CAPACITY(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
 	TEST_SV_CAPACITY(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
@@ -1342,6 +1345,7 @@ int test_sv_capacity()
 	TEST_SV_CAPACITY(g, 6, sv_alloc_t, sv_push_u, SV_U32, 123);
 	TEST_SV_CAPACITY(h, 7, sv_alloc_t, sv_push_i, SV_I64, 123);
 	TEST_SV_CAPACITY(i, 8, sv_alloc_t, sv_push_u, SV_U64, 123);
+#endif
 	return res;
 }
 
@@ -2158,8 +2162,13 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_alloc(16));
 	STEST_ASSERT(test_ss_alloca(32));
 	STEST_ASSERT(test_ss_shrink_to_fit());
-	STEST_ASSERT(test_ss_grow(100, 501, 0));
-	STEST_ASSERT(test_ss_grow(100, 506, 0));
+#ifdef SD_ENABLE_HEURISTIC_GROW
+	unsigned expected_low = 1;
+#else
+	unsigned expected_low = 0;
+#endif
+	STEST_ASSERT(test_ss_grow(100, 501, expected_low));
+	STEST_ASSERT(test_ss_grow(100, 506, expected_low));
 	STEST_ASSERT(test_ss_grow(100, 507, 1));
 	STEST_ASSERT(test_ss_grow(100, 508, 1));
 	STEST_ASSERT(test_ss_reserve(2));

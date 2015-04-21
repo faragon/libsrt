@@ -19,6 +19,14 @@ extern "C" {
 #include "scommon.h"
 
 /*
+ * Allocation heuristic configuration
+ *
+ * Define SD_ENABLE_HEURISTIC_GROW for enabling pre-allocation heuristics.
+ */
+
+#define SD_ENABLE_HEURISTIC_GROW
+
+/*
  * Macros
  */
 

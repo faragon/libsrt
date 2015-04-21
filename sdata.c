@@ -12,7 +12,6 @@
 /*
  * Allocation heuristic configuration
  *
- * Define SD_ENABLE_HEURISTIC_GROW for enabling pre-allocation heuristics.
  * SD_GROW_CACHE_MIN_ELEMS (e.g. 1024): number of elements that can be asumed
  * is going to be cheap to be copied because of being covered by data cache
  * fetch + write back.
@@ -20,13 +19,6 @@
  * having available space, allocate at least 25% the current allocated memory.
  * SD_GROW_PCT_NONCACHED (e.g. 100%): similar to the previous case, but when
  * elements are over SD_GROW_CACHE_MIN_ELEMS, increase the allocation in 100%.
- */
-
-/*
- * #define SD_ENABLE_HEURISTIC_GROW
- * Don't enable this until making those tests t: test_sv_capacity, test_ss_grow
- * aware of the heuristic (currently 3 pseudo-errors are given if this gets
- * enabled).
  */
 
 #define SD_GROW_CACHE_MIN_ELEMS	4096
