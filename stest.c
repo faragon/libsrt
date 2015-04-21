@@ -1,0 +1,2487 @@
+/*
+ * stest.c
+ *
+ * Tests (this will be splitted/simplified, currently is a way of
+ * detecting if something gets broken; it will be converted into
+ * a proper API validation).
+ *
+ * Copyright (c) 2015 F. Aragon. All rights reserved.
+ */
+ 
+#include "scommon.h"
+#include "sstring.h"
+#include "schar.h"
+#include "svector.h"
+#include "stree.h"
+#include "smap.h"
+#include "sdbg.h"
+
+#if 0 /* the "DEBUG_stree" code will be removed when debug/validation/optimization finishes */
+#define DEBUG_stree
+#endif
+
+/*
+ * Unit testing helpers
+ */
+
+#define STEST_START	int ss_errors = 0, ss_tmp = 0
+#define STEST_END	ss_errors
+#define STEST_ASSERT_BASE(a, pre_op)					\
+	 {								\
+		pre_op;							\
+		const int r = a;					\
+		ss_tmp += r;						\
+		if (r) {						\
+			fprintf(stderr, "%s: %08X <--------\n", #a, r);	\
+			ss_errors++;					\
+		}							\
+	}
+#ifdef S_DEBUG
+#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, fprintf(stderr, "%s...\n", #a))
+#else
+#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, ;)
+#endif
+
+/*
+ * Test common data structures
+ */
+
+struct AA { int a, b; };
+const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
+
+/*
+ * Tests
+ */
+
+int test_ss_alloc(const size_t max_size)
+{
+	ss_t *a = ss_alloc(max_size);
+	int res = !a ? 1 : (ss_len(a) != 0) * 2 |
+			   (ss_capacity(a) != max_size) * 4;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_alloca(const size_t max_size)
+{
+	ss_t *a = ss_alloca(max_size);
+	int res = !a ? 1 : (ss_len(a) != 0) * 2 |
+			   (ss_capacity(a) != max_size) * 4;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_shrink_to_fit()
+{
+	ss_t *a = ss_dup_printf(1024, "hello");
+	int res = !a ? 1 : (ss_shrink_to_fit(&a) ? 0 : 2) |
+			   (ss_capacity(a) == ss_len(a) ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_grow(const size_t init_size, const size_t extra_size,
+		 unsigned expected_struct_type)
+{
+	ss_t *a = ss_alloc(init_size);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_grow(&a, extra_size) ? 0 : 2) |
+			(a->is_full == expected_struct_type ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_reserve(const size_t max_size)
+{
+	ss_t *a = ss_alloc(max_size / 2);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_reserve(&a, max_size) >= max_size ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_resize_x()
+{
+	const char *i0 = "\xc3\x91" "1234567890";
+	const char *i1 = "\xc3\x91" "1234567890__";
+	const char *i2 = "\xc3\x91" "12";
+	const char *i3 = "\xc3\x91" "123";
+	ss_t *a = ss_dup_c(i0), *b = ss_dup_s(a);
+	int res = a && b ? 0 : 1;
+	res |= res ? 0: ((ss_resize(&a, 14, '_') &&
+			 !strcmp(ss_to_c(a), i1)) ? 0 : 2) |
+			((ss_resize_u(&b, 13, '_') &&
+			 !strcmp(ss_to_c(b), i1)) ? 0 : 4) |
+			((ss_resize(&a, 4, '_') &&
+			 !strcmp(ss_to_c(a), i2)) ? 0 : 8) |
+			((ss_resize_u(&b, 4, '_') &&
+			 !strcmp(ss_to_c(b), i3)) ? 0 : 16);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_trim(const char *in, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_trim(&a) ? 0 : 2) |
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_ltrim(const char *in, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_ltrim(&a) ? 0 : 2) |
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_rtrim(const char *in, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_rtrim(&a) ? 0 : 2) |
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_erase(const char *in, const size_t byte_off,
+		const size_t num_bytes, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ss_erase(&a, byte_off, num_bytes) ? 0 : 2) |
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_erase_u(const char *in, const size_t char_off,
+		const size_t num_chars, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = a ? 0 : 1;
+	size_t in_wlen = ss_len_u(a);
+	size_t expected_len = char_off >= in_wlen ? in_wlen :
+			(in_wlen - char_off) > num_chars ? in_wlen - num_chars :
+			char_off;
+	res |= res ? 0 : (ss_erase_u(&a, char_off, num_chars) ? 0 : 2) |
+			 (!strcmp(ss_to_c(a), expected) ? 0 : 4) |
+			 (expected_len == ss_len_u(a) ? 0 : 8);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_free(const size_t max_size)
+{
+	ss_t *a = ss_alloc(max_size);
+	int res = a ? 0 : 1;
+	ss_free(&a);
+	res |= (!a ? 0 : 2);
+	return res;
+}
+
+#if 0	/* FIXME: rewrite using sv_t vector */
+int test_ssv_alloc(const size_t max_size)
+{
+	struct SSUBV *v = ssv_alloc(max_size);
+	int res = !v ? 1 : (ssv_size(v) != 0) * 2 |
+			   (ssv_capacity(v) != max_size) * 4;
+	ssv_free(&v);
+	return res;
+}
+
+int test_ssv_reserve(const size_t max_size)
+{
+	struct SSUBV *a = ssv_alloc(max_size / 2);
+	int res = a ? 0 : 1;
+	res |= res ? 0 : (ssv_reserve(&a, max_size) ? 0 : 2);
+	ssv_free(&a);
+	return res;
+}
+
+int test_ssv_free(const size_t max_size)
+{
+	struct SSUBV *a = ssv_alloc(max_size);
+	int res = a ? 0 : 1;
+	ssv_free(&a);
+	res |= (!a ? 0 : 2);
+	return res;
+}
+#endif
+
+int test_ss_len(const char *a, const size_t expected_size)
+{
+	ss_t *sa = ss_dup_c(a);
+	int res = !sa ? 1 : (ss_len(sa) == expected_size ? 0 : 1);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_len_u(const char *a, const size_t expected_size)
+{
+	ss_t *sa = ss_dup_c(a);
+	int res = !sa ? 1 : (ss_len_u(sa) == expected_size ? 0 : 1);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_capacity()
+{
+	const size_t test_max_size = 100;
+	ss_t *a = ss_alloc(test_max_size);
+	ss_cpy_c(&a, "a");
+	int res = !a ? 1 : (ss_capacity(a) == test_max_size ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_len_left()
+{
+	ss_t *a = ss_alloc(10);
+	ss_cpy_c(&a, "a");
+	int res = !a ? 1 : (ss_capacity(a) - ss_len(a) == 9 ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_max()
+{
+	ss_t *a = ss_alloca(10), *b = ss_alloc(10);
+	int res = (a && b) ? 0 : 1;
+	res |= res ? 0 : (ss_max(a) == 10 ? 0 : 1);
+	res |= res ? 0 : (ss_max(b) == SS_RANGE_FULL ? 0 : 2);
+	ss_free(&b);
+	return res;
+}
+
+int test_ss_dup_s()
+{
+	ss_t *b = ss_dup_c("hello");
+	ss_t *a = ss_dup_s(b);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+#if 0	/* FIXME: rewrite using sv_t vector */
+int test_ss_dup_sub()
+{
+	ss_t *b = ss_dup_c("hello");
+	struct SSUB sub = { 0, 5 };
+	ss_t *a = ss_dup_sub(b, &sub);
+	int res = !a ? 1 : (ss_len(a) == sub.size ? 0 : 2) |
+			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_dup_substr()
+{
+	ss_t *a = ss_dup_c("hello");
+	ss_t *b = ss_dup_substr(a, 0, 5);
+	int res = (!a || !b) ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
+			  	(!strcmp("hello", ss_to_c(a)) ? 0 : 4);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_dup_substr_u()
+{
+	ss_t *b = ss_dup_c("hello");
+	ss_t *a = ss_dup_substr(b, 0, 5);
+	int res = !a ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
+			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
+	ss_free(&a, &b);
+	return res;
+}
+#endif
+
+int test_ss_dup_cn()
+{
+	ss_t *a = ss_dup_cn("hello123", 5);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_c()
+{
+	ss_t *a = ss_dup_cn("hello", 5);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_wn()
+{
+	ss_t *a = ss_dup_wn(L"hello123", 5);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_w()
+{
+	ss_t *a = ss_dup_w(L"hello");
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_int(const sint_t num, const char *expected)
+{
+	ss_t *a = ss_dup_int(num);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_tolower(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_tolower(sa);
+	int res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_dup_toupper(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_toupper(sa);
+	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+#define MK_TEST_SS_DUP_TO_ENC(suffix)						\
+	int test_ss_dup_to##suffix(const char *a, const char *b) {		\
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_to##suffix(sa);		\
+		int res = (!sa || !sb) ? 1 : (ss_to##suffix(&sa, sa) ? 0 : 2) |	\
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
+		ss_free(&sa, &sb);						\
+		return res;							\
+	}
+
+MK_TEST_SS_DUP_TO_ENC(b64)
+MK_TEST_SS_DUP_TO_ENC(hex)
+MK_TEST_SS_DUP_TO_ENC(HEX)
+
+int test_ss_dup_erase(const char *in, const size_t off, const size_t size, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_erase(a, off, size);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_dup_erase_u()
+{
+	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"), *b = ss_dup_erase_u(a, 2, 3);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_dup_replace(const char *in, const char *r, const char *s, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_c(r),
+	     *c = ss_dup_c(s), *d = ss_dup_replace(a, 0, b, c),
+	     *e = ss_dup_replace(a, 0, a, a);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2) |
+				   (!strcmp(ss_to_c(e), in)? 0 : 4); /* aliasing */
+	ss_free(&a, &b, &c, &d, &e);
+	return res;
+}
+
+int test_ss_dup_resize()
+{
+	ss_t *a = ss_dup_c("hello"), *b = ss_dup_resize(a, 10, 'z'),
+	     *c = ss_dup_resize(a, 2, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_dup_resize_u()
+{
+	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_resize_u(a, 11, 'z'),
+	     *c = ss_dup_resize_u(a, 3, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_dup_trim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_trim(sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_dup_ltrim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_dup_rtrim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_dup_printf()
+{
+	char btmp[512];
+	ss_t *a = ss_dup_printf(512, "abc%i%s%08X", 1, "hello", -1);
+	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
+	int res = !strcmp(ss_to_c(a), btmp) ? 0 : 1;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_printf_va(const char *expected, const size_t max_size,
+							const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	ss_t *a = ss_dup_printf_va(max_size, fmt, ap);
+	va_end(ap);
+	int res = !strcmp(ss_to_c(a), expected) ? 0 : 1;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_dup_char(const sint32_t in, const char *expected)
+{
+	ss_t *a = ss_dup_char(in);
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy(const char *in)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
+			  (ss_len(a) == strlen(in) ? 0 : 4);
+	ss_t *b = NULL;
+	ss_cpy(&b, a);
+	res = res ? 0 : (!strcmp(ss_to_c(b), in) ? 0 : 8) |
+		       (ss_len(b) == strlen(in) ? 0 : 16);
+	ss_free(&a, &b);
+	return res;
+}
+
+#if 0 /* FIXME: rewrite using sv_t vector */
+int test_ss_cpy_sub()
+{
+	struct SSUBV *v = NULL;
+	ss_t *d = NULL;
+	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
+		  *c = ss_dup_c("how");
+	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
+	res |= res ? 0 : (ss_cpy_sub(&d, a, ssv_get_sub(v, 0)) ? 0 : 4);
+	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+	ss_free(&a, &b, &c, &d);
+	ssv_free(&v);
+	return res;
+}
+
+int test_ss_cpy_substr()
+{
+	ss_t *b = NULL, *a = ss_dup_c("how are you"), *c = ss_dup_c("how");
+	int res = (!a || !c) ? 1 : 0;
+	res |= res ? 0 : (ss_cpy_substr(&b, a, 0, 3) ? 0 : 2);
+	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_cpy_substr_u()
+{
+	ss_t *b = NULL, *a = ss_dup_c("how are you"), *c = ss_dup_c("how");
+	int res = (!a || !c) ? 1 : 0;
+	res |= res ? 0 : (ss_cpy_substr_u(&b, a, 0, 3) ? 0 : 2);
+	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+#endif
+
+int test_ss_cpy_cn()
+{
+	char b[3] = { 0, 1, 2 };
+	ss_t *a = NULL;
+	int res = !ss_cpy_cn(&a, b, 3) ? 1 : (ss_to_c(a)[0] == b[0] ? 0: 2) |
+					     (ss_to_c(a)[1] == b[1] ? 0: 4) |
+					     (ss_to_c(a)[2] == b[2] ? 0: 8) |
+					     (ss_len(a) == 3 ? 0 : 16);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_c(const char *in)
+{
+	ss_t *a = NULL;
+	int res = !ss_cpy_c(&a, in) ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
+					 (ss_len(a) == strlen(in) ? 0 : 4);
+	char tmp[512];
+	sprintf(tmp, "%s%s", in, in);
+	res |= res ? 0 : ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
+{
+	ss_t *a = NULL;
+	int res = !ss_cpy_w(&a, in) ? 1 :
+				(!strcmp(ss_to_c(a), expected_utf8) ? 0 : 2) |
+				(ss_len(a) == strlen(expected_utf8) ? 0 : 4);
+	char tmp[512];
+	sprintf(tmp, "%S%S", in, in);
+	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_int(const sint_t num, const char *expected)
+{
+	ss_t *a = NULL;
+	ss_cpy_int(&a, num);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_tolower(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
+	ss_cpy_tolower(&sb, sa);
+	int res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cpy_toupper(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
+	ss_cpy_toupper(&sb, sa);
+	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+#define MK_TEST_SS_CPY_TO_ENC(suffix)						\
+	int test_ss_cpy_to##suffix(const char *a, const char *b) {		\
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");	\
+		ss_cpy_to##suffix(&sb, sa);					\
+		int res = (!sa || !sb) ? 1 : (ss_to##suffix(&sa, sa) ? 0 : 2) |	\
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
+		ss_free(&sa, &sb);						\
+		return res;							\
+	}
+
+MK_TEST_SS_CPY_TO_ENC(b64)
+MK_TEST_SS_CPY_TO_ENC(hex)
+MK_TEST_SS_CPY_TO_ENC(HEX)
+
+int test_ss_cpy_erase(const char *in, const size_t off, const size_t size, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_c("garbage i!&/()=");
+	ss_cpy_erase(&b, a, off, size);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_cpy_erase_u()
+{
+	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"), *b = ss_dup_c("garbage i!&/()=");
+	ss_cpy_erase_u(&b, a, 2, 3);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_cpy_replace(const char *in, const char *r, const char *s, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_c(r),
+	     *c = ss_dup_c(s), *d = ss_dup_c("garbage i!&/()=");
+	ss_cpy_replace(&d, a, 0, b, c);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
+	ss_free(&a, &b, &c, &d);
+	return res;
+}
+
+int test_ss_cpy_resize()
+{
+	ss_t *a = ss_dup_c("hello"), *b = ss_dup_c("garbage i!&/()="),
+	     *c = ss_dup_c("garbage i!&/()=");
+	ss_cpy_resize(&b, a, 10, 'z');
+	ss_cpy_resize(&c, a, 2, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_cpy_resize_u()
+{
+	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_c("garbage i!&/()="),
+	     *c = ss_dup_c("garbage i!&/()=");
+	ss_cpy_resize_u(&b, a, 11, 'z');
+	ss_cpy_resize_u(&c, a, 3, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_cpy_trim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
+	ss_cpy_trim(&sb, sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cpy_ltrim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
+	ss_cpy_ltrim(&sb, sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cpy_rtrim(const char *a, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
+	ss_cpy_rtrim(&sb, sa);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cpy_printf()
+{
+	char btmp[512];
+	ss_t *a = NULL;
+	ss_cpy_printf(&a, 512, "abc%i%s%08X", 1, "hello", -1);
+	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
+	int res = !a ? 1 : !strcmp(ss_to_c(a), btmp) ? 0 : 2;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
+							const char *fmt, ...)
+{
+	ss_t *a = NULL;
+	va_list ap;
+	va_start(ap, fmt);
+	ss_cpy_printf_va(&a, max_size, fmt, ap);
+	va_end(ap);
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cpy_char(const sint32_t in, const char *expected)
+{
+	ss_t *a = ss_dup_c("zz");
+	ss_cpy_char(&a, in);
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cat(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (sa && sb) ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%s%s%s", a, b, b);
+	res |= res ? 0 : (ss_cat(&sa, sb, sb) ? 0 : 2) |
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	/* Aliasing test: */
+	res |= res ? 0 : (sprintf(btmp, "%s%s", ss_to_c(sa), ss_to_c(sa)) &&
+			  ss_cat(&sa, sa) ? 0 : 8); 
+	res |= res ? 0 : (!strcmp(ss_to_c(sa), btmp) ? 0 : 16);
+	ss_t *sc = ss_dup_c("c"), *sd = ss_dup_c("d"),
+		    *se = ss_dup_c("e"), *sf = ss_dup_c("f");
+#ifdef S_DEBUG
+	size_t alloc_calls_before = dbg_cnt_alloc_calls;
+#endif
+	res |= res ? 0 : (sc && sd && se && sf &&
+			  ss_cat(&sc, sd, se, sf)) ? 0 : 32;
+	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 64;
+#ifdef S_DEBUG
+	/* Check that multiple append uses just one -or zero- allocation: */
+	size_t alloc_calls_after = dbg_cnt_alloc_calls;
+	res |= res ? 0 : (alloc_calls_after - alloc_calls_before) <= 1 ? 0 : 128;
+#endif
+	ss_free(&sa, &sb, &sc, &sd, &se, &sf);
+	return res;
+}
+
+#if 0 /* FIXME: rewrite using sv_t vector */
+int test_ss_cat_sub()
+{
+	struct SSUBV *v = NULL;
+	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
+		    *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
+	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
+	res |= res ? 0 : (ss_cat_sub(&d, a, ssv_get_sub(v, 2)) ? 0 : 4);
+	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+	ss_free(&a, &b, &c, &d);
+	ssv_free(&v);
+	return res;
+}
+
+int test_ss_cat_substr()
+{
+	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
+		    *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
+	int res = (!a || !b) ? 1 : 0;
+	res |= res ? 0 : (ss_cat_substr(&d, a, 8, 3) ? 0 : 4);
+	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+	ss_free(&a, &b, &c, &d);
+	return res;
+}
+
+int test_ss_cat_substr_u()
+{
+	/* like the above, but replacing the 'e' with a Chinese character */
+	ss_t *a = ss_dup_c("how ar" "\xf0\xa4\xad\xa2" " you"),
+	     *b = ss_dup_c(" "), *c = ss_dup_c("ar" "\xf0\xa4\xad\xa2" " you"),
+	     *d = ss_dup_c("ar" "\xf0\xa4\xad\xa2" " ");
+	int res = (!a || !b) ? 1 : 0;
+	res |= res ? 0 : (ss_cat_substr_u(&d, a, 8, 3) ? 0 : 4);
+	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+	ss_free(&a, &b, &c, &d);
+	return res;
+}
+#endif
+
+int test_ss_cat_cn()
+{
+	const char *a = "12345", *b = "67890";
+	ss_t *sa = ss_dup_c(a);
+	int res = sa ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%s%s", a, b);
+	res |= res ? 0 : (ss_cat_cn(&sa, b, 5) ? 0 : 2) |
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_cat_c(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a);
+	int res = sa ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%s%s%s", a, b, b);
+	res |= res ? 0 : (ss_cat_c(&sa, b, b) ? 0 : 2) |
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_cat_wn()
+{
+	const wchar_t *a = L"12345", *b = L"67890";
+	ss_t *sa = ss_dup_w(a);
+	int res = sa ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%S%S", a, b);
+	res |= res ? 0 : (ss_cat_wn(&sa, b, 5) ? 0 : 2) |
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
+{
+	ss_t *sa = ss_dup_w(a);
+	int res = sa ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%S%S%S%S", a, b, b, b);
+	res |= res ? 0 : (ss_cat_w(&sa, b, b, b) ? 0 : 2) |
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_cat_int(const char *in, const sint_t num, const char *expected)
+{
+	ss_t *a = ss_dup_c(in);
+	ss_cat_int(&a, num);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_cat_tolower(const char *a, const char *b, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	ss_cat_tolower(&sa, sb);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cat_toupper(const char *a, const char *b, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	ss_cat_toupper(&sa, sb);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+#define MK_TEST_SS_CAT_TO_ENC(suffix)							\
+	int test_ss_cat_to##suffix(const char *a, const char *b, const char *expected) {\
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);				\
+		ss_cat_to##suffix(&sa, sb);						\
+		int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);	\
+		ss_free(&sa, &sb);							\
+		return res;								\
+	}
+
+MK_TEST_SS_CAT_TO_ENC(b64)
+MK_TEST_SS_CAT_TO_ENC(hex)
+MK_TEST_SS_CAT_TO_ENC(HEX)
+
+int test_ss_cat_erase(const char *prefix, const char *in, const size_t off, const size_t size, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_c(prefix);
+	ss_cat_erase(&b, a, off, size);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_cat_erase_u()
+{
+	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"), *b = ss_dup_c("x");
+	ss_cat_erase_u(&b, a, 2, 3);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
+	ss_free(&a, &b);
+	return res;
+}
+
+int test_ss_cat_replace(const char *prefix, const char *in, const char *r, const char *s, const char *expected)
+{
+	ss_t *a = ss_dup_c(in), *b = ss_dup_c(r),
+	     *c = ss_dup_c(s), *d = ss_dup_c(prefix);
+	ss_cat_replace(&d, a, 0, b, c);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
+	ss_free(&a, &b, &c, &d);
+	return res;
+}
+
+int test_ss_cat_resize()
+{
+	ss_t *a = ss_dup_c("hello"), *b = ss_dup_c("x"),
+	     *c = ss_dup_c("x");
+	ss_cat_resize(&b, a, 10, 'z');
+	ss_cat_resize(&c, a, 2, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_cat_resize_u()
+{
+	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_c("x"),
+	     *c = ss_dup_c("x");
+	ss_cat_resize_u(&b, a, 11, 'z');
+	ss_cat_resize_u(&c, a, 3, 'z');
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "x\xc3\xb1" "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "x\xc3\xb1" "he") ? 0 : 4);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_cat_trim(const char *a, const char *b, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	ss_cat_trim(&sa, sb);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cat_ltrim(const char *a, const char *b, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	ss_cat_ltrim(&sa, sb);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cat_rtrim(const char *a, const char *b, const char *expected)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	ss_cat_rtrim(&sa, sb);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cat_printf()
+{
+	char btmp[512];
+	ss_t *sa = ss_dup_c("abc");
+	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
+	ss_cat_printf(&sa, 512, "%i%s%08X", 1, "hello", -1);
+	int res = !sa? 1 : !strcmp(ss_to_c(sa), btmp) ? 0 : 2;
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_cat_printf_va()
+{
+	return test_ss_cat_printf();
+}
+
+int test_ss_cat_char()
+{
+	const wchar_t *a = L"12345", *b = L"6";
+	ss_t *sa = ss_dup_w(a);
+	int res = sa ? 0 : 1;
+	char btmp[16384];
+	sprintf(btmp, "%S%S", a, b);
+	res |= res ? 0 : (ss_cat_char(&sa, b[0]) ? 0 : 2) |
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_tolower(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a);
+	int res = !sa ? 1 : (ss_tolower(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_toupper(const char *a, const char *b)
+{
+	ss_t *sa = ss_dup_c(a);
+	int res = !sa ? 1 : (ss_toupper(&sa) ? 0 : 2) |
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_clear(const char *in)
+{
+	ss_t *sa = ss_dup_c(in);
+	int res = !sa ? 1 : (ss_len(sa) == strlen(in) ? 0 : 2) |
+			   (ss_capacity(sa) == strlen(in) ? 0 : 4);
+	ss_clear(&sa);
+	res |= res ? 0 : (ss_len(sa) == 0 ? 0 : 16);
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_check()
+{
+	ss_t *sa = NULL;
+	int res = ss_check(&sa) ? 0 : 1;
+	ss_free(&sa);
+	return res;
+}
+
+int test_ss_replace(const char *s, const size_t off,
+		    const char *s1, const char *s2, const char *expected)
+{
+	ss_t *a = ss_dup_c(s), *b = ss_dup_c(s1),
+		    *c = ss_dup_c(s2);
+	int res = a && b && c && ss_replace(&a, off, b, c) ? 0 : 1;
+	res |= res ? 0 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
+	ss_free(&a, &b, &c);
+	return res;
+}
+
+int test_ss_to_c(const char *in)
+{
+	ss_t *a = ss_dup_c(in);
+	int res = !a ? 1 : (!strcmp(in, ss_to_c(a)) ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_to_w(const char *in)
+{
+	ss_t *a = ss_dup_c(in);
+	const size_t ssa = ss_len(a);
+	wchar_t *out = a ? (wchar_t *)malloc(sizeof(wchar_t) * (ssa + 1)) :
+			  NULL;
+	size_t out_size = 0;
+	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);
+	res |= ((ssa > 0 && out_size > 0) ? 0 : 4);
+
+	size_t ll = ss_len(a);
+	if (!res) {
+		char b1[16384], b2[16384];
+		int sb1 = sprintf(b1, "%s", ss_to_c(a));
+		int sb2 = sprintf(b2, "%S", out);
+		res |= (sb1 == sb2 ? 0 : 8) | (!memcmp(b1, b2, sb1) ? 0 : 16);
+	}
+	free(out);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_find(const char *a, const char *b, const size_t expected_loc)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (!sa || !sb) ? 1 : (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+#if 0 /* FIXME: rewrite using sv_t vector */
+int test_ss_split()
+{
+	struct SSUBV *v = NULL;
+	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" ");
+	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
+	res |= res ? 0 :
+	   (ssv_get_sub_off(v, 0) == 0 && ssv_get_sub_size(v, 0) == 3 &&
+	    ssv_get_sub_off(v, 1) == 4 && ssv_get_sub_size(v, 1) == 3 &&
+	    ssv_get_sub_off(v, 2) == 8 && ssv_get_sub_size(v, 2) == 3 ? 0 : 4);
+	ss_free(&a, &b);
+	ssv_free(&v);
+	return res;
+}
+#endif
+
+int validate_cmp(int res1, int res2)
+{
+	return (res1 == 0 && res2 == 0) || (res1 < 0 && res2 < 0) ||
+		(res1 > 0 && res2 > 0) ? 1 : 0;
+}
+
+int test_ss_cmp(const char *a, const char *b, int expected_cmp)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (!sa || !sb) ? 1 :
+			(validate_cmp(ss_cmp(sa, sb), expected_cmp) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_cmpi(const char *a, const char *b, int expected_cmp)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (!sa || !sb) ? 1 :
+			(validate_cmp(ss_cmpi(sa, sb), expected_cmp) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_ncmp(const char *a, const size_t a_off, const char *b,
+					const size_t n, int expected_cmp)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (!sa || !sb) ? 1 :
+			(validate_cmp(ss_ncmp(sa, a_off, sb, n),
+					expected_cmp) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_ncmpi(const char *a, const size_t a_off, const char *b,
+					const size_t n, int expected_cmp)
+{
+	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
+	int res = (!sa || !sb) ? 1 :
+			(validate_cmp(ss_ncmpi(sa, a_off, sb, n),
+					expected_cmp) ? 0 : 2);
+	ss_free(&sa, &sb);
+	return res;
+}
+
+int test_ss_printf()
+{
+	ss_t *a = NULL;
+	char btmp[512];
+	sprintf(btmp, "%i%s%08X", 1, "hello", -1);
+	ss_printf(&a, 512, "%i%s%08X", 1, "hello", -1);
+	int res = !strcmp(ss_to_c(a), btmp) ? 0 : 1;
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_getchar()
+{
+	ss_t *a = ss_dup_c("12");
+	size_t off = 0;
+	int res = !a ? 1 : (ss_getchar(a, &off) == '1' ? 0 : 2) |
+			   (ss_getchar(a, &off) == '2' ? 0 : 4) |
+			   (ss_getchar(a, &off) == EOF ? 0 : 8);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_putchar()
+{
+	ss_t *a = NULL;
+	int res = ss_putchar(&a, '1') && ss_putchar(&a, '2') ? 0 : 1;
+	res |= res ? 0 : (!strcmp(ss_to_c(a), "12") ? 0 : 2);
+	ss_free(&a);
+	return res;
+}
+
+int test_ss_popchar()
+{
+	ss_t *a = ss_dup_c("12" "\xc3\x91" "a");
+	int res = !a ? 1 : (ss_popchar(&a) == 'a' ? 0 : 2) |
+			   (ss_popchar(&a) == 0xd1 ? 0 : 4) |
+			   (ss_popchar(&a) == '2' ? 0 : 8) |
+			   (ss_popchar(&a) == '1' ? 0 : 16) |
+			   (ss_popchar(&a) == EOF ? 0 : 32);
+	ss_free(&a);
+	return res;
+}
+
+int test_sc_utf8_to_wc(const char *utf8_char, const int unicode32_expected)
+{
+	int uc_out = 0;
+	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6,
+						&uc_out, NULL);
+	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
+}
+
+int test_sc_wc_to_utf8(const int unicode32, const char *utf8_char_expected)
+{
+	char utf8[6];
+	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);
+	return !char_size ? 1 :
+			(!memcmp(utf8, utf8_char_expected, char_size) ? 0 : 2);
+}
+
+int test_ss_null()
+{
+	ss_clear(NULL);
+	ss_to_c(NULL);
+	ss_reserve(NULL, 0);
+	ss_cpy(NULL, NULL);
+	ss_cpy_c(NULL, NULL);
+	ss_cat(NULL, NULL);
+	ss_cat_c(NULL, NULL);
+	ss_printf(NULL, 0, "");
+	return 0;
+}
+
+#define TEST_SV_ALLOC(sv_alloc_x, sv_alloc_x_t, free_op)		\
+	sv_t *a = sv_alloc_x(sizeof(struct AA), 10);			\
+	sv_t *b = sv_alloc_x_t(SV_I8, 10);				\
+	int res = (!a || !b) ? 1 : (sv_len(a) == 0 ? 0 : 2) |		\
+				   (sv_push(&a, &aa1) ? 0 : 4) |	\
+				   (sv_len(a) == 1 ? 0 : 8) |		\
+				   (!sv_push(&a, NULL) ? 0 : 16) |	\
+				   (sv_len(a) == 1 ? 0 : 32);		\
+	free_op;							\
+	return res;
+
+int test_sv_alloc()
+{
+	TEST_SV_ALLOC(sv_alloc, sv_alloc_t, sv_free(&a, &b));
+}
+
+int test_sv_alloca()
+{
+	TEST_SV_ALLOC(sv_alloca, sv_alloca_t, {});
+}
+
+#define TEST_SV_GROW(v, pushval, ntest, sv_alloc_f, data_id, initial_reserve, sv_push_x)	\
+	sv_t *v = sv_alloc_f(data_id, initial_reserve);			\
+	res |= !v ? 1<<(ntest*3) :					\
+			(sv_push_x(&v, pushval) &&			\
+			sv_len(v) == 1 &&				\
+			sv_push_x(&v, pushval) &&			\
+			sv_len(v) == 2 &&				\
+			sv_capacity(v) >= 2) ? 0 : 2<<(ntest*3);	\
+	sv_free(&v);
+
+int test_sv_grow()
+{
+	int res = 0;
+	TEST_SV_GROW(a, &aa1, 0, sv_alloc, sizeof(struct AA), 1, sv_push);
+	TEST_SV_GROW(b, 123, 1, sv_alloc_t, SV_U8, 1, sv_push_u);
+	TEST_SV_GROW(c, 123, 2, sv_alloc_t, SV_I8, 1, sv_push_i);
+	TEST_SV_GROW(d, 123, 3, sv_alloc_t, SV_U16, 1, sv_push_u);
+	TEST_SV_GROW(e, 123, 4, sv_alloc_t, SV_I16, 1, sv_push_i);
+	TEST_SV_GROW(f, 123, 5, sv_alloc_t, SV_U32, 1, sv_push_u);
+	TEST_SV_GROW(g, 123, 6, sv_alloc_t, SV_I32, 1, sv_push_i);
+	TEST_SV_GROW(h, 123, 7, sv_alloc_t, SV_U64, 1, sv_push_u);
+	TEST_SV_GROW(i, 123, 8, sv_alloc_t, SV_I64, 1, sv_push_i);
+	return res;
+}
+
+#define TEST_SV_RESERVE(v, ntest, sv_alloc_f, data_id, reserve)		\
+	sv_t *v = sv_alloc_f(data_id, 1);			      	\
+	res |= !v ? 1<<(ntest*3) :					\
+		      (sv_reserve(&v, reserve) &&			\
+		       sv_len(v) == 0 &&				\
+		       sv_capacity(v) == reserve) ? 0 : 2<<(ntest*3);	\
+	sv_free(&v);
+
+int test_sv_reserve()
+{
+	int res = 0;
+	TEST_SV_RESERVE(a, 0, sv_alloc, sizeof(struct AA), 1);
+	TEST_SV_RESERVE(b, 1, sv_alloc_t, SV_U8, 1);
+	TEST_SV_RESERVE(c, 2, sv_alloc_t, SV_I8, 1);
+	TEST_SV_RESERVE(d, 3, sv_alloc_t, SV_U16, 1);
+	TEST_SV_RESERVE(e, 4, sv_alloc_t, SV_I16, 1);
+	TEST_SV_RESERVE(f, 5, sv_alloc_t, SV_U32, 1);
+	TEST_SV_RESERVE(g, 6, sv_alloc_t, SV_I32, 1);
+	TEST_SV_RESERVE(h, 7, sv_alloc_t, SV_U64, 1);
+	TEST_SV_RESERVE(i, 8, sv_alloc_t, SV_I64, 1);
+	return res;
+}
+
+#define TEST_SV_SHRINK_TO_FIT(v, ntest, alloc, push, type, pushval, r)	\
+	sv_t *v = alloc(type, r);					\
+	res |= !v ? 1<<(ntest*3) :					\
+		(push(&v, pushval) &&					\
+		 sv_shrink_to_fit(&v) &&				\
+		 sv_capacity(v) == sv_len(v)) ? 0 : 2<<(ntest*3);	\
+	sv_free(&v)
+
+int test_sv_shrink_to_fit()
+{
+	int res = 0;
+	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1, 100);
+	TEST_SV_SHRINK_TO_FIT(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(e, 4, sv_alloc_t, sv_push_u, SV_U16, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(f, 5, sv_alloc_t, sv_push_i, SV_I32, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(g, 6, sv_alloc_t, sv_push_u, SV_U32, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(h, 7, sv_alloc_t, sv_push_i, SV_I64, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(i, 8, sv_alloc_t, sv_push_u, SV_U64, 123, 100);
+	return res;
+}
+
+#define TEST_SV_LEN(v, ntest, alloc, push, type, pushval)	\
+	sv_t *v = alloc(type, 1);				\
+	res |= !v ? 1<<(ntest*3) :				\
+		(push(&v, pushval) && push(&v, pushval) &&	\
+		 push(&v, pushval) && push(&v, pushval) &&	\
+		 sv_len(v) == 4) ? 0 : 2<<(ntest*3);		\
+	sv_free(&v)
+
+int test_sv_len()
+{
+	int res = 0;
+	TEST_SV_LEN(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
+	TEST_SV_LEN(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
+	TEST_SV_LEN(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
+	TEST_SV_LEN(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123);
+	TEST_SV_LEN(e, 4, sv_alloc_t, sv_push_u, SV_U16, 123);
+	TEST_SV_LEN(f, 5, sv_alloc_t, sv_push_i, SV_I32, 123);
+	TEST_SV_LEN(g, 6, sv_alloc_t, sv_push_u, SV_U32, 123);
+	TEST_SV_LEN(h, 7, sv_alloc_t, sv_push_i, SV_I64, 123);
+	TEST_SV_LEN(i, 8, sv_alloc_t, sv_push_u, SV_U64, 123);
+	return res;
+}
+
+#define TEST_SV_CAPACITY(v, ntest, alloc, push, type, pushval)		\
+	sv_t *v = alloc(type, 1);					\
+	res |= !v ? 1<<(ntest*3) :					\
+		(sv_capacity(v) == 1 &&	sv_reserve(&v, 100) &&		\
+		 sv_capacity(v) == 100 && sv_shrink_to_fit(&v) &&	\
+		 sv_capacity(v) == 0) ? 0 : 2<<(ntest*3);		\
+	sv_free(&v)
+
+int test_sv_capacity()
+{
+	int res = 0;
+	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
+	TEST_SV_CAPACITY(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
+	TEST_SV_CAPACITY(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
+	TEST_SV_CAPACITY(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123);
+	TEST_SV_CAPACITY(e, 4, sv_alloc_t, sv_push_u, SV_U16, 123);
+	TEST_SV_CAPACITY(f, 5, sv_alloc_t, sv_push_i, SV_I32, 123);
+	TEST_SV_CAPACITY(g, 6, sv_alloc_t, sv_push_u, SV_U32, 123);
+	TEST_SV_CAPACITY(h, 7, sv_alloc_t, sv_push_i, SV_I64, 123);
+	TEST_SV_CAPACITY(i, 8, sv_alloc_t, sv_push_u, SV_U64, 123);
+	return res;
+}
+
+int test_sv_len_left()
+{
+	const size_t init_alloc = 10;
+	sv_t *a = sv_alloc_t(SV_I8, init_alloc);
+	int res = !a ? 1 : (sv_capacity(a) - sv_len(a) == init_alloc ? 0 : 2) |
+			   (sv_len_left(a) == init_alloc ? 0 : 4) |
+			   (sv_push_i(&a, 1) ? 0 : 8) |
+			   (sv_len_left(a) == (init_alloc - 1) ? 0 : 16);
+	sv_free(&a);
+	return res;
+}
+
+int test_sv_set_len()
+{
+	const size_t init_alloc = 10;
+	sv_t *a = sv_alloc_t(SV_I8, init_alloc);
+	int res = !a ? 1 : (sv_len(a) == 0 ? 0 : 2) |
+			   (!sv_set_len(a, init_alloc + 1) ? 0 : 4) |
+			   (sv_set_len(a, init_alloc) ? 0 : 8) |
+			   (sv_len_left(a) == 0 ? 0 : 16);
+	sv_free(&a);
+	return res;
+}
+
+int test_vs_get_buffer()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_get_buffer_size()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_elem_size()
+{
+	return 0; /* TODO */
+}
+
+#define TEST_SV_DUP(v, ntest, alloc, push, check, check2, type, pushval)\
+	sv_t *v = alloc(type, 0);					\
+	push(&v, pushval);						\
+	sv_t *v##2 = sv_dup(v);						\
+	res |= !v ? 1<<(ntest*3) :					\
+		((check) && (check2)) ? 0 : 2<<(ntest*3);		\
+	sv_free(&v, &v##2);
+
+int test_sv_dup()
+{
+	int res = 0;
+	const int val = 123;
+	TEST_SV_DUP(a, 0, sv_alloc, sv_push,
+		    ((struct AA *)sv_at(a, 0))->a == aa1.a,
+		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
+		    sizeof(struct AA), &aa1);
+	#define SVIAT(v) sv_i_at(v, 0) == val
+	#define SVUAT(v) sv_u_at(v, 0) == val
+	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
+	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
+	TEST_SV_DUP(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, val);
+	TEST_SV_DUP(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8, val);
+	TEST_SV_DUP(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), CHKPI(d), SV_I16, val);
+	TEST_SV_DUP(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), CHKPU(e), SV_U16, val);
+	TEST_SV_DUP(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), CHKPI(f), SV_I32, val);
+	TEST_SV_DUP(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), CHKPU(g), SV_U32, val);
+	TEST_SV_DUP(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), CHKPI(h), SV_I64, val);
+	TEST_SV_DUP(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64, val);
+	#undef SVIAT
+	#undef SVUAT
+	#undef CHKPI
+	#undef CHKPU
+	return res;
+}
+
+#define TEST_SV_DUP_ERASE(v, ntest, alloc, push, check, type, a, b)	\
+	sv_t *v = alloc(type, 0);					\
+	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);\
+	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);\
+	sv_t *v##2 = sv_dup_erase(v, 1, 5);				\
+	res |= !v ? 1<<(ntest*3) : (check) ? 0 : 2<<(ntest*3);		\
+	sv_free(&v, &v##2);
+
+int test_sv_dup_erase()
+{
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_DUP_ERASE(a, 0, sv_alloc, sv_push,
+	    ((struct AA *)sv_at(a2, 0))->a == ((struct AA *)sv_at(a2, 1))->a,
+	    sizeof(struct AA), &aa1, &aa2);
+	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
+	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
+	TEST_SV_DUP_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
+	TEST_SV_DUP_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, r, s);
+	TEST_SV_DUP_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, r, s);
+	TEST_SV_DUP_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, r, s);
+	TEST_SV_DUP_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, r, s);
+	TEST_SV_DUP_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, r, s);
+	TEST_SV_DUP_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, r, s);
+	TEST_SV_DUP_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, r, s);
+	#undef SVIAT
+	#undef SVUAT
+	return res;
+}
+
+int test_sv_dup_resize()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_cpy()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_cpy_erase()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_cpy_resize()
+{
+	return 0; /* TODO */
+}
+
+#define TEST_SV_CAT(v, ntest, alloc, push, check, check2, type, pushval)\
+	sv_t *v = alloc(type, 0);					\
+	push(&v, pushval);						\
+	sv_t *v##2 = sv_dup(v);						\
+	res |= !v ? 1<<(ntest*3) :					\
+		(sv_cat(&v, v##2) && sv_cat(&v, v) && sv_len(v) == 4 &&	\
+		 (check) && (check2)) ? 0 : 2<<(ntest*3);		\
+	sv_free(&v, &v##2);
+
+int test_sv_cat()
+{
+	int res = 0;
+	const int val = 123;
+	TEST_SV_CAT(a, 0, sv_alloc, sv_push,
+		    ((struct AA *)sv_at(a, 3))->a == aa1.a,
+		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
+		    sizeof(struct AA), &aa1);
+	#define SVIAT(v) sv_i_at(v, 3) == val
+	#define SVUAT(v) sv_u_at(v, 3) == val
+	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
+	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
+	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, val);
+	TEST_SV_CAT(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8, val);
+	TEST_SV_CAT(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), CHKPI(d), SV_I16, val);
+	TEST_SV_CAT(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), CHKPU(e), SV_U16, val);
+	TEST_SV_CAT(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), CHKPI(f), SV_I32, val);
+	TEST_SV_CAT(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), CHKPU(g), SV_U32, val);
+	TEST_SV_CAT(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), CHKPI(h), SV_I64, val);
+	TEST_SV_CAT(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64, val);
+	#undef SVIAT
+	#undef SVUAT
+	#undef CHKPI
+	#undef CHKPU
+	return res;
+}
+
+int test_sv_cat_erase()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_cat_resize()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_erase()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_resize()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_find()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_find_i()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_find_u()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_ncmp()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_i_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_u_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sv_push_pop()
+{
+	struct AA *t = NULL;
+	sv_t *a = sv_alloc(sizeof(struct AA), 10);
+	sv_t *b = sv_alloca(sizeof(struct AA), 10);
+	int res = (!a || !b) ? 1 : 0;
+	if (!res) {
+		res |= (sv_push(&a, &aa2, &aa2, &aa1) ? 0 : 4);
+		res |= (sv_len(a) == 3? 0 : 8);
+		res |= (((t = (struct AA *)sv_pop(a)) &&
+			t->a == aa1.a && t->b == aa1.b)? 0 : 16);
+		res |= (sv_len(a) == 2? 0 : 32);
+		res |= (sv_push(&b, &aa2) ? 0 : 64);
+		res |= (sv_len(b) == 1? 0 : 128);
+		res |= (((t = (struct AA *)sv_pop(b)) &&
+			 t->a == aa2.a && t->b == aa2.b)? 0 : 256);
+		res |= (sv_len(b) == 0? 0 : 512);
+	}
+	sv_free(&a);
+	return res;
+}
+
+int test_sv_push_pop_i()
+{
+	enum eSV_Type t[] = { SV_I8, SV_I16, SV_I32, SV_I64 };
+	size_t i = 0, ntests = sizeof(t)/sizeof(t[0]);
+	int res = 0;
+	for (; i < ntests; i++) {
+		sv_t *a = sv_alloc_t(t[i], 10);
+		sv_t *b = sv_alloca_t(t[i], 10);
+		sint_t r;
+		if (!(a && b && sv_push_i(&a, -1) && sv_push_i(&b, -1) &&
+		    (r = sv_pop_i(a)) && r == sv_pop_i(b) && r == -1 &&
+		     sv_len(a) == 0 && sv_len(b) == 0))
+			res |= 1<<i;
+		sv_free(&a);
+	}
+	return res;
+}
+
+int test_sv_push_pop_u()
+{
+	suint_t init[] = { (suint_t)-1, (suint_t)-1, (suint_t)-1, (suint_t)-1 },
+		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffff };
+	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
+	size_t i = 0, ntests = sizeof(t)/sizeof(t[0]);
+	int res = 0;
+	for (; i < ntests; i++) {
+		sv_t *a = sv_alloc_t(t[i], 10);
+		sv_t *b = sv_alloca_t(t[i], 10);
+		sint_t r;
+		if (!(a && b && sv_push_u(&a, (suint_t)-1) &&
+		      sv_push_u(&b, init[i]) &&
+		      (r = sv_pop_u(a)) && r == sv_pop_i(b) &&
+		      r == expected[i] &&
+		      sv_len(a) == 0 && sv_len(b) == 0))
+			res |= 1<<i;
+		sv_free(&a);
+	}
+	return res;
+}
+
+int test_sv_push_raw()
+{
+	return 0;
+}
+
+struct MyNode1
+{
+	struct S_Node n;
+	int k;
+	int v;
+};
+
+static int cmp1(const struct MyNode1 *a, const struct MyNode1 *b)
+{
+	return a->k - b->k;
+}
+
+static void ndx2s(char *out, const size_t out_max, const stndx_t id)
+{
+	if (id == ST_NIL)
+		strcpy(out, "nil");
+	else
+		snprintf(out, out_max, "%u", (unsigned)id);
+}
+
+static ss_t *ss_cat_stn_MyNode1(ss_t **s, const stn_t *n, const stndx_t id)
+{
+	ASSERT_RETURN_IF(!s, NULL);
+	struct MyNode1 *node = (struct MyNode1 *)n;
+	char l[128], r[128];
+	ndx2s(l, sizeof(l), n->l);
+	ndx2s(r, sizeof(r), n->r);
+	ss_cat_printf(s, 128, "[%u: (%i, %c) -> (%s, %s; r:%u)]",
+		     (unsigned)id, node->k, node->v, l, r, n->is_red );
+	return *s;
+}
+
+int test_st_alloc()
+{
+	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };
+	st_t *t = st_alloc(&f, 1000);
+#ifdef __TINYC__ /* Compatibility with TCC: TODO: find a better solution */
+	struct MyNode1 n;
+	memset(&n, 0, sizeof(n));
+	n.n.l = n.n.r = ST_NIL;
+	n.n.is_red = S_FALSE;
+#else
+	struct MyNode1 n = { EMPTY_STN, 0, 0 };
+#endif
+	int res = !t ? 1 : st_len(t) != 0 ? 2 :
+			   (!st_insert(&t, (const stn_t *)&n) ||
+			    st_len(t) != 1) ? 4 : 0;
+	st_free(&t);
+	return res;
+}
+
+#define ST_ENV_TEST_AUX							\
+	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };\
+	st_t *t = st_alloc(&f, 1000);					\
+	if (!t)								\
+		return 1;						\
+	ss_t *log = NULL;						\
+	/*struct MyNode1 n0 = { EMPTY_STN, 0, 0 };*/			\
+	struct MyNode1 n0;						\
+	memset(&n0, 0, sizeof(n0));					\
+	n0.n.l = n0.n.r = ST_NIL;					\
+	n0.n.is_red = S_FALSE;						\
+	stn_t *n = (stn_t *)&n0;					\
+	sbool_t r;
+#define ST_ENV_TEST_AUX_LEAVE						\
+	st_free(&t);							\
+	ss_free(&log);
+#define ST_A_INS(key, val) {						\
+			n0.k = key;					\
+			n0.v = val;					\
+			r = st_insert(&t, n);				\
+			/*st_log_obj(&log, t, ss_cat_stn_MyNode1);*/	\
+		}
+#define ST_A_DEL(key) {							\
+			n0.k = key;					\
+			r = st_delete(t, n, NULL);			\
+			/*st_log_obj(&log, t, ss_cat_stn_MyNode1);*/	\
+		}
+
+#define ST_CHK_BRK(t, len, err)			\
+		if (st_len(t) != (len)) {		\
+			res = err;		\
+			break;			\
+		}
+
+int test_st_insert_del()
+{
+	ST_ENV_TEST_AUX;
+	int res = 0;
+	const struct MyNode1 *nr;
+	int i = 0;
+	const int tree_elems = 90;
+	const int cbase = ' ';
+	for (;;) {
+		/* Case 1: add in order, delete in order */
+		for (i = 0; i < tree_elems; i++)
+			ST_A_INS(i, cbase + i);
+		ST_CHK_BRK(t, tree_elems, 1);
+		for (i = 0; i < (tree_elems - 1); i++)
+			ST_A_DEL(i);
+		ST_CHK_BRK(t, 1, 2);
+		n0.k = tree_elems - 1;
+		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
+		if (!nr || nr->v != (cbase + tree_elems - 1) || st_traverse_levelorder(t, NULL, NULL) != 1) {
+			res = 3;
+			break;
+		}
+		ST_A_DEL(tree_elems - 1);
+		ST_CHK_BRK(t, 0, 4);
+		/* Case 2: add in reverse order, delete in order */
+		for (i = tree_elems - 1; i >= 0; i--)
+			ST_A_INS(i, cbase + i);
+		ST_CHK_BRK(t, tree_elems, 4);
+		for (i = 0; i < (tree_elems - 1); i++)
+			ST_A_DEL(i);
+		ST_CHK_BRK(t, 1, 5);
+		n0.k = tree_elems - 1;
+		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
+		if (!nr || nr->v != (cbase + tree_elems - 1) || st_traverse_levelorder(t, NULL, NULL) != 1) {
+			res = 6;
+			break;
+		}
+		ST_A_DEL(tree_elems - 1);
+		ST_CHK_BRK(t, 0, tree_elems);
+		/* Case 3: add in order, delete in reverse order */
+		for (i = 0; i < tree_elems; i++)
+			ST_A_INS(i, cbase + i);	/* ST_A_INS(2, 'c');  <- double rotation */
+		ST_CHK_BRK(t, tree_elems, 8);
+		for (i = (tree_elems - 1); i > 0; i--)
+			ST_A_DEL(i);
+		ST_CHK_BRK(t, 1, 9);
+		n0.k = 0;
+		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
+		if (!nr || nr->v != cbase || st_traverse_levelorder(t, NULL, NULL) != 1) {
+			res = 10;
+			break;
+		}
+		ST_A_DEL(0);
+		ST_CHK_BRK(t, 0, 11);
+		break;
+	}
+	ST_ENV_TEST_AUX_LEAVE;
+	return res;
+}
+
+static int test_traverse(const struct STraverseParams *tp)
+{
+	ss_t **log = (ss_t **)tp->context;
+	struct MyNode1 *node = (struct MyNode1 *)tp->cn;
+	if (node)
+		ss_cat_printf(log, 512, "%c", node->v);
+	return 0;
+}
+
+int test_st_traverse()
+{
+	ST_ENV_TEST_AUX;
+	int res = 0;
+	for (;;) {
+		ST_A_INS(6, 'g'); ST_A_INS(7, 'h'); ST_A_INS(8, 'i');
+		ST_A_INS(3, 'd'); ST_A_INS(4, 'e'); ST_A_INS(5, 'f');
+		ST_A_INS(0, 'a'); ST_A_INS(1, 'b'); ST_A_INS(2, 'c');
+		ss_cpy_c(&log, "");
+		ssize_t levels = st_traverse_preorder(t, test_traverse, (void *)&log);
+
+		const char *out = ss_to_c(log);
+		if (strcmp(out, "ebadchgfi") != 0) {
+			res |= 1;
+			break;
+		}
+		ss_cpy_c(&log, "");
+		levels = st_traverse_levelorder(t, test_traverse, (void *)&log);
+		out = ss_to_c(log);
+		if (strcmp(out, "ebhadgicf") != 0) {
+			res |= 2;
+			break;
+		}
+		ss_cpy_c(&log, "");
+		levels = st_traverse_inorder(t, test_traverse, (void *)&log);
+		out = ss_to_c(log);
+		if (strcmp(out, "abcdefghi") != 0) {
+			res |= 4;
+			break;
+		}
+		ss_cpy_c(&log, "");
+		levels = st_traverse_postorder(t, test_traverse, (void *)&log);
+		out = ss_to_c(log);
+		if (strcmp(out, "acdbfgihe") != 0) {
+			res |= 8;
+			break;
+		}
+		break;
+	}
+	ST_ENV_TEST_AUX_LEAVE;
+	return res;
+}
+
+/*
+	TODO: add more test_sm_*
+*/
+
+#define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
+	int fn()							       \
+	{								       \
+		struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };\
+		sm_t *m = sm_alloc_X(SM_IntInt, 1000);			       \
+		int res = 0;						       \
+		for (;;) {						       \
+			if (!m) { res = 1; break; }			       \
+			sm_ii_insert(&m, 1, 1001);			       \
+			if (sm_len(m) != 1) { res = 2; break; }		       \
+			sm_ii_insert(&m, 2, 1002);			       \
+			sm_ii_insert(&m, 3, 1003);			       \
+			if (sm_ii_at(m, 1) != 1001) { res = 2; break; }	       \
+			if (sm_ii_at(m, 2) != 1002) { res = 3; break; }	       \
+			if (sm_ii_at(m, 3) != 1003) { res = 4; break; }	       \
+			break;						       \
+		}							       \
+		sm_free_X(&m);						       \
+		return res;						       \
+	}
+
+TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free);
+TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, 0 &&);
+
+int test_sm_shrink_to_fit()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_len()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_dup()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ii32_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_uu32_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ii_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_is_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ip_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_si_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ss_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_sp_at()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ii32_insert()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_uu32_insert()
+{
+	return 0; /* TODO */
+}
+int test_sm_ii_insert()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_is_insert()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_si_insert()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_ss_insert()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_i_delete()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_s_delete()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_enum()
+{
+	return 0; /* TODO */
+}
+
+int test_sm_sort_to_vectors()
+{
+	const size_t test_elems = 100;
+	sm_t *m = sm_alloc(SM_I32I32, test_elems);
+	sv_t *kv = NULL, *vv = NULL;
+	sv_t *kv2 = NULL, *vv2 = NULL;
+	int res = m ? 0 : 1;
+	ssize_t i, j;
+	for (;;) {
+		/*
+		 * Add elements
+		 */
+		for (i = test_elems; i > 0 && !res; i--) {
+			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			    !st_assert((st_t *)m)) {
+#ifdef DEBUG_stree
+				fprintf(stderr, "test_sm_sort_to_vectors: sm_ii_insert error @ offset: %i\r\n", (int)i);
+#endif
+				res |= 2;
+				break;
+			}
+		}
+		if (res)
+			break;
+		/*
+		 * Check all elements after every delete (O(n^2))
+		 */
+		for (j = test_elems; j > 0 && !res; j--) {
+			ssize_t r = sm_sort_to_vectors(m, &kv2, &vv2);
+			for (i = 0; i < j/*test_elems*/; i++) {
+				int k = (int)sv_i_at(kv2, i);
+				int v = (int)sv_i_at(vv2, i);
+				if (k != (i + 1) || v != -(i + 1)) {
+#ifdef DEBUG_stree
+					fprintf(stderr, "test_sm_sort_to_vectors: sm_sort_to_vectors @ offset: %i (%i, %i)\r\n", (int)i, k, v);
+#endif
+					res |= 4;
+					break;
+				}
+			}
+			if (!st_assert((st_t *)m))
+				res |= 8;
+			if (res)
+				break;
+			sv_set_size(kv2, 0);
+			sv_set_size(vv2, 0);
+			if (!sm_i_delete(m, j) || !st_assert((st_t *)m)) {
+#ifdef DEBUG_stree
+				printf("test_sm_sort_to_vectors: sm_i_delete error @ key: %i\r\n", (int)j);
+#endif
+				res |= 16;
+				break;
+			}
+		}
+		break;
+	}
+	sm_free(&m);
+	sv_free(&kv, &vv, &kv2, &vv2);
+	return res;
+}
+
+int test_sm_double_rotation()
+{
+	const size_t test_elems = 15;/* 18;*/
+#ifdef DEBUG_stree
+	ss_t *log = NULL;
+#endif
+	sm_t *m = sm_alloc(SM_I32I32, test_elems);
+	sv_t *kv = NULL, *vv = NULL;
+	sv_t *kv2 = NULL, *vv2 = NULL;
+	int res = m ? 0 : 1;
+	ssize_t i;
+	for (;;) {
+		/*
+		 * Add elements
+		 */
+		for (i = test_elems; i > 0; i--) {
+			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			    !st_assert((st_t *)m)) {
+				res = 2;
+#ifdef DEBUG_stree
+				fprintf(stderr, "test_sm_double_rotation[%i]: sm_ii_insert[1] error @ offset: %i\r\n", res, (int)i);
+#endif
+				break;
+			}
+#ifdef DEBUG_stree
+			fprintf(stderr, "\nAfter insert of #%i key:\n", i);
+			sm_log_obj(&log, m);
+#endif
+		}
+#ifdef DEBUG_stree
+		fprintf(stderr, "\nAfter adding %u elements:\n", (unsigned)test_elems);
+		sm_log_obj(&log, m);
+#endif
+		if (res)
+			break;
+		/*
+		 * Delete pair elements (it triggers double-rotation cases in the tree code of map implementation)
+		 */
+		for (i = test_elems; i > 0; i--) {
+			if ((i % 2))
+				continue;
+			if (!sm_i_delete(m, i) || !st_assert((st_t *)m)) {
+				res = 3;
+#ifdef DEBUG_stree
+				fprintf(stderr, "test_sm_double_rotation[%i]: sm_i_delete error @ offset: %i\r\n", res, (int)i);
+#endif
+				break;
+			}
+#ifdef DEBUG_stree
+			fprintf(stderr, "\nAfter deleting %i key:\n", (int)i);
+			sm_log_obj(&log, m);
+#endif
+		}
+#ifdef DEBUG_stree
+		fprintf(stderr, "\nAfter deleting pair elements:\n");
+		sm_log_obj(&log, m);
+#endif
+		if (res)
+			break;
+		/*
+		 * Add pair elements in reverse order
+		 */
+		for (i = 1; i <= (ssize_t)test_elems; i++) {
+			if ((i % 2))
+				continue;
+			if (i == 6) {
+				int a = 1;
+				int b = a;
+				sbool_t r = st_assert((st_t *)m);
+			}
+			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			    !st_assert((st_t *)m)) {
+				res = 4;
+#ifdef DEBUG_stree
+				fprintf(stderr, "test_sm_double_rotation[%i]: sm_ii_insert[2] error @ offset: %i\r\n", res, (int)i);
+#endif
+				break;
+			}
+#ifdef DEBUG_stree
+			fprintf(stderr, "\nAfter inserting element #%i\n", i);
+			sm_log_obj(&log, m);
+#endif
+		}
+#ifdef DEBUG_stree
+		fprintf(stderr, "\nAfter adding again pair elements:\n");
+		sm_log_obj(&log, m);
+#endif
+		if (res)
+			break;
+		/*
+		 * Delete all elements
+		 */
+		for (i = test_elems; i > 0; i--) {
+			if (!sm_i_delete(m, i)) {
+				res = 5;
+#ifdef DEBUG_stree
+				fprintf(stderr, "test_sm_double_rotation[%i]: sm_i_delete error @ offset: %i\r\n", res, (int)i);
+#endif
+				break;
+			}
+			if (!st_assert((st_t *)m))
+			{
+				res = 50;
+				break;
+			}
+		}
+		if (res)
+			break;
+		if (!st_assert((st_t *)m))
+		{
+			res = 100;
+			break;
+		}
+#ifdef DEBUG_stree
+		fprintf(stderr, "After deleting all elements:\n");
+		sm_log_obj(&log, m);
+#endif
+		break;
+	}
+#ifdef DEBUG_stree
+	fprintf(stderr, "Before test cleanup:\n");
+	sm_log_obj(&log, m);
+	ss_free(&log);
+#endif
+	sm_free(&m);
+	sv_free(&kv, &vv, &kv2, &vv2);
+	return res;
+}
+
+/*
+ * Test execution
+ */
+
+int main(int argc, char **argv)
+{
+	/* setlocale: required for this test, not for using ss_* calls */
+#ifdef S_POSIX_LOCALE_SUPPORT
+	setlocale(LC_ALL, "en_US.UTF-8");
+#else
+	setlocale(LC_ALL, "");
+#endif
+	STEST_START;
+	STEST_ASSERT(test_ss_alloc(0));
+	STEST_ASSERT(test_ss_alloc(16));
+	STEST_ASSERT(test_ss_alloca(32));
+	STEST_ASSERT(test_ss_shrink_to_fit());
+	STEST_ASSERT(test_ss_grow(100, 501, 0));
+	STEST_ASSERT(test_ss_grow(100, 506, 0));
+	STEST_ASSERT(test_ss_grow(100, 507, 1));
+	STEST_ASSERT(test_ss_grow(100, 508, 1));
+	STEST_ASSERT(test_ss_reserve(2));
+	STEST_ASSERT(test_ss_reserve(200));
+	STEST_ASSERT(test_ss_resize_x());
+	STEST_ASSERT(test_ss_trim("  a b c d e  ", "a b c d e"));
+	STEST_ASSERT(test_ss_ltrim("  a b c d e  ", "a b c d e  "));
+	STEST_ASSERT(test_ss_rtrim("  a b c d e  ", "  a b c d e"));
+	STEST_ASSERT(test_ss_trim("abc", "abc"));
+	STEST_ASSERT(test_ss_ltrim("abc", "abc"));
+	STEST_ASSERT(test_ss_rtrim("abc", "abc"));
+	STEST_ASSERT(test_ss_erase("abcde", 2, 1, "abde"));
+	STEST_ASSERT(test_ss_erase("abcde", 2, 3, "ab"));
+	STEST_ASSERT(test_ss_erase("abcde", 2, 10000, "ab"));
+	STEST_ASSERT(test_ss_erase("abcde", 0, 5, ""));
+	STEST_ASSERT(test_ss_erase("abcde", 0, 10000, ""));
+	STEST_ASSERT(test_ss_erase_u("abcde", 2, 1, "abde"));
+	STEST_ASSERT(test_ss_erase_u("abcde", 2, 3, "ab"));
+	STEST_ASSERT(test_ss_erase_u("abcde", 2, 10000, "ab"));
+	STEST_ASSERT(test_ss_erase_u("abcde", 0, 5, ""));
+	STEST_ASSERT(test_ss_erase_u("abcde", 0, 10000, ""));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 1, 2, "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1, "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1000, "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 1, 2, "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1, "\xc3\x91" "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1000, "\xc3\x91" "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 0, 1, "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_free(0));
+	STEST_ASSERT(test_ss_free(16));
+#if 0	/* FIXME: rewrite using sv_t vector */
+	STEST_ASSERT(test_ssv_alloc(0));
+	STEST_ASSERT(test_ssv_alloc(16));
+	STEST_ASSERT(test_ssv_reserve(2));
+	STEST_ASSERT(test_ssv_reserve(200));
+	STEST_ASSERT(test_ssv_free(0));
+	STEST_ASSERT(test_ssv_free(200));
+#endif
+	STEST_ASSERT(test_ss_len("hello", 5));
+	STEST_ASSERT(test_ss_len_u("hello\xc3\x91", 6));
+	STEST_ASSERT(test_ss_capacity());
+	STEST_ASSERT(test_ss_len_left());
+	STEST_ASSERT(test_ss_max());
+	STEST_ASSERT(test_ss_dup_s());
+#if 0	/* FIXME: rewrite using sv_t vector */
+	STEST_ASSERT(test_ss_dup_sub());
+	STEST_ASSERT(test_ss_dup_substr());
+	STEST_ASSERT(test_ss_dup_substr_u());
+#endif
+	STEST_ASSERT(test_ss_dup_cn());
+	STEST_ASSERT(test_ss_dup_c());
+	STEST_ASSERT(test_ss_dup_wn());
+	STEST_ASSERT(test_ss_dup_w());
+	STEST_ASSERT(test_ss_dup_int(0, "0"));
+	STEST_ASSERT(test_ss_dup_int(1, "1"));
+	STEST_ASSERT(test_ss_dup_int(-1, "-1"));
+	STEST_ASSERT(test_ss_dup_int(2147483647, "2147483647"));
+	STEST_ASSERT(test_ss_dup_int(-2147483647, "-2147483647"));
+	STEST_ASSERT(test_ss_dup_int(9223372036854775807,
+	       		      "9223372036854775807"));
+	STEST_ASSERT(test_ss_dup_int(-9223372036854775807,
+	       		      "-9223372036854775807"));
+	STEST_ASSERT(test_ss_dup_tolower("HELLO", "hello"));
+	STEST_ASSERT(test_ss_dup_toupper("hello", "HELLO"));
+	STEST_ASSERT(test_ss_dup_tob64("0123456789ABCDEF", "MDEyMzQ1Njc4OUFCQ0RFRg=="));
+	STEST_ASSERT(test_ss_dup_toHEX("0123456789ABCDEF", "30313233343536373839414243444546"));
+	STEST_ASSERT(test_ss_dup_tohex("\xff\xff", "ffff"));
+	STEST_ASSERT(test_ss_dup_toHEX("\xff\xff", "FFFF"));
+	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
+	STEST_ASSERT(test_ss_dup_erase_u());
+        STEST_ASSERT(test_ss_dup_replace("hello", "ll", "*LL*", "he*LL*o"));
+	STEST_ASSERT(test_ss_dup_resize());
+	STEST_ASSERT(test_ss_dup_resize_u());
+	STEST_ASSERT(test_ss_dup_trim("  hello  ", "hello"));
+	STEST_ASSERT(test_ss_dup_ltrim("  hello  ", "hello  "));
+	STEST_ASSERT(test_ss_dup_rtrim("  hello  ", "  hello"));
+	STEST_ASSERT(test_ss_dup_printf());
+	STEST_ASSERT(test_ss_dup_printf_va("abc1helloFFFFFFFF", 512,
+	       			    "abc%i%s%08X", 1, "hello", -1));
+	STEST_ASSERT(test_ss_dup_char('a', "a"));
+	if (sizeof(wchar_t) > 2) {
+		STEST_ASSERT(test_ss_dup_char(0x24b62, "\xf0\xa4\xad\xa2"));
+	}
+	STEST_ASSERT(test_ss_cpy(""));
+	STEST_ASSERT(test_ss_cpy("hello"));
+	STEST_ASSERT(test_ss_cpy_cn());
+#if 0 /* FIXME: rewrite using sv_t vector */
+	STEST_ASSERT(test_ss_cpy_sub());
+	STEST_ASSERT(test_ss_cpy_substr());
+	STEST_ASSERT(test_ss_cpy_substr_u());
+#endif
+	STEST_ASSERT(test_ss_cpy_c(""));
+	STEST_ASSERT(test_ss_cpy_c("hello"));
+	STEST_ASSERT(test_ss_cpy_w(L"hello", "hello"));
+	STEST_ASSERT(test_ss_cpy_int(0, "0"));
+	STEST_ASSERT(test_ss_cpy_int(1, "1"));
+	STEST_ASSERT(test_ss_cpy_int(-1, "-1"));
+	STEST_ASSERT(test_ss_cpy_int(2147483647, "2147483647"));
+	STEST_ASSERT(test_ss_cpy_int(-2147483647, "-2147483647"));
+	STEST_ASSERT(test_ss_cpy_int(9223372036854775807, "9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807, "-9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_tolower("HELLO", "hello"));
+	STEST_ASSERT(test_ss_cpy_toupper("hello", "HELLO"));
+	STEST_ASSERT(test_ss_cpy_tob64("01", "MDE="));
+	STEST_ASSERT(test_ss_cpy_toHEX("01", "3031"));
+	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
+	STEST_ASSERT(test_ss_cpy_erase_u());
+	STEST_ASSERT(test_ss_cpy_replace("hello", "ll", "*LL*", "he*LL*o"));
+	STEST_ASSERT(test_ss_cpy_resize());
+	STEST_ASSERT(test_ss_cpy_resize_u());
+	STEST_ASSERT(test_ss_cpy_trim("  hello  ", "hello"));
+	STEST_ASSERT(test_ss_cpy_ltrim("  hello  ", "hello  "));
+	STEST_ASSERT(test_ss_cpy_rtrim("  hello  ", "  hello"));
+	STEST_ASSERT(test_ss_cpy_printf());
+	STEST_ASSERT(test_ss_cpy_printf_va("abc1helloFFFFFFFF", 512,
+	       			    "abc%i%s%08X", 1, "hello", -1));
+	STEST_ASSERT(test_ss_cpy_char('a', "a"));
+	if (sizeof(wchar_t) > 2) {
+		STEST_ASSERT(test_ss_cpy_char(0x24b62, "\xf0\xa4\xad\xa2"));
+	}
+	STEST_ASSERT(test_ss_cat("hello", "all"));
+#if 0 /* FIXME: rewrite using sv_t vector */
+	STEST_ASSERT(test_ss_cat_sub());
+	STEST_ASSERT(test_ss_cat_substr());
+	STEST_ASSERT(test_ss_cat_substr_u());
+#endif
+	STEST_ASSERT(test_ss_cat_cn());
+	STEST_ASSERT(test_ss_cat_c("hello", "all"));
+	char btmp1[400], btmp2[400];
+	memset(btmp1, '0', sizeof(btmp1));
+	memset(btmp2, '1', sizeof(btmp2));
+	btmp1[sizeof(btmp1) - 1] = btmp2[sizeof(btmp2) - 1] = 0;
+	STEST_ASSERT(test_ss_cat_c(btmp1, btmp2));
+	STEST_ASSERT(test_ss_cat_wn());
+	STEST_ASSERT(test_ss_cat_w(L"hello", L"all"));
+	STEST_ASSERT(test_ss_cat_int("prefix", 1, "prefix1"));
+	STEST_ASSERT(test_ss_cat_tolower("ABC", "DEF", "ABCdef"));
+	STEST_ASSERT(test_ss_cat_toupper("abc", "def", "abcDEF"));
+	STEST_ASSERT(test_ss_cat_tob64("abc", "01", "abcMDE="));
+	STEST_ASSERT(test_ss_cat_toHEX("abc", "01", "abc3031"));
+	STEST_ASSERT(test_ss_cat_erase("x", "hello", 2, 2, "xheo"));
+	STEST_ASSERT(test_ss_cat_erase_u());
+	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*", "xhe*LL*o"));
+	STEST_ASSERT(test_ss_cat_resize());
+	STEST_ASSERT(test_ss_cat_resize_u());
+	STEST_ASSERT(test_ss_cat_trim("aaa", " hello ", "aaahello"));
+	STEST_ASSERT(test_ss_cat_ltrim("aaa", " hello ", "aaahello "));
+	STEST_ASSERT(test_ss_cat_rtrim("aaa", " hello ", "aaa hello"));
+	STEST_ASSERT(test_ss_cat_printf());
+	STEST_ASSERT(test_ss_cat_printf_va());
+	STEST_ASSERT(test_ss_cat_char());
+	STEST_ASSERT(test_ss_popchar());
+#if !defined(S_MINIMAL_BUILD)
+	STEST_ASSERT(test_ss_tolower("\xc3\x91", "\xc3\xb1"));
+	STEST_ASSERT(test_ss_toupper("aBcDeFgHi", "ABCDEFGHI"));
+	STEST_ASSERT(test_ss_toupper("\xc3\xb1", "\xc3\x91"));
+	STEST_ASSERT(!ss_set_turkish_mode(1));
+	STEST_ASSERT(test_ss_tolower("I", "\xc4\xb1")); /* 0x49 -> 0x131 */
+	STEST_ASSERT(test_ss_tolower("III", "\xc4\xb1" "\xc4\xb1" "\xc4\xb1"));
+	STEST_ASSERT(test_ss_toupper("\xc4\xb1", "I"));
+	STEST_ASSERT(test_ss_tolower("\xc4\xb0", "i")); /* 0x130 -> 0x69 */
+	STEST_ASSERT(test_ss_toupper("i", "\xc4\xb0"));
+	STEST_ASSERT(test_ss_tolower("\xc4\x9e", "\xc4\x9f")); /* 0x11e -> 0x11f */
+	STEST_ASSERT(test_ss_toupper("\xc4\x9f", "\xc4\x9e"));
+	STEST_ASSERT(test_ss_tolower("\xc5\x9e", "\xc5\x9f")); /* 0x15e -> 0x15f */
+	STEST_ASSERT(test_ss_toupper("\xc5\x9f", "\xc5\x9e"));
+	STEST_ASSERT(!ss_set_turkish_mode(0));
+#endif
+	STEST_ASSERT(test_ss_clear(""));
+	STEST_ASSERT(test_ss_clear("hello"));
+	STEST_ASSERT(test_ss_check());
+	STEST_ASSERT(test_ss_replace("where are you? where are we?", 0,
+				      "where", "who",
+				      "who are you? who are we?"));
+	STEST_ASSERT(test_ss_replace("who are you? who are we?", 0,
+				      "who", "where",
+				      "where are you? where are we?"));
+	STEST_ASSERT(test_ss_to_c(""));
+	STEST_ASSERT(test_ss_to_c("hello"));
+#if !defined(S_NOT_UTF8_SPRINTF)
+	STEST_ASSERT(test_ss_to_w("hello\xc3\x91"));
+#endif
+	STEST_ASSERT(test_ss_find("full text", "text", 5));
+	STEST_ASSERT(test_ss_find("full text", "hello", S_NPOS));
+#if 0 /* FIXME: rewrite using sv_t vector */
+	STEST_ASSERT(test_ss_split());
+#endif
+	STEST_ASSERT(test_ss_cmp("hello", "hello2", -1));
+	STEST_ASSERT(test_ss_cmp("hello2", "hello", 1));
+	STEST_ASSERT(test_ss_cmp("hello", "hello", 0));
+	STEST_ASSERT(test_ss_cmp("hello", "Hello", 'h' - 'H'));
+	STEST_ASSERT(test_ss_cmp("Hello", "hello", 'H' - 'h'));
+	STEST_ASSERT(test_ss_cmpi("hello", "HELLO2", -1));
+	STEST_ASSERT(test_ss_cmpi("hello2", "HELLO", 1));
+	STEST_ASSERT(test_ss_cmpi("HELLO", "hello", 0));
+	STEST_ASSERT(test_ss_ncmp("hello", 0, "hello2", 6, -1));
+	STEST_ASSERT(test_ss_ncmp("hello2", 0, "hello", 6, 1));
+	STEST_ASSERT(test_ss_ncmp("hello1", 0, "hello2", 5, 0));
+	STEST_ASSERT(test_ss_ncmp("hello", 0, "Hello", 5, 'h' - 'H'));
+	STEST_ASSERT(test_ss_ncmp("Hello", 0, "hello", 5, 'H' - 'h'));
+	STEST_ASSERT(test_ss_ncmpi("hello", 0, "HELLO2", 6, -1));
+	STEST_ASSERT(test_ss_ncmpi("hello2", 0, "HELLO", 6, 1));
+	STEST_ASSERT(test_ss_ncmpi("hello1", 0, "HELLO2", 5, 0));
+	STEST_ASSERT(test_ss_ncmp("xxhello", 2, "hello2", 6, -1));
+	STEST_ASSERT(test_ss_ncmp("xxhello2", 2, "hello", 6, 1));
+	STEST_ASSERT(test_ss_ncmp("xxhello1", 2, "hello2", 5, 0));
+	STEST_ASSERT(test_ss_ncmp("xxhello", 2, "Hello", 5, 'h' - 'H'));
+	STEST_ASSERT(test_ss_ncmp("xxHello", 2, "hello", 5, 'H' - 'h'));
+	STEST_ASSERT(test_ss_ncmpi("xxhello", 2, "HELLO2", 6, -1));
+	STEST_ASSERT(test_ss_ncmpi("xxhello2", 2, "HELLO", 6, 1));
+	STEST_ASSERT(test_ss_ncmpi("xxhello1", 2, "HELLO2", 5, 0));
+	STEST_ASSERT(test_ss_printf());
+	STEST_ASSERT(test_ss_getchar());
+	STEST_ASSERT(test_ss_putchar());
+	STEST_ASSERT(test_ss_null());
+	/*                          $       cent        euro            chinese             N~          n~         */
+	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac", "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };
+	const sint32_t uc[] = { 'a', 0x24, 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
+	unsigned i = 0;
+	for (; i < sizeof(utf8) / sizeof(utf8[0]); i++) {
+		STEST_ASSERT(test_sc_utf8_to_wc(utf8[i], uc[i]));
+		STEST_ASSERT(test_sc_wc_to_utf8(uc[i], utf8[i]));
+	}
+	/*
+	 * Windows require the specific locale for doing case conversions properly
+	 */
+#if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(S_MINIMAL_BUILD)
+	const size_t wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff : 0x3fffff;
+	size_t test_tolower = 0;
+	for (i = 0; i <= wchar_range; i++) {
+		unsigned l0 = towlower(i), l = sc_tolower(i);
+		if (l != l0) {
+			fprintf(stderr, "%x %x [%x system reported]\n", i, l, l0);
+			test_tolower++;
+		}
+	}
+	STEST_ASSERT(test_tolower);
+	size_t test_toupper = 0;
+	for (i = 0; i <= wchar_range; i++) {
+		unsigned u0 = towupper(i), u = sc_toupper(i);
+		if (u != u0) {
+			fprintf(stderr, "%x %x [%x system reported]\n", i, u, u0);
+			test_toupper++;
+		}
+	}
+	STEST_ASSERT(test_toupper);
+#endif /* #ifndef _MSC_VER */
+	/*
+	 * Vector
+	 */
+	STEST_ASSERT(test_sv_alloc());
+	STEST_ASSERT(test_sv_alloca());
+	STEST_ASSERT(test_sv_grow());
+	STEST_ASSERT(test_sv_reserve());
+	STEST_ASSERT(test_sv_shrink_to_fit());
+	STEST_ASSERT(test_sv_len());
+	STEST_ASSERT(test_sv_capacity());
+	STEST_ASSERT(test_sv_len_left());
+	STEST_ASSERT(test_sv_set_len());
+	STEST_ASSERT(test_vs_get_buffer());
+	STEST_ASSERT(test_sv_get_buffer_size());
+	STEST_ASSERT(test_sv_elem_size());
+	STEST_ASSERT(test_sv_dup());
+	STEST_ASSERT(test_sv_dup_erase());
+	STEST_ASSERT(test_sv_dup_resize());
+	STEST_ASSERT(test_sv_cpy());
+	STEST_ASSERT(test_sv_cpy_erase());
+	STEST_ASSERT(test_sv_cpy_resize());
+	STEST_ASSERT(test_sv_cat());
+	STEST_ASSERT(test_sv_cat_erase());
+	STEST_ASSERT(test_sv_cat_resize());
+	STEST_ASSERT(test_sv_erase());
+	STEST_ASSERT(test_sv_resize());
+	STEST_ASSERT(test_sv_find());
+	STEST_ASSERT(test_sv_find_i());
+	STEST_ASSERT(test_sv_find_u());
+	STEST_ASSERT(test_sv_ncmp());
+	STEST_ASSERT(test_sv_at());
+	STEST_ASSERT(test_sv_i_at());
+	STEST_ASSERT(test_sv_u_at());
+	STEST_ASSERT(test_sv_push_pop());
+	STEST_ASSERT(test_sv_push_pop_i());
+	STEST_ASSERT(test_sv_push_pop_u());
+	STEST_ASSERT(test_sv_push_raw());
+	STEST_ASSERT(test_st_alloc());
+	STEST_ASSERT(test_st_insert_del());
+	STEST_ASSERT(test_st_traverse());
+	STEST_ASSERT(test_sm_alloc());
+	STEST_ASSERT(test_sm_alloca());
+	STEST_ASSERT(test_sm_shrink_to_fit());
+	STEST_ASSERT(test_sm_len());
+	STEST_ASSERT(test_sm_dup());
+	STEST_ASSERT(test_sm_ii32_at());
+	STEST_ASSERT(test_sm_uu32_at());
+	STEST_ASSERT(test_sm_ii_at());
+	STEST_ASSERT(test_sm_is_at());
+	STEST_ASSERT(test_sm_ip_at());
+	STEST_ASSERT(test_sm_si_at());
+	STEST_ASSERT(test_sm_ss_at());
+	STEST_ASSERT(test_sm_sp_at());
+	STEST_ASSERT(test_sm_ii32_insert());
+	STEST_ASSERT(test_sm_uu32_insert());
+	STEST_ASSERT(test_sm_ii_insert());
+	STEST_ASSERT(test_sm_is_insert());
+	STEST_ASSERT(test_sm_si_insert());
+	STEST_ASSERT(test_sm_ss_insert());
+	STEST_ASSERT(test_sm_i_delete());
+	STEST_ASSERT(test_sm_s_delete());
+	STEST_ASSERT(test_sm_enum());
+	STEST_ASSERT(test_sm_sort_to_vectors());
+	STEST_ASSERT(test_sm_double_rotation());
+	/*
+	 * Report
+	 */
+#ifdef S_DEBUG
+	fprintf(stderr, "SS_RANGE_SMALL: %u, SS_RANGE_FULL: " FMT_ZU "\n",
+		(unsigned)SS_RANGE_SMALL, (FMTSZ_T)SS_RANGE_FULL);
+	fprintf(stderr, "SSTR: %u, SSTR_Small: %u, SSTR_Full: %u\n",
+		(unsigned)sizeof(ss_t), (unsigned)sizeof(struct SSTR_Small),
+		(unsigned)sizeof(struct SSTR_Full));
+	fprintf(stderr, "Errors: %i\n", ss_errors);
+#endif
+	return STEST_END;
+}
+
