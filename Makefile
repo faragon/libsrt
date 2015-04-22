@@ -90,19 +90,19 @@ DATE    = $(shell date)
 SOURCES	=sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c
 HEADERS	=scommon.h $(SOURCES:.c=.h)
 OBJECTS	=$(SOURCES:.c=.o)
-LIBSHLL	=shll.a
+LIBSRT	=libsrt.a
 TEST	=stest
 EXES	=$(TEST) sbench
 
 # Rules:
 all: $(EXES) run_tests
 $(OBJECTS): $(HEADERS)
-$(LIBSHLL): $(OBJECTS)
-	ar rcs $(LIBSHLL) $(OBJECTS)
-$(EXES): $% $(LIBSHLL)
+$(LIBSRT): $(OBJECTS)
+	ar rcs $(LIBSRT) $(OBJECTS)
+$(EXES): $% $(LIBSRT)
 run_tests:
 	@./$(TEST)
 clean:
-	@rm -f $(OBJECTS) $(LIBSHLL) *\.gcno *\.gcda *\.out callgrind* out\.txt
+	@rm -f $(OBJECTS) $(LIBSRT) *\.gcno *\.gcda *\.out callgrind* out\.txt
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 
