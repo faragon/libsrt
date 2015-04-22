@@ -1,4 +1,5 @@
-*** pre-alpha ***  (validation, cleanup, documentation, and examples: work in progress)
+*** pre-alpha ***
+(validation, cleanup, dynamic library, documentation, and examples: work in progress)
 
 
 
@@ -57,7 +58,7 @@ Generic advantages
 * Compatibility
  * C99 and C++ compatible
  * CPU-independent: endian-agnostic, aligned memory accesses.
- * E.g. GCC C and C++ (C89, C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio "project" is not provided, yet.
+ * E.g. GCC C and C++ (C89, C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio 2013 "project" is provided just for running the test.
 
 
 Generic disadvantages/limitations
