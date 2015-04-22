@@ -1,0 +1,33 @@
+# Object files
+*.slo
+*.lo
+*.o
+*.obj
+# Precompiled Headers
+*.gch
+*.pch
+# Dynamic libraries
+*.so
+*.dylib
+*.dll
+# Static libraries
+*.lai
+*.la
+*.a
+*.lib
+# Executables
+*.exe
+stest
+sbench
+# Profiling
+*.gcda
+*.gcno
+gmon.out
+# Other
+*.suo
+win/vs2013/Debug/
+win/vs2013/Release/
+win/vs2013/stest_Debug/
+win/vs2013/stest_Release/
+win/vs2013/x64/
+
