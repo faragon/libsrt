@@ -97,11 +97,6 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 struct SSTR_Small ss_void0 = EMPTY_SS;
 ss_t *ss_void = (ss_t *)&ss_void0; /* empty string with alloc error set */
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-#define S_MIN_SSV_RESERVE	32
-struct SSUBV ssv_void0 = EMPTY_SSUBV, *ssv_void = &ssv_void0;
-#endif
-
 /*
  * Forward definitions for some static functions
  */
@@ -109,10 +104,6 @@ struct SSUBV ssv_void0 = EMPTY_SSUBV, *ssv_void = &ssv_void0;
 static size_t get_max_size(const ss_t *s);
 static void ss_reset(ss_t *s, const size_t alloc_size, const sbool_t ext_buf);
 static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz);
-#if 0	/* FIXME: rewrite using sv_t vector */
-static size_t ssv_get_max_size(const struct SSUBV *v);
-static void ssv_reset(struct SSUBV *s, const size_t alloc_size, const sbool_t ext_buf);
-#endif
 
 /*
  * Global variables (used only for Turkish mode)
@@ -137,24 +128,6 @@ static struct sd_conf ssf = {	get_max_size,
 				0
 				};
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-static struct sd_conf ssvf = { (size_t(*)(const sd_t *))ssv_get_max_size,
-				(void (*)(sd_t *, const size_t, const sbool_t))ssv_reset,
-				NULL,
-				(sd_t *(*)(const size_t))ssv_alloc,
-				NULL,
-				NULL,
-				(sd_t *)&ssv_void0,
-				0,
-				0,
-				0,
-				sizeof(struct SSUBV),
-				sizeof(struct SSUB),
-				0,
-				0
-				};
-#endif
-
 /*
  * Internal functions
  */
@@ -163,13 +136,6 @@ static unsigned is_unicode_size_cached(const ss_t *s)
 {
 	return s->other1;
 }
-
-#if 0	/* FIXME: rewrite using sv_t vector */
-static size_t ssv_get_max_size(const struct SSUBV *v)
-{
-	return v->max_size;
-}
-#endif
 
 static unsigned get_unicode_size_h(const ss_t *s)
 {
@@ -301,13 +267,6 @@ static void ss_reset(ss_t *s, const size_t alloc_size, const sbool_t ext_buf)
 	}
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-static void ssv_reset(struct SSUBV *s, const size_t alloc_size, const sbool_t ext_buf)
-{
-	sd_reset((sd_t *)s, S_TRUE, alloc_size, ext_buf);
-}
-#endif
-
 static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz)
 {
 	size_t size = get_size(s), unicode_size = get_unicode_size(s); char *s_str = get_str(s);
@@ -324,7 +283,7 @@ static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz)
 	set_unicode_size(s, unicode_size);
 }
 
-/* #BEHAVIOR: aliasing is supported, e.g. append(&a, a) */
+/* BEHAVIOR: aliasing is supported, e.g. append(&a, a) */
 static ss_t *ss_cat_cn_raw(ss_t **s, const char *src, const size_t src_off,
 			   const size_t src_size, const size_t src_usize)
 {
@@ -886,31 +845,6 @@ void ss_free_aux(const size_t nargs, ss_t **s, ...)
 	va_end(ap);
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-struct SSUBV *ssv_alloc(const size_t max_size)
-{
-	struct SSUBV *v = (struct SSUBV *)sd_alloc(0, 0, max_size, &ssvf);
-	if (v) {
-		v->size = 0;
-		v->max_size = max_size;
-	}
-	return v;
-}
-
-struct SSUBV *ssv_reserve(struct SSUBV **v, const size_t max_size)
-{
-	return (struct SSUBV *)sd_reserve((sd_t **)v, max_size, &ssvf);
-}
-
-void ssv_free_aux(const size_t nargs, struct SSUBV **sv, ...)
-{
-	va_list ap;
-	va_start(ap, sv);
-	sd_free_va(nargs,(sd_t **)sv, ap);
-	va_end(ap);
-}
-#endif
-
 /*
  * Accessors
  */
@@ -991,35 +925,6 @@ void ss_clear_errors(ss_t *s)
 		set_encoding_errors(s, S_FALSE); 
 	}
 }
-
-#if 0	/* FIXME: rewrite using sv_t vector */
-size_t ssv_size(const struct SSUBV *v)
-{
-	S_ASSERT(v);
-	return v ? v->size : 0;
-}
-
-size_t ssv_capacity(const struct SSUBV *v)
-{
-	S_ASSERT(v);
-	return v ? v->max_size : 0;
-}
-
-size_t ssv_get_sub_off(const struct SSUBV *v, const size_t id)
-{
-	return (v && id < v->size) ? v->subs[id].off : 0;
-}
-
-size_t ssv_get_sub_size(const struct SSUBV *v, const size_t id)
-{
-	return (v && id < v->size) ? v->subs[id].size : 0;
-}
-
-const struct SSUB *ssv_get_sub(const struct SSUBV *v, const size_t id)
-{
-	return (v && id < v->size) ? &v->subs[id] : NULL;
-}
-#endif
 
 /*
  * Allocation from a given source: s = ss_dup*

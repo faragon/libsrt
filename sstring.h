@@ -134,13 +134,6 @@ size_t ss_reserve(ss_t **s, const size_t max_size);
 void ss_free_aux(const size_t nargs, ss_t **s, ...);
 void ss_free_call(ss_t **s);
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-struct SSUBV *ssv_alloc(const size_t max_strings);
-struct SSUBV *ssv_reserve(struct SSUBV **v, const size_t max_size);
-void ssv_free_aux(const size_t nargs, struct SSUBV **s, ...);
-void ssv_free_call(struct SSUBV **s);
-#endif
-
 /*
  * Accessors
  */
@@ -155,14 +148,6 @@ char *ss_get_buffer(ss_t *s);
 sbool_t ss_alloc_errors(const ss_t *s);
 sbool_t ss_encoding_errors(const ss_t *s);
 void ss_clear_errors(ss_t *s);
-
-#if 0	/* FIXME: rewrite using sv_t vector */
-size_t ssv_size(const struct SSUBV *v);
-size_t ssv_capacity(const struct SSUBV *v);
-size_t ssv_get_sub_off(const struct SSUBV *v, const size_t id);
-size_t ssv_get_sub_size(const struct SSUBV *v, const size_t id);
-const struct SSUB *ssv_get_sub(const struct SSUBV *v, const size_t id);
-#endif
 
 /*
  * Allocation from other sources: "dup"

@@ -182,35 +182,6 @@ int test_ss_free(const size_t max_size)
 	return res;
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-int test_ssv_alloc(const size_t max_size)
-{
-	struct SSUBV *v = ssv_alloc(max_size);
-	int res = !v ? 1 : (ssv_size(v) != 0) * 2 |
-			   (ssv_capacity(v) != max_size) * 4;
-	ssv_free(&v);
-	return res;
-}
-
-int test_ssv_reserve(const size_t max_size)
-{
-	struct SSUBV *a = ssv_alloc(max_size / 2);
-	int res = a ? 0 : 1;
-	res |= res ? 0 : (ssv_reserve(&a, max_size) ? 0 : 2);
-	ssv_free(&a);
-	return res;
-}
-
-int test_ssv_free(const size_t max_size)
-{
-	struct SSUBV *a = ssv_alloc(max_size);
-	int res = a ? 0 : 1;
-	ssv_free(&a);
-	res |= (!a ? 0 : 2);
-	return res;
-}
-#endif
-
 int test_ss_len(const char *a, const size_t expected_size)
 {
 	ss_t *sa = ss_dup_c(a);
@@ -2138,14 +2109,6 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 0, 1, "\xc3\x91" "a"));
 	STEST_ASSERT(test_ss_free(0));
 	STEST_ASSERT(test_ss_free(16));
-#if 0	/* FIXME: rewrite using sv_t vector */
-	STEST_ASSERT(test_ssv_alloc(0));
-	STEST_ASSERT(test_ssv_alloc(16));
-	STEST_ASSERT(test_ssv_reserve(2));
-	STEST_ASSERT(test_ssv_reserve(200));
-	STEST_ASSERT(test_ssv_free(0));
-	STEST_ASSERT(test_ssv_free(200));
-#endif
 	STEST_ASSERT(test_ss_len("hello", 5));
 	STEST_ASSERT(test_ss_len_u("hello\xc3\x91", 6));
 	STEST_ASSERT(test_ss_capacity());
