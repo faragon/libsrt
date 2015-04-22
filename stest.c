@@ -16,10 +16,6 @@
 #include "smap.h"
 #include "sdbg.h"
 
-#if 0 /* the "DEBUG_stree" code will be removed when debug/validation/optimization finishes */
-#define DEBUG_stree
-#endif
-
 /*
  * Unit testing helpers
  */
@@ -1970,9 +1966,6 @@ int test_sm_sort_to_vectors()
 		for (i = test_elems; i > 0 && !res; i--) {
 			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
-#ifdef DEBUG_stree
-				fprintf(stderr, "test_sm_sort_to_vectors: sm_ii_insert error @ offset: %i\r\n", (int)i);
-#endif
 				res |= 2;
 				break;
 			}
@@ -1988,9 +1981,6 @@ int test_sm_sort_to_vectors()
 				int k = (int)sv_i_at(kv2, i);
 				int v = (int)sv_i_at(vv2, i);
 				if (k != (i + 1) || v != -(i + 1)) {
-#ifdef DEBUG_stree
-					fprintf(stderr, "test_sm_sort_to_vectors: sm_sort_to_vectors @ offset: %i (%i, %i)\r\n", (int)i, k, v);
-#endif
 					res |= 4;
 					break;
 				}
@@ -2002,9 +1992,6 @@ int test_sm_sort_to_vectors()
 			sv_set_size(kv2, 0);
 			sv_set_size(vv2, 0);
 			if (!sm_i_delete(m, j) || !st_assert((st_t *)m)) {
-#ifdef DEBUG_stree
-				printf("test_sm_sort_to_vectors: sm_i_delete error @ key: %i\r\n", (int)j);
-#endif
 				res |= 16;
 				break;
 			}
@@ -2019,9 +2006,6 @@ int test_sm_sort_to_vectors()
 int test_sm_double_rotation()
 {
 	const size_t test_elems = 15;/* 18;*/
-#ifdef DEBUG_stree
-	ss_t *log = NULL;
-#endif
 	sm_t *m = sm_alloc(SM_I32I32, test_elems);
 	sv_t *kv = NULL, *vv = NULL;
 	sv_t *kv2 = NULL, *vv2 = NULL;
@@ -2035,20 +2019,9 @@ int test_sm_double_rotation()
 			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res = 2;
-#ifdef DEBUG_stree
-				fprintf(stderr, "test_sm_double_rotation[%i]: sm_ii_insert[1] error @ offset: %i\r\n", res, (int)i);
-#endif
 				break;
 			}
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter insert of #%i key:\n", i);
-			sm_log_obj(&log, m);
-#endif
 		}
-#ifdef DEBUG_stree
-		fprintf(stderr, "\nAfter adding %u elements:\n", (unsigned)test_elems);
-		sm_log_obj(&log, m);
-#endif
 		if (res)
 			break;
 		/*
@@ -2059,20 +2032,9 @@ int test_sm_double_rotation()
 				continue;
 			if (!sm_i_delete(m, i) || !st_assert((st_t *)m)) {
 				res = 3;
-#ifdef DEBUG_stree
-				fprintf(stderr, "test_sm_double_rotation[%i]: sm_i_delete error @ offset: %i\r\n", res, (int)i);
-#endif
 				break;
 			}
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter deleting %i key:\n", (int)i);
-			sm_log_obj(&log, m);
-#endif
 		}
-#ifdef DEBUG_stree
-		fprintf(stderr, "\nAfter deleting pair elements:\n");
-		sm_log_obj(&log, m);
-#endif
 		if (res)
 			break;
 		/*
@@ -2089,20 +2051,9 @@ int test_sm_double_rotation()
 			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res = 4;
-#ifdef DEBUG_stree
-				fprintf(stderr, "test_sm_double_rotation[%i]: sm_ii_insert[2] error @ offset: %i\r\n", res, (int)i);
-#endif
 				break;
 			}
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter inserting element #%i\n", i);
-			sm_log_obj(&log, m);
-#endif
 		}
-#ifdef DEBUG_stree
-		fprintf(stderr, "\nAfter adding again pair elements:\n");
-		sm_log_obj(&log, m);
-#endif
 		if (res)
 			break;
 		/*
@@ -2111,9 +2062,6 @@ int test_sm_double_rotation()
 		for (i = test_elems; i > 0; i--) {
 			if (!sm_i_delete(m, i)) {
 				res = 5;
-#ifdef DEBUG_stree
-				fprintf(stderr, "test_sm_double_rotation[%i]: sm_i_delete error @ offset: %i\r\n", res, (int)i);
-#endif
 				break;
 			}
 			if (!st_assert((st_t *)m))
@@ -2129,17 +2077,8 @@ int test_sm_double_rotation()
 			res = 100;
 			break;
 		}
-#ifdef DEBUG_stree
-		fprintf(stderr, "After deleting all elements:\n");
-		sm_log_obj(&log, m);
-#endif
 		break;
 	}
-#ifdef DEBUG_stree
-	fprintf(stderr, "Before test cleanup:\n");
-	sm_log_obj(&log, m);
-	ss_free(&log);
-#endif
 	sm_free(&m);
 	sv_free(&kv, &vv, &kv2, &vv2);
 	return res;

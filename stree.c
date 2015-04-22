@@ -19,14 +19,6 @@
 #include "scommon.h"
 #include "svector.h"
 
-#if 0 /* the "DEBUG_stree" code will be removed when debug/validation/optimization finishes */
-#define DEBUG_stree
-#endif
-
-#ifdef DEBUG_stree
-#include "sdbg.h"
-#endif
-
 #ifndef STREE_DISABLE_KEY_OVERWRITING
 #define STREE_ALLOW_KEY_OVERWRITING
 #endif
@@ -258,18 +250,8 @@ static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, c
 static void st_checkfix_root(st_t *t, stndx_t pivot_node, stndx_t new_pivot_node)
 {
 	if (pivot_node == t->root) {
-#ifdef DEBUG_stree
-		ss_t *log = NULL;
-		fprintf(stderr, "\nBefore st_checkfix_root:\n");
-		sm_log_obj(&log, (sm_t *)t);
-#endif
 		t->root = new_pivot_node;
 		/*set_red(t, t->root, S_FALSE);*/
-#ifdef DEBUG_stree
-		fprintf(stderr, "\nAfter st_checkfix_root:\n");
-		sm_log_obj(&log, (sm_t *)t);
-		ss_free(&log);
-#endif
 	}
 }
 
@@ -419,12 +401,6 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 			/* Increase tree size: */
 			set_size(t, ts + 1);
 			done = S_TRUE;
-#ifdef DEBUG_stree
-			ss_t *log = NULL;
-			fprintf(stderr, "\nst_insert: after found\n");
-			sm_log_obj(&log, (sm_t *)t);
-			ss_free(&log);
-#endif
 		}
 		else {
 			/* Two red sons? -> red parent + black sons */
@@ -450,12 +426,6 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 				else {
 					t->root = v;
 				}
-#ifdef DEBUG_stree
-				ss_t *log = NULL;
-				fprintf(stderr, "\nst_insert: after rot?x:\n");
-				sm_log_obj(&log, (sm_t *)t);
-				ss_free(&log);
-#endif
 			}
 		}
 		const sint_t cmp = t->f.cmp(w[c].n, n);
@@ -481,9 +451,6 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 
 sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 {
-#ifdef DEBUG_stree
-	ss_t *log = NULL;
-#endif
 	ASSERT_RETURN_IF(!t || !n, S_FALSE);
 	/* Check empty tree: */
 	const size_t ts0 = get_size(t);
@@ -516,9 +483,6 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 		const sint_t cmp = t->f.cmp(w[c].n, n);
 		const enum STNDir d = cmp < 0 ? ST_Right : ST_Left;
 		if (!cmp) {
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nst_delete: node found\n");
-#endif
 			S_ASSERT(found.n == NULL);
 			if (ts == 1) { /* Trivial case: one node */
 				if (callback)
@@ -545,10 +509,6 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				/* Update parent */
 				w[cp].x = y;
 				w[cp].n = yn;
-#ifdef DEBUG_stree
-				fprintf(stderr, "\nAfter delete.rot1x_y:\n");
-				sm_log_obj(&log, (sm_t *)t);
-#endif
 				break;
 			}
 			const enum STNDir xd0 = cd(d0);
@@ -571,19 +531,11 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				const stndx_t y = rot2x(t, w[cp].n, w[cp].x, d0, xd0);
 				set_lr(w[cpp].n, d2, y);
 				st_checkfix_root(t, w[cp].x, y);
-#ifdef DEBUG_stree
-				fprintf(stderr, "\nAfter delete.rot2x:\n");
-				sm_log_obj(&log, (sm_t *)t);
-#endif
 			} else {
 				if (is_red(t, get_lr(sn, xd0))) {
 					const stndx_t y = rot1x(t, w[cp].n, w[cp].x, d0, xd0);
 					set_lr(w[cpp].n, d2, y);
 					st_checkfix_root(t, w[cp].x, y);
-#ifdef DEBUG_stree
-					fprintf(stderr, "\nAfter delete.rot1x:\n");
-					sm_log_obj(&log, (sm_t *)t);
-#endif
 				}
 			}
 			stn_t *cpp_d2n = get_node(t, get_lr(w[cpp].n, d2));
@@ -604,10 +556,6 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 		d0 = d;
 	}
 	if (found.n) {
-#ifdef DEBUG_stree
-		fprintf(stderr, "\nAfter loop:\n");
-		sm_log_obj(&log, (sm_t *)t);
-#endif
 		if (callback)
 			callback((void *)found.n);
 		/*
@@ -619,26 +567,13 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			/*copy_node_data(t, found.n, cn); ?????*/
 			update_node_data(t, found.n, w[c].n);
 			found.x = w[c].x;
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter copy_node:\n");
-			sm_log_obj(&log, (sm_t *)t);
-#endif
 		}
 		if (!w[cp].n) { /* Root node deletion (???) */
 			t->root = w[c].n->l != ST_NIL ? w[c].n->l : w[c].n->r;
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter deleting root node:\n");
-			sm_log_obj(&log, (sm_t *)t);
-#endif
 		} else {
 			enum STNDir ds = w[c].n->l == ST_NIL ? ST_Right : ST_Left;
 			enum STNDir dt = w[cp].n->r == w[c].x ? ST_Right : ST_Left;
 			set_lr(w[cp].n, dt, get_lr(w[c].n, ds));
-
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter set_lr:\n");
-			sm_log_obj(&log, (sm_t *)t);
-#endif
 		}
 		/*
 		 * If deleted node is not the last node in the linear space,
@@ -663,18 +598,9 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				/* BEHAVIOR: this point should never be reached */
 				S_ASSERT(S_FALSE);
 			}
-#ifdef DEBUG_stree
-			fprintf(stderr, "\nAfter w[c].x != sz:\n");
-			sm_log_obj(&log, (sm_t *)t);
-#endif
 		}
 		set_size(t, ts - 1);
 	}
-
-#ifdef DEBUG_stree
-	ss_free(&log);
-#endif
-
 	/* Set root node as black */
 	set_red(t, t->root, S_FALSE);
 	return found.n ? S_TRUE : S_FALSE;
