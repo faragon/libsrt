@@ -109,7 +109,6 @@ Strings
 * strbuf (Git project)
  * Equivalent strbuf\_grow(), strbuf\_split\_\*() functionality.
  * Documentation structure (https://github.com/git/git/blob/master/Documentation/technical/api-strbuf.txt)
- * Count arguments: http://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
 * string library comparison
  * http://www.and.org/vstr/comparison
  * http://bstring.sourceforge.net/features.html
@@ -188,7 +187,8 @@ C language
 
 * C preprocessor
  * var args comp.lang.c FAQ http://www.lysator.liu.se/c/c-faq/c-7.html 
- 
+ * Count arguments: http://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
+
 Misc
 ---
 

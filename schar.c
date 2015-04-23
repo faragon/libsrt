@@ -1,5 +1,5 @@
 /*
- * sutf8.c
+ * schar.c
  *
  * Unicode processing helper functions.
  *
