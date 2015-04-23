@@ -834,7 +834,7 @@ sbool_t st_assert(const st_t *t)
 {
 	ASSERT_RETURN_IF(!t, S_FALSE);
 	ASSERT_RETURN_IF(t->df.size == 1 && is_red(t, t->root), S_FALSE);
-	ASSERT_RETURN_IF(t->df.size == 1, S_TRUE);
+	RETURN_IF(t->df.size == 1, S_TRUE);
 	return st_assert_aux(t, t->root) ? S_TRUE : S_FALSE;
 }
 
