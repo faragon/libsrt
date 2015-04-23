@@ -26,6 +26,12 @@
 #endif
 
 /*
+ * Constants
+ */
+
+#define S_SPLIT_MIN_ALLOC_ELEMS	32
+
+/*
  * Macros
  */
 
@@ -937,11 +943,10 @@ ss_t *ss_dup_s(const ss_t *src)
 	return ss_cpy(&s, src);
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-ss_t *ss_dup_sub(const ss_t *src, const struct SSUB *sub)
+ss_t *ss_dup_sub(const ss_t *src, const sv_t *offs, const size_t nth)
 {
 	ss_t *s = NULL;
-	return ss_cpy_sub(&s, src, sub);
+	return ss_cpy_sub(&s, src, offs, nth);
 }
 
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
@@ -949,7 +954,6 @@ ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
 	ss_t *s = NULL;
 	return ss_cpy_substr(&s, src, off, n);
 }
-#endif
 
 ss_t *ss_dup_u(const ss_t *src, const size_t char_off, const size_t n)
 {
@@ -1094,14 +1098,16 @@ ss_t *ss_cpy(ss_t **s, const ss_t *src)
 	return ss_cat(s, src);
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const struct SSUB *sub)
+ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF(!src || !sub, ss_clear(s)); /* BEHAVIOR: empty */
-	return ss_cpy_substr(s, src, sub->off, sub->size);
+	ASSERT_RETURN_IF((!src || !offs), ss_clear(s)); /* BEHAVIOR: empty */
+	const size_t elems = sv_get_size(offs) / 2;
+	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
+	const size_t off = (size_t)sv_u_at(offs, nth * 2);
+	const size_t size = (size_t)sv_u_at(offs, nth * 2 + 1);
+	return ss_cpy_substr(s, src, off, size);
 }
-#endif
 
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
@@ -1340,15 +1346,20 @@ ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 	return ss_check(s);
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const struct SSUB *sub)
+ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	RETURN_IF((!src || !sub), ss_check(s)); /* same string */
+	RETURN_IF((!src || !offs), ss_check(s)); /* same string */
 	char *src_str = NULL, *src_aux;
-	size_t sub_off = sub ? sub->off : 0;
-	const size_t src_off = get_str_off(src) + sub_off,
-		     src_size = sub ? sub->size : get_size(src);
+	const size_t elems = sv_get_size(offs) / 2;
+	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
+	size_t src_off = get_str_off(src), src_size;
+	if (nth < elems) {
+		src_off += (size_t)sv_u_at(offs, nth * 2);
+		src_size = (size_t)sv_u_at(offs, nth * 2 + 1);
+	} else {
+		src_size = get_size(src);
+	}
 	if (*s == src && *s && !(*s)->ext_buffer) {
 		/* Aliasing case: make grow the buffer in order
 		   to keep the reference to the data valid. */
@@ -1359,11 +1370,10 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const struct SSUB *sub)
 		src_aux = (char *)src;
 		src_str = (char *)src_aux;
 	}
-	const size_t src_unicode_size = (is_unicode_size_cached(src) && !sub) ?
-						get_unicode_size(src) : 0;
+	const size_t src_unicode_size = is_unicode_size_cached(src) ?
+					get_unicode_size(src) : 0;
 	return ss_cat_cn_raw(s, src_str, src_off, src_size, src_unicode_size);
 }
-#endif
 
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 							const size_t sub_size)
@@ -1715,34 +1725,25 @@ size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-/*
- * TODO: fix SSV memory management (!)
- */
-size_t ss_split(struct SSUBV **v, const ss_t *src, const ss_t *separator)
+size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 {
 	S_ASSERT(v && src && separator);
 	if (!v || !src || !separator)
 		return 0;
+	if (*v == NULL)
+		*v = sv_alloc_t(SV_U64, S_SPLIT_MIN_ALLOC_ELEMS);
+	ASSERT_RETURN_IF(!*v, 0);
 	const size_t src_size = get_size(src),
 		     separator_size = get_size(separator);
 	S_ASSERT(src_size > 0 && separator_size > 0);
 	if (src_size > 0 && separator_size > 0) {
-		ssv_free(v);
-		*v = ssv_alloc(S_MIN_SSV_RESERVE);
 		size_t i = 0;
 		for (; i < src_size;) {
 			const size_t off = ss_find(src, i, separator);
-			if ((*v)->size == (*v)->max_size)
-				ssv_reserve(v, (*v)->size * 2);
-			if (((*v)->size + 1) < (*v)->max_size) {
-				(*v)->subs[(*v)->size].off = i;
-				(*v)->subs[(*v)->size].size = off != S_NPOS ?
-						(off - i) : (src_size - i);
-				(*v)->size++;
-			} else {
+			const size_t sz = (off != S_NPOS ? off : src_size) - i;
+			if (!sv_push_u(v, i) || !sv_push_u(v, sz)) {
 				S_ERROR("not enough memory");
-				(*v)->size = 0;
+				sv_set_size(*v, 0);
 				break;
 			}
 			if (off == S_NPOS) {	/* no more separators */
@@ -1751,9 +1752,21 @@ size_t ss_split(struct SSUBV **v, const ss_t *src, const ss_t *separator)
 			i = off + separator_size;
 		}
 	}
-	return (v && *v) ? (*v)->size : 0;
+	return sv_get_size(*v) / 2;
 }
-#endif
+
+size_t ss_nth_size(const sv_t *offsets, const size_t nth)
+{
+	RETURN_IF(!offsets, 0);
+	const size_t elems = sv_get_size(offsets) / 2;
+	return nth < elems ? (size_t)sv_u_at(offsets, nth * 2 + 1) : 0;
+}
+
+size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
+{
+	RETURN_IF(!offsets, 0);
+	return (size_t)sv_u_at(offsets, nth * 2);
+}
 
 /*
  * Format

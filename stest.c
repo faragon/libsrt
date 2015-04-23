@@ -236,15 +236,17 @@ int test_ss_dup_s()
 	return res;
 }
 
-#if 0	/* FIXME: rewrite using sv_t vector */
 int test_ss_dup_sub()
 {
 	ss_t *b = ss_dup_c("hello");
-	struct SSUB sub = { 0, 5 };
-	ss_t *a = ss_dup_sub(b, &sub);
-	int res = !a ? 1 : (ss_len(a) == sub.size ? 0 : 2) |
+	sv_t *sub = sv_alloc_t(SV_U64, 2);
+	sv_push_u(&sub, 0);
+	sv_push_u(&sub, 5);
+	ss_t *a = ss_dup_sub(b, sub, 0);
+	int res = !a ? 1 : (ss_len(a) == ss_nth_size(sub, 0) ? 0 : 2) |
 			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
 	ss_free(&a, &b);
+	sv_free(&sub);
 	return res;
 }
 
@@ -267,7 +269,6 @@ int test_ss_dup_substr_u()
 	ss_free(&a, &b);
 	return res;
 }
-#endif
 
 int test_ss_dup_cn()
 {
@@ -457,18 +458,17 @@ int test_ss_cpy(const char *in)
 	return res;
 }
 
-#if 0 /* FIXME: rewrite using sv_t vector */
 int test_ss_cpy_sub()
 {
-	struct SSUBV *v = NULL;
+	sv_t *v = NULL;
 	ss_t *d = NULL;
 	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
 		  *c = ss_dup_c("how");
 	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
-	res |= res ? 0 : (ss_cpy_sub(&d, a, ssv_get_sub(v, 0)) ? 0 : 4);
+	res |= res ? 0 : (ss_cpy_sub(&d, a, v, 0) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
 	ss_free(&a, &b, &c, &d);
-	ssv_free(&v);
+	sv_free(&v);
 	return res;
 }
 
@@ -491,7 +491,6 @@ int test_ss_cpy_substr_u()
 	ss_free(&a, &b, &c);
 	return res;
 }
-#endif
 
 int test_ss_cpy_cn()
 {
@@ -717,17 +716,16 @@ int test_ss_cat(const char *a, const char *b)
 	return res;
 }
 
-#if 0 /* FIXME: rewrite using sv_t vector */
 int test_ss_cat_sub()
 {
-	struct SSUBV *v = NULL;
+	sv_t *v = NULL;
 	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
 		    *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
 	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
-	res |= res ? 0 : (ss_cat_sub(&d, a, ssv_get_sub(v, 2)) ? 0 : 4);
+	res |= res ? 0 : (ss_cat_sub(&d, a, v, 2) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
 	ss_free(&a, &b, &c, &d);
-	ssv_free(&v);
+	sv_free(&v);
 	return res;
 }
 
@@ -754,7 +752,6 @@ int test_ss_cat_substr_u()
 	ss_free(&a, &b, &c, &d);
 	return res;
 }
-#endif
 
 int test_ss_cat_cn()
 {
@@ -1040,21 +1037,19 @@ int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 	return res;
 }
 
-#if 0 /* FIXME: rewrite using sv_t vector */
 int test_ss_split()
 {
-	struct SSUBV *v = NULL;
+	sv_t *v = NULL;
 	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" ");
 	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
 	res |= res ? 0 :
-	   (ssv_get_sub_off(v, 0) == 0 && ssv_get_sub_size(v, 0) == 3 &&
-	    ssv_get_sub_off(v, 1) == 4 && ssv_get_sub_size(v, 1) == 3 &&
-	    ssv_get_sub_off(v, 2) == 8 && ssv_get_sub_size(v, 2) == 3 ? 0 : 4);
+		(ss_nth_offset(v, 0) == 0 && ss_nth_size(v, 0) == 3 &&
+		 ss_nth_offset(v, 1) == 4 && ss_nth_size(v, 1) == 3 &&
+		 ss_nth_offset(v, 2) == 8 && ss_nth_size(v, 2) == 3 ? 0 : 4);
 	ss_free(&a, &b);
-	ssv_free(&v);
+	sv_free(&v);
 	return res;
 }
-#endif
 
 int validate_cmp(int res1, int res2)
 {
@@ -2115,11 +2110,9 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());
 	STEST_ASSERT(test_ss_dup_s());
-#if 0	/* FIXME: rewrite using sv_t vector */
 	STEST_ASSERT(test_ss_dup_sub());
 	STEST_ASSERT(test_ss_dup_substr());
 	STEST_ASSERT(test_ss_dup_substr_u());
-#endif
 	STEST_ASSERT(test_ss_dup_cn());
 	STEST_ASSERT(test_ss_dup_c());
 	STEST_ASSERT(test_ss_dup_wn());
@@ -2157,11 +2150,9 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_cpy(""));
 	STEST_ASSERT(test_ss_cpy("hello"));
 	STEST_ASSERT(test_ss_cpy_cn());
-#if 0 /* FIXME: rewrite using sv_t vector */
 	STEST_ASSERT(test_ss_cpy_sub());
 	STEST_ASSERT(test_ss_cpy_substr());
 	STEST_ASSERT(test_ss_cpy_substr_u());
-#endif
 	STEST_ASSERT(test_ss_cpy_c(""));
 	STEST_ASSERT(test_ss_cpy_c("hello"));
 	STEST_ASSERT(test_ss_cpy_w(L"hello", "hello"));
@@ -2192,11 +2183,9 @@ int main(int argc, char **argv)
 		STEST_ASSERT(test_ss_cpy_char(0x24b62, "\xf0\xa4\xad\xa2"));
 	}
 	STEST_ASSERT(test_ss_cat("hello", "all"));
-#if 0 /* FIXME: rewrite using sv_t vector */
 	STEST_ASSERT(test_ss_cat_sub());
 	STEST_ASSERT(test_ss_cat_substr());
 	STEST_ASSERT(test_ss_cat_substr_u());
-#endif
 	STEST_ASSERT(test_ss_cat_cn());
 	STEST_ASSERT(test_ss_cat_c("hello", "all"));
 	char btmp1[400], btmp2[400];
@@ -2255,9 +2244,7 @@ int main(int argc, char **argv)
 #endif
 	STEST_ASSERT(test_ss_find("full text", "text", 5));
 	STEST_ASSERT(test_ss_find("full text", "hello", S_NPOS));
-#if 0 /* FIXME: rewrite using sv_t vector */
 	STEST_ASSERT(test_ss_split());
-#endif
 	STEST_ASSERT(test_ss_cmp("hello", "hello2", -1));
 	STEST_ASSERT(test_ss_cmp("hello2", "hello", 1));
 	STEST_ASSERT(test_ss_cmp("hello", "hello", 0));

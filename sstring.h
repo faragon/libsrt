@@ -14,6 +14,7 @@ extern "C" {
 
 #include "scommon.h"
 #include "sdata.h"
+#include "svector.h"
 
 /*
  * Constants
@@ -56,40 +57,8 @@ struct  SSTR_Full
 	char str[1]; /* +1: '\0' */
 };
 
-#if 0	/* FIXME: rewrite using sv_t vector */
-/*
- * Subtring: reference within a string
- */
-
-struct SSUB
-{
-	size_t off;
-	size_t size;
-};
-
-/*
- * Substring vector structure (ss_split)
- */
-
-struct SSUBV
-{
-	struct SData_Full df;
-	size_t size;
-	size_t max_size;
-	size_t elem_size;
-	struct SSUB subs[1];
-};
-#endif
-
 #define EMPTY_SS \
 	{ { { 0, 1, 0, 0, 1, 1, 1, 0 }, 0, SS_METAINFO_SMALL }, 0, { 0 } }
-
-#if 0	/* FIXME: rewrite using sv_t vector */
-#define EMPTY_SSUB \
-	{ 0, 0 }
-#define EMPTY_SSUBV \
-	{ EMPTY_SData_Full(sizeof(struct SSUBV)), 0, 0, 0, EMPTY_SSUB }
-#endif
 
 /*
  * Types
@@ -103,7 +72,6 @@ typedef struct SData ss_t; /* "Hidden" structure (accessors are provided) */
 
 #ifdef S_USE_VA_ARGS
 #define ss_free(...) ss_free_aux(S_NARGS_SPW(__VA_ARGS__), __VA_ARGS__)
-#define ssv_free(...) ssv_free_aux(S_NARGS_SSVPW(__VA_ARGS__), __VA_ARGS__)
 #define ss_cpy_c(s, ...) ss_cpy_c_aux(s, S_NARGS_CR(__VA_ARGS__), __VA_ARGS__)
 #define ss_cpy_w(s, ...) ss_cpy_w_aux(s, S_NARGS_WR(__VA_ARGS__), __VA_ARGS__)
 #define ss_cat(s, ...) ss_cat_aux(s, S_NARGS_SR(__VA_ARGS__), __VA_ARGS__)
@@ -111,7 +79,6 @@ typedef struct SData ss_t; /* "Hidden" structure (accessors are provided) */
 #define ss_cat_w(s, ...) ss_cat_w_aux(s, S_NARGS_WR(__VA_ARGS__), __VA_ARGS__)
 #else
 #define ss_free(...)
-#define ssv_free(...)
 #define ss_cpy_c(s, ...) return NULL;
 #define ss_cpy_w(s, ...) return NULL;
 #define ss_cat(s, ...) return NULL;
@@ -154,9 +121,7 @@ void ss_clear_errors(ss_t *s);
  */
 
 ss_t *ss_dup_s(const ss_t *src);
-#if 0   /* FIXME: rewrite using sv_t vector */
-ss_t *ss_dup_sub(const ss_t *src, const struct SSUB *sub);
-#endif
+ss_t *ss_dup_sub(const ss_t *src, const sv_t *offsets, const size_t nth);
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n);
 ss_t *ss_dup_substr_u(const ss_t *src, const size_t char_off, const size_t n);
 ss_t *ss_dup_cn(const char *src, const size_t src_size);
@@ -186,9 +151,7 @@ ss_t *ss_dup_char(const int c);
  */
 
 ss_t *ss_cpy(ss_t **s, const ss_t *src);
-#if 0   /* FIXME: rewrite using sv_t vector */
-ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const struct SSUB *sub);
-#endif
+ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offsets, const size_t nth);
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n);
 ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n);
 ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size);
@@ -218,9 +181,7 @@ ss_t *ss_cpy_char(ss_t **s, const int c);
  */
 
 ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...);
-#if 0   /* FIXME: rewrite using sv_t vector */
-ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const struct SSUB *sub);
-#endif
+ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offsets, const size_t nth);
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n);
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n);
 ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size);
@@ -278,9 +239,9 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
  */
 
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt);
-#if 0   /* FIXME: rewrite using sv_t vector */
-size_t ss_split(struct SSUBV **v, const ss_t *src, const ss_t *separator);
-#endif
+size_t ss_split(sv_t **offsets, const ss_t *src, const ss_t *separator);
+size_t ss_nth_size(const sv_t *offsets, const size_t nth);
+size_t ss_nth_offset(const sv_t *offsets, const size_t nth);
 
 /*
  * Compare

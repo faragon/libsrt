@@ -114,7 +114,7 @@ struct sd_conf
 	size_t range_small;
 	size_t metainfo_small;
 	size_t metainfo_full;
-	/* Fixed size elements (ss_t, ssv_t): */
+	/* Fixed size elements (ss_t): */
 	size_t fixed_elem_size;
 	/* Variable size objects (sv_t): */
 	size_t header_size;

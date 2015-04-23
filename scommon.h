@@ -108,11 +108,6 @@ extern "C" {
 	#define S_NARGS_SR(...) (sizeof((const ss_t * []){__VA_ARGS__})/sizeof(const ss_t *))
 	#define S_NARGS_SPW(...) (sizeof((ss_t ** []){__VA_ARGS__})/sizeof(ss_t **))
 	#define S_NARGS_SPR(...) (sizeof((const ss_t ** []){__VA_ARGS__})/sizeof(const ss_t **))
-	/* struct SSUBV * */
-	#define S_NARGS_SSVW(...) (sizeof((struct SSUBV * []){__VA_ARGS__})/sizeof(struct SSUBV *))
-	#define S_NARGS_SSVR(...) (sizeof((const struct SSUBV * []){__VA_ARGS__})/sizeof(const struct SSUBV *))
-	#define S_NARGS_SSVPW(...) (sizeof((struct SSUBV ** []){__VA_ARGS__})/sizeof(struct SSUBV **))
-	#define S_NARGS_SSVPR(...) (sizeof((const struct SSUBV ** []){__VA_ARGS__})/sizeof(const struct SSUBV **))
 	/* sv_t * */
 	#define S_NARGS_SVW(...) (sizeof((sv_t * []){__VA_ARGS__})/sizeof(sv_t *))
 	#define S_NARGS_SVR(...) (sizeof((const sv_t * []){__VA_ARGS__})/sizeof(const sv_t *))
