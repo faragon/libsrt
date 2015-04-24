@@ -125,6 +125,9 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 	memset(f, 0, sizeof(*f));
 	switch (t)
 	{
+	case SM_U32U32:
+		f->cmp = (st_cmp_t)cmp_u;
+		break;
 	case SM_I32I32:
 		f->cmp = (st_cmp_t)cmp_i;
 		break;
