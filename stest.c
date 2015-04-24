@@ -1873,6 +1873,44 @@ int test_sm_sp_at()
 	return 0; /* TODO */
 }
 
+#define TEST_SM_X_COUNT(T, k, v, END)		\
+	int res = 0;				\
+	size_t i, tcount = 100;			\
+	sm_t *m = sm_alloc(T, tcount);		\
+	for (i = 0; i < tcount; i++)		\
+		sm_uu32_insert(&m, k, v);	\
+	for (i = 0; i < tcount; i++)		\
+		if (!sm_u_count(m, k)) {	\
+		res = 1 + (int)i;		\
+		break;				\
+	}					\
+	sm_free(&m);				\
+	END;					\
+	return res;
+
+int test_sm_u_count()
+{
+	TEST_SM_X_COUNT(SM_U32U32, (unsigned)i, 1, {});
+}
+
+int test_sm_i_count()
+{
+	TEST_SM_X_COUNT(SM_I32I32, (int)i, 1, {});
+}
+
+int test_sm_s_count()
+{
+	ss_t *s = ss_dup_c("a_1"), *t = ss_dup_c("a_2"), *u = ss_dup_c("a_3");
+	sm_t *m = sm_alloc(SM_StrInt, 3);
+	sm_si_insert(&m, s, 1);
+	sm_si_insert(&m, t, 2);
+	sm_si_insert(&m, u, 3);
+	int res = sm_s_count(m, s) && sm_s_count(m, t) && sm_s_count(m, u) ? 0 : 1;
+	ss_free(&s, &t, &u);
+	sm_free(&m);
+	return res;
+}
+
 int test_sm_ii32_insert()
 {
 	return 0; /* TODO */
@@ -2357,6 +2395,9 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_sm_ip_at());
 	STEST_ASSERT(test_sm_si_at());
 	STEST_ASSERT(test_sm_ss_at());
+	STEST_ASSERT(test_sm_u_count());
+	STEST_ASSERT(test_sm_i_count());
+	STEST_ASSERT(test_sm_s_count());
 	STEST_ASSERT(test_sm_sp_at());
 	STEST_ASSERT(test_sm_ii32_insert());
 	STEST_ASSERT(test_sm_uu32_insert());

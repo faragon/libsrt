@@ -37,6 +37,7 @@ enum eSM_Type
 
 struct SMapIx { stn_t n; sint_t k; };
 struct SMapSx { stn_t n; ss_t *k; };
+struct SMapSX { stn_t n; const ss_t *k; };
 struct SMapii { stn_t n; sint32_t k, v; };
 struct SMapuu { stn_t n; suint32_t k, v; };
 struct SMapII { struct SMapIx x; sint_t v; };
@@ -92,6 +93,14 @@ const void *sm_ip_at(const sm_t *m, const sint_t k);
 const sint_t sm_si_at(const sm_t *m, const ss_t *k);
 const ss_t *sm_ss_at(const sm_t *m, const ss_t *k);
 const void *sm_sp_at(const sm_t *m, const ss_t *k);
+
+/*
+ * Existence check
+ */
+
+const sbool_t sm_u_count(const sm_t *m, const suint32_t k);
+const sbool_t sm_i_count(const sm_t *m, const sint_t k);
+const sbool_t sm_s_count(const sm_t *m, const ss_t *k);
 
 /*
  * Insert

@@ -424,6 +424,34 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k)
 }
 
 /*
+ * Existence check
+ */
+
+const sbool_t sm_u_count(const sm_t *m, const suint32_t k)
+{
+	ASSERT_RETURN_IF(!m, S_FALSE);
+	struct SMapuu n;
+	n.k = k;
+	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
+}
+
+const sbool_t sm_i_count(const sm_t *m, const sint_t k)
+{
+	ASSERT_RETURN_IF(!m, S_FALSE);
+	struct SMapIx n;
+	n.k = k;
+	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
+}
+
+const sbool_t sm_s_count(const sm_t *m, const ss_t *k)
+{
+	ASSERT_RETURN_IF(!m, S_FALSE);
+	struct SMapSX n;
+	n.k = k;
+	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
+}
+
+/*
  * Insert
  */
 
@@ -518,6 +546,7 @@ const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSI n;
+	n.x.k = NULL;
 	ss_cpy(&n.x.k, k);
 	n.v = v;
 	return st_insert((st_t **)m, (const stn_t *)&n);
@@ -534,6 +563,7 @@ const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSS n;
+	n.x.k = n.v = NULL;
 	ss_cpy(&n.x.k, k);
 	ss_cpy(&n.v, v);
 	return st_insert((st_t **)m, (const stn_t *)&n);
@@ -550,6 +580,7 @@ const sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSP n;
+	n.x.k = NULL;
 	ss_cpy(&n.x.k, k);
 	n.v = v;
 	return st_insert((st_t **)m, (const stn_t *)&n);
