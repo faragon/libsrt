@@ -72,7 +72,7 @@ void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v);
 
 /* SD_BUILDPROTS(st) */
 
-#define sm_free(...) st_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
+#define sm_free(...) sm_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
 
 /*
  * Accessors
