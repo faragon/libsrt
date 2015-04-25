@@ -1873,7 +1873,7 @@ int test_sm_sp_at()
 	return 0; /* TODO */
 }
 
-#define TEST_SM_X_COUNT(T, k, v, END)		\
+#define TEST_SM_X_COUNT(T, k, v)		\
 	int res = 0;				\
 	size_t i, tcount = 100;			\
 	sm_t *m = sm_alloc(T, tcount);		\
@@ -1885,17 +1885,16 @@ int test_sm_sp_at()
 		break;				\
 	}					\
 	sm_free(&m);				\
-	END;					\
 	return res;
 
 int test_sm_u_count()
 {
-	TEST_SM_X_COUNT(SM_U32U32, (unsigned)i, 1, {});
+	TEST_SM_X_COUNT(SM_U32U32, (unsigned)i, 1);
 }
 
 int test_sm_i_count()
 {
-	TEST_SM_X_COUNT(SM_I32I32, (int)i, 1, {});
+	TEST_SM_X_COUNT(SM_I32I32, (int)i, 1);
 }
 
 int test_sm_s_count()
