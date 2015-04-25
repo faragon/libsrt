@@ -59,6 +59,7 @@ static size_t sd_size_to_alloc_size(const size_t header_size,
 
 size_t sd_get_size(const sd_t *d)
 {
+	RETURN_IF(!d, 0);
 	return d->is_full ? ((struct SData_Full *)d)->size :
 		((d->size_h << 8) | ((struct SData_Small *)d)->size_l);
 }

@@ -815,6 +815,12 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 }
 
 /*
+ * Generated from template
+ */
+
+SD_BUILDFUNCS(ss)
+
+/*
  * Allocation
  */
 
@@ -828,38 +834,9 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
 	return (ss_t *)sd_alloc_into_ext_buf(buffer, buffer_size, &ssf);
 }
 
-ss_t *ss_shrink_to_fit(ss_t **s)
-{
-	return sd_shrink_to_fit((sd_t **)s, &ssf);
-}
-
-size_t ss_grow(ss_t **s, const size_t extra_size)
-{
-	return sd_grow((sd_t **)s, extra_size, &ssf);
-}
-
-size_t ss_reserve(ss_t **s, const size_t max_size)
-{
-	return sd_reserve((sd_t **)s, max_size, &ssf);
-}
-
-void ss_free_aux(const size_t nargs, ss_t **s, ...)
-{
-	va_list ap;
-	va_start(ap, s);
-	sd_free_va(nargs, (sd_t **)s, ap);
-	va_end(ap);
-}
-
 /*
  * Accessors
  */
-
-size_t ss_len(const ss_t *s)
-{
-	S_ASSERT(s);
-	return s ? get_size(s) : 0;
-}
 
 size_t ss_len_u(const ss_t *s)
 {

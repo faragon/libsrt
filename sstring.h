@@ -87,6 +87,12 @@ typedef struct SData ss_t; /* "Hidden" structure (accessors are provided) */
 #endif
 
 /*
+ * Generated from template
+ */
+
+SD_BUILDPROTS(ss)
+
+/*
  * Allocation
  */
 
@@ -95,17 +101,12 @@ ss_t *ss_alloc(const size_t initial_heap_reserve);
 	ss_alloc_into_ext_buf(alloca(SS_SIZE_TO_ALLOC_SIZE(stack_reserve)), \
 			      SS_SIZE_TO_ALLOC_SIZE(stack_reserve))
 ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size);
-ss_t *ss_shrink_to_fit(ss_t **s);
-size_t ss_grow(ss_t **s, const size_t extra_size);
-size_t ss_reserve(ss_t **s, const size_t max_size);
-void ss_free_aux(const size_t nargs, ss_t **s, ...);
 void ss_free_call(ss_t **s);
 
 /*
  * Accessors
  */
 
-size_t ss_len(const ss_t *s);
 size_t ss_len_u(const ss_t *s);
 size_t ss_capacity(const ss_t *s);
 size_t ss_len_left(const ss_t *s);
