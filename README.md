@@ -146,7 +146,7 @@ Vector-specific disadvantages/limitations
 Tree-specific advantages
 ===
 
-* Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy.
+* Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require up to 8x more memory).
 * Top-down implementation (insertion/deletion/traverse/search)
 * Zero node allocation cost (via pre-allocation or amortization)
 * O(1) allocation and deallocation
@@ -162,7 +162,7 @@ Tree-specific disadvantages/limitations
 Map-specific advantages
 ===
 
- * Abstraction over the tree implementation.
+ * Abstraction over the tree implementation, with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
  * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
  * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
  * O(1) for allocation
@@ -176,70 +176,6 @@ Map-specific disadvantages/limitations
 ===
 
 *
-
-String usage overview
-===
-
-Introduction
----
-
-
-"hello world" example:
-
-```c
-example...
-```
-
-heap and stack
-
-Observations:
-
-* o1
-* o2
-
-Allocation
----
-
-Allocation, reserve, free. Stack, heap, etc.
-
-```c
-example...
-```
-
-
-
-Operations
----
-
-```c
-example...
-```
-
-
-
-Transformation
----
-
-
-
-Internal data direct access
----
-
-
-
-Error handling and implicit behavior
----
-
-
-Vector usage overview
-===
-
-...
-
-Map usage overview
-===
-
-...
 
 License
 ===
