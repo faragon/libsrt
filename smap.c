@@ -148,17 +148,6 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 * Allocation
 */
 
-/*! Generic map allocation (including using of external buffer, e.g. stack or others)
- *! Before using this, check if sm_alloc or sm_alloca work better for your case.
- * \param[in] t map type
- * \param[in] ext_buf bool: using an already allocated external buffer
- * \param[in] n reserve memory for n elements
- * \param[in] buffer external buffer
- * \param[in] buffer_size external buffer size
- * \return allocated map
- * \note O(1)
- */
-
 sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
 		   const size_t n, void *buffer,
 		   const size_t buffer_size)
@@ -168,12 +157,6 @@ sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
 	return (sm_t *)st_alloc_raw(&f, ext_buf, n, buffer, buffer_size);
 }
 
-/*! Allocate map (using built-in dynamic memory handling)
- * \param[in] t map type
- * \param[in] n reserve memory for n elements
- * \return allocated map
- * \note O(1)
- */
 sm_t *sm_alloc(const enum eSM_Type t, const size_t n)
 {
 	struct STConf f;
@@ -181,14 +164,6 @@ sm_t *sm_alloc(const enum eSM_Type t, const size_t n)
 	return (sm_t *)st_alloc(&f, n);
 }
 
-/*! Free one or more maps. Instead of sm_free_aux, use sm_free, which is a
- *! macro that already counts the number of arguments, not needing the
- *! 'nargs' parameter.
- * \param[in] nargs number of maps to delete
- * \param[in] m map
- * \param[in] ... more maps to be deleted (optional)
- * \note O(1) for simple maps, O(n) for maps having nodes with strings
- */
 void sm_free_aux(const size_t nargs, sm_t **m, ...)
 {
 	va_list ap;
@@ -205,21 +180,11 @@ void sm_free_aux(const size_t nargs, sm_t **m, ...)
 	va_end(ap);
 }
 
-/*! Make the map use the minimum possible memory
- * \param[in,out] m map
- * \return map pointer (optional usage, input already modified)
- * \note O(n)
- */
 sm_t *sm_shrink_to_fit(sm_t **m)
 {
 	return (sm_t *)st_shrink_to_fit((st_t **)m);
 }
 
-/*! Returns map node size from map type
- * \param[in] t map type
- * \return bytes required for storing a single node
- * \note O(1)
- */
 size_t sm_elem_size(const enum eSM_Type t)
 {
 	switch (t) {
@@ -235,21 +200,11 @@ size_t sm_elem_size(const enum eSM_Type t)
 	return 0;
 }
 
-/*! Map copy
- * \param[in] t map type
- * \return map copy
- * \note O(n)
- */
 sm_t *sm_dup(const sm_t *src)
 {
 	return st_dup(src);
 }
 
-/*! Reset tree: empty map (keeping map type)
- * \param[in] m map
- * \return S_TRUE: ok, S_FALSE: invalid input map
- * \note O(1) for integer-only trees, O(n) when using strings
- */
 sbool_t sm_reset(sm_t *m)
 {
 	RETURN_IF(!m, S_FALSE);
@@ -272,11 +227,6 @@ sbool_t sm_reset(sm_t *m)
 	return S_TRUE;
 }
 
-/*! Changes defaults for accessing invalid offsets in sm_xx_at()
- * \param[in,out] m map
- * \param[in] i_def_v default integer value
- * \param[in] s_def_v default string value (constant reference)
- */
 void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v)
 {
 	if (m) {
@@ -289,11 +239,6 @@ void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v)
  * Accessors
  */
 
-/*! Map number of elements
- * \param[in] m map
- * \return number of elements
- * \note O(log(n))
- */
 size_t sm_len(const sm_t *m)
 {
 	return st_len(m);
@@ -303,12 +248,6 @@ size_t sm_len(const sm_t *m)
  * Random access
  */
 
-/*! Access to specific map element (key: int32, value: int32)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT32_MIN);
@@ -318,12 +257,6 @@ const sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 	return nr ? nr->v : (sint32_t)m->f.iaux1;
 }
 
-/*! Access to specific map element (key: uint32, value: uint32)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
 {
 	ASSERT_RETURN_IF(!m, 0);
@@ -333,12 +266,6 @@ const suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
 	return nr ? nr->v : (suint32_t)m->f.iaux1;
 }
 
-/*! Access to specific map element (key: int, value: int)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const sint_t sm_ii_at(const sm_t *m, const sint_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT_MIN);
@@ -348,12 +275,6 @@ const sint_t sm_ii_at(const sm_t *m, const sint_t k)
 	return nr ? nr->v : m->f.iaux1;
 }
 
-/*! Access to specific map element (key: int, value: string)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const ss_t *sm_is_at(const sm_t *m, const sint_t k)
 {
 	ASSERT_RETURN_IF(!m, ss_empty());
@@ -363,12 +284,6 @@ const ss_t *sm_is_at(const sm_t *m, const sint_t k)
 	return nr ? nr->v : (ss_t *)m->f.paux1;
 }
 
-/*! Access to specific map element (key: int, value: pointer)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const void *sm_ip_at(const sm_t *m, const sint_t k)
 {
 	ASSERT_RETURN_IF(!m, NULL);
@@ -378,12 +293,6 @@ const void *sm_ip_at(const sm_t *m, const sint_t k)
 	return nr ? nr->v : NULL;
 }
 
-/*! Access to specific map element (key: string, value: int)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const sint_t sm_si_at(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, SINT_MIN);
@@ -393,12 +302,6 @@ const sint_t sm_si_at(const sm_t *m, const ss_t *k)
 	return nr ? nr->v : m->f.iaux1;
 }
 
-/*! Access to specific map element (key: string, value: string)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const ss_t *sm_ss_at(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, ss_empty());
@@ -408,12 +311,6 @@ const ss_t *sm_ss_at(const sm_t *m, const ss_t *k)
 	return nr ? nr->v : (ss_t *)m->f.paux1;
 }
 
-/*! Access to specific map element (key: string, value: pointer)
- * \param[in] m map
- * \param[in] k key of the element to be located
- * \return key-value value associated data
- * \note O(log(n))
- */
 const void *sm_sp_at(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, NULL);
@@ -455,13 +352,6 @@ const sbool_t sm_s_count(const sm_t *m, const ss_t *k)
  * Insert
  */
 
-/*! Insert element into a map (key: int32, value: int32)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -471,13 +361,6 @@ const sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: uint32, value: uint32)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -487,13 +370,6 @@ const sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: integer, value: integer)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -503,13 +379,6 @@ const sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: integer, value: string)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -519,13 +388,6 @@ const sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: integer, value: pointer)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -535,13 +397,6 @@ const sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: string, value: integer)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -552,13 +407,6 @@ const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: string, value: string)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -569,13 +417,6 @@ const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-/*! Insert element into a map (key: string, value: pointer)
- * \param[in,out] m map
- * \param[in] k key of the element to be inserted
- * \param[in] v associated value for the element to be inserted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 const sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -590,12 +431,6 @@ const sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
  * Delete
  */
 
-/*! Deletes an element of a map (key: integer)
- * \param[in,out] m map
- * \param[in] k key for locating the element to be deleted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 sbool_t sm_i_delete(sm_t *m, const sint_t k)
 {
 	struct SMapIx ix;
@@ -627,12 +462,6 @@ sbool_t sm_i_delete(sm_t *m, const sint_t k)
 	return st_delete(m, n, callback);
 }
 
-/*! Deletes an element of a map (key: string)
- * \param[in,out] m map
- * \param[in] k key for locating the element to be deleted
- * \return S_TRUE: ok, S_FALSE: key not found
- * \note O(log(n))
- */
 sbool_t sm_s_delete(sm_t *m, const ss_t *k)
 {
 	stn_callback_t callback = NULL;
@@ -650,37 +479,17 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k)
  * Enumeration / export data
  */
 
-/*! Enumerates elements from a map (not sorted, i.e fast)
- * \param[in,out] m map
- * \param[in] f callback function
- * \param[in,out] context callback associated context (optional)
- * \return number of elements enumerated
- * \note O(n)
- */
 const stn_t *sm_enum(const sm_t *m, const stndx_t i)
 {
 	return st_enum(m, i);
 }
 
-/*! Enumerates elements from a map (sorted)
- * \param[in,out] m map
- * \param[in] f callback function
- * \param[in,out] context callback associated context (optional)
- * \return number of elements enumerated
- * \note O(n log(n))
- */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context)
 {
 	return st_traverse_inorder((const st_t *)m, f, context);
 }
 
 
-/*! Put map elements in a vector (sorted by key)
- * \param[in] m input map
- * \param[out] kv key output vector
- * \param[out] vv value output vector
- * \return Internal tree depth
- */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 {
 	RETURN_IF(!kv || !vv, 0);
