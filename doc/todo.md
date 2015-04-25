@@ -8,14 +8,9 @@ Short-term
 * size/len incoherences (e.g. get_len / get_size)
 * adjust size: string structure is not properly used.
 * add overflow checks, using "s_size_t_overflow"
-* Add tree/map dup functions.
-* rb tree: study cache locality split as l/r/isred/k and node data, so the search do not dirt CPU cache with node data. Not sure the extra complexity it would help, I bet it will.
 * Make last-inserted nodes cache, in order to speed-up delete.
-* Add grow() heuristics, e.g. increase size: 5x if below 100 elements, 2x if below 10k elements, 1.5x over 10k elements.
 * Add st_shl and st_shr for shifting elements on a vector.
-* think about splitting node access: avoid exposing tree structures in sm_* functions
 * Example: RGB888 to palette
-* Add exit check to traversal callbacks
 * sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
 * Write examples
 
