@@ -33,7 +33,7 @@ Integer-key maps
                 m[i] = 1;
 ```
 ```c
-        sm_t *m = sm_alloc(SM_U32U32, count);
+        sm_t *m = sm_alloc(SM_U32U32, 1);
         for (size_t i = 0; i < count; i++)
                 sm_uu32_insert(&m, i, 1);
         sm_free(&m);
@@ -41,7 +41,7 @@ Integer-key maps
 
 umap: g++ unordered_map
 map: g++ map
-smap: gcc libsrt smap
+smap: gcc libsrt smap (starting with just one element allocated)
 gcc/g++ 4.8.2-19ubuntu1, Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 
 | Test | Element count | Memory (MB) | Execution time (s) |
@@ -59,7 +59,7 @@ gcc/g++ 4.8.2-19ubuntu1, Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 | map    | 10^8 | 4831 | 63.444 |
 | smap   | 10^8 | 1610 | 59.804 |
 
-In this case, libsrt smap wins in the memory usage to both GNU`s std::map (RB tree) and std::unordered_map (hash map). In speed terms, libsrt smap and std::map are similar (same algorithm), while std::unordered_map wins because using both hash tables and being the hashing of 32-bit integer very simple. Currently libsrt smap is not as optimized as it could be (more optimizations will be added after being sure there are no implementation errors left), the target will be being competitive with hash tables for up to 10^7 elements for the case of int-int maps.
+In this case, libsrt smap wins in the memory usage to both GNU`s std::map (RB tree) and std::unordered_map (hash map). In speed terms, libsrt smap and std::map are similar (same algorithm), while std::unordered_map wins because using both hash tables and being the hashing of 32-bit integer very simple. Currently libsrt smap is not as optimized as it could be (more optimizations will be added after being sure there are no implementation errors left), the target will be being competitive with hash tables up to 10^7 elements for the case of int-int maps.
 
 String-key maps
 ---
