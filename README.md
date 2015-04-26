@@ -27,12 +27,13 @@ Generic advantages
 * Space-optimized
  * Dynamic one-block linear addressing space.
  * Internal structures use indexes instead of pointers.
+ * More information: doc/benchmarks.md
 
 * Time-optimized
  * Buffer direct access
  * Preallocation hints (reducing memory allocation calls)
  * Heap and stack memory allocation support (s\*\_alloca)
- * Fast O(log(n)) algorithms run as fast as other O(1) implementations because of space-optimization (cache hit).
+ * More information: doc/benchmarks.md
 
 * Predictable (suitable for hard and soft real-time)
  * Predictable execution speed (O(1), O(n), and O(log n) algorithms).
@@ -146,7 +147,7 @@ Vector-specific disadvantages/limitations
 Tree-specific advantages
 ===
 
-* Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require up to 8x more memory).
+* Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require at least 3x more memory -see doc/benchmarks.md-).
 * Top-down implementation (insertion/deletion/traverse/search)
 * Zero node allocation cost (via pre-allocation or amortization)
 * O(1) allocation and deallocation
@@ -206,6 +207,4 @@ Acknowledgements and references
 ---
 
 See doc/references.md file for acknowledgements and references.
-
-
 
