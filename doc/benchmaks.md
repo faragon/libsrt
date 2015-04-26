@@ -1,14 +1,7 @@
 String benchmarks
 ===
 
-Copy
----
- 
-Search
----
-
-Case conversion
----
+To do: copy, search, case, etc.
 
 Vector benchmarks
 ===
@@ -39,10 +32,10 @@ Integer-key maps
         sm_free(&m);
 ```
 
-umap: g++ unordered_map
-map: g++ map
-smap: gcc libsrt smap (starting with just one element allocated)
-gcc/g++ 4.8.2-19ubuntu1, Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
+* umap: g++ unordered_map
+* map: g++ map
+* smap: gcc libsrt smap (starting with just one element allocated)
+* gcc/g++ 4.8.2-19ubuntu1, Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 
 | Test | Element count | Memory (MB) | Execution time (s) |
 | ------------------- |:----:|:----:|:-----:|
