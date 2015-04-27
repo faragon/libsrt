@@ -26,6 +26,7 @@ const char *sv_type_to_label(const enum eSV_Type t);
 void sv_log_obj(ss_t **log, const sv_t *v);
 void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f);
 void sm_log_obj(ss_t **log, const sm_t *m);
+void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf_size);
 
 #ifdef __cplusplus
 };      /* extern "C" { */

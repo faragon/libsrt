@@ -29,13 +29,11 @@ extern "C" {
  * Macros (not user-serviceable)
  */
 
-#if 1 /* TODO: to be removed (only stest.c relies on it) */
 #define SD_SIZE_TO_ALLOC_SIZE(size, small_range_max, mt_small, mt_full) \
 	(size + (size <= small_range_max ? mt_small : mt_full))
 #define SS_SIZE_TO_ALLOC_SIZE(s_size)					\
 	SD_SIZE_TO_ALLOC_SIZE(s_size, SS_RANGE_SMALL,			\
 			      SS_METAINFO_SMALL, SS_METAINFO_FULL)
-#endif
 
 /*
  * String base structure

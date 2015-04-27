@@ -21,48 +21,6 @@ const char *sv_type_to_label(const enum eSV_Type t)
 	return "?";
 }
 
-/* TODO: move this this example to the documentation:
-	ss_t *log = ss_alloca(64000);
-	ss_cat_printf(&log, 512, "test_sv_push_pop_i: test [%zu/%zu]\n", i + 1, ntests);
-	sv_push_i(&a, -1);
-	sv_push_i(&a, -1);
-	sv_push_i(&b, -1);
-	sv_push_i(&b, -1);
-	sv_push_i(&b, -1);
-	sv_log_obj(&log, a);
-	sv_log_obj(&log, b);
-	fprintf(stderr, "%s", ss_to_c(log));
-
-
-ss_t *log = NULL;
-sv_t *a = sv_alloc_t(SV_I64, 0);
-sv_push_i(&a, 0x1000000000000123);
-sv_t *b = sv_dup(a);
-ss_cat_c(&log, "a: ");
-sv_log_obj(&log, a);
-ss_cat_c(&log, "b: ");
-sv_log_obj(&log, b);
-ss_cat_printf(&log, 512, "a: %p, b: %p, a.t: %i, b.t: %i, capacity(a): %zu, capacity(b): %zu\n",
-a, b, a->sv_type, b->sv_type, sv_capacity(a), sv_capacity(b));
-fprintf(stderr, "%s\n", ss_to_c(log));
-sv_free(&a, &b);
-
-ss_t *log = NULL;
-ss_cat_c(&log, "a: ");
-sv_log_obj(&log, a);
-fprintf(stderr, "%s\n", ss_to_c(log));
-sv_free(&a, &b);
-
-fprintf(stderr, "a: %p, a2: %p, res: %08X\n", b, b2, (unsigned)res);
-ss_t *log = NULL;
-ss_cat_c(&log, "a: ");
-sv_log_obj(&log, b);
-ss_cat_c(&log, "a2: ");
-sv_log_obj(&log, b2);
-fprintf(stderr, "%s\n", ss_to_c(log));
-exit(0);
-
-*/
 void sv_log_obj(ss_t **log, const sv_t *v)
 {
 	if (!log)
@@ -186,7 +144,6 @@ void sm_log_obj(ss_t **log, const sm_t *m)
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
-#if 0
 void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf_size)
 {
 	if (!log)
@@ -194,8 +151,7 @@ void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf
 	ss_t *aux = ss_dup_cn(buf, buf_size);
 	if (label)
 		ss_cat_c(log, label);
-	ss_cat_tohex(log, aux, S_FALSE);
+	ss_cat_tohex(log, aux);
 	ss_free(&aux);
 }
-#endif
 
