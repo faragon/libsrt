@@ -4,7 +4,7 @@ Common
 * umap: g++ unordered_map
 * map: g++ map
 * smap: gcc libsrt smap
-* gcc/g++ 4.8.2-19ubuntu1 (x86_64), Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
+* gcc/g++ 4.8.2-19ubuntu1 (x86_64) (optimization flags: -O2), Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 
 
 String benchmarks
