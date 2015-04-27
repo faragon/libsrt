@@ -121,20 +121,13 @@ static st_t *st_check(st_t **t)
 
 static stn_t *locate_parent(st_t *t, const struct NodeContext *son, enum STNDir *d)
 {
-	stndx_t c = t->root;
-	if (c == son->x)
+	if (t->root == son->x)
 		return son->n;
-	for (; c != ST_NIL;) {
-		stn_t *cn = get_node(t, c);
-		const sbool_t l = cn->l == son->x,
-			      r = cn->r == son->x;
-		if (l || r) {
-			*d = l ? ST_Left : ST_Right;
-			return cn;
-		}
-		c = get_lr(cn, t->f.cmp(cn, son->n) < 0 ? ST_Right : ST_Left);
-	}
-	return NULL;
+	stn_t *cn = get_node(t, t->root);
+	for (; cn && cn->l != son->x && cn->r != son->x;)
+		cn = get_node(t, get_lr(cn, t->f.cmp(cn, son->n) < 0 ? ST_Right : ST_Left));
+	*d = cn && cn->l == son->x ? ST_Left : ST_Right;
+	return cn;
 }
 
 static size_t get_size(const st_t *t)
@@ -216,26 +209,30 @@ static enum STNDir cd(const enum STNDir d)
 	set_red(t, x, S_TRUE);			\
 	set_red(t, y, S_FALSE);
 
-static stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, const enum STNDir xd)
+static stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+							const enum STNDir xd)
 {
 	F_rotate1X;
 	return y;
 }
 
-static void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, const enum STNDir xd, stn_t *xpn)
+static void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+					const enum STNDir xd, stn_t *xpn)
 {
 	F_rotate1X;
 	set_lr(xpn, d, y);
 }
 
-static stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, const enum STNDir xd, stndx_t *y_out)
+static stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+					const enum STNDir xd, stndx_t *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
 	return yn;
 }
 
-static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, const enum STNDir xd)
+static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+							const enum STNDir xd)
 {
 	const stndx_t child = get_lr(xn, xd);
 	stn_t *child_node = get_node(t, child);
@@ -247,10 +244,10 @@ static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d, c
  * If current node is the tree root node, change the root index so it targets
  * the new node.
  */
-static void st_checkfix_root(st_t *t, stndx_t pivot_node, stndx_t new_pivot_node)
+static void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
 {
-	if (pivot_node == t->root) {
-		t->root = new_pivot_node;
+	if (pivot == t->root) {
+		t->root = new_pivot;
 		/*set_red(t, t->root, S_FALSE);*/
 	}
 }
@@ -283,7 +280,7 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 		if (l == r)
 			return is_red(t, ndx) ? l : l + 1;
 #ifdef DEBUG_stree
-		fprintf(stderr, "st_assert: height mismatch (l: %u, r: %u)\n", l, r);
+		fprintf(stderr, "st_assert: height mismatch l %u r %u\n", l, r);
 #endif
 		return 0;
 	}
@@ -308,8 +305,9 @@ st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
 
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
 {
-	const size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
-	return st_alloc_raw(f, S_FALSE, initial_reserve, malloc(alloc_size), alloc_size);
+	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
+	return st_alloc_raw(f, S_FALSE, initial_reserve, malloc(alloc_size),
+								alloc_size);
 }
 
 SD_BUILDFUNCS(st)
@@ -327,7 +325,8 @@ st_t *st_dup(const st_t *t)
 	const size_t t_size = get_size(t);
 	st_t *t2 = st_alloc(&t->f, t_size);
 	ASSERT_RETURN_IF(!t2, NULL);
-	/* Alloc size will be restored after the memcpy:
+	/*
+	 * Alloc size will be restored after the memcpy:
 	 */
 	const size_t t2_alloc_size = sd_get_alloc_size((const sd_t *)t);
 	memcpy(t2, t, SDT_HEADER_SIZE + t_size * t->f.node_size);
@@ -341,22 +340,18 @@ st_t *st_dup(const st_t *t)
 sbool_t st_insert(st_t **tt, const stn_t *n)
 {
 	ASSERT_RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
-	const size_t ts0 = get_size(*tt);
-	ASSERT_RETURN_IF(ts0 >= ST_NIL, S_FALSE);
-	stndx_t ts = (stndx_t)ts0;
 	st_t *t = *tt;
+	const size_t ts = get_size(t);
+	ASSERT_RETURN_IF(ts >= ST_NIL, S_FALSE);
 	/*
 	 * Trivial case: insert node into empty tree
 	 */
 	if (!ts) {
-		if (st_reserve(tt, 1) > 0) {
-			stn_t *node = get_node(t, 0);
-			new_node(t, node, n, S_FALSE);
-			t->root = 0;
-			set_size(t, 1);
-			return S_TRUE;
-		}
-		return S_FALSE;
+		stn_t *node = get_node(t, 0);
+		new_node(t, node, n, S_FALSE);
+		t->root = 0;
+		set_size(t, 1);
+		return S_TRUE;
 	}
 	/*
 	 * Typical case: insert into non-empty tree
@@ -401,8 +396,7 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 			/* Increase tree size: */
 			set_size(t, ts + 1);
 			done = S_TRUE;
-		}
-		else {
+		} else {
 			/* Two red sons? -> red parent + black sons */
 			if (is_red(t, w[c].n->l) && is_red(t, w[c].n->r))
 				STN_SET_RBB(t, w[c].n);
@@ -410,24 +404,23 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 		/* Check for double red case (current and parent are red) */
 		const size_t cpp = (c + 2) % CW_SIZE,
 			     cppp = (c + 1) % CW_SIZE;
-		if (w[cpp].n) {
-			if (w[c].n->is_red && w[cp].n->is_red) {
-				const enum STNDir xld = cd(ld);
-				const stndx_t pd = get_lr(w[cp].n, ld);
-				const stndx_t v = w[c].x == pd ?
-					rot1x(t, w[cpp].n, w[cpp].x, xld, ld) :
-					rot2x(t, w[cpp].n, w[cpp].x, xld, ld);
-				if (w[cppp].n) {
-					enum STNDir d2 = w[cppp].n->r == w[cpp].x ?
-							 ST_Right : ST_Left;
-					set_lr(w[cppp].n, d2, v);
-					st_checkfix_root(t, w[cpp].x, v);
-				}
-				else {
-					t->root = v;
-				}
+		if (w[cpp].n && w[c].n->is_red && w[cp].n->is_red) {
+			const enum STNDir xld = cd(ld);
+			const stndx_t pd = get_lr(w[cp].n, ld);
+			const stndx_t v = w[c].x == pd ?
+				rot1x(t, w[cpp].n, w[cpp].x, xld, ld) :
+				rot2x(t, w[cpp].n, w[cpp].x, xld, ld);
+			if (w[cppp].n) {
+				enum STNDir d2 = w[cppp].n->r == w[cpp].x ?
+						 ST_Right : ST_Left;
+				set_lr(w[cppp].n, d2, v);
+				st_checkfix_root(t, w[cpp].x, v);
+			} else {
+				t->root = v;
 			}
 		}
+		if (done)
+			break;
 		const sint_t cmp = t->f.cmp(w[c].n, n);
 		if (!cmp) {
 #ifdef STREE_ALLOW_KEY_OVERWRITING
@@ -439,7 +432,8 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 		ld = d;
 		d = cmp < 0 ? ST_Right : ST_Left;
 		/* Node context window shift */
-		w[cppp].n = get_node(t, w[cppp].x = get_lr(w[c].n, d));
+		w[cppp].x = get_lr(w[c].n, d);
+		w[cppp].n = get_node(t, w[cppp].x);
 		c = cppp;
 	}
 	return S_TRUE;
@@ -470,10 +464,10 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 #endif
 	auxn.r = t->root;
 	struct NodeContext w[CW_SIZE] = {
-			{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
-			{ ST_NIL, NULL },   /* cppp: cn parent parent parent node */
-			{ ST_NIL, NULL },   /* cpp: cn parent parent node */
-			{ ST_NIL, &auxn } }; /* cp: cn parent node */
+		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
+		{ ST_NIL, NULL },    /* cppp: cn parent parent parent node */
+		{ ST_NIL, NULL },    /* cpp: cn parent parent node */
+		{ ST_NIL, &auxn } }; /* cp: cn parent node */
 	stndx_t c = 0, cp = 3, cpp = 2, cppp = 1;
 	struct NodeContext found = { ST_NIL, NULL };
 	enum STNDir d0 = ST_Right;
@@ -511,8 +505,9 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				w[cp].n = yn;
 				break;
 			}
+			/* s/sn: same-parent brother node */
 			const enum STNDir xd0 = cd(d0);
-			const stndx_t s = get_lr(w[cp].n, xd0); /* same-parent brother node */
+			const stndx_t s = get_lr(w[cp].n, xd0);
 			if (s == ST_NIL)
 				break;
 			stn_t *sn = get_node(t, s);
@@ -526,14 +521,17 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			}
 			if (!w[cpp].n)
 				break;
-			const enum STNDir d2 = w[cpp].n->r == w[cp].x ? ST_Right : ST_Left;
+			const enum STNDir d2 = w[cpp].n->r == w[cp].x ?
+						ST_Right : ST_Left;
 			if (is_red(t, get_lr(sn, d0))) {
-				const stndx_t y = rot2x(t, w[cp].n, w[cp].x, d0, xd0);
+				const stndx_t y = rot2x(t, w[cp].n, w[cp].x,
+							d0, xd0);
 				set_lr(w[cpp].n, d2, y);
 				st_checkfix_root(t, w[cp].x, y);
 			} else {
 				if (is_red(t, get_lr(sn, xd0))) {
-					const stndx_t y = rot1x(t, w[cp].n, w[cp].x, d0, xd0);
+					stndx_t y = rot1x(t, w[cp].n, w[cp].x,
+							  d0, xd0);
 					set_lr(w[cpp].n, d2, y);
 					st_checkfix_root(t, w[cp].x, y);
 				}
@@ -588,14 +586,15 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 		if (w[c].x != sz) {
 			enum STNDir d = ST_Left;
 			const struct NodeContext ct = { sz, get_node(t, sz) };
-			stn_t *fpn = locate_parent(t, &ct, &d); /* TODO: cache this (!) */
+			/* TODO: cache this (!) */
+			stn_t *fpn = locate_parent(t, &ct, &d);
 			if (fpn) {
 				copy_node(t, w[c].n, ct.n);
 				set_lr(fpn, d, w[c].x);
 				if (t->root == sz)
 					t->root = w[c].x;
 			} else {
-				/* BEHAVIOR: this point should never be reached */
+				/* BEHAVIOR: this should never be reached */
 				S_ASSERT(S_FALSE);
 			}
 		}
@@ -609,18 +608,17 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 /*
  * O(log(n))
  */
+
 const stn_t *st_locate(const st_t *t, const stn_t *n)
 {
-	stndx_t c = t->root;
-	for (; c != ST_NIL;) {
-		const stn_t *cn = get_node_r(t, c);
-		const int r = t->f.cmp(cn, n);
+	const stn_t *cn = get_node_r(t, t->root);
+	for (; cn;) {
+		int r = t->f.cmp(cn, n);
 		if (!r)
-			return cn;
-		const enum STNDir d = r < 0 ? ST_Right : ST_Left;
-		c = get_lr(cn, d);
+			break;
+		cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right : ST_Left));
 	}
-	return NULL;
+	return cn;
 }
 
 /*
@@ -655,7 +653,8 @@ enum eTMode
  * Time complexity: O(n)
  * Aux space: using the stack -i.e. "free"-, O(2 * log(n))
  */
-static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context, const enum eTMode m)
+static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
+							const enum eTMode m)
 {
 	ASSERT_RETURN_IF(!t, -1);
 	const size_t ts = get_size(t);
@@ -682,8 +681,9 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context, const enum
 		if (tp.level > tp.max_level)
 			tp.max_level = tp.level;
 		/*
-		 * If having more levels than the expected 'rbt_max_depth', it would mean
-		 * that there is some bug in the insert/delete rebalanzing code.
+		 * If having more levels than the expected 'rbt_max_depth', it
+		 * would mean that there is some bug in the insert/delete
+		 * rebalanzing code.
 		 */
 		S_ASSERT(tp.max_level < rbt_max_depth);
 		/* State:
@@ -761,7 +761,6 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context, const enum
 			continue;
 		}
 	}
-
 	return tp.max_level + 1;
 }
 

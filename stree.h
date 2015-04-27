@@ -83,9 +83,6 @@ struct STraverseParams
 
 typedef int (*st_traverse)(const struct STraverseParams *p);
 
-
-
-
 /*
 * Constants
 */
