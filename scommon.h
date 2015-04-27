@@ -70,6 +70,7 @@ extern "C" {
  * Context
  */
 
+
 #if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || \
 	defined(__GNUC__) || defined (__TINYC__) || _MSC_VER >= 1800 || \
 	defined(__DMC__)
@@ -94,6 +95,35 @@ extern "C" {
 #else /* assume 128-bit CPU */
 	#define S_BPWORD 16
 #endif
+
+/*
+ * Prefetch stuff
+ */
+
+#if defined(MSVC) && defined(_M_X86)
+	#include <emmintrin.h>
+	#define S_PREFETCH_R(address) 					\
+		if (address)						\
+			_mm_prefetch((char *)(address), _MM_HINT_T0)
+	#define S_PREFETCH_W(address) S_PREFETCH_R(address)
+#endif
+#if defined(__GNUC__)
+	#define S_PREFETCH_GNU(address, rw)		\
+		if (address)				\
+			__builtin_prefetch(address, rw)
+	#define S_PREFETCH_R(address) S_PREFETCH_GNU(address, 0)
+	#define S_PREFETCH_W(address) S_PREFETCH_GNU(address, 1)
+#endif
+#ifndef S_PREFETCH_R
+	#define S_PREFETCH_R(address)
+#endif
+#ifndef S_PREFETCH_W
+	#define S_PREFETCH_W(address)
+#endif
+
+/*
+ * Variable argument helpers
+ */
 
 #ifdef S_USE_VA_ARGS /* purposes: 1) count parameters, 2) parameter syntax check */
 	/* void *, char *, wchar_t * */
