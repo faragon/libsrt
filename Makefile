@@ -36,6 +36,8 @@ ifndef FORCE32
 	FORCE32=0
 endif
 
+COMMON_FLAGS = -pipe
+
 # Configure compiler context:
 ifeq ($(CC), tcc)
 	PROFILING=0
@@ -77,16 +79,19 @@ ifeq ($(PROFILING), 1)
 	CFLAGS += -fprofile-arcs -ftest-coverage
 	LDFLAGS += -lgcov -coverage
 	# gprof flags:
-	CFLAGS += -pg
-	LDFLAGS += -pg
+	COMMON_FLAGS += -pg
+else
+	COMMON_FLAGS += -fomit-frame-pointer
 endif
 ifeq ($(FORCE32), 1)
-	CFLAGS += -m32
-	CXXFLAGS += -m32
-	LDFLAGS += -m32
+	COMMON_FLAGS += -m32
 endif
 
-DATE    = $(shell date)
+CFLAGS += $(COMMON_FLAGS)
+CXXFLAGS += $(COMMON_FLAGS)
+LDFLAGS += $(COMMON_FLAGS)
+
+#DATE   =$(shell date)
 SOURCES	=sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c
 HEADERS	=scommon.h $(SOURCES:.c=.h)
 OBJECTS	=$(SOURCES:.c=.o)
