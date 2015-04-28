@@ -359,7 +359,7 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 	/*
 	 * Prepare a 4-level node tracking window
 	 */
-#ifdef __TINYC__ /* Compatibility with TCC: TODO: find a better solution */
+#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
 	stn_t auxn;
 	auxn.l = auxn.r = ST_NIL;
 	auxn.is_red = S_FALSE;
@@ -455,7 +455,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	 * would be enough, using 4 in order to avoid the division by 3,
 	 * which is more expensive than by 4 in many CPUs).
 	 */
-#ifdef __TINYC__ /* Compatibility with TCC: TODO: find a better solution */
+#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
 	stn_t auxn;
 	auxn.l = auxn.r = ST_NIL;
 	auxn.is_red = S_FALSE;

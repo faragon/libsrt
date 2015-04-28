@@ -54,10 +54,7 @@ struct S_Node
 		stndx_t is_red : 1;
 		stndx_t l : ST_NODE_BITS;
 	};
-	struct {
-		stndx_t unused : 1; /* TODO: not yet used */
-		stndx_t r : ST_NODE_BITS;
-	};
+	stndx_t r;
 };
 
 typedef struct S_Tree st_t;
@@ -89,7 +86,7 @@ typedef int (*st_traverse)(const struct STraverseParams *p);
 
 #define EMPTY_STC { 0, 0, 0 }
 #define EMPTY_ST { EMPTY_SData_Full(sizeof(st_t)), 0, EMPTY_STC }
-#define EMPTY_STN { { 0, ST_NIL }, { 0, ST_NIL } }
+#define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
 
 /*
 * Macros
