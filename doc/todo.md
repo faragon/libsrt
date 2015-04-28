@@ -4,6 +4,8 @@
 Short-term
 ---
 
+* stree: In addition to the callback, add an iterator for traversal.
+* stree: min, max, range query, iterator.
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * adjust size: string structure is not properly used.
@@ -26,7 +28,6 @@ Mid-term
  * Check if some important string functionality is missing.
  * Unicode: to_lower, to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
 * Tree enhancements
- * st_min, st_max, st_nth (n-th element), branch and bound (http://en.wikipedia.org/wiki/Branch_and_bound), range query.
 * Other
  * Bindings for other languages
 * Add some simple data compression (e.g. 4KB LZW or 32KB LZ77 + Huffman coding)
