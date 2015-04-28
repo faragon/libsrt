@@ -86,6 +86,10 @@ extern "C" {
 	#define offsetof(s, m) ((size_t)(&((s *)0)->m))
 #endif
 
+#if defined(__CYGWIN__) && !defined(UINTPTR_MAX)
+	#define UINTPTR_MAX 0xffffffff
+#endif
+
 #if UINTPTR_MAX == 0xffff
 	#define S_BPWORD 2 /* 16-bit CPU */
 #elif UINTPTR_MAX == 0xffffffff
@@ -180,7 +184,11 @@ extern "C" {
 #else
 	#define FMT_ZI "%zi"
 	#define FMT_ZU "%zu"
-	#define FMT_I FMT_ZI
+	#if S_BPWORD >= 8
+		#define FMT_I FMT_ZI
+	#else
+		#define FMT_I "%lli"
+	#endif
 	#define FMTSZ_T ssize_t
 	#define FMTSSZ_T size_t
 #endif
