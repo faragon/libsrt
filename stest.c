@@ -22,8 +22,7 @@
 
 #define STEST_START	int ss_errors = 0, ss_tmp = 0
 #define STEST_END	ss_errors
-#define STEST_ASSERT_BASE(a, pre_op)					\
-	 {								\
+#define STEST_ASSERT_BASE(a, pre_op) {					\
 		pre_op;							\
 		const int r = a;					\
 		ss_tmp += r;						\
@@ -1284,20 +1283,23 @@ int test_sv_len()
 	return res;
 }
 
+#ifdef SD_ENABLE_HEURISTIC_GROW
+#define SDCMP >=
+#else
+#define SDCMP ==
+#endif
+
 #define TEST_SV_CAPACITY(v, ntest, alloc, push, type, pushval)		\
 	sv_t *v = alloc(type, 1);					\
 	res |= !v ? 1<<(ntest*3) :					\
 		(sv_capacity(v) == 1 &&	sv_reserve(&v, 100) &&		\
-		 sv_capacity(v) == 100 && sv_shrink_to_fit(&v) &&	\
+		 sv_capacity(v) SDCMP 100 && sv_shrink_to_fit(&v) &&	\
 		 sv_capacity(v) == 0) ? 0 : 2<<(ntest*3);		\
 	sv_free(&v)
 
 int test_sv_capacity()
 {
 	int res = 0;
-#ifdef SD_ENABLE_HEURISTIC_GROW
-	/* TODO */
-#else
 	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
 	TEST_SV_CAPACITY(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
 	TEST_SV_CAPACITY(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
@@ -1307,7 +1309,6 @@ int test_sv_capacity()
 	TEST_SV_CAPACITY(g, 6, sv_alloc_t, sv_push_u, SV_U32, 123);
 	TEST_SV_CAPACITY(h, 7, sv_alloc_t, sv_push_i, SV_I64, 123);
 	TEST_SV_CAPACITY(i, 8, sv_alloc_t, sv_push_u, SV_U64, 123);
-#endif
 	return res;
 }
 
@@ -1629,7 +1630,7 @@ int test_st_alloc()
 {
 	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };
 	st_t *t = st_alloc(&f, 1000);
-#ifdef __TINYC__ /* Compatibility with TCC: TODO: find a better solution */
+#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
 	struct MyNode1 n;
 	memset(&n, 0, sizeof(n));
 	n.n.l = n.n.r = ST_NIL;
