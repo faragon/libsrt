@@ -815,19 +815,56 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 }
 
 /*
+ * API functions
+ */
+
+/*
  * Generated from template
  */
 
 SD_BUILDFUNCS(ss)
 
 /*
+
+#API: |Free one or more strings|string;more strings (optional)|O(1)| 
+void ss_free(ss_t **c, ...)
+
+#API: |Ensure space for extra elements|string;number of extra eelements|O(1)|
+size_t ss_grow(ss_t **c, const size_t extra_elems)
+
+#API: |Ensure space for elements;string;absolute element reserve|O(1)|
+size_t ss_reserve(ss_t **c, const size_t max_elems)
+
+#API: |Return unused space|string|O(1)|
+ss_t *ss_shrink_to_fit(ss_t **c)
+
+#API: |Get string size (bytes used in UTF8 format)|string|O(1)|
+size_t ss_get_size(const ss_t *c)
+
+#API: |Set string size (bytes used in UTF8 format)|string|O(1)|
+void ss_set_size(ss_t *c, const size_t s)
+
+#API: |Equivalent to ss_get_size|string|O(1)|
+size_t ss_get_len(const ss_t *c)
+
+#API: |Allocate string (stack)|space preAllocated to store n elements|O(1)|
+ss_t *ss_alloca(const size_t initial_reserve)
+
+*/
+
+/*
  * Allocation
  */
+
+
+/* #API: |Allocate string (heap)|space preAllocated to store n elements|O(1)| */
 
 ss_t *ss_alloc(const size_t initial_reserve)
 {
 	return (ss_t *)sd_alloc(0, 0, initial_reserve, &ssf);
 }
+
+/* #API: |Allocate string (external buffer)|space preAllocated to store n elements|O(1)| */
 
 ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
 {
@@ -837,6 +874,8 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
 /*
  * Accessors
  */
+
+/* #API: |Return the number of Unicode characters|string|O(1)| */
 
 size_t ss_len_u(const ss_t *s)
 {
@@ -855,11 +894,15 @@ size_t ss_len_u(const ss_t *s)
 	return cached_uc_size;
 }
 
+/* #API: |Allocated space|string|O(1)| */
+
 size_t ss_capacity(const ss_t *s)
 {
 	S_ASSERT(s);
 	return s ? get_max_size(s) : 0;
 }
+
+/* #API: |Allocated space left|string|O(1)| */
 
 size_t ss_len_left(const ss_t *s)
 {
@@ -870,12 +913,15 @@ size_t ss_len_left(const ss_t *s)
 	return (s && max_size > size) ? max_size - size : 0;
 }
 
+/* #API: |Maximum size|string|O(1)| */
+
 size_t ss_max(const ss_t *s)
 {
 	return !s ? 0 : s->ext_buffer ? get_max_size(s) : SS_RANGE_FULL;
 }
 
-/* Intended for external I/O raw acccess */
+/* #API: |Explicit set length (intended for external I/O raw acccess)|string|New length|O(1)| */
+
 void ss_set_len(ss_t *s, const size_t new_len)
 {
 	if (s) {
