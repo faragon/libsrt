@@ -826,28 +826,28 @@ SD_BUILDFUNCS(ss)
 
 /*
 
-#API: |Free one or more strings|string;more strings (optional)|O(1)| 
+#API: |Free one or more strings|string;more strings (optional)||O(1)|
 void ss_free(ss_t **c, ...)
 
-#API: |Ensure space for extra elements|string;number of extra eelements|O(1)|
+#API: |Ensure space for extra elements|string;number of extra eelements|extra size allocated|O(1)|
 size_t ss_grow(ss_t **c, const size_t extra_elems)
 
-#API: |Ensure space for elements;string;absolute element reserve|O(1)|
+#API: |Ensure space for elements|string;absolute element reserve|reserved elements|O(1)|
 size_t ss_reserve(ss_t **c, const size_t max_elems)
 
-#API: |Return unused space|string|O(1)|
+#API: |Free unused space|string|same string (optional usage)|O(1)|
 ss_t *ss_shrink_to_fit(ss_t **c)
 
-#API: |Get string size (bytes used in UTF8 format)|string|O(1)|
+#API: |Get string size|string|string bytes used in UTF8 format|O(1)|
 size_t ss_get_size(const ss_t *c)
 
-#API: |Set string size (bytes used in UTF8 format)|string|O(1)|
+#API: |Set string size (bytes used in UTF8 format)|string||O(1)|
 void ss_set_size(ss_t *c, const size_t s)
 
-#API: |Equivalent to ss_get_size|string|O(1)|
+#API: |Equivalent to ss_get_size|string|Number of bytes (UTF-8 string length)|O(1)|
 size_t ss_get_len(const ss_t *c)
 
-#API: |Allocate string (stack)|space preAllocated to store n elements|O(1)|
+#API: |Allocate string (stack)|space preAllocated to store n elements|allocated string|O(1)|
 ss_t *ss_alloca(const size_t initial_reserve)
 
 */
@@ -857,14 +857,14 @@ ss_t *ss_alloca(const size_t initial_reserve)
  */
 
 
-/* #API: |Allocate string (heap)|space preAllocated to store n elements|O(1)| */
+/* #API: |Allocate string (heap)|space preallocated to store n elements|allocated string|O(1)| */
 
 ss_t *ss_alloc(const size_t initial_reserve)
 {
 	return (ss_t *)sd_alloc(0, 0, initial_reserve, &ssf);
 }
 
-/* #API: |Allocate string (external buffer)|space preAllocated to store n elements|O(1)| */
+/* #API: |Allocate string into external buffer|external buffer; external buffer size|allocated string|O(1)| */
 
 ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
 {
@@ -875,7 +875,7 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
  * Accessors
  */
 
-/* #API: |Return the number of Unicode characters|string|O(1)| */
+/* #API: |String length (Unicode)|string|number of Unicode characters|O(1)| */
 
 size_t ss_len_u(const ss_t *s)
 {
@@ -894,7 +894,7 @@ size_t ss_len_u(const ss_t *s)
 	return cached_uc_size;
 }
 
-/* #API: |Allocated space|string|O(1)| */
+/* #API: |Allocated space|string|current allocated space (bytes)|O(1)| */
 
 size_t ss_capacity(const ss_t *s)
 {
@@ -902,7 +902,7 @@ size_t ss_capacity(const ss_t *s)
 	return s ? get_max_size(s) : 0;
 }
 
-/* #API: |Allocated space left|string|O(1)| */
+/* #API: |Preallocated space left|string|allocated space left|O(1)| */
 
 size_t ss_len_left(const ss_t *s)
 {
@@ -913,14 +913,14 @@ size_t ss_len_left(const ss_t *s)
 	return (s && max_size > size) ? max_size - size : 0;
 }
 
-/* #API: |Maximum size|string|O(1)| */
+/* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)| */
 
 size_t ss_max(const ss_t *s)
 {
 	return !s ? 0 : s->ext_buffer ? get_max_size(s) : SS_RANGE_FULL;
 }
 
-/* #API: |Explicit set length (intended for external I/O raw acccess)|string;New length|O(1)| */
+/* #API: |Explicit set length (intended for external I/O raw acccess)|string;new length||O(1)| */
 
 void ss_set_len(ss_t *s, const size_t new_len)
 {
@@ -931,28 +931,28 @@ void ss_set_len(ss_t *s, const size_t new_len)
 	}
 }
 
-/* #API: |Get string buffer access|string|O(1)| */
+/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)| */
 
 char *ss_get_buffer(ss_t *s)
 {
 	return s ? get_str(s) : NULL;
 }
 
-/* #API: |Check if string had allocation errors|string|O(1)| */
+/* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)| */
 
 sbool_t ss_alloc_errors(const ss_t *s)
 {
 	return (!s || s->alloc_errors) ? S_TRUE : S_FALSE;
 }
 
-/* #API: |Check if string had UTF8 encoding errors|string|O(1)| */
+/* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)| */
 
 sbool_t ss_encoding_errors(const ss_t *s)
 {
 	return s && has_encoding_errors(s) ? S_TRUE : S_FALSE;
 }
 
-/* #API: |Clear allocation/encoding error flags|string|O(1)| */
+/* #API: |Clear allocation/encoding error flags|string||O(1)| */
 
 void ss_clear_errors(ss_t *s)
 {
@@ -967,7 +967,7 @@ void ss_clear_errors(ss_t *s)
  * (equivalent to: s = NULL; ss_cpy*(&s, ...);)
  */
 
-/* #API: |Duplicate string|string|O(n)| */
+/* #API: |Duplicate string|string|Output result|O(n)| */
 
 ss_t *ss_dup_s(const ss_t *src)
 {
@@ -975,7 +975,7 @@ ss_t *ss_dup_s(const ss_t *src)
 	return ss_cpy(&s, src);
 }
 
-/* #API: |Duplicate from substring|string;substring offsets;select nth substring|O(n)| */
+/* #API: |Duplicate from substring|string;substring offsets;select nth substring|Output result|O(n)| */
 
 ss_t *ss_dup_sub(const ss_t *src, const sv_t *offs, const size_t nth)
 {
@@ -983,7 +983,7 @@ ss_t *ss_dup_sub(const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cpy_sub(&s, src, offs, nth);
 }
 
-/* #API: |Duplicate from substring|string;byte offset;number of bytes|O(n)| */
+/* #API: |Duplicate from substring|string;byte offset;number of bytes|output result|O(n)| */
 
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
 {
@@ -991,7 +991,7 @@ ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
 	return ss_cpy_substr(&s, src, off, n);
 }
 
-/* #API: |Duplicate from substring|string;character offset;number of characters|O(n)| */
+/* #API: |Duplicate from substring|string;character offset;number of characters|output result|O(n)| */
 
 ss_t *ss_dup_u(const ss_t *src, const size_t char_off, const size_t n)
 {
@@ -999,7 +999,7 @@ ss_t *ss_dup_u(const ss_t *src, const size_t char_off, const size_t n)
 	return ss_cpy_substr_u(&s, src, char_off, n);
 }
 
-/* #API: |Duplicate from C string|C string buffer;number of bytes|O(n)| */
+/* #API: |Duplicate from C string|C string buffer;number of bytes|output result|O(n)| */
 
 ss_t *ss_dup_cn(const char *src, const size_t src_size)
 {
@@ -1007,7 +1007,7 @@ ss_t *ss_dup_cn(const char *src, const size_t src_size)
 	return ss_cpy_cn(&s, src, src_size);
 }
 
-/* #API: |Duplicate from C String (ASCII-z)|C string|O(n)| */
+/* #API: |Duplicate from C String (ASCII-z)|C string|output result|O(n)| */
 
 ss_t *ss_dup_c(const char *src)
 {
@@ -1015,7 +1015,7 @@ ss_t *ss_dup_c(const char *src)
 	return ss_cpy_c(&s, src);
 }
 
-/* #API: |Duplicate from Unicode "wide char" string|"wide char" string; number of characters|O(n)| */
+/* #API: |Duplicate from Unicode "wide char" string|"wide char" string; number of characters|output result|O(n)| */
 
 ss_t *ss_dup_wn(const wchar_t *src, const size_t src_size)
 {
@@ -1023,14 +1023,14 @@ ss_t *ss_dup_wn(const wchar_t *src, const size_t src_size)
 	return ss_cpy_wn(&s, src, src_size);
 }
 
-/* #API: |Duplicate from integer|integer|O(1)| */
+/* #API: |Duplicate from integer|integer|output result|O(1)| */
 ss_t *ss_dup_int(const sint_t num)
 {
 	ss_t *s = NULL;
 	return ss_cpy_int(&s, num);
 }
 
-/* #API: |Duplicate string with lowercase conversion|string|O(n)| */
+/* #API: |Duplicate string with lowercase conversion|string|output result|O(n)| */
 
 ss_t *ss_dup_tolower(const ss_t *src)
 {
@@ -1038,7 +1038,7 @@ ss_t *ss_dup_tolower(const ss_t *src)
 	return ss_cpy_tolower(&s, src);
 }
 
-/* #API: |Duplicate string with uppercase conversion|string|O(n)| */
+/* #API: |Duplicate string with uppercase conversion|string|output result|O(n)| */
 
 ss_t *ss_dup_toupper(const ss_t *src)
 {
@@ -1059,18 +1059,18 @@ MK_SS_DUP_TO_ENC(ss_dup_toHEX, ss_cpy_toHEX);
 
 /*
 
-#API: |Duplicate string with base64 conversion|string|O(n)|
+#API: |Duplicate string with base64 conversion|string|output result|O(n)|
 ss_t *ss_dup_tob64(const ss_t *src)
 
-#API: |Duplicate string with hex conversion|string|O(n)|
+#API: |Duplicate string with hex conversion|string|output result|O(n)|
 ss_t *ss_dup_tohex(const ss_t *src)
 
-#API: |Duplicate string with hex conversion|string|O(n)|
+#API: |Duplicate string with hex conversion|string|output result|O(n)|
 ss_t *ss_dup_toHEX(const ss_t *src)
 
 */
 
-/* #API: |Duplicate from string erasing portion from input|string;byte offset;number of bytes|O(n)| */
+/* #API: |Duplicate from string erasing portion from input|string;byte offset;number of bytes|output result|O(n)| */
 
 ss_t *ss_dup_erase(const ss_t *src, const size_t off, const size_t n)
 {
@@ -1078,7 +1078,7 @@ ss_t *ss_dup_erase(const ss_t *src, const size_t off, const size_t n)
 	return aux_erase(&s, S_FALSE, src, off, n);
 }
 
-/* #API: |Duplicate from Unicode "wide char" string erasing portion from input|string;character offset;number of characters|O(n)| */
+/* #API: |Duplicate from Unicode "wide char" string erasing portion from input|string;character offset;number of characters|output result|O(n)| */
 
 ss_t *ss_dup_erase_u(const ss_t *src, const size_t char_off, const size_t n)
 {
@@ -1086,7 +1086,7 @@ ss_t *ss_dup_erase_u(const ss_t *src, const size_t char_off, const size_t n)
 	return aux_erase_u(&s, S_FALSE, src, char_off, n);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and apply replace operation after offset|string; offset (bytes); needle; needle replacement|output result|O(n)| */
 
 ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1,
 								const ss_t *s2)
@@ -1095,7 +1095,7 @@ ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1,
 	return aux_replace(&s, S_FALSE, src, off, s1, s2);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and resize (byte addressing)|string; new size (bytes); fill byte|output result|O(n)| */
 
 ss_t *ss_dup_resize(const ss_t *src, const size_t n, char fill_byte)
 {
@@ -1103,7 +1103,7 @@ ss_t *ss_dup_resize(const ss_t *src, const size_t n, char fill_byte)
 	return aux_resize(&s, S_FALSE, src, n, fill_byte);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and resize (Unicode addressing)|string; new size (characters); fill character|output result|O(n)| */
 
 ss_t *ss_dup_resize_u(const ss_t *src, const size_t n, int fill_char)
 {
@@ -1111,7 +1111,7 @@ ss_t *ss_dup_resize_u(const ss_t *src, const size_t n, int fill_char)
 	return aux_resize_u(&s, S_FALSE, src, n, fill_char);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and trim string|string|output result|O(n)| */
 
 ss_t *ss_dup_trim(const ss_t *src)
 {
@@ -1119,7 +1119,7 @@ ss_t *ss_dup_trim(const ss_t *src)
 	return ss_cpy_trim(&s, src);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and apply trim at left side|string|output result|O(n)| */
 
 ss_t *ss_dup_ltrim(const ss_t *src)
 {
@@ -1127,7 +1127,7 @@ ss_t *ss_dup_ltrim(const ss_t *src)
 	return aux_ltrim(&s, S_FALSE, src);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate and apply trim at right side|string|output result|O(n)| */
 
 ss_t *ss_dup_rtrim(const ss_t *src)
 {
@@ -1135,7 +1135,7 @@ ss_t *ss_dup_rtrim(const ss_t *src)
 	return aux_rtrim(&s, S_FALSE, src);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate from "wide char" Unicode string|"wide char" string|output result|O(n)| */
 
 ss_t *ss_dup_w(const wchar_t *src)
 {
@@ -1143,7 +1143,7 @@ ss_t *ss_dup_w(const wchar_t *src)
 	return ss_cpy_w(&s, src);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate from printf formatting|printf space (bytes); printf format; optional printf parameters|output result|O(n)| */
 
 ss_t *ss_dup_printf(const size_t size, const char *fmt, ...)
 {
@@ -1155,7 +1155,7 @@ ss_t *ss_dup_printf(const size_t size, const char *fmt, ...)
 	return s;
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate from printf_va formatting|printf_va space (bytes); printf format; variable argument reference|output result|O(n)| */
 
 ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap)
 {
@@ -1163,7 +1163,7 @@ ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap)
 	return ss_cpy_printf_va(&s, size, fmt, ap);
 }
 
-/* #API: |||O()| */
+/* #API: |Duplicate string from character|Unicode character|output result|O(1)| */
 
 ss_t *ss_dup_char(const int c)
 {
@@ -1175,7 +1175,7 @@ ss_t *ss_dup_char(const int c)
  * Assignment from a given source: ss_cpy*(s, ...)
  */
 
-/* #API: |||O()| */
+/* #API: |Copy string to another|output string; input string|output string (optional usage)|O(n)| */
 
 ss_t *ss_cpy(ss_t **s, const ss_t *src)
 {
@@ -1187,7 +1187,7 @@ ss_t *ss_cpy(ss_t **s, const ss_t *src)
 	return ss_cat(s, src);
 }
 
-/* #API: |||O()| */
+/* #API: |Copy substring over string|output string; input string; separator offsets; Nth substring to be used|output string (optional usage)|O(n)| */
 
 ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
@@ -1200,7 +1200,7 @@ ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cpy_substr(s, src, off, size);
 }
 
-/* #API: |||O()| */
+/* #API: |Copy substring over string (byte mode)|output string; input string; input string start offset (bytes); number of bytes to be copied|output string (optional usage)|O(n)| */
 
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
@@ -1222,7 +1222,7 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: |Copy substring over string (character mode)|output string; input string; input string start offset (characters); number of characters to be copied|output string (optional usage)|O(n)| */
 
 ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 							const size_t n)
@@ -1256,7 +1256,8 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 }
 
 /* BEHAVIOR: strict aliasing is assumed */
-/* #API: |||O()| */
+
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 {
@@ -1269,7 +1270,8 @@ ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 }
 
 /* BEHAVIOR: strict aliasing is assumed */
-/* #API: |||O()| */
+
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 {
@@ -1279,7 +1281,8 @@ ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 }
 
 /* BEHAVIOR: strict aliasing is assumed */
-/* #API: |||O()| */
+
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
@@ -1290,7 +1293,8 @@ ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 }
 
 /* BEHAVIOR: strict aliasing is assumed */
-/* #API: |||O()| */
+
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 {
@@ -1299,21 +1303,21 @@ ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_int(ss_t **s, const sint_t num)
 {
 	return aux_toint(s, S_FALSE, num);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_tolower(ss_t **s, const ss_t *src)
 {
 	return aux_toXcase(s, S_FALSE, src, fsc_tolower);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_toupper(ss_t **s, const ss_t *src)
 {
@@ -1329,17 +1333,17 @@ MK_SS_CPY_TO_ENC(ss_cpy_tob64, senc_b64);
 MK_SS_CPY_TO_ENC(ss_cpy_tohex, senc_hex);
 MK_SS_CPY_TO_ENC(ss_cpy_toHEX, senc_HEX);
 
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_FALSE, src, off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 						const size_t n)
@@ -1347,7 +1351,7 @@ ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return aux_erase_u(s, S_FALSE, src, char_off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off,
 					const ss_t *s1, const ss_t *s2)
@@ -1355,21 +1359,21 @@ ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off,
 	return aux_replace(s, S_FALSE, src, off, s1, s2);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte)
 {
 	return aux_resize(s, S_FALSE, src, n, fill_byte);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, src, n, fill_char);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_trim(ss_t **s, const ss_t *src)
 {
@@ -1378,21 +1382,21 @@ ss_t *ss_cpy_trim(ss_t **s, const ss_t *src)
 	return aux_rtrim(s, S_FALSE, *s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_ltrim(ss_t **s, const ss_t *src)
 {
 	return aux_ltrim(s, S_FALSE, src);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src)
 {
 	return aux_rtrim(s, S_FALSE, src);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
@@ -1409,7 +1413,7 @@ ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 	return *s;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 {
@@ -1422,7 +1426,7 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 	return ss_cat_printf_va(s, size, fmt, ap);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cpy_char(ss_t **s, const int c)
 {
@@ -1447,8 +1451,7 @@ static ss_t *ss_cat_aliasing(ss_t **s, const ss_t *s0, const size_t s0_size,
 					    get_unicode_size(src));
 }
 
-/* #API: |||O()| */
-
+/* #API: ||||O()| */
 
 ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 {
@@ -1483,7 +1486,7 @@ ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
@@ -1514,7 +1517,7 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cat_cn_raw(s, src_str, src_off, src_size, src_unicode_size);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 							const size_t sub_size)
@@ -1538,7 +1541,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 	return ss_cat_cn_raw(s, src_str, src_off, sub_size, src_unicode_size);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 							const size_t n)
@@ -1560,7 +1563,7 @@ ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 {
@@ -1568,7 +1571,7 @@ ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 	return ss_cat_cn_raw(s, src_aux, 0, src_size, 0);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 {
@@ -1577,7 +1580,7 @@ ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
@@ -1603,7 +1606,7 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 {
@@ -1612,21 +1615,21 @@ ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_int(ss_t **s, const sint_t num)
 {
 	return aux_toint(s, S_TRUE, num);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_tolower(ss_t **s, const ss_t *src)
 {
         return aux_toXcase(s, S_TRUE, src, fsc_tolower);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_toupper(ss_t **s, const ss_t *src)
 {
@@ -1642,17 +1645,17 @@ MK_SS_CAT_TO_ENC(ss_cat_tob64, senc_b64);
 MK_SS_CAT_TO_ENC(ss_cat_tohex, senc_hex);
 MK_SS_CAT_TO_ENC(ss_cat_toHEX, senc_HEX);
 
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_TRUE, src, off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 								const size_t n)
@@ -1660,7 +1663,7 @@ ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return aux_erase_u(s, S_TRUE, src, char_off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off,
 						const ss_t *s1, const ss_t *s2)
@@ -1668,15 +1671,14 @@ ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off,
 	return aux_replace(s, S_TRUE, src, off, s1, s2);
 }
 
-/* #API: |||O()| */
-
+/* #API: ||||O()| */
 ss_t *ss_cat_resize(ss_t **s, const ss_t *src, const size_t n,
 								char fill_byte)
 {
 	return aux_resize(s, S_TRUE, src, n, fill_byte);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n,
 								int fill_char)
@@ -1684,7 +1686,7 @@ ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n,
 	return aux_resize_u(s, S_TRUE, src, n, fill_char);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_trim(ss_t **s, const ss_t *src)
 {
@@ -1693,21 +1695,21 @@ ss_t *ss_cat_trim(ss_t **s, const ss_t *src)
 	return aux_rtrim(s, S_FALSE, *s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_ltrim(ss_t **s, const ss_t *src)
 {
 	return aux_ltrim(s, S_TRUE, src);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_rtrim(ss_t **s, const ss_t *src)
 {
 	return aux_rtrim(s, S_TRUE, src);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
@@ -1719,7 +1721,7 @@ ss_t *ss_cat_printf(ss_t **s, const size_t size, const char *fmt, ...)
 	return *s;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 {
@@ -1742,7 +1744,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 	return ss_check(s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_cat_char(ss_t **s, const int c)
 {
@@ -1755,14 +1757,14 @@ ss_t *ss_cat_char(ss_t **s, const int c)
  * Transformation
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_tolower(ss_t **s)
 {
         return aux_toXcase(s, S_FALSE, *s, fsc_tolower);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_toupper(ss_t **s)
 {
@@ -1778,10 +1780,10 @@ MK_SS_TO_ENC(ss_tob64, senc_b64);
 MK_SS_TO_ENC(ss_tohex, senc_hex);
 MK_SS_TO_ENC(ss_toHEX, senc_HEX);
 
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
-/* #API: |||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
 
 sbool_t ss_set_turkish_mode(const int enable_turkish_mode)
 {
@@ -1795,7 +1797,7 @@ sbool_t ss_set_turkish_mode(const int enable_turkish_mode)
 	return fsc_tolower != 0 && fsc_toupper != 0;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_clear(ss_t **s)
 {
@@ -1805,7 +1807,8 @@ ss_t *ss_clear(ss_t **s)
 }
 
 /* Replaces a NULL string with an empty string of size 0 */
-/* #API: |||O()| */
+
+/* #API: ||||O()| */
 
 ss_t *ss_check(ss_t **s)
 {
@@ -1824,42 +1827,42 @@ ss_t *ss_check(ss_t **s)
 	return *s;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_erase(ss_t **s, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_FALSE, *s, off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_erase_u(ss_t **s, const size_t char_off, const size_t n)
 {
 	return aux_erase_u(s, S_FALSE, *s, char_off, n);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_replace(ss_t **s, const size_t off, const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_FALSE, *s, off, s1, s2);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_resize(ss_t **s, const size_t n, char fill_byte)
 {
 	return aux_resize(s, S_FALSE, *s, n, fill_byte);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_resize_u(ss_t **s, const size_t u_chars, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, *s, u_chars, fill_char);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_trim(ss_t **s)
 {
@@ -1868,14 +1871,14 @@ ss_t *ss_trim(ss_t **s)
 	return aux_ltrim(s, S_FALSE, *s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_ltrim(ss_t **s)
 {
 	return aux_ltrim(s, S_FALSE, *s);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 ss_t *ss_rtrim(ss_t **s)
 {
@@ -1886,7 +1889,7 @@ ss_t *ss_rtrim(ss_t **s)
  * Export
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 const char *ss_to_c(ss_t *s)
 {
@@ -1898,7 +1901,7 @@ const char *ss_to_c(ss_t *s)
 	return s_str;		/* +1 space is guaranteed */
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 {
@@ -1929,7 +1932,7 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
  * Search
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 {
@@ -1942,7 +1945,7 @@ size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 {
@@ -1974,7 +1977,7 @@ size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 	return sv_get_size(*v) / 2;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 size_t ss_nth_size(const sv_t *offsets, const size_t nth)
 {
@@ -1983,7 +1986,7 @@ size_t ss_nth_size(const sv_t *offsets, const size_t nth)
 	return nth < elems ? (size_t)sv_u_at(offsets, nth * 2 + 1) : 0;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
 {
@@ -1995,7 +1998,7 @@ size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
  * Format
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 {
@@ -2016,7 +2019,7 @@ int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
  * Compare
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
 {
@@ -2026,21 +2029,21 @@ static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
 	return S_MAX(s1_size, s2_size);
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_cmp(const ss_t *s1, const ss_t *s2)
 {
 	return ss_ncmp(s1, 0, s2, get_cmp_size(s1, s2));
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_cmpi(const ss_t *s1, const ss_t *s2)
 {
 	return ss_ncmpi(s1, 0, s2, get_cmp_size(s1, s2));
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 {
@@ -2061,7 +2064,7 @@ int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 	return res;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 {
@@ -2105,7 +2108,7 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
  * I/O: Unicode
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_getchar(const ss_t *s, size_t *autoinc_off)
 {
@@ -2120,14 +2123,14 @@ int ss_getchar(const ss_t *s, size_t *autoinc_off)
 	return c;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_putchar(ss_t **s, const int c)
 {
 	return (s && ss_cat_char(s, c) && get_size(*s) > 0) ? c : EOF;
 }
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 int ss_popchar(ss_t **s)
 {
@@ -2151,7 +2154,7 @@ int ss_popchar(ss_t **s)
  * Aux
  */
 
-/* #API: |||O()| */
+/* #API: ||||O()| */
 
 const ss_t *ss_empty()
 {
