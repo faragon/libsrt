@@ -1088,8 +1088,7 @@ ss_t *ss_dup_erase_u(const ss_t *src, const size_t char_off, const size_t n)
 
 /* #API: |Duplicate and apply replace operation after offset|string; offset (bytes); needle; needle replacement|output result|O(n)| */
 
-ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1,
-								const ss_t *s2)
+ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
 {
 	ss_t *s = NULL;
 	return aux_replace(&s, S_FALSE, src, off, s1, s2);
@@ -1175,7 +1174,7 @@ ss_t *ss_dup_char(const int c)
  * Assignment from a given source: ss_cpy*(s, ...)
  */
 
-/* #API: |Copy string to another|output string; input string|output string (optional usage)|O(n)| */
+/* #API: |Overwrite string with a string copy|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy(ss_t **s, const ss_t *src)
 {
@@ -1187,7 +1186,7 @@ ss_t *ss_cpy(ss_t **s, const ss_t *src)
 	return ss_cat(s, src);
 }
 
-/* #API: |Copy substring over string|output string; input string; separator offsets; Nth substring to be used|output string (optional usage)|O(n)| */
+/* #API: |Overwrite string with a substring copy|output string; input string; separator offsets; Nth substring to be used|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
@@ -1200,7 +1199,7 @@ ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cpy_substr(s, src, off, size);
 }
 
-/* #API: |Copy substring over string (byte mode)|output string; input string; input string start offset (bytes); number of bytes to be copied|output string (optional usage)|O(n)| */
+/* #API: |Overwrite string with a substring copy (byte mode)|output string; input string; input string start offset (bytes); number of bytes to be copied|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
@@ -1222,10 +1221,9 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 	return ss_check(s);
 }
 
-/* #API: |Copy substring over string (character mode)|output string; input string; input string start offset (characters); number of characters to be copied|output string (optional usage)|O(n)| */
+/* #API: |Overwrite string with a substring copy (character mode)|output string; input string; input string start offset (characters); number of characters to be copied|output string reference (optional usage)|O(n)| */
 
-ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
-							const size_t n)
+ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	ASSERT_RETURN_IF(!src || !n, ss_clear(s)); /* BEHAVIOR: empty */
@@ -1255,9 +1253,8 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return ss_check(s);
 }
 
-/* BEHAVIOR: strict aliasing is assumed */
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with C string copy (strict aliasing is assumed)|output string; input string; input string bytes|output string reference (optional usage)|On(n)| */
 
 ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 {
@@ -1269,9 +1266,10 @@ ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 	return ss_check(s);
 }
 
-/* BEHAVIOR: strict aliasing is assumed */
-
-/* #API: ||||O()| */
+/*
+#API: |Overwrite string with multiple C string copy (strict aliasing is assumed)|output string; input strings (one or more C strings)|output string reference (optional usage)|O(n)|
+ss_t *ss_cpy_c(ss_t **s, ...)
+*/
 
 ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 {
@@ -1280,9 +1278,7 @@ ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 	return ss_check(s);
 }
 
-/* BEHAVIOR: strict aliasing is assumed */
-
-/* #API: ||||O()| */
+/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
@@ -1292,9 +1288,10 @@ ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 	return ss_cat_wn(s, src, src_size);
 }
 
-/* BEHAVIOR: strict aliasing is assumed */
-
-/* #API: ||||O()| */
+/*
+#API: |Overwrite string with multiple C "wide char" Unicode string copy (strict aliasing is assumed)|output string; input strings (one or more C "wide char" strings)|output string reference (optional usage)|O(n)|
+ss_t *ss_cpy_w(ss_t **s, ...)
+*/
 
 ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 {
@@ -1303,21 +1300,21 @@ ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with integer to string copy|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_int(ss_t **s, const sint_t num)
 {
 	return aux_toint(s, S_FALSE, num);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string lowercase conversion copy|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_tolower(ss_t **s, const ss_t *src)
 {
 	return aux_toXcase(s, S_FALSE, src, fsc_tolower);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string uppercase conversion copy|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_toupper(ss_t **s, const ss_t *src)
 {
@@ -1333,47 +1330,54 @@ MK_SS_CPY_TO_ENC(ss_cpy_tob64, senc_b64);
 MK_SS_CPY_TO_ENC(ss_cpy_tohex, senc_hex);
 MK_SS_CPY_TO_ENC(ss_cpy_toHEX, senc_HEX);
 
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
+/*
+#API: |Overwrite string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cpy_tob64(ss_t **s, const ss_t *src)
+
+#API: |Overwrite string with input string hexadecimal (lowercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cpy_tohex(ss_t **s, const ss_t *src)
+
+#API: |Overwrite string with input string hexadecimal (uppercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cpy_toHEX(ss_t **s, const ss_t *src)
+*/
+
+
+/* #API: |Overwrite string with input string copy applying a erase operation (byte/UTF-8 mode)|output string; input string; input string erase start byte offset; number of bytes to erase|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_FALSE, src, off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string copy applying a erase operation (character mode)|output string; input string; input string erase start character offset; number of characters to erase|output string reference (optional usage)|O(n)| */
 
-ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
-						const size_t n)
+ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n)
 {
 	return aux_erase_u(s, S_FALSE, src, char_off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string plus replace operation|output string; input string; input string; offset for starting the replace operation (0 for the whole input string); pattern to be replaced; patter replacement||O(n)| */
 
-ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off,
-					const ss_t *s1, const ss_t *s2)
+ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_FALSE, src, off, s1, s2);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string copy plus resize operation (byte/UTF-8 mode)|output string; input string; number of bytes of input string; byte for refill|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte)
 {
 	return aux_resize(s, S_FALSE, src, n, fill_byte);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string copy plus resize operation (byte/UTF-8 mode)|output string; input string; number of bytes of input string; byte for refill|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, src, n, fill_char);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string plus trim (left and right) space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_trim(ss_t **s, const ss_t *src)
 {
@@ -1382,21 +1386,21 @@ ss_t *ss_cpy_trim(ss_t **s, const ss_t *src)
 	return aux_rtrim(s, S_FALSE, *s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string plus left-trim space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_ltrim(ss_t **s, const ss_t *src)
 {
 	return aux_ltrim(s, S_FALSE, src);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with input string plus right-trim space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src)
 {
 	return aux_rtrim(s, S_FALSE, src);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with printf operation|output string; printf output size (bytes); printf format; printf parameters|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
@@ -1413,7 +1417,7 @@ ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 	return *s;
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with printf_va operation|output string; printf output size (bytes); printf format; printf_va parameters|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 {
@@ -1426,7 +1430,7 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 	return ss_cat_printf_va(s, size, fmt, ap);
 }
 
-/* #API: ||||O()| */
+/* #API: |Overwrite string with a string with just one character|output string; input character|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_char(ss_t **s, const int c)
 {
