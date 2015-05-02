@@ -1356,7 +1356,6 @@ ss_t *ss_cpy_tohex(ss_t **s, const ss_t *src)
 ss_t *ss_cpy_toHEX(ss_t **s, const ss_t *src)
 */
 
-
 /* #API: |Overwrite string with input string copy applying a erase operation (byte/UTF-8 mode)|output string; input string; input string erase start byte offset; number of bytes to erase|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
@@ -1461,7 +1460,10 @@ ss_t *ss_cpy_char(ss_t **s, const int c)
  * Concatenate/append from given source/s: a = ss_cat*
  */
 
-/* #API: ||||O()| */
+/*
+#API: |Concatenate to string one or more strings|output string; input string; optional input strings|output string reference (optional usage)|O(n)|
+ss_t *ss_cat(ss_t **s, const ss_t *s1, ...)
+*/
 
 ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 {
@@ -1496,7 +1498,7 @@ ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate substring token|output string; input string; substring offsets;select nth substring|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
@@ -1527,10 +1529,9 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cat_cn_raw(s, src_str, src_off, src_size, src_unicode_size);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate substring (byte/UTF-8 mode)|output string; input string; input string substring byte offset; input string substring size (bytes)|output string reference (optional usage)|O(n)| */
 
-ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
-							const size_t sub_size)
+ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off, const size_t sub_size)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF(!src, ss_check(s)); /* same string */
@@ -1551,7 +1552,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 	return ss_cat_cn_raw(s, src_str, src_off, sub_size, src_unicode_size);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate substring (Unicode character mode)|output string; input string; input substring character offset; input string substring size (characters)|output string reference (optional usage)||O(n)| */
 
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 							const size_t n)
@@ -1573,7 +1574,7 @@ ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate C substring (byte/UTF-8 mode)|output string; input C string; input string size (bytes)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 {
@@ -1581,7 +1582,10 @@ ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 	return ss_cat_cn_raw(s, src_aux, 0, src_size, 0);
 }
 
-/* #API: ||||O()| */
+/*
+#API: |Concatenate multiple C strings (byte/UTF-8 mode)|output string; input string; optional input strings|output string reference (optional usage)|O(n)|
+ss_t *ss_cat_c(ss_t **s, const char *s1, ...)
+*/
 
 ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 {
@@ -1590,7 +1594,7 @@ ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate "wide char" C substring (Unicode character mode)|output string; input "wide char" C string; input string size (characters)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
@@ -1616,7 +1620,10 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/*
+#API: |Concatenate multiple "wide char" C strings (Unicode character mode)|output string; input "wide char" C string; optional input "wide char" C strings|output string reference (optional usage)|O(n)|
+ss_t *ss_cat_w(ss_t **s, const char *s1, ...)
+*/
 
 ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 {
@@ -1625,21 +1632,21 @@ ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate integer|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_int(ss_t **s, const sint_t num)
 {
 	return aux_toint(s, S_TRUE, num);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate "lowercased" string|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_tolower(ss_t **s, const ss_t *src)
 {
         return aux_toXcase(s, S_TRUE, src, fsc_tolower);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate "uppercased" string|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_toupper(ss_t **s, const ss_t *src)
 {
@@ -1655,17 +1662,25 @@ MK_SS_CAT_TO_ENC(ss_cat_tob64, senc_b64);
 MK_SS_CAT_TO_ENC(ss_cat_tohex, senc_hex);
 MK_SS_CAT_TO_ENC(ss_cat_toHEX, senc_HEX);
 
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
+/*
+#API: |Concatenate string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cat_tob64(ss_t **s, const ss_t *src)
+
+#API: |Concatenate string with input string hexadecimal (lowercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cat_tohex(ss_t **s, const ss_t *src)
+
+#API: |Concatenate string with input string hexadecimal (uppercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_cat_toHEX(ss_t **s, const ss_t *src)
+*/
+
+/* #API: |Concatenate string with erase operation (byte/UTF-8 mode)|output string; input string; input string byte offset for erase start; erase count (bytes)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_TRUE, src, off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with erase operation (Unicode character mode)|output string; input string; input character string offset for erase start; erase count (characters)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 								const size_t n)
@@ -1673,30 +1688,28 @@ ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return aux_erase_u(s, S_TRUE, src, char_off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with replace operation|output string; input string; offset for starting the replace operation (0 for the whole input string); pattern to be replaced; patter replacement|output string reference (optional usage)|O(n)| */
 
-ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off,
-						const ss_t *s1, const ss_t *s2)
+ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_TRUE, src, off, s1, s2);
 }
 
-/* #API: ||||O()| */
-ss_t *ss_cat_resize(ss_t **s, const ss_t *src, const size_t n,
-								char fill_byte)
+/* #API: |Concatenate string with input string copy plus resize operation (byte/UTF-8 mode)|output string; input string; number of bytes of input string; byte for refill|output string reference (optional usage)|O(n)| */
+
+ss_t *ss_cat_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte)
 {
 	return aux_resize(s, S_TRUE, src, n, fill_byte);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with input string copy plus resize operation (Unicode character)|output string; input string; number of characters of input string; character for refill|output string reference (optional usage)|O(n)| */
 
-ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n,
-								int fill_char)
+ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char)
 {
 	return aux_resize_u(s, S_TRUE, src, n, fill_char);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with input string plus trim (left and right) space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_trim(ss_t **s, const ss_t *src)
 {
@@ -1705,21 +1718,21 @@ ss_t *ss_cat_trim(ss_t **s, const ss_t *src)
 	return aux_rtrim(s, S_FALSE, *s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with input string plus left-trim space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_ltrim(ss_t **s, const ss_t *src)
 {
 	return aux_ltrim(s, S_TRUE, src);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with input string plus right-trim space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_rtrim(ss_t **s, const ss_t *src)
 {
 	return aux_rtrim(s, S_TRUE, src);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with printf operation|output string; printf output size (bytes); printf format; printf parameters|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
@@ -1731,7 +1744,7 @@ ss_t *ss_cat_printf(ss_t **s, const size_t size, const char *fmt, ...)
 	return *s;
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with printf_va operation|output string; printf output size (bytes); printf format; printf_va parameters|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 {
@@ -1754,7 +1767,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 	return ss_check(s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Concatenate string with a string with just one character|output string; input character|output string reference (optional usage)|O(1)| */
 
 ss_t *ss_cat_char(ss_t **s, const int c)
 {
@@ -1767,14 +1780,14 @@ ss_t *ss_cat_char(ss_t **s, const int c)
  * Transformation
  */
 
-/* #API: ||||O()| */
+/* #API: |Convert string to lowercase|output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_tolower(ss_t **s)
 {
         return aux_toXcase(s, S_FALSE, *s, fsc_tolower);
 }
 
-/* #API: ||||O()| */
+/* #API: |Convert string to uppercase|output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_toupper(ss_t **s)
 {
@@ -1790,12 +1803,20 @@ MK_SS_TO_ENC(ss_tob64, senc_b64);
 MK_SS_TO_ENC(ss_tohex, senc_hex);
 MK_SS_TO_ENC(ss_toHEX, senc_HEX);
 
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
+/*
+#API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_tob64(ss_t **s, const ss_t *src)
 
-sbool_t ss_set_turkish_mode(const int enable_turkish_mode)
+#API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_tohex(ss_t **s, const ss_t *src)
+
+#API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|
+ss_t *ss_toHEX(ss_t **s, const ss_t *src)
+*/
+
+/* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable; S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)| */
+
+sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode)
 {
 	if (enable_turkish_mode) {
 		fsc_tolower = sc_tolower_tr;
@@ -1807,7 +1828,7 @@ sbool_t ss_set_turkish_mode(const int enable_turkish_mode)
 	return fsc_tolower != 0 && fsc_toupper != 0;
 }
 
-/* #API: ||||O()| */
+/* #API: |Clear string|output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_clear(ss_t **s)
 {
@@ -1818,7 +1839,7 @@ ss_t *ss_clear(ss_t **s)
 
 /* Replaces a NULL string with an empty string of size 0 */
 
-/* #API: ||||O()| */
+/* #API: |Check and fix string|output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_check(ss_t **s)
 {

@@ -214,7 +214,7 @@ ss_t *ss_toupper(ss_t **s);
 ss_t *ss_tob64(ss_t **s, const ss_t *src);
 ss_t *ss_tohex(ss_t **s, const ss_t *src);
 ss_t *ss_toHEX(ss_t **s, const ss_t *src);
-sbool_t ss_set_turkish_mode(const int enable_turkish_mode);
+sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode);
 ss_t *ss_clear(ss_t **s);
 ss_t *ss_check(ss_t **s);
 ss_t *ss_erase(ss_t **s, const size_t off, const size_t n);
