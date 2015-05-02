@@ -14,12 +14,22 @@ Short-term
 * Add st_shl and st_shr for shifting elements on a vector.
 * Example: RGB888 to palette
 * sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
+* Think about adding more types: "stable" (read-only "frozen" tree/map) and "shashmap" (smap implemented with hash tables)
 * Write examples
 
 Mid-term
 ---
 
+* New types
+ * Think about adding graph type (adjacency list and adjacency matrix) with somealgorithms for solving typical problems easily: MST, SAT / hamiltonian paths/circuits, minimal path, linear programming (e.g. simplex method), etc.
+* Vector enhancements
+ * Sort
+* Map enhancements
+ * Apply function to map: for all, for range, etc.
+* Tree enhancementsA
+ * Compare, substract, add.
 * String enhancements
+ * Store string search hash at string end (mark it with flag)
  * Search multiple targets on string keeping with O(m * n) worst search time (not O(n^2), but cheap one-pass)
  * Cache Rabin-Karpin hashes for amortized cost when repeating search with same target ("needle").
  * Add SSE 4.2 SIMD intrinsics for increasing from 1GB/s up to the saturation of the memory bus (e.g. 10GB/s per core at 3GHz) \-not 100% sure if that much will be possible, but I have some ideas\-
@@ -27,10 +37,11 @@ Mid-term
  * String analysis (naive Bayes, weight/entropy)
  * Check if some important string functionality is missing.
  * Unicode: to_lower, to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
-* Tree enhancements
 * Other
  * Bindings for other languages
 * Add some simple data compression (e.g. 4KB LZW or 32KB LZ77 + Huffman coding)
+* Win32-specific optimizations
+ * Study if using VirtualAlloc could be used as faster realloc.
 
 Long-term (never)
 ---
