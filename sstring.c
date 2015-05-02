@@ -313,6 +313,23 @@ static ss_t *ss_cat_cn_raw(ss_t **s, const char *src, const size_t src_off,
 	return ss_check(s);
 }
 
+static ss_t *ss_cat_aliasing(ss_t **s, const ss_t *s0, const size_t s0_size,
+			     const size_t s0_unicode_size, const ss_t *src)
+{
+	return src == s0 ? ss_cat_cn_raw(s, get_str(*s), 0, s0_size,
+					    s0_unicode_size) :
+			   ss_cat_cn_raw(s, get_str_r(src), 0, get_size(src),
+					    get_unicode_size(src));
+}
+
+static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
+{
+	if (!s1 || !s2)
+		return 0;
+	size_t s1_size = get_size(s1), s2_size = get_size(s2);
+	return S_MAX(s1_size, s2_size);
+}
+
 static size_t ss_utf8_to_wc(const char *s, const size_t off,
 			    const size_t max_off, int *unicode_out,
 			    ss_t *s_unicode_error_out)
@@ -825,7 +842,6 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 SD_BUILDFUNCS(ss)
 
 /*
-
 #API: |Free one or more strings|string;more strings (optional)||O(1)|
 void ss_free(ss_t **c, ...)
 
@@ -849,7 +865,6 @@ size_t ss_get_len(const ss_t *c)
 
 #API: |Allocate string (stack)|space preAllocated to store n elements|allocated string|O(1)|
 ss_t *ss_alloca(const size_t initial_reserve)
-
 */
 
 /*
@@ -1446,15 +1461,6 @@ ss_t *ss_cpy_char(ss_t **s, const int c)
  * Concatenate/append from given source/s: a = ss_cat*
  */
 
-static ss_t *ss_cat_aliasing(ss_t **s, const ss_t *s0, const size_t s0_size,
-			     const size_t s0_unicode_size, const ss_t *src)
-{
-	return src == s0 ? ss_cat_cn_raw(s, get_str(*s), 0, s0_size,
-					    s0_unicode_size) :
-			   ss_cat_cn_raw(s, get_str_r(src), 0, get_size(src),
-					    get_unicode_size(src));
-}
-
 /* #API: ||||O()| */
 
 ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
@@ -2022,16 +2028,6 @@ int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 /*
  * Compare
  */
-
-/* #API: ||||O()| */
-
-static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
-{
-	if (!s1 || !s2)
-		return 0;
-	size_t s1_size = get_size(s1), s2_size = get_size(s2);
-	return S_MAX(s1_size, s2_size);
-}
 
 /* #API: ||||O()| */
 
