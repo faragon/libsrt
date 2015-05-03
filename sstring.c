@@ -1858,42 +1858,42 @@ ss_t *ss_check(ss_t **s)
 	return *s;
 }
 
-/* #API: ||||O()| */
+/* #API: |Erase portion of a string (byte/UTF-8 mode)|input/output string; byte offset where to start the cut; number of bytes to be cut|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_erase(ss_t **s, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_FALSE, *s, off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Erase portion of a string (Unicode character mode)|input/output string; character offset where to start the cut; number of characters to be cut|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_erase_u(ss_t **s, const size_t char_off, const size_t n)
 {
 	return aux_erase_u(s, S_FALSE, *s, char_off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Replace into string|input/output string; byte offset where to start applying the replace operation; target pattern; replacement pattern|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_replace(ss_t **s, const size_t off, const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_FALSE, *s, off, s1, s2);
 }
 
-/* #API: ||||O()| */
+/* #API: |Resize string (byte/UTF-8 mode)|input/output string; new size in bytes; fill byte|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_resize(ss_t **s, const size_t n, char fill_byte)
 {
 	return aux_resize(s, S_FALSE, *s, n, fill_byte);
 }
 
-/* #API: ||||O()| */
+/* #API: |Resize string (Unicode character mode)|input/output string; new size in characters; fill character|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_resize_u(ss_t **s, const size_t u_chars, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, *s, u_chars, fill_char);
 }
 
-/* #API: ||||O()| */
+/* #API: |Remove spaces from left and right side|input/output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_trim(ss_t **s)
 {
@@ -1902,14 +1902,14 @@ ss_t *ss_trim(ss_t **s)
 	return aux_ltrim(s, S_FALSE, *s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Remove spaces from left side|input/output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_ltrim(ss_t **s)
 {
 	return aux_ltrim(s, S_FALSE, *s);
 }
 
-/* #API: ||||O()| */
+/* #API: |Remove spaces from right side|input/output string|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_rtrim(ss_t **s)
 {
@@ -1920,7 +1920,7 @@ ss_t *ss_rtrim(ss_t **s)
  * Export
  */
 
-/* #API: ||||O()| */
+/* #API: |Give a C-compatible zero-ended string reference (byte/UTF-8 mode)|input string|Zero-ended C compatible string reference (UTF-8)|O(1)| */
 
 const char *ss_to_c(ss_t *s)
 {
@@ -1932,7 +1932,7 @@ const char *ss_to_c(ss_t *s)
 	return s_str;		/* +1 space is guaranteed */
 }
 
-/* #API: ||||O()| */
+/* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)| */
 
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 {
@@ -1963,7 +1963,7 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
  * Search
  */
 
-/* #API: ||||O()| */
+/* #API: |Find substring into string|input string; search offset start; target string|Offset location if found, S_NPOS if not found|O(n)| */
 
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 {
@@ -1976,7 +1976,7 @@ size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
 
-/* #API: ||||O()| */
+/* #API: |Split/tokenize: break string by separators|output offset structure;input string; separator|Number of elements|O(n)| */
 
 size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 {
@@ -2008,7 +2008,7 @@ size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 	return sv_get_size(*v) / 2;
 }
 
-/* #API: ||||O()| */
+/* #API: |Substring size|substring offset data; n-th element|Size in bytes of the n-th element|O(1)| */
 
 size_t ss_nth_size(const sv_t *offsets, const size_t nth)
 {
@@ -2017,7 +2017,7 @@ size_t ss_nth_size(const sv_t *offsets, const size_t nth)
 	return nth < elems ? (size_t)sv_u_at(offsets, nth * 2 + 1) : 0;
 }
 
-/* #API: ||||O()| */
+/* #API: |Substring offset|substring offset data; n-th element|Offset in bytes of the n-th element|O(1)| */
 
 size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
 {
@@ -2029,7 +2029,7 @@ size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
  * Format
  */
 
-/* #API: ||||O()| */
+/* #API: |printf operation on string|output string; printf "format"; printf "format" parameters|output string reference (optional usage)|O(n)| */
 
 int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 {
@@ -2050,21 +2050,21 @@ int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
  * Compare
  */
 
-/* #API: ||||O()| */
+/* #API: |String compare|string 1; string 2|0: s1 = s2; < 0: s1 lower than s2; > 0: s1 greater than s2|O(n)| */
 
 int ss_cmp(const ss_t *s1, const ss_t *s2)
 {
 	return ss_ncmp(s1, 0, s2, get_cmp_size(s1, s2));
 }
 
-/* #API: ||||O()| */
+/* #API: |Case-insensitive string compare|string 1; string 2|0: s1 = s2; < 0: s1 lower than s2; > 0: s1 greater than s2|O(n)| */
 
 int ss_cmpi(const ss_t *s1, const ss_t *s2)
 {
 	return ss_ncmpi(s1, 0, s2, get_cmp_size(s1, s2));
 }
 
-/* #API: ||||O()| */
+/* #API: |Partial string compare|string 1; string 1 offset (bytes; string 2; comparison size (bytes)|0: s1 = s2; < 0: s1 lower than s2; > 0: s1 greater than s2|O(n)| */
 
 int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 {
@@ -2085,7 +2085,7 @@ int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 	return res;
 }
 
-/* #API: ||||O()| */
+/* #API: |Partial case insensitive string compare|string 1; string 1 offset (bytes; string 2; comparison size (bytes)|0: s1 = s2; < 0: s1 lower than s2; > 0: s1 greater than s2|O(n)| */
 
 int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 {
@@ -2129,7 +2129,7 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
  * I/O: Unicode
  */
 
-/* #API: ||||O()| */
+/* #API: |Get next Unicode character|input string; iterator|Output character, or EOF if no more characters left|O(1)| */
 
 int ss_getchar(const ss_t *s, size_t *autoinc_off)
 {
@@ -2144,14 +2144,14 @@ int ss_getchar(const ss_t *s, size_t *autoinc_off)
 	return c;
 }
 
-/* #API: ||||O()| */
+/* #API: |Put/add character into string|output string; Unicode character|Echo of the output character or EOF if overflow error|O(1)| */
 
 int ss_putchar(ss_t **s, const int c)
 {
 	return (s && ss_cat_char(s, c) && get_size(*s) > 0) ? c : EOF;
 }
 
-/* #API: ||||O()| */
+/* #API: |Extract last character from string|input/output string|Extracted character if OK, EOF if empty|O(1)| */
 
 int ss_popchar(ss_t **s)
 {
@@ -2175,7 +2175,7 @@ int ss_popchar(ss_t **s)
  * Aux
  */
 
-/* #API: ||||O()| */
+/* #API: |Empty string reference||output string reference|O(1)| */
 
 const ss_t *ss_empty()
 {
