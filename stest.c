@@ -1290,11 +1290,11 @@ int test_sv_len()
 #endif
 
 #define TEST_SV_CAPACITY(v, ntest, alloc, push, type, pushval)		\
-	sv_t *v = alloc(type, 1);					\
+	sv_t *v = alloc(type, 2);					\
 	res |= !v ? 1<<(ntest*3) :					\
-		(sv_capacity(v) == 1 &&	sv_reserve(&v, 100) &&		\
+		(sv_capacity(v) == 2 &&	sv_reserve(&v, 100) &&		\
 		 sv_capacity(v) SDCMP 100 && sv_shrink_to_fit(&v) &&	\
-		 sv_capacity(v) == 0) ? 0 : 2<<(ntest*3);		\
+		 sv_capacity(v) == 1) ? 0 : 2<<(ntest*3);		\
 	sv_free(&v)
 
 int test_sv_capacity()

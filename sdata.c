@@ -175,7 +175,7 @@ size_t sd_grow(sd_t **d, const size_t extra_size, const struct sd_conf *f)
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
 }
 
-size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f)
+static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 {
 	ASSERT_RETURN_IF(!d || !f, 0);
 	if (*d && *d != f->sx_void) {
@@ -186,42 +186,57 @@ size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f)
 				SD_GROW_PCT_CACHED : SD_GROW_PCT_NONCACHED;
 			max_size = (max_size * (100 + grow_pct)) / 100;
 #endif
-			if ((*d)->ext_buffer) {
-				S_ERROR("out of memore on fixed-size "
-					 "allocated space");
-				sd_set_alloc_errors(*d, S_TRUE);
-				return current_max_size;
-			}
-			size_t header_size, elem_size;
-			if (f) {
-				header_size = f->header_size;
-				elem_size = !f->elem_size_off ? 0 :
-					    s_load_size_t((void *)*d,
-							  f->elem_size_off);
-			} else {
-				header_size =elem_size = 0;
-			}
-			size_t new_alloc_size = sd_size_to_alloc_size(header_size, elem_size, max_size, f);
-			sd_t *d1 = (sd_t *)realloc(*d, new_alloc_size);
-			if (!d1) {
-				S_ERROR("not enough memory (realloc error)");
-				sd_set_alloc_errors(*d, S_TRUE);
-				return current_max_size;
-			}
-			*d = d1;
-			S_PROFILE_ALLOC_CALL;
-			if (f->sx_reconfig) {
-				const size_t mt1 = sd_alloc_size_to_mt_size(sd_get_alloc_size(*d), f);
-				const size_t mt2 = sd_alloc_size_to_mt_size(new_alloc_size, f);
-				const int mt_delta = (int)mt2 - (int)mt1;
-				if (mt1 >= mt2) /* Current type is enough */
-					sd_set_alloc_size(*d, new_alloc_size);
-				else /* Structure rewrite required */
-					f->sx_reconfig(*d, new_alloc_size, mt2);
-			} else {
-				sd_set_alloc_size(*d, new_alloc_size);
-			}
+		} else {
+			if (max_size == 0) /* BEHAVIOR: minimum alloc size: 1 */
+				max_size = 1;
 		}
+		if ((*d)->ext_buffer) {
+			S_ERROR("out of memore on fixed-size "
+				 "allocated space");
+			sd_set_alloc_errors(*d, S_TRUE);
+			return current_max_size;
+		}
+		size_t header_size, elem_size;
+		if (f) {
+			header_size = f->header_size;
+			elem_size = !f->elem_size_off ? 0 :
+				    s_load_size_t((void *)*d,
+						  f->elem_size_off);
+		} else {
+			header_size =elem_size = 0;
+		}
+		size_t new_alloc_size = sd_size_to_alloc_size(header_size, elem_size, max_size, f);
+		sd_t *d1 = (sd_t *)realloc(*d, new_alloc_size);
+		if (!d1) {
+			S_ERROR("not enough memory (realloc error)");
+			sd_set_alloc_errors(*d, S_TRUE);
+			return current_max_size;
+		}
+		*d = d1;
+		S_PROFILE_ALLOC_CALL;
+		if (f->sx_reconfig && current_max_size < max_size) {
+			const size_t mt1 = sd_alloc_size_to_mt_size(sd_get_alloc_size(*d), f);
+			const size_t mt2 = sd_alloc_size_to_mt_size(new_alloc_size, f);
+			const int mt_delta = (int)mt2 - (int)mt1;
+			if (mt1 >= mt2) /* Current type is enough */
+				sd_set_alloc_size(*d, new_alloc_size);
+			else /* Structure rewrite required */
+				f->sx_reconfig(*d, new_alloc_size, mt2);
+		} else {
+			sd_set_alloc_size(*d, new_alloc_size);
+		}
+	} else {
+		*d = f->sx_alloc(max_size);
+	}
+	return *d ? f->sx_get_max_size(*d) : 0;
+}
+
+size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f)
+{
+	ASSERT_RETURN_IF(!d || !f, 0);
+	if (*d && *d != f->sx_void) {
+		if (f->sx_get_max_size(*d) < max_size)
+			return sd_resize_aux(d, max_size, f);
 	} else {
 		*d = f->sx_alloc(max_size);
 	}
@@ -231,12 +246,19 @@ size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f)
 sd_t *sd_shrink_to_fit(sd_t **d, const struct sd_conf *f)
 {
 	ASSERT_RETURN_IF(!d, f->sx_void);
-	if (*d && sd_get_size(*d) < f->sx_get_max_size(*d) &&
+	RETURN_IF(!*d, f->sx_check(d));
+	size_t csize = sd_get_size(*d);
+	if (*d && csize < f->sx_get_max_size(*d) &&
 	    !(*d)->ext_buffer) { /* shrink only for heap-allocated */
-		sd_t *d2 = f->sx_dup(*d);
-		if  (d2) {
-			sd_free(d);
-			*d = d2;
+		/* non-trivial resize structure (involving full->small switch) */
+		if (f->sx_dup && f->range_small > 0 && csize <= S_ALLOC_SMALL && (*d)->is_full) {
+			sd_t *d2 = f->sx_dup(*d);
+			if  (d2) {
+				sd_free(d);
+				*d = d2;
+			}
+		} else { /* generic fast resize (via realloc) */
+			sd_resize_aux(d, csize, f);
 		}
 	}
 	return f->sx_check(d);
