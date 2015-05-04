@@ -4,30 +4,32 @@
 Short-term
 ---
 
-* stree: In addition to the callback, add an iterator for traversal.
-* stree: min, max, range query, iterator.
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
-* adjust size: string structure is not properly used.
 * add overflow checks, using "s_size_t_overflow"
 * Make last-inserted nodes cache, in order to speed-up delete.
 * Add st_shl and st_shr for shifting elements on a vector.
-* Example: RGB888 to palette
 * sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
-* Think about adding more types: "stable" (read-only "frozen" tree/map) and "shashmap" (smap implemented with hash tables)
 * Write examples
+ * RGB888 to palette using a map
+ * Key-value database: trivial case (string-string key-value) and zero alloc case (using nodes as allocation chunks -this imply limiting key size by parameter-)
 
 Mid-term
 ---
 
-* New types
- * Think about adding graph type (adjacency list and adjacency matrix) with somealgorithms for solving typical problems easily: MST, SAT / hamiltonian paths/circuits, minimal path, linear programming (e.g. simplex method), etc.
+* Think about adding more types
+ * stable: read-only "frozen" tree/map
+ * shashmap: smap implemented with hash tables
+ * sgraph: graph type (adjacency list and adjacency matrix) with some algorithms for solving typical problems easily: MST, SAT / hamiltonian paths/circuits, minimal path, linear programming (e.g. simplex method), etc.
 * Vector enhancements
  * Sort
 * Map enhancements
  * Apply function to map: for all, for range, etc.
 * Tree enhancementsA
+ * Iterato: In addition to the callback, add an iterator for traversal.
+ * min, max, range query
  * Compare, substract, add.
+
 * String enhancements
  * Store string search hash at string end (mark it with flag)
  * Search multiple targets on string keeping with O(m * n) worst search time (not O(n^2), but cheap one-pass)

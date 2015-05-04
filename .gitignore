@@ -30,4 +30,4 @@ win/vs2013/Release/
 win/vs2013/stest_Debug/
 win/vs2013/stest_Release/
 win/vs2013/x64/
-
+private/
