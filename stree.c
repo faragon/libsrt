@@ -612,12 +612,11 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 const stn_t *st_locate(const st_t *t, const stn_t *n)
 {
 	const stn_t *cn = get_node_r(t, t->root);
-	for (; cn;) {
-		int r = t->f.cmp(cn, n);
-		if (!r)
+	int r;
+	for (;;)
+		if (!(r = t->f.cmp(cn, n)) ||
+		    !(cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right : ST_Left))))
 			break;
-		cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right : ST_Left));
-	}
 	return cn;
 }
 
