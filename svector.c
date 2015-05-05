@@ -329,6 +329,14 @@ static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
  * Allocation
  */
 
+/*
+#API: |Allocate typed vector in the stack|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|
+sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
+
+#API: |Allocate generic vector in the stack|element size; space preallocated to store n elements|vector|O(1)|
+sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
+*/
+
 sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 		   const sbool_t ext_buf, void *buffer,
 		   const size_t buffer_size)
@@ -341,10 +349,14 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 	return v;
 }
 
+/* #API: |Allocate generic vector in the heap|element size; space preallocated to store n elements|vector|O(1)| */
+
 sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve)
 {
 	return sv_alloc_base(SV_GEN, elem_size, initial_num_elems_reserve);
 }
+
+/* #API: |Allocate typed vector in the heap|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)| */
 
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 {
@@ -354,8 +366,36 @@ sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 SD_BUILDFUNCS(sv)
 
 /*
+#API: |Free one or more vectors|vector;more vectors (optional)||O(1)|
+void sv_free(sv_t **c, ...)
+
+#API: |Ensure space for extra elements|vector;number of extra eelements|extra size allocated|O(1)|
+size_t sv_grow(sv_t **c, const size_t extra_elems)
+
+#API: |Ensure space for elements|vector;absolute element reserve|reserved elements|O(1)|
+size_t sv_reserve(sv_t **c, const size_t max_elems)
+
+#API: |Free unused space|vector|same vector (optional usage)|O(1)|
+sv_t *sv_shrink_to_fit(sv_t **c)
+
+#API: |Get vector size|vector|vector bytes used in UTF8 format|O(1)|
+size_t sv_get_size(const sv_t *c)
+
+#API: |Set vector size (bytes used in UTF8 format)|vector||O(1)|
+void sv_set_size(sv_t *c, const size_t s)
+
+#API: |Equivalent to sv_get_size|vector|Number of bytes (UTF-8 vector length)|O(1)|
+size_t sv_get_len(const sv_t *c)
+
+#API: |Allocate vector (stack)|space preAllocated to store n elements|allocated vector|O(1)|
+sv_t *sv_alloca(const size_t initial_reserve)
+*/
+
+/*
  * Accessors
  */
+
+/* #API: |Allocated space|vector|current allocated space (vector elements)|O(1)| */
 
 size_t sv_capacity(const sv_t *v)
 {
@@ -363,10 +403,14 @@ size_t sv_capacity(const sv_t *v)
 		0 : (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
 }
 
+/* #API: |Preallocated space left|vector|allocated space left|O(1)| */
+
 size_t sv_len_left(const sv_t *v)
 {
 	return !v? 0 : sv_capacity(v) - sv_len(v);
 }
+
+/* #API: |Explicit set length (intended for external I/O raw acccess)|vector;new length||O(1)| */
 
 sbool_t sv_set_len(sv_t *v, const size_t elems)
 {
@@ -376,20 +420,28 @@ sbool_t sv_set_len(sv_t *v, const size_t elems)
 	return resize_ok;
 }
 
+/* #API: |Get string buffer read-only access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)| */
+
 const void *sv_get_buffer_r(const sv_t *v)
 {
 	return !v ? 0 : get_buffer_r(v);
 }
+
+/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)| */
 
 void *sv_get_buffer(sv_t *v)
 {
 	return !v ? 0 : get_buffer(v);
 }
 
+/* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)| */
+
 size_t sv_get_buffer_size(const sv_t *v)
 {
 	return sv_len(v) * SDV_HEADER_SIZE;
 }
+
+/* #API: |Get vector type element size|vector type|Element size (bytes)|O(1)| */
 
 size_t sv_elem_size(const enum eSV_Type t)
 {
@@ -400,17 +452,23 @@ size_t sv_elem_size(const enum eSV_Type t)
  * Allocation from other sources: "dup"
  */
 
+/* #API: |Duplicate vector|vector|output vector|O(n)| */
+
 sv_t *sv_dup(const sv_t *src)
 {
 	sv_t *v = NULL;
 	return sv_cpy(&v, src);
 }
 
+/* #API: |Duplicate vector portion|vector; offset start; number of elements to take|output vector|O(n)| */
+
 sv_t *sv_dup_erase(const sv_t *src, const size_t off, const size_t n)
 {
 	sv_t *v = NULL;
 	return aux_erase(&v, S_FALSE, src, off, n);
 }
+
+/* #API: ||||O()| */
 
 sv_t *sv_dup_resize(const sv_t *src, const size_t n)
 {
@@ -422,15 +480,21 @@ sv_t *sv_dup_resize(const sv_t *src, const size_t n)
  * Assignment
  */
 
+/* #API: |Overwrite vector with a vector copy|output vector; input vector|output vector reference (optional usage)|O(n)| */
+
 sv_t *sv_cpy(sv_t **v, const sv_t *src)
 {
 	return aux_cat(v, S_FALSE, src, sv_len(src));
 }
 
+/* #API: |Overwrite vector with input vector copy applying a erase operation|output vector; input vector; input vector erase start offset; number of elements to erase|output vector reference (optional usage)|O(n)| */
+
 sv_t *sv_cpy_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(v, S_FALSE, src, off, n);
 }
+
+/* #API: |Overwrite vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)| */
 
 sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n)
 {
@@ -440,6 +504,11 @@ sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n)
 /*
  * Append
  */
+
+/*
+#API: |Concatenate vectors to vector|vector; first vector to be concatenated; optional: N additional vectors to be concatenated|output vector reference (optional usage)|O(n)|
+sv_t *sv_cat(sv_t **v, const sv_t *v1, ...)
+*/
 
 sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...)
 {
@@ -466,10 +535,14 @@ sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...)
 	return sv_check(v);
 }
 
+/* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)| */
+
 sv_t *sv_cat_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(v, S_TRUE, src, off, n);
 }
+
+/* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)| */
 
 sv_t *sv_cat_resize(sv_t **v, const sv_t *src, const size_t n)
 {
@@ -480,10 +553,14 @@ sv_t *sv_cat_resize(sv_t **v, const sv_t *src, const size_t n)
  * Transformation
  */
 
+/* #API: |Erase portion of a vector|input/output vector; element offset where to start the cut; number of elements to be cut|output vector reference (optional usage)|O(n)| */
+
 sv_t *sv_erase(sv_t **v, const size_t off, const size_t n)
 {
 	return aux_erase(v, S_FALSE, *v, off, n);
 }
+
+/* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)| */
 
 sv_t *sv_resize(sv_t **v, const size_t n)
 {
@@ -493,6 +570,8 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 /*
  * Search
  */
+
+/* #API: ||||O()| */
 
 size_t sv_find(const sv_t *v, const size_t off, const void *target)
 {
@@ -527,11 +606,15 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	default: src = NULL;											\
 	}
 
+/* #API: ||||O()| */
+
 size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target)
 {
 	SV_FIND_iu(v, off, target);
 	return sv_find(v, off, src);
 }
+
+/* #API: ||||O()| */
 
 size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target)
 {
@@ -544,6 +627,8 @@ size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target)
 /*
  * Compare
  */
+
+/* #API: ||||O()| */
 
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2off, const size_t n)
 {
@@ -563,6 +648,8 @@ int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2o
  * Vector "at": element access to given position
  */
 
+/* #API: ||||O()| */
+
 const void *sv_at(const sv_t *v, const size_t index)
 {
 	RETURN_IF(!v, sv_void);
@@ -577,10 +664,14 @@ const void *sv_at(const sv_t *v, const size_t index)
 	sint_t tmp;						\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, index));
 
+/* #API: ||||O()| */
+
 sint_t sv_i_at(const sv_t *v, const size_t index)
 {
 	SV_IU_AT(sint_t, SV_DEFAULT_SIGNED_VAL);
 }
+
+/* #API: ||||O()| */
 
 suint_t sv_u_at(const sv_t *v, const size_t index)
 {
@@ -592,6 +683,10 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
 /*
  * Vector "push": add element in the last position
  */
+
+/* #API: ||||O()| */
+/* #API: ||||O()| */
+/* #API: ||||O()| */
 
 #define SV_PUSH_START(n)					\
 	ASSERT_RETURN_IF(!v || !sv_grow(v, n) || !*v, S_FALSE); \
@@ -631,6 +726,8 @@ size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 	return op_cnt;
 }
 
+/* #API: ||||O()| */
+
 sbool_t sv_push_i(sv_t **v, const sint_t c)
 {
 	SV_PUSH_START(1);
@@ -638,6 +735,8 @@ sbool_t sv_push_i(sv_t **v, const sint_t c)
 	svstx_f[(*v)->sv_type](p, &c);
 	return S_TRUE;
 }
+
+/* #API: ||||O()| */
 
 sbool_t sv_push_u(sv_t **v, const suint_t c)
 {
@@ -669,6 +768,8 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	sint_t tmp;					\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, 0));
 
+/* #API: ||||O()| */
+
 void *sv_pop(sv_t *v)
 {
 	SV_POP_START(NULL);
@@ -676,12 +777,16 @@ void *sv_pop(sv_t *v)
 	return p;
 }
 
+/* #API: ||||O()| */
+
 sint_t sv_pop_i(sv_t *v)
 {
 	SV_POP_START(SV_DEFAULT_SIGNED_VAL);
 	SV_POP_END;
 	SV_POP_IU(sint_t);
 }
+
+/* #API: ||||O()| */
 
 suint_t sv_pop_u(sv_t *v)
 {
