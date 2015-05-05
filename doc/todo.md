@@ -10,13 +10,13 @@ Short-term
 * Make last-inserted nodes cache, in order to speed-up delete.
 * Add st_shl and st_shr for shifting elements on a vector.
 * sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
-* Write examples
- * RGB888 to palette using a map
- * Key-value database: trivial case (string-string key-value) and zero alloc case (using nodes as allocation chunks -this imply limiting key size by parameter-)
+* Write some simple examples
 
 Mid-term
 ---
 
+* Dynamic disk/RAM (mmap) allocators
+ * ..._allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
 * Think about adding more types
  * stable: read-only "frozen" tree/map
  * shashmap: smap implemented with hash tables
@@ -29,7 +29,6 @@ Mid-term
  * Iterato: In addition to the callback, add an iterator for traversal.
  * min, max, range query
  * Compare, substract, add.
-
 * String enhancements
  * Store string search hash at string end (mark it with flag)
  * Search multiple targets on string keeping with O(m * n) worst search time (not O(n^2), but cheap one-pass)
@@ -44,6 +43,8 @@ Mid-term
 * Add some simple data compression (e.g. 4KB LZW or 32KB LZ77 + Huffman coding)
 * Win32-specific optimizations
  * Study if using VirtualAlloc could be used as faster realloc.
+* Write examples
+ * Key-value database: trivial case (string-string key-value) and zero alloc case (key/value fitting on fixed-size node)
 
 Long-term (never)
 ---
