@@ -170,7 +170,7 @@ sm_t *sm_alloc(const enum eSM_Type t, const size_t n)
 
 /*
 #API: |Free one or more maps|map; more maps (optional)||O(1) for simple maps, O(n) for maps having nodes with strings|
-void sm(sm_t **m, ...)
+void sm_free(sm_t **m, ...)
 */
 
 void sm_free_aux(const size_t nargs, sm_t **m, ...)
@@ -189,7 +189,8 @@ void sm_free_aux(const size_t nargs, sm_t **m, ...)
 	va_end(ap);
 }
 
-/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(n)| */
+/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators| */
+
 sm_t *sm_shrink_to_fit(sm_t **m)
 {
 	return (sm_t *)st_shrink_to_fit((st_t **)m);
@@ -213,12 +214,14 @@ size_t sm_elem_size(const enum eSM_Type t)
 }
 
 /* #API: |Duplicate map|input map|output map|O(n)| */
+
 sm_t *sm_dup(const sm_t *src)
 {
 	return st_dup(src);
 }
 
 /* #API: |Reset/clean map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings| */
+
 sbool_t sm_reset(sm_t *m)
 {
 	RETURN_IF(!m, S_FALSE);
@@ -268,7 +271,7 @@ size_t sm_len(const sm_t *m)
 
 /* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)| */
 
-const sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
+sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT32_MIN);
 	struct SMapii n;
@@ -279,7 +282,7 @@ const sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 
 /* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)| */
 
-const suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
+suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
 {
 	ASSERT_RETURN_IF(!m, 0);
 	struct SMapuu n;
@@ -290,7 +293,7 @@ const suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
 
 /* #API: |Access to integer-interger map|map; integer key|integer|O(log n)| */
 
-const sint_t sm_ii_at(const sm_t *m, const sint_t k)
+sint_t sm_ii_at(const sm_t *m, const sint_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT_MIN);
 	struct SMapII n;
@@ -323,7 +326,7 @@ const void *sm_ip_at(const sm_t *m, const sint_t k)
 
 /* #API: |Access to string-integer map|map; string key|integer|O(log n)| */
 
-const sint_t sm_si_at(const sm_t *m, const ss_t *k)
+sint_t sm_si_at(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, SINT_MIN);
 	struct SMapSI n;
@@ -360,7 +363,7 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k)
 
 /* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)| */
 
-const sbool_t sm_u_count(const sm_t *m, const suint32_t k)
+sbool_t sm_u_count(const sm_t *m, const suint32_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
@@ -370,7 +373,7 @@ const sbool_t sm_u_count(const sm_t *m, const suint32_t k)
 
 /* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)| */
 
-const sbool_t sm_i_count(const sm_t *m, const sint_t k)
+sbool_t sm_i_count(const sm_t *m, const sint_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIx n;
@@ -380,7 +383,7 @@ const sbool_t sm_i_count(const sm_t *m, const sint_t k)
 
 /* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)| */
 
-const sbool_t sm_s_count(const sm_t *m, const ss_t *k)
+sbool_t sm_s_count(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSX n;
@@ -394,7 +397,7 @@ const sbool_t sm_s_count(const sm_t *m, const ss_t *k)
 
 /* #API: |Insert into int32-int32 map|map; key; value||O(log n)| */
 
-const sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
+sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapii n;
@@ -405,7 +408,7 @@ const sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
 
 /* #API: |Insert into uint32-uint32 map|map; key; value||O(log n)| */
 
-const sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
+sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
@@ -416,7 +419,7 @@ const sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
 
 /* #API: |Insert into int-int map|map; key; value||O(log n)| */
 
-const sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
+sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapII n;
@@ -427,7 +430,7 @@ const sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
 
 /* #API: |Insert into int-string map|map; key; value||O(log n)| */
 
-const sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
+sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIS n;
@@ -438,7 +441,7 @@ const sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
 
 /* #API: |Insert into int-pointer map|map; key; value||O(log n)| */
 
-const sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
+sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIP n;
@@ -449,7 +452,7 @@ const sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
 
 /* #API: |Insert into string-int map|map; key; value||O(log n)| */
 
-const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
+sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSI n;
@@ -461,7 +464,7 @@ const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
 
 /* #API: |Insert into string-string map|map; key; value||O(log n)| */
 
-const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
+sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSS n;
@@ -473,7 +476,7 @@ const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 
 /* #API: |Insert into string-pointer map|map; key; value||O(log n)| */
 
-const sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
+sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSP n;

@@ -79,18 +79,18 @@ void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v);
  * Accessors
  */
 
-size_t sm_len(const sm_t *v);
+size_t sm_len(const sm_t *m);
 
 /*
  * Random access
  */
 
-const sint32_t sm_ii32_at(const sm_t *m, const sint32_t k);
-const suint32_t sm_uu32_at(const sm_t *m, const suint32_t k);
-const sint_t sm_ii_at(const sm_t *m, const sint_t k);
+sint32_t sm_ii32_at(const sm_t *m, const sint32_t k);
+suint32_t sm_uu32_at(const sm_t *m, const suint32_t k);
+sint_t sm_ii_at(const sm_t *m, const sint_t k);
 const ss_t *sm_is_at(const sm_t *m, const sint_t k);
 const void *sm_ip_at(const sm_t *m, const sint_t k);
-const sint_t sm_si_at(const sm_t *m, const ss_t *k);
+sint_t sm_si_at(const sm_t *m, const ss_t *k);
 const ss_t *sm_ss_at(const sm_t *m, const ss_t *k);
 const void *sm_sp_at(const sm_t *m, const ss_t *k);
 
@@ -98,22 +98,22 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k);
  * Existence check
  */
 
-const sbool_t sm_u_count(const sm_t *m, const suint32_t k);
-const sbool_t sm_i_count(const sm_t *m, const sint_t k);
-const sbool_t sm_s_count(const sm_t *m, const ss_t *k);
+sbool_t sm_u_count(const sm_t *m, const suint32_t k);
+sbool_t sm_i_count(const sm_t *m, const sint_t k);
+sbool_t sm_s_count(const sm_t *m, const ss_t *k);
 
 /*
  * Insert
  */
 
-const sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v);
-const sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
-const sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v);
-const sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v);
-const sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v);
-const sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v);
-const sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
-const sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
+sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v);
+sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
+sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v);
+sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v);
+sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v);
+sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v);
+sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
+sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
 
 /*
  * Delete
