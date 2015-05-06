@@ -36,7 +36,7 @@ Generic advantages
  * More information: doc/benchmarks.md
 
 * Predictable (suitable for hard and soft real-time)
- * Predictable execution speed (O(1), O(n), and O(log n) algorithms).
+ * Predictable execution speed: all API calls have documented time complexity. Also space complexity, when extra space involving dynamic memory is required.
  * Hard real-time: allocating maximum size (strings, vector, trees, map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
  * Soft real-time: logarithmic memory allocation: for 10^n new elements just log(n) calls to the malloc() function. This is not a guarantee for hard real time, but for soft real time (being careful could provide almost same results, except in the case of very poor malloc() implementation in the C library being used -not a problem with modern compilers-).
 
