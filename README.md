@@ -6,7 +6,7 @@
 libsrt: Simple Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, tree, and map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as *all* functions are predictable in both space and time.
+libsrt is a C library that provides string, vector, tree, and map handling (and distributed maps, coming soon). It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as *all* functions are predictable in both space and time.
 
 Key points:
 
@@ -25,8 +25,8 @@ Generic advantages
  * Use strings in a similar way to higher level languages.
 
 * Space-optimized
- * Dynamic one-block linear addressing space.
- * Internal structures use indexes instead of pointers.
+ * Dynamic one-block linear addressing space (all types, but the distributed map type which uses N+1 areas).
+ * Internal structures use indexes instead of pointers (i.e. similar memory usage in both 32 and 64 bit mode).
  * More information: doc/benchmarks.md
 
 * Time-optimized
@@ -95,7 +95,7 @@ Generic disadvantages/limitations
  * ss\_free(&s1, ..., &sN);  (no manual set to NULL is required)
 
 
-String-specific advantages
+String-specific advantages (ss_t)
 ===
 
 * Unicode support
@@ -134,7 +134,7 @@ String-specific disadvantages/limitations
 
  * No reference counting support. Rationale: simplicity.
 
-Vector-specific advantages
+Vector-specific advantages (sv_t)
 ===
 
  * Variable-length concatenation and push functions.
@@ -144,7 +144,7 @@ Vector-specific disadvantages/limitations
 ===
 
 
-Tree-specific advantages
+Tree-specific advantages (st_t)
 ===
 
 * Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require at least 3x more memory -see doc/benchmarks.md-).
@@ -160,23 +160,42 @@ Tree-specific disadvantages/limitations
 
 * 
 
-Map-specific advantages
+Map-specific advantages (sm_t)
 ===
 
- * Abstraction over the tree implementation, with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
+ * Abstraction over the tree implementation (st_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
  * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
  * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
  * O(1) for allocation
  * O(1) for deleting maps without strings (one or zero calls to 'free' C function)
  * O(n) for deleting maps with strings (n + one or zero calls to 'free' C function)
- * O(log(n)) insert, delete
- * O(n) sorted enumeration (amortized O(n log(n)))
+ * O(log n) insert, search, delete
+ * O(n) sorted enumeration (amortized O(n log n))
  * O(n) unsorted enumeration (faster than the sorted case)
 
 Map-specific disadvantages/limitations
 ===
 
 *
+
+Distributed map (sdm_t)  *not implemented, yet (trivial abstraction over sm_t)*
+===
+
+* Abstraction over sm_t (st_t): same types, same memory usage, same time complexity.
+* Operation: routing via hash table + N maps (sm_t)
+* Horizontal scaling: cheap in-process clustering (e.g. lock-free multithreading on N submaps)
+* Use this instead of simpler map (sm_t), if:
+ * On-chip vertical scaling: e.g. one thread taking care of one submap. E.g. sdm_t of 8 sub-maps for 8 threads.
+ * Intended unfair routing instead of "fair" hashing (distribute elements to all subtress at same pace), you can tune the routing hash for applying specific criteria so some elements go to smaller or bigger trees, for faster retrieval (e.g. range, length, priority, group, class, etc.).
+ * Tree speed-up: less interesting case, because of memory subsystem can make it not as effective as how it looks theoretically, but nice as experiment. E.g. even using just one thread, using 1000 subtrees would reduce tree height of a one 10^9 node tree to the equivalent of the height of a 10^6 tree (up to 50% speed-up -1.5x faster- just because of the arrangement). Using 10^6 subtrees would speed-up tree search 200% (3x faster).
+
+Distributed map specific disadvantages/limitations
+===
+
+* Limitations because of using N sm_t elements:
+ * Uses N + 1 memory regions, and not linear memory addressing.
+ * Can not be allocated in the stack. If you need stack allocation, use the simpler map (sm_t).
+* Global sort to vector and enumeration is not supported. For achieving that, user has to address individual to submaps.
 
 License
 ===
