@@ -185,7 +185,7 @@ Distributed map (sdm_t)  *not implemented, yet (trivial abstraction over sm_t)*
 * Operation: routing via hash table + N maps (sm_t)
 * Horizontal scaling: cheap in-process clustering (e.g. lock-free multithreading on N submaps)
 * Use this instead of simpler map (sm_t), if:
- * On-chip vertical scaling: e.g. one thread taking care of one submap. E.g. sdm_t of 8 sub-maps for 8 threads.
+ * On-chip horizontal scaling: e.g. one thread taking care of one submap. E.g. sdm_t of 8 sub-maps for 8 threads.
  * Intended unfair routing instead of "fair" hashing (distribute elements to all subtress at same pace), you can tune the routing hash for applying specific criteria so some elements go to smaller or bigger trees, for faster retrieval (e.g. range, length, priority, group, class, etc.).
  * Tree speed-up: less interesting case, because of memory subsystem can make it not as effective as how it looks theoretically, but nice as experiment. E.g. even using just one thread, using 1000 subtrees would reduce tree height of a one 10^9 node tree to the equivalent of the height of a 10^6 tree (up to 50% speed-up -1.5x faster- just because of the arrangement). Using 10^6 subtrees would speed-up tree search 200% (3x faster).
 
