@@ -1,25 +1,41 @@
 Common
 ===
 
-* umap: g++ unordered_map
+* umap: g++ unordered\_map
 * map: g++ map
 * smap: gcc libsrt smap
-* gcc/g++ 4.8.2-19ubuntu1 (x86_64) (optimization flags: -O2), Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
+* gcc/g++ 4.8.2-19ubuntu1 (x86\_64) (optimization flags: -O2), Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 
 
-String benchmarks
+String benchmarks (ss\_t)
 ===
+
+Introduction
+---
 
 To do: copy, search, case, etc.
 
-Vector benchmarks
+Vector benchmarks (sv\_t)
 ===
 
-Tree benchmarks
+Introduction
+---
+
+Tree benchmarks (st\_t)
 ===
 
-Map benchmarks
+Introduction
+---
+
+Map benchmarks (sm\_t)
 ===
+
+Introduction
+---
+
+libsrt map implementation use red-black trees. It is about 10 times slower than hash tables (e.g. std::unsorted\_map) for maps with up to 10^8 elements doing search on simplest data types. E.g. just doing search, with same CPU used for the tests, you could query about 6 million of nodes per second (int-int type) while with the hash map, more than 60 million per second (in both cases with one CPU). For more complex data structures in the map, or including interface operations like serialization/deserialization, the total per-query time gets closer between the tree-based implementation and the hash-map implementation (e.g. serving 1 million key-value queries per second on one CPU is a huge achievement, so having 6 or 60 million QPS throughput is not going to make a world of difference).
+
+There is room for some optimization on the libsrt map (sm\_t), but bigger gain will come from using distributed maps (see sdm\_t type, libstrt map implementation that manages N maps with same interface as the simple map), so micro-optimization is not a priority (e.g. some unrolling and explicit prefetch could be added for helping non-OooE CPUs -both optimizations tried on OooE CPUs, with no visible gain, even inlining the compare function instead of using a function pointer; more tests will be done with a simpler CPU, e.g. board with ARM v6 ISA CPU-).
 
 Integer-key map insert
 ---
@@ -28,7 +44,7 @@ Integer-key map insert
 #ifdef T_MAP
         std::map<unsigned,unsigned> m;
 #else
-        std::unordered_map<unsigned,unsigned> m;
+        std::unordered\_map<unsigned,unsigned> m;
 #endif
         for (size_t i = 0; i < count; i++)
                 m[i] = 1;
@@ -39,8 +55,7 @@ Integer-key map insert
                 sm_uu32_insert(&m, i, 1);
         sm_free(&m);
 ```
-
-* umap: g++ unordered_map
+* umap: g++ unordered\_map
 * map: g++ map
 * smap: gcc libsrt smap (starting with just one element allocated)
 * gcc/g++ 4.8.2-19ubuntu1, Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
@@ -60,18 +75,18 @@ Integer-key map insert
 | map    | 10^8 | 4831 | 63.444 |
 | smap   | 10^8 | 1610 | 59.804 |
 
-In this case, libsrt smap wins in the memory usage to both GNU`s std::map (RB tree) and std::unordered_map (hash map). In speed terms, libsrt smap and std::map are similar (same algorithm), while std::unordered_map wins because using both hash tables and being the hashing of 32-bit integer very simple.
+In this case, libsrt smap wins in the memory usage to both GNU`s std::map (RB tree) and std::unordered\_map (hash map). In speed terms, libsrt smap and std::map are similar (same algorithm), while std::unordered\_map wins because using both hash tables and being the hashing of 32-bit integer very simple.
 
-Note that "average" insertion time complexity for std::unordered_map is O(1), while std::map and libsrt smap have O(log(n)). At 10^6 elements being 5x faster, and being just 6.6x faster at 10^8 elements, it shows that the allocator is hurting the hash table performance. Currently libsrt smap is not as optimized as it could be (more optimizations will be added after being sure there are no implementation errors left), the target will be being competitive with hash tables up to 10^7 elements for the case of int-int maps (e.g. 2-3x speed difference, instead of 5x).
+Note that "average" insertion time complexity for std::unordered\_map is O(1), while std::map and libsrt smap have O(log n). At 10^6 elements being 5x faster, and being just 6.6x faster at 10^8 elements, it shows that the allocator is hurting the hash table performance.
 
 Integer-key map insert and 10x read
 ---
 
 ```cpp
-#ifdef T_MAP
+#ifdef T\_MAP
         std::map<unsigned,unsigned> m;
 #else
-        std::unordered_map<unsigned,unsigned> m;
+        std::unordered\_map<unsigned,unsigned> m;
 #endif
         for (size_t i = 0; i < count; i++)
                 m[i] = 1;
@@ -83,7 +98,7 @@ Integer-key map insert and 10x read
 			}
 ```
 ```c
-        sm_t *m = sm_alloc(SM_U32U32, 1);
+        sm_t *m = sm\_alloc(SM\_U32U32, 1);
         for (size_t i = 0; i < count; i++)
                 sm_uu32_insert(&m, i, 1);
 	for (size_t h = 0; h < 10; h++)
@@ -107,8 +122,15 @@ Integer-key map insert and 10x read
 | map    | 10^8 | 10^9 | 4831 | 412.542 |
 | smap   | 10^8 | 10^9 | 1610 | 433.407 |
 
-Because of access not having the penalty of memory allocation, the std::unordered_map is 3x faster on read than on insertion. After optimizations, libsrt smap will target to reduce current 10x to 5x time vs the hash map case for 10^7 elements int-int maps.
+Because of access not having the penalty of memory allocation, the std::unordered\_map is 3x faster on read than on insertion.
 
 String-key map insert
+---
+
+
+Distributed map benchmarks (sdm\_t)
+===
+
+Introduction
 ---
 

@@ -4,6 +4,10 @@
 Short-term
 ---
 
+* sdm_t
+ * "Distributed map"
+ * Routing hash + N smap (no re-hash required, hash used for routing, not for location).
+ * Trivial N-way lock-free concurrent write operation.
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"
