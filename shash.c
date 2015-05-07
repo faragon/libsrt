@@ -39,7 +39,7 @@ int main(int argc, const char **argv)
 	int f_in = 0;
 	ssize_t l = posix_read(f_in, buf, sizeof(buf));
 	unsigned hash = sh_csum32(buf, l);
-	printf("%u\n", (hash/2 + hash)%4);
+	printf("%u", hash);
 	return 0;
 }
 #endif
