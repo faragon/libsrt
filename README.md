@@ -6,7 +6,7 @@
 libsrt: Simple Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, tree, and map handling (and distributed maps, coming soon). It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as *all* functions are predictable in both space and time.
+libsrt is a C library that provides string, vector, tree, map, and distributed map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as *all* functions are predictable in both space and time.
 
 Key points:
 
@@ -178,7 +178,7 @@ Map-specific disadvantages/limitations
 
 *
 
-Distributed map (sdm_t)  *not implemented, yet (trivial abstraction over sm_t)*
+Distributed map (sdm_t)
 ===
 
 * Abstraction over sm_t (st_t): same types, same memory usage, same time complexity.
