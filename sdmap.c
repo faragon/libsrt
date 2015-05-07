@@ -1,5 +1,5 @@
 /*
- * sdmap.c   ** incomplete, work in progress **
+ * sdmap.c
  *
  * Distributed map handling (same-process clustering)
  *
@@ -10,12 +10,47 @@
 #include "scommon.h"
 
 /*
+ * Macros
+ */
+
+#ifndef SDM_DEF_S_HASH_MAX_SIZE
+#define SDM_DEF_S_HASH_MAX_SIZE 16
+#endif
+
+
+#define SDM_FUN_DMAP(CHK, REF, FUN, FPFREF)		\
+	if (CHK) {					\
+		size_t i = 0, n = sdm_size(REF);	\
+		for (; i < n; i++)			\
+			FUN(FPFREF->maps[i]);		\
+	}
+#define SDM_FUN_PPDMAP(m, FUN)	SDM_FUN_DMAP(m && *m, *m, FUN, &(*m))
+#define SDM_FUN_PDMAP(m, FUN)	SDM_FUN_DMAP(m, m, FUN, m)
+
+/*
  * Internal functions
  */
 
-/* TODO
-   - Add default hashing functions ("fair"/uniform)
- */
+static size_t sdm_default_i_hash(const sdm_t *dm, const sint_t k)
+{
+	S_ASSERT(dm && dm->nmaps);
+	return dm ? (k % dm->nmaps) : 0;
+}
+
+static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
+{
+	S_ASSERT(dm && k && dm->nmaps);
+	/*
+	 * Simple routing hash for strings: there is no need for string
+	 * full scan, as we just need to route to a subtree and not a
+	 * hash map bucket. That's the reason of scanning just the first
+	 * 16 bytes of the string. If not enough for you, you can use a
+	 * custom routing function (or pass a bigger value through the
+	 * Makefile).
+	 */
+	const unsigned h = ss_csum32(k, SDM_DEF_S_HASH_MAX_SIZE);
+	return dm && k ? ((h / 2 + h) % dm->nmaps) : 0;
+}
 
 /*
  * Allocation
@@ -44,34 +79,30 @@ sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t init
 		}
 		free(dm);
 		dm = NULL;
+	} else {
+		/* Set routing defaults */
+		sdm_set_routing(dm, NULL, NULL);
+		dm->nmaps = nsubmaps;
 	}
 	return dm;
 }
 
 /*
 #API: |Free one or more distributed maps|map; more distributed maps (optional)||O(1) for simple dmaps, O(n) for dmaps having nodes with strings|
-void sdm_free(sdm_t **m, ...)
+void sdm_free(sdm_t **dm, ...)
 */
 
-#define SDM_FUN_MAP(m, FUN)			\
-	if (m && (*m)) {			\
-		size_t nelems = sdm_size(*m);	\
-		size_t i = 0;			\
-		for (; i < nelems; i++ )	\
-			FUN(&(*m)->maps[i]);	\
-	}
-
-static void sdm_free_aux1(sdm_t **m)
+static void sdm_free_aux1(sdm_t **dm)
 {
-	SDM_FUN_MAP(m, sm_free);
+	SDM_FUN_PPDMAP(dm, sm_free);
 }
 
-void sdm_free_aux(const size_t nargs, sdm_t **m, ...)
+void sdm_free_aux(const size_t nargs, sdm_t **dm, ...)
 {
 	va_list ap;
-	va_start(ap, m);
-	if (m)
-		sdm_free_aux1(m);
+	va_start(ap, dm);
+	if (dm)
+		sdm_free_aux1(dm);
 	if (nargs > 1) {
 		size_t i = 1;
 		for (; i < nargs; i++)
@@ -82,9 +113,9 @@ void sdm_free_aux(const size_t nargs, sdm_t **m, ...)
 
 /* #API: |Make the dynamic map use the minimum possible memory|map||O(1) for allocators using memory remap; O(n) for naive allocators| */
 
-void sdm_shrink_to_fit(sdm_t **m)
+void sdm_shrink_to_fit(sdm_t **dm)
 {
-        SDM_FUN_MAP(m, sm_shrink_to_fit);
+        SDM_FUN_PPDMAP(dm, sm_shrink_to_fit);
 }
 
 /* #API: |Duplicate distributed map|input map|output map|O(n)| */
@@ -94,7 +125,7 @@ sdm_t *sdm_dup(const sdm_t *src)
 	ASSERT_RETURN_IF(!src, NULL);
 	size_t nsubmaps = sdm_size(src);
 	ASSERT_RETURN_IF(!nsubmaps, NULL);
-	sm_t **maps = sdm_submaps(src);
+	const sm_t **maps = sdm_submaps_r(src);
 	ASSERT_RETURN_IF(!maps, NULL);
 	ASSERT_RETURN_IF(!maps[0], NULL);
 	size_t nmaps = sdm_size(src);
@@ -123,88 +154,67 @@ sdm_t *sdm_dup(const sdm_t *src)
 
 /* #API: |Reset/clean distributed map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings| */
 
-sbool_t sdm_reset(sdm_t *m)
+sbool_t sdm_reset(sdm_t *dm)
 {
-#if 1
-	return S_FALSE;
-#else
 	sbool_t res_ok = S_TRUE;
-        SDM_FUN_MAP(&m, res_ok &&= sm_reset);
+	SDM_FUN_PDMAP(dm, res_ok &= sm_reset);
 	return res_ok;
-#endif
 }
 
 /*
- * Hash function change (default one is "fair"/uniform)
+ * Routing
  */
 
-/* #API: ||||| */
+/* #API: |Set routing functions|map; routing function for integer keys (if NULL, a "fair" hash will be used); routing function for string keys (if NULL, also a "fair" hash will be used)||O(1)| */
 
-void sdm_set_i_hash(sdm_t *m, sdm_i_hash_t f)
+void sdm_set_routing(sdm_t *dm, sdm_i_hash_t irf, sdm_s_hash_t srf)
 {
-	/* TODO */
+	if (dm) {
+		dm->ih = irf ? irf : sdm_default_i_hash;
+		dm->sh = srf ? srf : sdm_default_s_hash;
+	}
 }
 
-/* #API: ||||| */
+/* #API: |Get route to subtree (integer key)|dmap; key|subtree id|O(1)| */
 
-void sdm_set_u_hash(sdm_t *m, sdm_u_hash_t f)
+size_t sdm_i_route(const sdm_t *dm, const sint_t k)
 {
-	/* TODO */
+	S_ASSERT(dm);
+	return dm ? dm->ih(dm, k) : 0;
 }
 
-/* #API: ||||| */
+/* #API: |Get route to subtree (string key)|dmap; key|subtree id|O(1)| */
 
-void sdm_set_s_hash(sdm_t *m, sdm_s_hash_t f)
+size_t sdm_s_route(const sdm_t *dm, const ss_t *k)
 {
-	/* TODO */
-}
-
-/* #API: ||||| */
-
-void sdm_set_hash_defaults(sdm_t *m)
-{
-	/* TODO */
-}
-
-/*
- * Key to submap routing
- */
-
-/* #API: ||||| */
-
-int sdm_u_route(const sdm_t *m, const suint32_t k)
-{
-	return -1; /* TODO */
-}
-
-/* #API: ||||| */
-
-int sdm_i_route(const sdm_t *m, const sint_t k)
-{
-	return -1; /* TODO */
-}
-
-/* #API: ||||| */
-
-int sdm_s_route(const sdm_t *m, const ss_t *k)
-{
-	return -1; /* TODO */
+	S_ASSERT(dm);
+	return dm ? dm->sh(dm, k) : 0;
 }
 
 /*
  * Accessors
  */
 
-size_t sdm_size(const sdm_t *m)
+/* #API: |Get number of submaps|dmap|Number of submaps|O(1)| */
+
+size_t sdm_size(const sdm_t *dm)
 {
-	return 0; /* TODO */
+	S_ASSERT(dm);
+	return dm ? dm->nmaps : 0;
 }
 
-/* #API: ||||| */
+/* #API: |Get submap pointer vector|dmap|map vector|O(1)| */
 
-sm_t **sdm_submaps(const sdm_t *m)
+sm_t **sdm_submaps(sdm_t *dm)
 {
-	return 0; /* TODO */
+	return (sm_t **)sdm_submaps_r(dm);
 }
 
+/* #API: |Get submap pointer vector (read-only)|dmap|map vector|O(1)| */
+
+const sm_t **sdm_submaps_r(const sdm_t *dm)
+{
+	S_ASSERT(dm);
+	return dm ? (const sm_t **)dm->maps : NULL;
+}
 
