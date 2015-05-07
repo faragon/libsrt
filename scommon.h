@@ -70,7 +70,6 @@ extern "C" {
  * Context
  */
 
-
 #if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || \
 	defined(__GNUC__) || defined (__TINYC__) || _MSC_VER >= 1800 || \
 	defined(__DMC__)
@@ -152,6 +151,11 @@ extern "C" {
 	#define S_NARGS_STR(...) (sizeof((const st_t * []){__VA_ARGS__})/sizeof(const st_t *))
 	#define S_NARGS_STPW(...) (sizeof((st_t ** []){__VA_ARGS__})/sizeof(st_t **))
 	#define S_NARGS_STPR(...) (sizeof((const st_t ** []){__VA_ARGS__})/sizeof(const st_t **))
+	/* sdm_t */
+	#define S_NARGS_SDMW(...) (sizeof((sdm_t * []){__VA_ARGS__})/sizeof(sdm_t *))
+	#define S_NARGS_SDMR(...) (sizeof((const sdm_t * []){__VA_ARGS__})/sizeof(const sdm_t *))
+	#define S_NARGS_SDMPW(...) (sizeof((sdm_t ** []){__VA_ARGS__})/sizeof(sdm_t **))
+	#define S_NARGS_SDMPR(...) (sizeof((const sdm_t ** []){__VA_ARGS__})/sizeof(const sdm_t **))
 
 #endif
 
@@ -165,7 +169,6 @@ extern "C" {
 #define S_TRUE		(1)
 #define S_FALSE		(0)
 #define S_SIZET_MAX	(UINTPTR_MAX)
-
 
 #ifdef _MSC_VER
 	#if S_BPWORD == 8
@@ -197,9 +200,12 @@ extern "C" {
  * Macros
  */
 
-#define S_MIN(a, b) ((a) < (b) ? (a) : b)
-#define S_MAX(a, b) ((a) > (b) ? (a) : b)
-#define S_MIN3(a, b, c) S_MIN(S_MIN(a, b), c)
+#define S_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define S_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define S_MIN3(a, b, c) S_MIN(S_MIN(a, b), (c))
+#define S_ROL32(a, c) ((a) << (c) | (a) >> (32 - (c)))
+#define S_ROR32(a, c) ((a) >> (c) | (a) << (32 - (c)))
+#define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
 #define RETURN_IF(a, v) if (a) return (v)
 #define ASSERT_RETURN_IF(a, v) S_ASSERT(!(a)); if (a) return (v)
 
@@ -251,7 +257,6 @@ extern "C" {
 #define SINT32_MIN ((sint32_t)(0x80000000))
 #define SUINT32_MAX 0xffffffff
 #define SUINT32_MIN 0
-
 
 typedef unsigned char sbool_t;
 
@@ -306,6 +311,7 @@ static sbool_t s_size_t_overflow(const size_t a, const size_t b)
 /*
  * Integer log2(N) approximation
  */
+
 static unsigned slog2(suint_t i)
 {
 	unsigned o = 0, test;
