@@ -95,6 +95,11 @@ void sdm_free(sdm_t **dm, ...)
 static void sdm_free_aux1(sdm_t **dm)
 {
 	SDM_FUN_PPDMAP(dm, sm_free);
+	if (dm && *dm) {
+		SDM_FUN_PPDMAP(dm, sm_free);
+		free(*dm);
+		*dm = NULL;
+	}
 }
 
 void sdm_free_aux(const size_t nargs, sdm_t **dm, ...)
