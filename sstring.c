@@ -11,6 +11,7 @@
 #include "ssearch.h"
 #include "scommon.h"
 #include "senc.h"
+#include "shash.h"
 
 /*
  * Togglable optimizations
@@ -2169,6 +2170,19 @@ int ss_popchar(ss_t **s)
 		}
 	}
 	return EOF;
+}
+
+/*
+ * Hashing
+ */
+
+/* #API: |Simple hash: 32-bit checksum|string; 0: compare all string; 1 <= n < N compare first N elements |32-bit hash|O(n)| */
+
+unsigned ss_csum32(const ss_t *s, const size_t n)
+{
+	RETURN_IF(!s, 0);
+	const size_t ss = ss_get_size(s), cmpsz = n ? S_MIN(ss, n) : ss;
+	return sh_csum32(get_str_r(s), cmpsz);
 }
 
 /*

@@ -266,6 +266,12 @@ int ss_putchar(ss_t **s, const int c);
 int ss_popchar(ss_t **s);
 
 /*
+ * Hashing
+ */
+
+unsigned ss_csum32(const ss_t *s, const size_t n);
+
+/*
  * Aux
  */
 
