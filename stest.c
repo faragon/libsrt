@@ -14,6 +14,7 @@
 #include "svector.h"
 #include "stree.h"
 #include "smap.h"
+#include "sdmap.h"
 #include "sdbg.h"
 
 /*
@@ -1674,7 +1675,7 @@ int test_st_alloc()
 		}
 
 #define ST_CHK_BRK(t, len, err)			\
-		if (st_len(t) != (len)) {		\
+		if (st_len(t) != (len)) {	\
 			res = err;		\
 			break;			\
 		}
@@ -1804,7 +1805,7 @@ int test_st_traverse()
 		for (;;) {						       \
 			if (!m) { res = 1; break; }			       \
 			sm_ii_insert(&m, 1, 1001);			       \
-			if (sm_len(m) != 1) { res = 2; break; }		       \
+			if (sm_size(m) != 1) { res = 2; break; }	       \
 			sm_ii_insert(&m, 2, 1002);			       \
 			sm_ii_insert(&m, 3, 1003);			       \
 			if (sm_ii_at(m, 1) != 1001) { res = 2; break; }	       \
@@ -1824,7 +1825,7 @@ int test_sm_shrink_to_fit()
 	return 0; /* TODO */
 }
 
-int test_sm_len()
+int test_sm_size()
 {
 	return 0; /* TODO */
 }
@@ -2086,6 +2087,24 @@ int test_sm_double_rotation()
 	sm_free(&m);
 	sv_free(&kv, &vv, &kv2, &vv2);
 	return res;
+}
+
+int test_sdm_alloc()
+{
+	sdm_t *dm = sdm_alloc(SM_IntInt, 4, 1);
+	RETURN_IF(!dm, 1);
+	sm_t **submaps = sdm_submaps(dm);
+	size_t c = 0, nelems = 1000000;
+	for (; c < nelems; c++) {
+		const size_t route = sdm_i_route(dm, c);
+		sm_ii_insert(&submaps[route], c, c);
+	}
+	size_t sdmsz = sdm_size(dm);
+	size_t nelems_check = 0;
+	for (c = 0; c < sdmsz; c++)
+		nelems_check += sm_size(submaps[c]);
+	sdm_free(&dm);
+	return nelems == nelems_check ? 0 : 2;
 }
 
 /*
@@ -2383,10 +2402,13 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_st_alloc());
 	STEST_ASSERT(test_st_insert_del());
 	STEST_ASSERT(test_st_traverse());
+	/*
+	 * Map
+	 */
 	STEST_ASSERT(test_sm_alloc());
 	STEST_ASSERT(test_sm_alloca());
 	STEST_ASSERT(test_sm_shrink_to_fit());
-	STEST_ASSERT(test_sm_len());
+	STEST_ASSERT(test_sm_size());
 	STEST_ASSERT(test_sm_dup());
 	STEST_ASSERT(test_sm_ii32_at());
 	STEST_ASSERT(test_sm_uu32_at());
@@ -2410,6 +2432,10 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_sm_enum());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
+	/*
+	 * Distributed map
+	 */
+	STEST_ASSERT(test_sdm_alloc());
 	/*
 	 * Report
 	 */
