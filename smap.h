@@ -71,15 +71,13 @@ sm_t *sm_dup(const sm_t *src);
 sbool_t sm_reset(sm_t *m);
 void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v);
 
-/* SD_BUILDPROTS(st) */
-
 #define sm_free(...) sm_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
 
 /*
  * Accessors
  */
 
-size_t sm_len(const sm_t *m);
+size_t sm_size(const sm_t *m);
 
 /*
  * Random access

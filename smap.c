@@ -260,7 +260,7 @@ void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v)
 
 /* #API: |Get map size|map|Map number of elements|O(1)| */
 
-size_t sm_len(const sm_t *m)
+size_t sm_size(const sm_t *m)
 {
 	return st_len(m);
 }
