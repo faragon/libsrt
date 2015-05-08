@@ -1,5 +1,5 @@
-#ifndef SENC_H
-#define SENC_H
+#ifndef SHASH_H
+#define SHASH_H
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -17,10 +17,12 @@ extern "C" {
  *   routing hash in sdmap.c)
  */
 
+#include "scommon.h"
+
 unsigned sh_csum32(const void *buf, const size_t buf_size);
 
 #ifdef __cplusplus
 };      /* extern "C" { */
 #endif
-#endif	/* SENC_H */
+#endif	/* SHASH_H */
 

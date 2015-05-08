@@ -487,7 +487,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			/* Push child red node down */
 			stndx_t nd = get_lr(w[c].n, d);
 			stn_t *ndn = get_node(t, nd);
-			if (w[c].n->is_red || ndn && ndn->is_red)
+			if (w[c].n->is_red || (ndn && ndn->is_red))
 				break;
 			const enum STNDir xd = cd(d);
 			if (is_red(t, get_lr(w[c].n, xd))) {

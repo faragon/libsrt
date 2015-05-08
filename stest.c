@@ -1818,7 +1818,7 @@ int test_st_traverse()
 	}
 
 TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free);
-TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, 0 &&);
+TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, );
 
 int test_sm_shrink_to_fit()
 {

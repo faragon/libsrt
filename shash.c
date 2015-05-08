@@ -6,8 +6,7 @@
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  */
 
-#include "senc.h"
-#include "scommon.h"
+#include "shash.h"
 
 /*
  * Functions

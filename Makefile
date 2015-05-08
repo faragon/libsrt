@@ -49,6 +49,9 @@ else
 	ifeq ($(CC), clang++)
 		CPP_MODE=1
 	endif
+	ifeq ($(CPP11), 1)
+		CPP_MODE=1
+	endif
 	ifeq ($(CPP_MODE), 1)
 		ifeq ($(CPP11), 1)
 			CFLAGS += -std=c++11
