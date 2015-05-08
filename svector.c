@@ -571,7 +571,7 @@ sv_t *sv_resize(sv_t **v, const size_t n)
  * Search
  */
 
-/* #API: ||||O()| */
+/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)| */
 
 size_t sv_find(const sv_t *v, const size_t off, const void *target)
 {
@@ -606,7 +606,7 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	default: src = NULL;											\
 	}
 
-/* #API: ||||O()| */
+/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)| */
 
 size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target)
 {
@@ -614,7 +614,7 @@ size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target)
 	return sv_find(v, off, src);
 }
 
-/* #API: ||||O()| */
+/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)| */
 
 size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target)
 {
@@ -628,7 +628,7 @@ size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target)
  * Compare
  */
 
-/* #API: ||||O()| */
+/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)| */
 
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2off, const size_t n)
 {
@@ -648,7 +648,7 @@ int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2o
  * Vector "at": element access to given position
  */
 
-/* #API: ||||O()| */
+/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)| */
 
 const void *sv_at(const sv_t *v, const size_t index)
 {
@@ -664,14 +664,14 @@ const void *sv_at(const sv_t *v, const size_t index)
 	sint_t tmp;						\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, index));
 
-/* #API: ||||O()| */
+/* #API: |Vector random access (integer)|vector; location|Element value|O(1)| */
 
 sint_t sv_i_at(const sv_t *v, const size_t index)
 {
 	SV_IU_AT(sint_t, SV_DEFAULT_SIGNED_VAL);
 }
 
-/* #API: ||||O()| */
+/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)| */
 
 suint_t sv_u_at(const sv_t *v, const size_t index)
 {
@@ -684,10 +684,6 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
  * Vector "push": add element in the last position
  */
 
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-/* #API: ||||O()| */
-
 #define SV_PUSH_START(n)					\
 	ASSERT_RETURN_IF(!v || !sv_grow(v, n) || !*v, S_FALSE); \
 	const size_t sz = get_size(*v);				\
@@ -697,6 +693,8 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
 #define SV_PUSH_END(n)	\
 	set_size(*v, sz + n);
 
+/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
+
 sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 {
 	ASSERT_RETURN_IF(!src || !n, S_FALSE);
@@ -705,6 +703,11 @@ sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 	memcpy(p, src, elem_size * n);
 	return S_TRUE;
 }
+
+/*
+#API: |Push/add multiple elements (generic data)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1) for one element; O(n) generic case|
+sbool_t sv_push(sv_t **v, const void *c1, ...)
+*/
 
 size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 {
@@ -726,7 +729,7 @@ size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 	return op_cnt;
 }
 
-/* #API: ||||O()| */
+/* #API: |Push/add element (integer)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
 
 sbool_t sv_push_i(sv_t **v, const sint_t c)
 {
@@ -736,7 +739,7 @@ sbool_t sv_push_i(sv_t **v, const sint_t c)
 	return S_TRUE;
 }
 
-/* #API: ||||O()| */
+/* #API: |Push/add element (unsigned integer)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
 
 sbool_t sv_push_u(sv_t **v, const suint_t c)
 {
@@ -768,7 +771,7 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	sint_t tmp;					\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, 0));
 
-/* #API: ||||O()| */
+/* #API: |Pop/extract element (generic data)|vector|Element reference|O(i1)| */
 
 void *sv_pop(sv_t *v)
 {
@@ -777,7 +780,7 @@ void *sv_pop(sv_t *v)
 	return p;
 }
 
-/* #API: ||||O()| */
+/* #API: |Pop/extract element (integer)|vector|Integer element|O(i1)| */
 
 sint_t sv_pop_i(sv_t *v)
 {
@@ -786,7 +789,7 @@ sint_t sv_pop_i(sv_t *v)
 	SV_POP_IU(sint_t);
 }
 
-/* #API: ||||O()| */
+/* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(i1)| */
 
 suint_t sv_pop_u(sv_t *v)
 {
