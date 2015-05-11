@@ -4,11 +4,11 @@
 Short-term
 ---
 
-* add fast LZW
- * stack usage
- * perfect search for 2^10 to 2^12 codes (not a hash-search approximation)
- * no sequential search on nodes: tree with per-node two-level hash hierarchy (e.g. instead of having every node a hash table with 256 entries, have 16-element pre-routing hash plus up to 16 hash tables of 16-elements each one
- * speed target: at least 200MB/s encoding speed on Intel Core i5 @3GHz (one thread).
+* Add fast LZW
+ * Amortized O(n) time complexity
+ * Use up to 4 LUTs per node (reduce LUT underusage and LUT setup time)
+ * Memory target: 20 to 80KB, allocated on the stack (for 1024 to 4096 nodes, including LUTs).
+ * Speed target: at least 200MB/s encoding speed on Intel Core i5 @3GHz (one thread).
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"

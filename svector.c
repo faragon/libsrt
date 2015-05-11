@@ -468,7 +468,7 @@ sv_t *sv_dup_erase(const sv_t *src, const size_t off, const size_t n)
 	return aux_erase(&v, S_FALSE, src, off, n);
 }
 
-/* #API: ||||O()| */
+/* #API: |Duplicate vector with resize operation|vector; size for the output|output vector|O(n)| */
 
 sv_t *sv_dup_resize(const sv_t *src, const size_t n)
 {
