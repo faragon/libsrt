@@ -100,31 +100,6 @@ extern "C" {
 #endif
 
 /*
- * Prefetch stuff
- */
-
-#if defined(MSVC) && defined(_M_X86)
-	#include <emmintrin.h>
-	#define S_PREFETCH_R(address) 					\
-		if (address)						\
-			_mm_prefetch((char *)(address), _MM_HINT_T0)
-	#define S_PREFETCH_W(address) S_PREFETCH_R(address)
-#endif
-#if defined(__GNUC__)
-	#define S_PREFETCH_GNU(address, rw)		\
-		if (address)				\
-			__builtin_prefetch(address, rw)
-	#define S_PREFETCH_R(address) S_PREFETCH_GNU(address, 0)
-	#define S_PREFETCH_W(address) S_PREFETCH_GNU(address, 1)
-#endif
-#ifndef S_PREFETCH_R
-	#define S_PREFETCH_R(address)
-#endif
-#ifndef S_PREFETCH_W
-	#define S_PREFETCH_W(address)
-#endif
-
-/*
  * Variable argument helpers
  */
 
@@ -208,6 +183,71 @@ extern "C" {
 #define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
 #define RETURN_IF(a, v) if (a) return (v)
 #define ASSERT_RETURN_IF(a, v) S_ASSERT(!(a)); if (a) return (v)
+
+/*
+ * Low-level stuff
+ */
+
+#if defined(__i386__) || defined(__x86_64__)
+	#define S_UNALIGNED_MEMORY_ACCESS
+#endif
+
+#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) || defined(LITTLE_ENDIAN) ||\
+    defined(__i386__) ||defined(__x86_64__)
+	#define S_IS_LITTLE_ENDIAN 1
+	#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
+#endif
+
+#ifndef S_IS_LITTLE_ENDIAN
+	#define S_IS_LITTLE_ENDIAN 0
+#endif
+
+#if S_IS_LITTLE_ENDIAN
+	#define S_NTOH_U32(a) S_BSWAP32((unsigned)(a))
+#else
+	#define S_NTOH_U32(a) (a)
+#endif
+#define S_HTON_U32(a) S_NTOH_U32(a)
+
+#ifdef S_UNALIGNED_MEMORY_ACCESS
+	#define S_LD_U32(a) *(unsigned *)(a)
+	#define S_ST_U32(a, v) *(unsigned *)(a) = v
+#else
+	#if S_IS_LITTLE_ENDIAN
+		#define S_LD_U32(a) *(unsigned char *)(a) ||	\
+			*((unsigned char *)(a) + 1) << 8 ||	\
+			*((unsigned char *)(a) + 2) << 16 ||	\
+			*((unsigned char *)(a) + 3) << 24
+	#else
+		#define S_LD_U32(a) *(unsigned char *)(a) <<24 ||	\
+			*((unsigned char *)(a) + 1) << 16 ||		\
+			*((unsigned char *)(a) + 2) << 8 ||		\
+			*((unsigned char *)(a) + 3)
+
+	#endif
+	#define S_ST_U32(a, v) { unsigned int w = v; memcpy((a), &w, sizeof(w)); }
+#endif
+
+#if defined(MSVC) && defined(_M_X86)
+	#include <emmintrin.h>
+	#define S_PREFETCH_R(address) 					\
+		if (address)						\
+			_mm_prefetch((char *)(address), _MM_HINT_T0)
+	#define S_PREFETCH_W(address) S_PREFETCH_R(address)
+#endif
+#if defined(__GNUC__)
+	#define S_PREFETCH_GNU(address, rw)		\
+		if (address)				\
+			__builtin_prefetch(address, rw)
+	#define S_PREFETCH_R(address) S_PREFETCH_GNU(address, 0)
+	#define S_PREFETCH_W(address) S_PREFETCH_GNU(address, 1)
+#endif
+#ifndef S_PREFETCH_R
+	#define S_PREFETCH_R(address)
+#endif
+#ifndef S_PREFETCH_W
+	#define S_PREFETCH_W(address)
+#endif
 
 /* debug and alloc counter */
 #ifdef S_DEBUG
