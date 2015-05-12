@@ -195,7 +195,6 @@ extern "C" {
 #if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) || defined(LITTLE_ENDIAN) ||\
     defined(__i386__) ||defined(__x86_64__)
 	#define S_IS_LITTLE_ENDIAN 1
-	#define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
 #endif
 
 #ifndef S_IS_LITTLE_ENDIAN
