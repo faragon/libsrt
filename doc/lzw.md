@@ -19,8 +19,8 @@ Most LZW implementations, for a given tree node, use a linked list plus some LUT
 
 ### Memory usage reduction optimization: encoding
 
-* Use 16-bit indexes could be used instead of pointers (half the memory in 32-bit mode, one quarter in 64-bit mode).
-* Avoid structure usage: use separated arrays, so no memory is wasted because alignment.
+* Use 16-bit indexes instead of pointers (half the memory in 32-bit mode, one quarter in 64-bit mode).
+* Avoid structure usage: use separated arrays, so no memory is wasted because of data alignment.
 * Don't use linked lists: one node will have one child or a LUT as child. That will work very well for not "very random" data, while exausting fast LUT tables on noisy/random input. 
 * Full node (with LUT reference): 5 + 256 bytes  2 bytes for node code (the element being stored as "compressed" data), 2 bytes multiplexed for LUT/code (if > 0, LUT for 256 child nodes, 0: empty, < 0: -(child node)), 1 byte for child node byte.
 * Minimum node size (node with one child): 5 bytes (amortized alignment, so really 5 bytes, not more). This is a subset of the above with lut reference lower than 0 (using the negative number as code instead of LUT reference)
