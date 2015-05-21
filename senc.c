@@ -42,6 +42,16 @@ static const char h2n[64] = {
 	0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 
+#define SLZW_MAX_TREE_BITS	12
+#define SLZW_CODE_LIMIT		(1 << SLZW_MAX_TREE_BITS)
+#define SLZW_MAX_CODE		(SLZW_CODE_LIMIT - 1)
+#define SLZW_ROOT_NODE_BITS	8
+#define SLZW_RESET		(1 << SLZW_ROOT_NODE_BITS)
+#define SLZW_STOP		(SLZW_RESET + 1)
+#define SLZW_FIRST		(SLZW_STOP + 1)
+#define SLZW_LUT_CHILD_ELEMS	256
+#define SLZW_MAX_LUTS		(SLZW_CODE_LIMIT / 8)
+
 /*
  * Macros
  */
@@ -53,6 +63,37 @@ static const char h2n[64] = {
 #define DB64C1(a, b)	(a << 2 | b >> 4)
 #define DB64C2(b, c)	(b << 4 | c >> 2)
 #define DB64C3(c, d)	(c << 6 | d)
+
+#define SLZW_ENC_WRITE(ob, oi, acc, code, code_size_bits) {	\
+		int c = code, code_bits = code_size_bits;	\
+		if (acc) {					\
+			int xbits = 8 - acc;			\
+			ob[oi++] |= (c << acc);			\
+			c >>= xbits;				\
+			code_bits -= xbits;			\
+		}						\
+		size_t copy_size = code_bits / 8;		\
+		switch (copy_size) {				\
+		case 3: ob[oi++] = c; c >>= 8;			\
+		case 2: ob[oi++] = c; c >>= 8;			\
+		case 1: ob[oi++] = c; c >>= 8;			\
+		}						\
+		acc = code_bits % 8;				\
+		if (acc)					\
+			ob[oi] = c;				\
+	}
+
+#define SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,	\
+		       node_stack_in_use, next_code, curr_code_len) {	\
+		int j;							\
+		for (j = 0; j < SLZW_RESET; j++)			\
+			node_lutref[node_codes[j] = j] = 0;		\
+		lut_stack_in_use = 1;					\
+		node_stack_in_use = 256;				\
+		SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);	\
+		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
+		next_code = SLZW_FIRST;					\
+	}
 
 /*
  * Internal functions
@@ -185,51 +226,190 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
+/*
+ * LZW encoding/decoding
+ */
+
+typedef short slzw_ndx_t;
+
+size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
+{
+	RETURN_IF(!s || !o || !ss, 0);
+	/*
+	 * Node structure (separated elements and not a "struct", in order to
+	 * save space because of data alignment)
+	 *
+	 * node_codes[i]: LZW output code for the node
+	 * node_lutref[i]: 0: empty, < 0: -next_node, > 0: 256-child LUT ref.
+	 * node_child[i]: if node_lutref[0] < 0: next node byte (one-child node)
+	 */
+        slzw_ndx_t node_codes[SLZW_CODE_LIMIT],
+		   node_lutref[SLZW_CODE_LIMIT],
+		   lut_stack[SLZW_MAX_LUTS][SLZW_LUT_CHILD_ELEMS];
+        unsigned char node_child[SLZW_CODE_LIMIT];
+	/*
+	 * Stack allocation control
+	 */
+        size_t node_stack_in_use, lut_stack_in_use;
+	/*
+	 * Output encoding control
+	 */
+        size_t oi = 0;
+        int next_code, curr_code_len, acc = 0;
+	/*
+	 * Initialize data structures
+	 */
+	SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,
+		       node_stack_in_use, next_code, curr_code_len);
+	/*
+	 * Encoding loop
+	 */
+	size_t i = 0;
+	slzw_ndx_t curr_node;
+	for (; i < ss;) {
+		/*
+		 * Locate pattern
+		 */
+		unsigned in_byte = s[i++];
+		curr_node = in_byte;
+		slzw_ndx_t r;
+		for (; i < ss; i++) {
+			in_byte = s[i];
+			const slzw_ndx_t nlut = node_lutref[curr_node];
+			if (nlut < 0 && in_byte == node_child[curr_node]) {
+				curr_node = -nlut;
+				continue;
+			}
+			if (nlut <= 0 || !(r = lut_stack[nlut][in_byte]))
+				break;
+			curr_node = r;
+		}
+		if (i == ss)
+			break;
+		/*
+		 * Add new code to the tree
+		 */
+		const slzw_ndx_t new_node = node_stack_in_use++;
+		if (node_lutref[curr_node] <= 0) {
+			if (node_lutref[curr_node] == 0) { /* empty */
+				node_lutref[curr_node] = -new_node;
+				node_child[curr_node] = in_byte;
+			} else { /* single node: convert it to LUT */
+				slzw_ndx_t alt_n = -node_lutref[curr_node];
+				slzw_ndx_t new_lut = lut_stack_in_use++;
+				node_lutref[curr_node] = new_lut;
+				memset(&lut_stack[new_lut], 0, sizeof(lut_stack[0]));
+				lut_stack[new_lut][node_child[curr_node]] = alt_n;
+			}
+		}
+		if (node_lutref[curr_node] > 0)
+			lut_stack[node_lutref[curr_node]][in_byte] = new_node;
+		/*
+		 * Write pattern code to the output stream
+		 */
+		node_codes[new_node] = next_code;
+		node_lutref[new_node] = 0;
+		SLZW_ENC_WRITE(o, oi, acc, node_codes[curr_node], curr_code_len);
+		if (next_code == (1 << curr_code_len))
+			curr_code_len++;
+		/*
+		 * Reset tree if tree code limit is reached or if running
+		 * out of LUTs
+		 */
+		if (++next_code == SLZW_MAX_CODE ||
+		    lut_stack_in_use == SLZW_MAX_LUTS)
+		        SLZW_ENC_RESET(node_codes, node_lutref,
+				       lut_stack_in_use, node_stack_in_use,
+				       next_code, curr_code_len);
+	}
+	/*
+	 * Write last code, the "end of information" mark, and fill bits with 0
+	 */
+	SLZW_ENC_WRITE(o, oi, acc, node_codes[curr_node], curr_code_len);
+	SLZW_ENC_WRITE(o, oi, acc, SLZW_STOP, curr_code_len);
+	if (acc)
+		o[++oi] = 0;
+	return oi;
+}
+
+size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
+{
+	RETURN_IF(!s || !o || !ss, 0);
+	/*
+	 * TODO:
+	 *
+	 * 1. Decoding loop
+	 * 1.1. Feed accumulator
+	 * 1.2. Extract code
+	 * 1.3. Expand code
+	 * 2. Check uncompressed size
+	 *
+	 */
+	fprintf(stderr, "[sdec_lzw] NOT IMPLEMENTED (!)\n");
+	return 0;
+}
+
 #ifdef STANDALONE_TEST
+
+#define BUF_IN_SIZE (220 * 1024 * 1024)
+#define BUF_OUT_SIZE (BUF_IN_SIZE * 2)
 
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
-		"Error [%i] Syntax: %s [-cb|-db|-ch|-cH|-dh]\nExamples:\n"
-		"%s -cb <in >out.b64\n%s -db <in.b64 >out\n"
-		"%s -ch <in >out.hex\n%s -cH <in >out.HEX\n"
-		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0);
+		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh]\nExamples:\n"
+		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
+		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
+		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
+		"%s -ez <in >in.z\n%s -dz <in.z >out\n",
+		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
 int main(int argc, const char **argv)
 {
-	int i = 0;
 	size_t lo = 0;
-	char buf[128 * 1024];
-	char bufo[384 * 1024];
+	char *buf0 = (char *)malloc(BUF_IN_SIZE + BUF_OUT_SIZE);
+	char *buf = buf0;
+	char *bufo = buf0 + BUF_IN_SIZE;
 	int f_in = 0, f_out = 1;
 #if 0
 	f_in = posix_open("..\\test", O_RDONLY | O_BINARY);
 	f_out = posix_open("..\\test2.b64", O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0622);
 #endif
-	ssize_t l = posix_read(f_in, buf, sizeof(buf));
-	if (l < 0 || argc < 2)
+	ssize_t l;
+	if (argc < 2 || (l = posix_read(f_in, buf, BUF_IN_SIZE)) < 0)
 		return syntax_error(argv, 1);
-	const int mode = !strcmp(argv[1], "-eb") ? 1 : !strcmp(argv[1], "-db") ? 2 :
-			 !strcmp(argv[1], "-eh") ? 3 : !strcmp(argv[1], "-eH") ? 4 :
-			 !strcmp(argv[1], "-dh") ? 5 : 0;
+	const int mode = !strncmp(argv[1], "-eb", 3) ? 1 :
+			 !strncmp(argv[1], "-db", 3) ? 2 :
+			 !strncmp(argv[1], "-eh", 3) ? 3 :
+			 !strncmp(argv[1], "-eH", 3) ? 4 :
+			 !strncmp(argv[1], "-dh", 3) ? 5 :
+			 !strncmp(argv[1], "-ez", 3) ? 6 :
+			 !strncmp(argv[1], "-dz", 3) ? 7 : 0;
 	if (!mode)
 		return syntax_error(argv, 2);
-	for (; i < 100000; i++)
-	{
+	size_t i = 0, imax;
+	switch (argv[1][3] == 'x') {
+	case 'x': imax = 100000; break;
+	case 'X': imax = 1000000; break;
+	default:  imax = 1;
+	}
+	for (; i < imax; i++) {
 		switch (mode) {
 		case 1: lo = senc_b64(buf, (size_t)l, bufo); break;
 		case 2: lo = sdec_b64(buf, (size_t)l, bufo); break;
 		case 3: lo = senc_hex(buf, (size_t)l, bufo); break;
 		case 4: lo = senc_HEX(buf, (size_t)l, bufo); break;
 		case 5: lo = sdec_hex(buf, (size_t)l, bufo); break;
+		case 6: lo = senc_lzw(buf, (size_t)l, bufo); break;
+		case 7: lo = sdec_lzw(buf, (size_t)l, bufo); break;
 		}
 	}
-	posix_write(f_out, bufo, lo);
-	fprintf(stderr, "in: %u * %i bytes, out: %u * %i bytes\n", (unsigned)l, i, (unsigned)lo, i);
+	int r = posix_write(f_out, bufo, lo);
+	fprintf(stderr, "in: %u * %u bytes, out: %u * %u bytes [write result: %u]\n",
+		(unsigned)l, (unsigned)i, (unsigned)lo, (unsigned)i, (unsigned)r);
 	return 0;
 }
 #endif
