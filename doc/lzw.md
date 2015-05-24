@@ -1,6 +1,6 @@
 # Time-optimized LZW
 
-There are already fast LZ77 implementations (LZF, LZ4). This document is a design for a fast LZW implementation (implementation will be added afterwards).
+There are already fast LZ77 implementations (LZF, LZ4). This document is a design for a fast LZW implementation.
 
 Copyright (c) 2015 F. Aragon. All rights reserved.
 
@@ -8,7 +8,7 @@ Copyright (c) 2015 F. Aragon. All rights reserved.
 
 ## Introduction
 
-LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding). For algorithm overview, you can check following links, as I'll go directly to the optimized implementation. The implementation will target at least 200MB/s encoding speed on Intel Core i5 @3GHz (one thread).
+LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding). For algorithm overview, you can check following links, as I'll go directly to the optimized implementation. Current implementation encodes at 100-300MB/s and decodes at 200MB/s on Intel Core i5 @3GHz (one thread). This will be faster when enabling hybrid LZW + RLE (GB/s compression and decompression speeds on input data with areas with repeated bytes -e.g. zones with zeros-).
 
 https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
 http://www2.scssoft.com/~petr/gfx/lzw.html
