@@ -9,6 +9,11 @@
 #include "senc.h"
 #include <stdlib.h>
 
+/*#define SLZW_ENABLE_RLE (hybrid LZW+RLE not finished, yet) */
+#if defined(SLZW_ENABLE_RLE) && defined(S_UNALIGNED_MEMORY_ACCESS)
+#define SLZW_ENABLE_RLE_ENC
+#endif
+
 /*
  * Constants
  */
@@ -48,7 +53,13 @@ static const char h2n[64] = {
 #define SLZW_ROOT_NODE_BITS	8
 #define SLZW_RESET		(1 << SLZW_ROOT_NODE_BITS)
 #define SLZW_STOP		(SLZW_RESET + 1)
-#define SLZW_FIRST		(SLZW_STOP + 1)
+#ifdef SLZW_ENABLE_RLE
+	#define SLZW_RLE	(SLZW_STOP + 1)
+	#define SLZW_FIRST	(SLZW_RLE + 1)
+	#define SLZW_RLE_CSIZE	16
+#else
+	#define SLZW_FIRST	(SLZW_STOP + 1)
+#endif
 #define SLZW_LUT_CHILD_ELEMS	256
 #define SLZW_MAX_LUTS		(SLZW_CODE_LIMIT / 8)
 
@@ -64,8 +75,8 @@ static const char h2n[64] = {
 #define DB64C2(b, c)	(b << 4 | c >> 2)
 #define DB64C3(c, d)	(c << 6 | d)
 
-#define SLZW_ENC_WRITE(ob, oi, acc, code, code_size_bits) {	\
-		int c = code, code_bits = code_size_bits;	\
+#define SLZW_ENC_WRITE(ob, oi, acc, code, curr_code_len) {	\
+		int c = code, code_bits = curr_code_len;	\
 		if (acc) {					\
 			int xbits = 8 - acc;			\
 			ob[oi++] |= (c << acc);			\
@@ -93,6 +104,37 @@ static const char h2n[64] = {
 		SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);	\
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
 		next_code = SLZW_FIRST;					\
+	}
+
+#define SLZW_DEC_READ(nc, s, ss, i, acc, accbuf, curr_code_len) {	\
+		int cbits = curr_code_len;				\
+		nc = 0;							\
+		if (acc) {						\
+			nc |= accbuf;					\
+			cbits -= acc;					\
+		}							\
+		if (cbits >= 8) {					\
+			nc |= (s[i++] << acc);				\
+			cbits -= 8;					\
+			acc += 8;					\
+		}							\
+		if (cbits > 0) {					\
+			accbuf = s[i++];				\
+			nc |= ((accbuf & S_NBITMASK(cbits)) << acc);	\
+			accbuf >>= cbits;				\
+			acc = 8 - cbits;				\
+		} else {						\
+			acc = 0;					\
+		}							\
+	}
+
+#define SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code,	\
+		       parents) {					\
+		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
+		last_code = SLZW_CODE_LIMIT;				\
+		next_inc_code = SLZW_FIRST;				\
+		for (j = 0; j < 256; j++)				\
+			parents[j] = SLZW_CODE_LIMIT;			\
 	}
 
 /*
@@ -267,6 +309,29 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	size_t i = 0;
 	slzw_ndx_t curr_node;
 	for (; i < ss;) {
+#ifdef SLZW_ENABLE_RLE_ENC
+		if (i + 8 < ss) {
+			unsigned *u = (unsigned *)(s + i);
+			if (u[0] == u[1]) {
+				int j = i + 4;
+				int max_cs = i + ((1 << curr_code_len) - 1) *
+					     SLZW_RLE_CSIZE;
+				int ss2 = S_MIN(ss, max_cs);
+				for (; j + 4 < ss2 ; j += 4)
+					if (u[0] != *(unsigned *)(s + j + 4))
+						break;
+				if (j - i >= SLZW_RLE_CSIZE) {
+					int count_cs = (j - i) / SLZW_RLE_CSIZE;
+					SLZW_ENC_WRITE(o, oi, acc, SLZW_RLE, curr_code_len);
+					SLZW_ENC_WRITE(o, oi, acc, count_cs, curr_code_len);
+					SLZW_ENC_WRITE(o, oi, acc, s[i], curr_code_len);
+					i += count_cs * SLZW_RLE_CSIZE;
+				}
+			}
+			if (i == ss)
+				break;
+		}
+#endif
 		/*
 		 * Locate pattern
 		 */
@@ -335,18 +400,83 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
+	size_t i, j;
+	size_t acc = 0, accbuf = 0, oi = 0;
+	size_t last_code, curr_code_len, next_inc_code;
+	size_t parents[SLZW_CODE_LIMIT];
+	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
 	/*
-	 * TODO:
-	 *
-	 * 1. Decoding loop
-	 * 1.1. Feed accumulator
-	 * 1.2. Extract code
-	 * 1.3. Expand code
-	 * 2. Check uncompressed size
-	 *
+	 * Initialize root node
 	 */
-	fprintf(stderr, "[sdec_lzw] NOT IMPLEMENTED (!)\n");
-	return 0;
+	unsigned acc4;
+	memcpy(&acc4, "\x00\x01\x02\x03", 4);
+	unsigned *p = (unsigned *)xbyte;
+	for (j = 0; j < 256/4; j++) {
+		p[j] = acc4;
+		acc4 += 0x04040404;
+	}
+	SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
+	/*
+	 * Code expand loop
+	 */
+	for (i = 0; i < ss;) {
+		int new_code;
+		SLZW_DEC_READ(new_code, s, ss, i, acc, accbuf, curr_code_len);
+#ifdef SLZW_ENABLE_RLE
+		/*
+		 * Write RLE pattern
+		 */
+		if (new_code == SLZW_RLE) {
+			size_t count, lre_byte, write_size;
+			SLZW_DEC_READ(count, s, ss, i, acc, accbuf, curr_code_len);
+			SLZW_DEC_READ(lre_byte, s, ss, i, acc, accbuf, curr_code_len);
+			write_size = count * SLZW_RLE_CSIZE;
+			memset(o + oi, lre_byte, write_size);
+			oi += write_size;
+			continue;
+		}
+#endif
+		if (new_code == SLZW_RESET) {
+			SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
+			continue;
+		}
+		if (new_code == SLZW_STOP) {
+			fprintf(stderr, "*STOP*\n");
+			break;
+		}
+		if (last_code == SLZW_CODE_LIMIT) {
+			o[oi++] = lastwc = xbyte[new_code];
+			last_code = new_code;
+			continue;
+		}
+		size_t code, pattern_off = SLZW_CODE_LIMIT - 1;
+		if (new_code == next_inc_code) {
+			pattern[pattern_off--] = lastwc;
+			code = last_code;
+		} else {
+			code = new_code;
+		}
+		for (; code >= SLZW_FIRST;) {
+			pattern[pattern_off--] = xbyte[code];
+			code = parents[code];
+		}
+		pattern[pattern_off--] = lastwc = xbyte[next_inc_code] = xbyte[code];
+		parents[next_inc_code] = last_code;
+		if (next_inc_code < SLZW_CODE_LIMIT)
+			next_inc_code++;
+		if (next_inc_code == 1 << curr_code_len &&
+		    next_inc_code < SLZW_CODE_LIMIT) {
+			curr_code_len++;
+		}
+		last_code = new_code;
+		/*
+		 * Write LZW pattern
+		 */
+		size_t write_size = SLZW_CODE_LIMIT - 1 - pattern_off;
+		memcpy(o + oi, pattern + pattern_off + 1, write_size);
+		oi += write_size;
+	}
+	return oi;
 }
 
 #ifdef STANDALONE_TEST
@@ -367,6 +497,7 @@ static int syntax_error(const char **argv, const int exit_code)
 	return exit_code;
 }
 
+/* TODO: buffered I/O instead of unbuffered */
 int main(int argc, const char **argv)
 {
 	size_t lo = 0;
@@ -374,10 +505,6 @@ int main(int argc, const char **argv)
 	char *buf = buf0;
 	char *bufo = buf0 + BUF_IN_SIZE;
 	int f_in = 0, f_out = 1;
-#if 0
-	f_in = posix_open("..\\test", O_RDONLY | O_BINARY);
-	f_out = posix_open("..\\test2.b64", O_CREAT | O_TRUNC | O_WRONLY | O_BINARY, 0622);
-#endif
 	ssize_t l;
 	if (argc < 2 || (l = posix_read(f_in, buf, BUF_IN_SIZE)) < 0)
 		return syntax_error(argv, 1);

@@ -180,7 +180,13 @@ extern "C" {
 #define S_MIN3(a, b, c) S_MIN(S_MIN(a, b), (c))
 #define S_ROL32(a, c) ((a) << (c) | (a) >> (32 - (c)))
 #define S_ROR32(a, c) ((a) >> (c) | (a) << (32 - (c)))
+#define S_NBIT(n) (1 << n)
+#define S_NBITMASK(n) (S_NBIT(n) - 1)
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
+#define S_BSWAP32(a) __builtin_bswap32(a)
+#else
 #define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
+#endif
 #define RETURN_IF(a, v) if (a) return (v)
 #define ASSERT_RETURN_IF(a, v) S_ASSERT(!(a)); if (a) return (v)
 
@@ -188,7 +194,8 @@ extern "C" {
  * Low-level stuff
  */
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(__i386__) || defined(__x86_64__) || \
+    defined(_ARM_ARCH_6) /* ARM v6 or later */
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
