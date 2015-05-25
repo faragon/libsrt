@@ -9,7 +9,7 @@
 #include "senc.h"
 #include <stdlib.h>
 
-/*#define SLZW_ENABLE_RLE (hybrid LZW+RLE not finished, yet) */
+#define SLZW_ENABLE_RLE
 #if defined(SLZW_ENABLE_RLE) && defined(S_UNALIGNED_MEMORY_ACCESS)
 #define SLZW_ENABLE_RLE_ENC
 #endif
@@ -57,6 +57,13 @@ static const char h2n[64] = {
 	#define SLZW_RLE	(SLZW_STOP + 1)
 	#define SLZW_FIRST	(SLZW_RLE + 1)
 	#define SLZW_RLE_CSIZE	16
+	#if S_BPWORD >= 8
+		#define SLRE_CMPS 8
+		typedef suint_t srle_cmp_t;
+	#else
+		#define SLRE_CMPS 4
+		typedef suint32_t srle_cmp_t;
+	#endif
 #else
 	#define SLZW_FIRST	(SLZW_STOP + 1)
 #endif
@@ -97,8 +104,13 @@ static const char h2n[64] = {
 #define SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
 		int j;							\
-		for (j = 0; j < SLZW_RESET; j++)			\
-			node_lutref[node_codes[j] = j] = 0;		\
+		for (j = 0; j < 256; j += 4) {				\
+			node_codes[j] = j;				\
+			node_codes[j + 1] = j + 1;			\
+			node_codes[j + 2] = j + 2;			\
+			node_codes[j + 3] = j + 3;			\
+		}							\
+		memset(node_lutref, 0, 256 * sizeof(node_lutref[0]));	\
 		lut_stack_in_use = 1;					\
 		node_stack_in_use = 256;				\
 		SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);	\
@@ -133,8 +145,9 @@ static const char h2n[64] = {
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
 		last_code = SLZW_CODE_LIMIT;				\
 		next_inc_code = SLZW_FIRST;				\
-		for (j = 0; j < 256; j++)				\
-			parents[j] = SLZW_CODE_LIMIT;			\
+		for (j = 0; j < 256; j += 4) 				\
+			parents[j] = parents[j + 1] = parents[j + 2] =	\
+				     parents[j + 3] = SLZW_CODE_LIMIT;	\
 	}
 
 /*
@@ -167,6 +180,20 @@ static size_t senc_hex_aux(const unsigned char *s, const size_t ss, unsigned cha
 	}
 	#undef ENCHEX_LOOP
 	return out_size;
+}
+
+static void slzw_setseq256s8(unsigned *p)
+{
+	union { unsigned a32; char b[4]; } acc;
+	acc.b[0] = 0;
+	acc.b[1] = 1;
+	acc.b[2] = 2;
+	acc.b[3] = 3;
+	unsigned j;
+	for (j = 0; j < 256 / 4; j++) {
+		p[j] = acc.a32;
+		acc.a32 += 0x04040404;
+	}
 }
 
 /*
@@ -310,15 +337,17 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	slzw_ndx_t curr_node;
 	for (; i < ss;) {
 #ifdef SLZW_ENABLE_RLE_ENC
-		if (i + 8 < ss) {
-			unsigned *u = (unsigned *)(s + i);
-			if (u[0] == u[1]) {
-				int j = i + 4;
+		if ((i + SLRE_CMPS * 2) < ss) {
+			const srle_cmp_t *u = (srle_cmp_t *)(s + i),
+					 *v = (srle_cmp_t *)(s + i + 1),
+					 u0 = u[0];
+			if (u0 == u[1] && u0 == v[0]) {
+				int j = (i + SLRE_CMPS);
 				int max_cs = i + ((1 << curr_code_len) - 1) *
 					     SLZW_RLE_CSIZE;
 				int ss2 = S_MIN(ss, max_cs);
-				for (; j + 4 < ss2 ; j += 4)
-					if (u[0] != *(unsigned *)(s + j + 4))
+				for (; j + SLRE_CMPS < ss2 ; j += SLRE_CMPS)
+					if (u0 != *(srle_cmp_t *)(s + j + SLRE_CMPS))
 						break;
 				if (j - i >= SLZW_RLE_CSIZE) {
 					int count_cs = (j - i) / SLZW_RLE_CSIZE;
@@ -408,13 +437,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Initialize root node
 	 */
-	unsigned acc4;
-	memcpy(&acc4, "\x00\x01\x02\x03", 4);
-	unsigned *p = (unsigned *)xbyte;
-	for (j = 0; j < 256/4; j++) {
-		p[j] = acc4;
-		acc4 += 0x04040404;
-	}
+	slzw_setseq256s8((unsigned *)xbyte);
 	SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
 	/*
 	 * Code expand loop
@@ -441,7 +464,6 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			continue;
 		}
 		if (new_code == SLZW_STOP) {
-			fprintf(stderr, "*STOP*\n");
 			break;
 		}
 		if (last_code == SLZW_CODE_LIMIT) {
