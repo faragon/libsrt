@@ -1559,10 +1559,25 @@ int test_sv_push_pop_i()
 		sv_t *a = sv_alloc_t(t[i], 10);
 		sv_t *b = sv_alloca_t(t[i], 10);
 		sint_t r;
-		if (!(a && b && sv_push_i(&a, -1) && sv_push_i(&b, -1) &&
-		    (r = sv_pop_i(a)) && r == sv_pop_i(b) && r == -1 &&
-		     sv_len(a) == 0 && sv_len(b) == 0))
-			res |= 1<<i;
+		do {
+			if (!a || !b) {
+				res |= 1 << (i * 4);
+				break;
+			}
+			sint_t v = -1;
+			if (!sv_push_i(&a, i) || !sv_push_i(&b, i)) {
+				res |= 2 << (i * 4);
+				break;
+			}
+			if (sv_pop_i(a) != i || sv_pop_i(b) != i) {
+				res |= 3 << (i * 4);
+				break;
+			}
+			if (sv_len(a) != 0 || sv_len(b) != 0 ){
+				res |= 4 << (i * 4);
+				break;
+			}
+		} while (0);
 		sv_free(&a);
 	}
 	return res;
