@@ -1,14 +1,14 @@
-# Time-optimized LZW
+# Time-optimized LZW (with RLE opcode mixing)
 
-There are already fast LZ77 implementations (LZF, LZ4). This document is a design for a fast LZW implementation.
+There are already fast LZ77 implementations (LZF, LZ4). This document is a design for a fast LZW implementation with built-in RLE opcode mixing (inject RLE opcodes into the LZW stream).
 
 Copyright (c) 2015 F. Aragon. All rights reserved.
 
-# LZW algorithm
+# Algorithm
 
 ## Introduction
 
-LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding). For algorithm overview, you can check following links, as I'll go directly to the optimized implementation. Current implementation encodes at 100-300MB/s and decodes at 200MB/s on Intel Core i5 @3GHz (one thread). This will be faster when enabling hybrid LZW + RLE (GB/s compression and decompression speeds on input data with areas with repeated bytes -e.g. zones with zeros-).
+LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding). For algorithm overview, you can check following links, as I'll go directly to the optimized implementation. Current implementation encodes at 75-300MB/s and decodes at 100-300MB/s on Intel Core i5 @3GHz (one thread). On "flat" areas (same byte repeated many times), when RLE opcodes can be injected in the LZW stream, speed is much faster: 4 GB/s compression and 6 GB/s decompression.
 
 https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
 http://www2.scssoft.com/~petr/gfx/lzw.html

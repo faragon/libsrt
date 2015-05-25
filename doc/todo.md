@@ -4,8 +4,6 @@
 Short-term
 ---
 
-* Add fast LZW
- * See doc/lzw.md for documentation
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"

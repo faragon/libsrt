@@ -11,11 +11,39 @@ extern "C" {
  *
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  *
- * Features:
+ * Features (base64 and hex encoding/decoding):
  *
  * - Aliasing safe (input and output buffer can be the same).
  * - RFC 3548/4648 base 16 (hexadecimal) and 64 encoding/decoding.
  * - Fast (~1 GB/s on i5-3330 @3GHz -using one core- and gcc 4.8.2 -O2)
+ *
+ * Features (custom LZW implementation):
+ *
+ * - Encoding time is related to input data entropy. The more random
+ *   the data is, LZW encoding requires more populated nodes. When "plane"
+ *   areas are found, RLE opcodes are mixed into the LZW stream.
+ * - Decoding time is related to the mix of normal LZW codes or RLE codes
+ *    (the more RLE codes in the stream, the fastest).
+ * - Encoding speed:
+ *      Random data:
+ *       75 MB/s (i5-3330 @3GHz)
+ *       2 MB/s (ARM11 @700MHz)
+ *      First 50 MB of a "cat" from /lib (Ubuntu 15.04 x86-64):
+ *       200 MB/s (i5-3330 @3GHz)
+ *       13 MB/s (ARM11 @700MHz)
+ *      Data with lots of repeated bytes:
+ *       4 GB/s (i5-3330 @3GHz)
+ *       100 MB/s (ARM11 @700MHz)
+ * - Decoding speed:
+ *      Random data:
+ *       100 MB/s (i5-3330 @3GHz)
+ *       2 MB/s (ARM11 @700MHz)
+ *      First 50 MB of a "cat" from /lib (Ubuntu 15.04 x86-64):
+ *       275 MB/s (i5-3330 @3GHz)
+ *       34 MB/s (ARM11 @700MHz)
+ *      Data with lots of repeated bytes:
+ *       6 GB/s (i5-3330 @3GHz)
+ *       300 MB/s (ARM11 @700MHz)
  *
  * Observations:
  * - Tables take 288 bytes (could be reduced to 248 bytes -tweaking access
