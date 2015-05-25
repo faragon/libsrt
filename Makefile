@@ -9,6 +9,7 @@
 # Build with clang++ using C++11 standard: make CC=clang++ CPP11=1
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
 # Build with gcc cross compiler: make CC=powerpc-linux-gnu-gcc
+# Build on Raspberry Pi forcing ARMv6: make CFLAGS="-march=armv6 -fomit-frame-pointer -O2"
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #

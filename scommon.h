@@ -99,6 +99,7 @@ extern "C" {
 	#define S_BPWORD 16
 #endif
 
+#define S_ALIGNMASK (~(S_BPWORD - 1))
 /*
  * Variable argument helpers
  */
@@ -194,8 +195,14 @@ extern "C" {
  * Low-level stuff
  */
 
-#if defined(__i386__) || defined(__x86_64__) || \
-    defined(_ARM_ARCH_6) /* ARM v6 or later */
+#if defined(__i386__) || defined(__x86_64__) || __ARM_ARCH >= 6 ||	\
+    defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__) || 			\
+    defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6Z__) ||		\
+    defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6K__) ||		\
+    defined(__ARM_ARCH_6T2__) || defined(_ARM_ARCH_7) ||		\
+    defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
+    defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
+    defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__)
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 

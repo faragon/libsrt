@@ -342,7 +342,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					 *v = (srle_cmp_t *)(s + i + 1),
 					 u0 = u[0];
 			if (u0 == u[1] && u0 == v[0]) {
-				int j = (i + SLRE_CMPS);
+				int j = (i + SLRE_CMPS) & S_ALIGNMASK;
 				int max_cs = i + ((1 << curr_code_len) - 1) *
 					     SLZW_RLE_CSIZE;
 				int ss2 = S_MIN(ss, max_cs);
@@ -503,7 +503,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 
 #ifdef STANDALONE_TEST
 
-#define BUF_IN_SIZE (220 * 1024 * 1024)
+#define BUF_IN_SIZE (120 * 1024 * 1024)
 #define BUF_OUT_SIZE (BUF_IN_SIZE * 2)
 
 static int syntax_error(const char **argv, const int exit_code)
