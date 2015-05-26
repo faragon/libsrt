@@ -55,7 +55,8 @@ static const char h2n[64] = {
 #define SLZW_STOP		(SLZW_RESET + 1)
 #ifdef SLZW_ENABLE_RLE
 	#define SLZW_RLE	(SLZW_STOP + 1)
-	#define SLZW_FIRST	(SLZW_RLE + 1)
+	#define SLZW_RLE4	(SLZW_RLE + 1)
+	#define SLZW_FIRST	(SLZW_RLE4 + 1)
 	#define SLZW_RLE_CSIZE	16
 	#if S_BPWORD >= 8
 		#define SLRE_CMPS 8
@@ -341,8 +342,17 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			const srle_cmp_t *u = (srle_cmp_t *)(s + i),
 					 *v = (srle_cmp_t *)(s + i + 1),
 					 u0 = u[0];
-			if (u0 == u[1] && u0 == v[0]) {
-				int j = (i + SLRE_CMPS) & S_ALIGNMASK;
+			for (;u0 == u[1];) {
+				int rle_mode = 0;
+				int j = (i + SLRE_CMPS);
+				if (u0 == v[0]) {
+					rle_mode = SLZW_RLE;
+					j &= S_ALIGNMASK;
+				} else {
+					rle_mode = SLZW_RLE4;
+				}
+				if (!rle_mode)
+					break;
 				int max_cs = i + ((1 << curr_code_len) - 1) *
 					     SLZW_RLE_CSIZE;
 				int ss2 = S_MIN(ss, max_cs);
@@ -351,11 +361,17 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 						break;
 				if (j - i >= SLZW_RLE_CSIZE) {
 					int count_cs = (j - i) / SLZW_RLE_CSIZE;
-					SLZW_ENC_WRITE(o, oi, acc, SLZW_RLE, curr_code_len);
+					SLZW_ENC_WRITE(o, oi, acc, rle_mode, curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, count_cs, curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, s[i], curr_code_len);
+					if (rle_mode == SLZW_RLE4) {
+						SLZW_ENC_WRITE(o, oi, acc, s[i + 1], curr_code_len);
+						SLZW_ENC_WRITE(o, oi, acc, s[i + 2], curr_code_len);
+						SLZW_ENC_WRITE(o, oi, acc, s[i + 3], curr_code_len);
+					}
 					i += count_cs * SLZW_RLE_CSIZE;
 				}
+				break;
 			}
 			if (i == ss)
 				break;
@@ -449,12 +465,20 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		/*
 		 * Write RLE pattern
 		 */
-		if (new_code == SLZW_RLE) {
-			size_t count, lre_byte, write_size;
+		if (new_code == SLZW_RLE || new_code == SLZW_RLE4) {
+			union { unsigned a32; char b[4]; } rle;
+			size_t count, write_size;
 			SLZW_DEC_READ(count, s, ss, i, acc, accbuf, curr_code_len);
-			SLZW_DEC_READ(lre_byte, s, ss, i, acc, accbuf, curr_code_len);
+			SLZW_DEC_READ(rle.b[0], s, ss, i, acc, accbuf, curr_code_len);
 			write_size = count * SLZW_RLE_CSIZE;
-			memset(o + oi, lre_byte, write_size);
+			if (new_code == SLZW_RLE) {
+				memset(o + oi, rle.b[0], write_size);
+			} else {
+				SLZW_DEC_READ(rle.b[1], s, ss, i, acc, accbuf, curr_code_len);
+				SLZW_DEC_READ(rle.b[2], s, ss, i, acc, accbuf, curr_code_len);
+				SLZW_DEC_READ(rle.b[3], s, ss, i, acc, accbuf, curr_code_len);
+				s_memset32((unsigned *)(o + oi), rle.a32, write_size / 4);
+			}
 			oi += write_size;
 			continue;
 		}

@@ -193,6 +193,9 @@ extern "C" {
 
 /*
  * Low-level stuff
+ * - Aligned memory access CPU support detection
+ * - Endianess
+ * - Unaligned load/store
  */
 
 #if defined(__i386__) || defined(__x86_64__) || __ARM_ARCH >= 6 ||	\
@@ -384,6 +387,24 @@ static unsigned slog2(suint_t i)
 	SLOG2STEP(0x02, 1);
 	#undef SLOG2STEP
 	return o;
+}
+
+/*
+ * Custom "memset" functions
+ */
+
+/* TODO: rewrite using aligned memory access (up to 50% speed-up on RISC CPUs) */
+static void s_memset32(unsigned *o, unsigned data, size_t n)
+{
+	size_t k, n4 = (n / 4) * 4;
+	for (k = 0; k < n4; k += 4) {
+		S_ST_U32(o + k, data);
+		S_ST_U32(o + k + 1, data);
+		S_ST_U32(o + k + 2, data);
+		S_ST_U32(o + k + 3, data);
+	}
+	for (; k < n; k++)
+		S_ST_U32(o + k, data);
 }
 
 #ifdef __cplusplus
