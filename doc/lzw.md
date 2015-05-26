@@ -8,10 +8,15 @@ Copyright (c) 2015 F. Aragon. All rights reserved.
 
 ## Introduction
 
-LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding). For algorithm overview, you can check following links, as I'll go directly to the optimized implementation. Current implementation encodes at 75-300MB/s and decodes at 100-300MB/s on Intel Core i5 @3GHz (one thread). On "flat" areas (same byte repeated many times), when RLE opcodes can be injected in the LZW stream, speed is much faster: 4 GB/s compression and 6 GB/s decompression.
+LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding).
 
-https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
-http://www2.scssoft.com/~petr/gfx/lzw.html
+An hybrid LZW + RLE is implmented, being RLE opcodes injected/mixed into the LZW stream for covering 1, 2 and 4-byte patterns (that improves compression speed on sparse data). Current implementation encodes at 75-300 MB/s and decodes at 100-300 MB/s on Intel Core i5 @3GHz (one thread). On "flat" areas (same byte repeated many times), when RLE opcodes can be injected in the LZW stream, speed is much faster: 4 GB/s compression and 6 GB/s decompression. For ARM 11 @700MHz (e.g. Raspberry Pi 1), encoding speed is 2-12 MB/s for "normal" data and up to 100 MB/s for 1/2/4 byte repeated sequences (when most LZW opcodes are RLE), being decoding speed 2-34 MB/s for "normal" data and up to 300 MB/s for the case of data with most LZW codes being RLE.
+
+For LZW and RLE algorithm overview you can check following links:
+
+- https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
+- http://www2.scssoft.com/~petr/gfx/lzw.html
+- https://es.wikipedia.org/wiki/Run-length\_encoding
 
 ## Data structures
 
@@ -38,13 +43,13 @@ In addition to the first 256 predefined codes, there is the "clear code" and "en
 * Think about adding Rabin-Karp 8 to 16 byte rolling hash plus some additional hash tables (not yet decided). This could slowdown the loop for some cases, not being amortized the cost of doing computations into a loop that does few things, or "free" in the case of OooE CPUs with 3-4 instructions per clock.
 * LUT setup would be on-demand: in cases with not random input data nodes with more than one child will be the common case, so initializing LUTs that are not going to be used would be wasting CPU cycles.
 
-(work in progress)
+Before the tree search, a RLE attempt is done. That's almost "free" because accessing sequential data, so in worst case it acts as data prefetch.
 
 ### Memory usage reduction optimization: decoding
 
-(to do)
+Decoding requires less memory than decoding because there is no need to guess node population, but a LZW code already has an associated output byte.
 
 ### Algorithm optimization: decoding
 
-(to do)
+For LZW decoding, the tree LZW tree is reconstructed from received opcodes. A vector with the associattion between LZW code and associated character allows to reconstruct a pattern backwards (no optimization is done here). RLE opcodes mixed into the LZW stream are very fast because are implemented as a memset (1-byte patterns) and with a custom 4-byte memset.
 
