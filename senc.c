@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #define SLZW_ENABLE_RLE
-//#define SLZW_ENABLE_RLE4
+#define SLZW_ENABLE_RLE4
 #if defined(SLZW_ENABLE_RLE) && defined(S_UNALIGNED_MEMORY_ACCESS)
 #define SLZW_ENABLE_RLE_ENC
 #endif
@@ -68,7 +68,6 @@ static const char h2n[64] = {
 	#else
 		typedef suint32_t srle_cmp_t;
 	#endif
-	#define SLRE_CMPS sizeof(srle_cmp_t)
 #else
 	#define SLZW_FIRST	(SLZW_STOP + 1)
 #endif
@@ -88,9 +87,9 @@ static const char h2n[64] = {
 #define DB64C3(c, d)	(c << 6 | d)
 
 #define SLZW_ENC_WRITE(ob, oi, acc, code, curr_code_len) {	\
-		int c = code, code_bits = curr_code_len;	\
+		size_t c = code, code_bits = curr_code_len;	\
 		if (acc) {					\
-			int xbits = 8 - acc;			\
+			size_t xbits = 8 - acc;			\
 			ob[oi++] |= (c << acc);			\
 			c >>= xbits;				\
 			code_bits -= xbits;			\
@@ -108,7 +107,7 @@ static const char h2n[64] = {
 
 #define SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
-		int j;							\
+		size_t j;						\
 		for (j = 0; j < 256; j += 4) {				\
 			node_codes[j] = j;				\
 			node_codes[j + 1] = j + 1;			\
@@ -124,7 +123,7 @@ static const char h2n[64] = {
 	}
 
 #define SLZW_DEC_READ(nc, s, ss, i, acc, accbuf, curr_code_len) {	\
-		int cbits = curr_code_len;				\
+		size_t cbits = curr_code_len;				\
 		nc = 0;							\
 		if (acc) {						\
 			nc |= accbuf;					\
@@ -329,7 +328,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Output encoding control
 	 */
         size_t oi = 0;
-        int next_code, curr_code_len, acc = 0;
+        size_t next_code, curr_code_len, acc = 0;
 	/*
 	 * Initialize data structures
 	 */
@@ -342,45 +341,58 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	slzw_ndx_t curr_node;
 	for (; i < ss;) {
 #ifdef SLZW_ENABLE_RLE_ENC
-		if ((i + SLRE_CMPS * 2) < ss) {
-			const srle_cmp_t *u = (srle_cmp_t *)(s + i),
-					 *v = (srle_cmp_t *)(s + i + 1),
-					 u0 = u[0];
-			for (;u0 == u[1];) {
-				int rle_mode = 0;
-				int j = (i + SLRE_CMPS * 2);
+		if ((i + SLZW_RLE_CSIZE) < ss) {
+			suint32_t *p32 = (suint32_t *)(s + i);
+			for (; p32[0] == p32[1];) {
+				const srle_cmp_t *u = (srle_cmp_t *)(s + i),
+				*v = (srle_cmp_t *)(s + i + 1),
+				u0 = u[0];
+				size_t rle_mode, j = i + sizeof(suint32_t) * 2;
 				if (u0 == v[0]) {
 					rle_mode = SLZW_RLE;
 					j &= S_ALIGNMASK;
 				} else {
 #ifdef SLZW_ENABLE_RLE4
-					if (*(suint32_t *)(s + i) == *(suint32_t *)(s + i + 4))
-						rle_mode = SLZW_RLE4;
+					rle_mode = SLZW_RLE4;
+#else
+					break;
 #endif
 				}
-				if (!rle_mode)
-					break;
-				int max_cs = i + ((1 << curr_code_len) - 1) *
-					     SLZW_RLE_CSIZE;
-				int ss2 = S_MIN(ss - SLRE_CMPS, max_cs);
-				for (; j < ss2 ; j += SLRE_CMPS)
+#ifdef SLZW_ENABLE_RLE4
+				size_t cx, extra_bits;
+				if (rle_mode == SLZW_RLE4) {
+					cx = 4;
+					extra_bits = 2;
+				} else {
+					cx = 1;
+					extra_bits = 0;
+				}
+#else
+				size_t cx = 1, extra_bits = 0;
+#endif
+				size_t range_bits = curr_code_len * 2 + extra_bits;
+				size_t max_cs = i + S_NBIT(range_bits);
+				size_t ss2 = S_MIN(ss, max_cs) - sizeof(srle_cmp_t);
+				for (; j < ss2 ; j += sizeof(srle_cmp_t))
 					if (u0 != *(srle_cmp_t *)(s + j))
 						break;
 				if (j - i >= SLZW_RLE_CSIZE) {
-					int count_cs = (j - i) / SLZW_RLE_CSIZE;
+					size_t count_cs = (j - i - cx) / cx;
+					size_t count_csx = count_cs * cx;
+					size_t ch = count_cs >> curr_code_len;
+					size_t cl = count_cs & S_NBITMASK(curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, rle_mode, curr_code_len);
-					SLZW_ENC_WRITE(o, oi, acc, count_cs, curr_code_len);
+					SLZW_ENC_WRITE(o, oi, acc, cl, curr_code_len);
+					SLZW_ENC_WRITE(o, oi, acc, ch, curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, s[i], curr_code_len);
 #ifdef SLZW_ENABLE_RLE4
 					if (rle_mode == SLZW_RLE4) {
 						SLZW_ENC_WRITE(o, oi, acc, s[i + 1], curr_code_len);
 						SLZW_ENC_WRITE(o, oi, acc, s[i + 2], curr_code_len);
 						SLZW_ENC_WRITE(o, oi, acc, s[i + 3], curr_code_len);
-						i += (count_cs * SLZW_RLE_CSIZE - 4);
 					}
-					else
 #endif
-						i += (count_cs * SLZW_RLE_CSIZE - 1);
+					i += count_csx;
 				}
 				break;
 			}
@@ -482,23 +494,24 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 #endif
 		   ) {
 			union { unsigned a32; char b[4]; } rle;
-			size_t count, write_size;
-			SLZW_DEC_READ(count, s, ss, i, acc, accbuf, curr_code_len);
+			size_t count, cl, ch;
+			SLZW_DEC_READ(cl, s, ss, i, acc, accbuf, curr_code_len);
+			SLZW_DEC_READ(ch, s, ss, i, acc, accbuf, curr_code_len);
+			count = ch << curr_code_len | cl;
 			SLZW_DEC_READ(rle.b[0], s, ss, i, acc, accbuf, curr_code_len);
-			write_size = count * SLZW_RLE_CSIZE;
 			if (new_code == SLZW_RLE) {
-				memset(o + oi, rle.b[0], write_size);
-				oi += (write_size - 1);
+				memset(o + oi, rle.b[0], count);
 			}
 #ifdef SLZW_ENABLE_RLE4
 			else {
+				count *= 4;
 				SLZW_DEC_READ(rle.b[1], s, ss, i, acc, accbuf, curr_code_len);
 				SLZW_DEC_READ(rle.b[2], s, ss, i, acc, accbuf, curr_code_len);
 				SLZW_DEC_READ(rle.b[3], s, ss, i, acc, accbuf, curr_code_len);
-				s_memset32((unsigned *)(o + oi), rle.a32, write_size / 4);
-				oi += (write_size - 4);
+				s_memset32((unsigned *)(o + oi), rle.a32, count);
 			}
 #endif
+			oi += count;
 			continue;
 		}
 #endif
@@ -546,14 +559,14 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 
 #ifdef STANDALONE_TEST
 
-#define BUF_IN_SIZE (120 * 1024 * 1024)
+#define BUF_IN_SIZE (140 * 1024 * 1024)
 #define BUF_OUT_SIZE (BUF_IN_SIZE * 2)
 
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
-		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh]\nExamples:\n"
+		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ez|-dz]\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
