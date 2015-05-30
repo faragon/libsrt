@@ -107,13 +107,6 @@ static const char h2n[64] = {
 
 #define SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
-		size_t j;						\
-		for (j = 0; j < 256; j += 4) {				\
-			node_codes[j] = j;				\
-			node_codes[j + 1] = j + 1;			\
-			node_codes[j + 2] = j + 2;			\
-			node_codes[j + 3] = j + 3;			\
-		}							\
 		memset(node_lutref, 0, 256 * sizeof(node_lutref[0]));	\
 		lut_stack_in_use = 1;					\
 		node_stack_in_use = 256;				\
@@ -332,6 +325,13 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Initialize data structures
 	 */
+	size_t j;
+	for (j = 0; j < 256; j += 4) {
+		node_codes[j] = j;
+		node_codes[j + 1] = j + 1;
+		node_codes[j + 2] = j + 2;
+		node_codes[j + 3] = j + 3;
+	}
 	SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,
 		       node_stack_in_use, next_code, curr_code_len);
 	/*
@@ -344,7 +344,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		if ((i + SLZW_RLE_CSIZE) < ss) {
 			suint32_t *p32 = (suint32_t *)(s + i);
 			for (; p32[0] == p32[1];) {
-				const srle_cmp_t *u = (srle_cmp_t *)(s + i),
+				srle_cmp_t *u = (srle_cmp_t *)(s + i),
 				*v = (srle_cmp_t *)(s + i + 1),
 				u0 = u[0];
 				size_t rle_mode, j = i + sizeof(suint32_t) * 2;
@@ -358,29 +358,28 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					break;
 #endif
 				}
-#ifdef SLZW_ENABLE_RLE4
 				size_t cx, extra_bits;
+#ifdef SLZW_ENABLE_RLE4
 				if (rle_mode == SLZW_RLE4) {
 					cx = 4;
 					extra_bits = 2;
-				} else {
+				}
+#endif
+				else {
 					cx = 1;
 					extra_bits = 0;
 				}
-#else
-				size_t cx = 1, extra_bits = 0;
-#endif
-				size_t range_bits = curr_code_len * 2 + extra_bits;
-				size_t max_cs = i + S_NBIT(range_bits);
-				size_t ss2 = S_MIN(ss, max_cs) - sizeof(srle_cmp_t);
+				size_t range_bits = curr_code_len * 2 + extra_bits,
+				       max_cs = i + S_NBIT(range_bits),
+				       ss2 = S_MIN(ss, max_cs) - sizeof(srle_cmp_t);
 				for (; j < ss2 ; j += sizeof(srle_cmp_t))
 					if (u0 != *(srle_cmp_t *)(s + j))
 						break;
 				if (j - i >= SLZW_RLE_CSIZE) {
-					size_t count_cs = (j - i - cx) / cx;
-					size_t count_csx = count_cs * cx;
-					size_t ch = count_cs >> curr_code_len;
-					size_t cl = count_cs & S_NBITMASK(curr_code_len);
+					size_t count_cs = (j - i - cx) / cx,
+					       count_csx = count_cs * cx,
+					       ch = count_cs >> curr_code_len,
+					       cl = count_cs & S_NBITMASK(curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, rle_mode, curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, cl, curr_code_len);
 					SLZW_ENC_WRITE(o, oi, acc, ch, curr_code_len);
