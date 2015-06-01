@@ -205,12 +205,18 @@ extern "C" {
     defined(__ARM_ARCH_6T2__) || defined(_ARM_ARCH_7) ||		\
     defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
     defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
-    defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__)
+    defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
+    defined(__ARM_FEATURE_UNALIGNED)
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
-#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) || defined(LITTLE_ENDIAN) ||\
-    defined(__i386__) ||defined(__x86_64__)
+#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) || \
+    defined(LITTLE_ENDIAN) || defined(__i386__) || defined(__x86_64__) || \
+    defined(__ARMEL__) || defined(__i960__) || defined(__TIC80__) || \
+    defined(__MIPSEL__) || defined(__AVR__) || defined(__MSP430__) || \
+    defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) || \
+    defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) || \
+    defined(__IEEE_LITTLE_ENDIAN)
 	#define S_IS_LITTLE_ENDIAN 1
 #endif
 
@@ -393,18 +399,53 @@ static unsigned slog2(suint_t i)
  * Custom "memset" functions
  */
 
-/* TODO: rewrite using aligned memory access (up to 50% speed-up on RISC CPUs) */
-static void s_memset32(unsigned *o, unsigned data, size_t n)
+static void s_memset32(unsigned char *o, unsigned data, size_t n)
 {
-	size_t k, n4 = (n / 4) * 4;
-	for (k = 0; k < n4; k += 4) {
-		S_ST_U32(o + k, data);
-		S_ST_U32(o + k + 1, data);
-		S_ST_U32(o + k + 2, data);
-		S_ST_U32(o + k + 3, data);
+	size_t k = 0, n4 = n / 4;
+	size_t ua_head = (intptr_t)o & 3;
+	unsigned *o32;
+	if (ua_head && n4) {
+		S_ST_U32(o, data);
+		S_ST_U32(o + n - 4, data);
+		o32 = (unsigned *)(o + 4 - ua_head);
+#ifdef S_IS_LITTLE_ENDIAN
+		data = S_ROL32(data, ua_head * 8);
+#else
+		data = S_ROR32(data, ua_head * 8);
+#endif
+		k = 0;
+		n4--;
+	} else {
+		o32 = (unsigned *)o;
 	}
-	for (; k < n; k++)
-		S_ST_U32(o + k, data);
+	for (; k < n4; k++)
+		S_ST_U32(o32 + k, data);
+}
+
+static void s_memset24(unsigned char *o, unsigned char *data, size_t n)
+{
+	size_t k = 0, ua_head = (intptr_t)o & 3;
+	if (ua_head && n >= 3) {
+		memcpy(o + k, data, 3);
+		k = 4 - ua_head;
+	}
+	unsigned *o32 = (unsigned *)(o + k);
+	size_t copy_size = n - k, c12 = (copy_size / 12);
+	if (c12 > 0) {
+		union { unsigned a32; char b[4]; } d[3];
+		size_t i, j;
+		for (i = 0; i < 3; i ++)
+			for (j = 0; j < 4; j++)
+				d[i].b[j] = data[(j + k + i * 4) % 3];
+		for (i = 0; i < c12; i++) {
+			*o32++ = d[0].a32;
+			*o32++ = d[1].a32;
+			*o32++ = d[2].a32;
+		}
+		k = c12 * 12;
+	}
+	for (; k < n; k += 3)
+		memcpy(o + k, data, 3);
 }
 
 #ifdef __cplusplus
