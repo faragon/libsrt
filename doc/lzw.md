@@ -51,5 +51,11 @@ Decoding requires less memory than decoding because there is no need to guess no
 
 ### Algorithm optimization: decoding
 
-For LZW decoding, the tree LZW tree is reconstructed from received opcodes. A vector with the associattion between LZW code and associated character allows to reconstruct a pattern backwards (no optimization is done here). RLE opcodes mixed into the LZW stream are very fast because are implemented as a memset (1-byte patterns) and with a custom 4-byte memset.
+For LZW decoding, the tree LZW tree is reconstructed from received opcodes. A vector with the associattion between LZW code and associated character allows to reconstruct a pattern backwards (no optimization is done here). RLE opcodes mixed into the LZW stream are very fast because are implemented as a memset (1-byte patterns) and custom 3 and 4-byte memset functions.
+
+### Next steps
+
+- Uncompressible data handling.
+- Speed-up LZW tree search on encoding.
+- Add compressed data "cat" support.
 
