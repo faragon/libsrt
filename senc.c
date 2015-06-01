@@ -55,7 +55,8 @@ static const char h2n[64] = {
 #define SLZW_STOP		(SLZW_RESET + 1)
 #ifdef SLZW_ENABLE_RLE
 	#define SLZW_RLE	(SLZW_STOP + 1)
-	#define SLZW_RLE4	(SLZW_RLE + 1)
+	#define SLZW_RLE3       (SLZW_RLE + 1)
+	#define SLZW_RLE4       (SLZW_RLE3 + 1)
 	#define SLZW_FIRST	(SLZW_RLE4 + 1)
 	#define SLZW_RLE_CSIZE	16
 	#define SRLE_RUN_BITS_D2 9
@@ -338,32 +339,44 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	for (; i < ss;) {
 #ifdef SLZW_ENABLE_RLE_ENC
 		if ((i + SLZW_RLE_CSIZE) < ss) {
-			suint32_t *p32 = (suint32_t *)(s + i);
-			for (; p32[0] == p32[1];) {
+			suint32_t *p0 = (suint32_t *)(s + i);
+			suint32_t *p3 = (suint32_t *)(s + i + 3);
+			int eq4 = p0[0] == p0[1];
+			int eq3 = !eq4 && p0[0] == p3[0];
+			for (; eq4 || eq3;) {
 				srle_cmp_t *u = (srle_cmp_t *)(s + i),
 				*v = (srle_cmp_t *)(s + i + 1),
 				u0 = u[0];
-				size_t rle_mode, j = i + sizeof(suint32_t) * 2;
-				if (u0 == v[0]) {
-					rle_mode = SLZW_RLE;
-					j &= S_ALIGNMASK;
-				} else {
-					rle_mode = SLZW_RLE4;
-				}
-				size_t cx, extra_bits;
-				if (rle_mode == SLZW_RLE4) {
-					cx = 4;
-					extra_bits = 2;
-				} else {
-					cx = 1;
-					extra_bits = 0;
-				}
+				size_t cx, extra_bits, rle_mode, j;
 				size_t range_bits = SRLE_RUN_BITS_D2 * 2 + extra_bits,
 				       max_cs = i + S_NBIT(range_bits),
 				       ss2 = S_MIN(ss, max_cs) - sizeof(srle_cmp_t);
-				for (; j < ss2 ; j += sizeof(srle_cmp_t))
-					if (u0 != *(srle_cmp_t *)(s + j))
+				if (eq4) {
+					j = i + sizeof(suint32_t) * 2;
+					if (u0 == v[0]) {
+						rle_mode = SLZW_RLE;
+						j &= S_ALIGNMASK;
+						cx = 1;
+						extra_bits = 0;
+					} else {
+						rle_mode = SLZW_RLE4;
+						cx = 4;
+						extra_bits = 2;
+					}
+					for (; j < ss2 ; j += sizeof(srle_cmp_t))
+						if (u0 != *(srle_cmp_t *)(s + j))
+							break;
+				} else {
+					if (p0[1] != p3[1] || p0[2] != p3[2])
 						break;
+					j = i + 3 * 4;
+					rle_mode = SLZW_RLE3;
+					cx = 3;
+					extra_bits = 0;
+					for (; j < ss2 ; j += 3)
+						if (p0[0] != *(suint32_t *)(s + j))
+							break;
+				}
 				if (j - i >= SLZW_RLE_CSIZE) {
 					size_t count_cs = (j - i - cx) / cx,
 					       count_csx = count_cs * cx,
@@ -373,10 +386,11 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					SLZW_ENC_WRITE(o, oi, acc, cl, SRLE_RUN_BITS_D2);
 					SLZW_ENC_WRITE(o, oi, acc, ch, SRLE_RUN_BITS_D2);
 					SLZW_ENC_WRITE(o, oi, acc, s[i], 8);
-					if (rle_mode == SLZW_RLE4) {
+					if (cx >= 3) {
 						SLZW_ENC_WRITE(o, oi, acc, s[i + 1], 8);
 						SLZW_ENC_WRITE(o, oi, acc, s[i + 2], 8);
-						SLZW_ENC_WRITE(o, oi, acc, s[i + 3], 8);
+						if (cx >= 4)
+							SLZW_ENC_WRITE(o, oi, acc, s[i + 3], 8);
 					}
 					i += count_csx;
 				}
@@ -474,7 +488,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		/*
 		 * Write RLE pattern
 		 */
-		if (new_code == SLZW_RLE || new_code == SLZW_RLE4) {
+		if (new_code == SLZW_RLE || new_code == SLZW_RLE3 || new_code == SLZW_RLE4) {
 			union { unsigned a32; char b[4]; } rle;
 			size_t count, cl, ch;
 			SLZW_DEC_READ(cl, s, ss, i, acc, accbuf, SRLE_RUN_BITS_D2);
@@ -484,11 +498,16 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			if (new_code == SLZW_RLE) {
 				memset(o + oi, rle.b[0], count);
 			} else {
-				count *= 4;
 				SLZW_DEC_READ(rle.b[1], s, ss, i, acc, accbuf, 8);
 				SLZW_DEC_READ(rle.b[2], s, ss, i, acc, accbuf, 8);
-				SLZW_DEC_READ(rle.b[3], s, ss, i, acc, accbuf, 8);
-				s_memset32((unsigned *)(o + oi), rle.a32, count);
+				if (new_code == SLZW_RLE4) {
+					count *= 4;
+					SLZW_DEC_READ(rle.b[3], s, ss, i, acc, accbuf, 8);
+					s_memset32(o + oi, rle.a32, count);
+				} else {
+					count *= 3;
+					s_memset24(o + oi, rle.b, count);
+				}
 			}
 			oi += count;
 			continue;
@@ -538,7 +557,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 
 #ifdef STANDALONE_TEST
 
-#define BUF_IN_SIZE (140 * 1024 * 1024)
+#define BUF_IN_SIZE (120 * 1024 * 1024)
 #define BUF_OUT_SIZE (BUF_IN_SIZE * 2)
 
 static int syntax_error(const char **argv, const int exit_code)
