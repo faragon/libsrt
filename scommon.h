@@ -424,16 +424,16 @@ static void s_memset32(unsigned char *o, unsigned data, size_t n)
 
 static void s_memset24(unsigned char *o, unsigned char *data, size_t n)
 {
-	size_t k = 0, ua_head = (intptr_t)o & 3;
-	if (ua_head && n >= 3) {
-		memcpy(o + k, data, 3);
-		k = 4 - ua_head;
-	}
-	unsigned *o32 = (unsigned *)(o + k);
-	size_t copy_size = n - k, c12 = (copy_size / 12);
-	if (c12 > 0) {
+	size_t k = 0;
+	if (n >= 15) {
+		size_t ua_head = (intptr_t)o & 3;
+		if (ua_head) {
+			memcpy(o + k, data, 3);
+			k = 4 - ua_head;
+		}
+		unsigned *o32 = (unsigned *)(o + k);
 		union { unsigned a32; char b[4]; } d[3];
-		size_t i, j;
+		size_t i, j, copy_size = n - k, c12 = (copy_size / 12);
 		for (i = 0; i < 3; i ++)
 			for (j = 0; j < 4; j++)
 				d[i].b[j] = data[(j + k + i * 4) % 3];
