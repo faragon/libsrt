@@ -51,13 +51,13 @@ static const char h2n[64] = {
 #define SLZW_CODE_LIMIT		(1 << SLZW_MAX_TREE_BITS)
 #define SLZW_MAX_CODE		(SLZW_CODE_LIMIT - 1)
 #define SLZW_ROOT_NODE_BITS	8
-#define SLZW_RESET		(1 << SLZW_ROOT_NODE_BITS)
+#define SLZW_OP_START		(1 << SLZW_ROOT_NODE_BITS)
+#define SLZW_RESET		SLZW_OP_START
 #define SLZW_STOP		(SLZW_RESET + 1)
 #ifdef SLZW_ENABLE_RLE
 	#define SLZW_RLE	(SLZW_STOP + 1)
 	#define SLZW_RLE3       (SLZW_RLE + 1)
 	#define SLZW_RLE4       (SLZW_RLE3 + 1)
-	#define SLZW_FIRST	(SLZW_RLE4 + 1)
 	#define SLZW_RLE_CSIZE	16
 	#define SRLE_RUN_BITS_D2 9
 	#if S_BPWORD >= 8
@@ -65,9 +65,11 @@ static const char h2n[64] = {
 	#else
 		typedef suint32_t srle_cmp_t;
 	#endif
+	#define SLZW_OP_END	SLZW_RLE4
 #else
-	#define SLZW_FIRST	(SLZW_STOP + 1)
+	#define SLZW_OP_END	SLZW_STOP
 #endif
+#define SLZW_FIRST		(SLZW_OP_END + 1)
 #define SLZW_LUT_CHILD_ELEMS	256
 #define SLZW_MAX_LUTS		(SLZW_CODE_LIMIT / 8)
 
@@ -471,7 +473,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	size_t i, j;
 	size_t acc = 0, accbuf = 0, oi = 0;
 	size_t last_code, curr_code_len, next_inc_code;
-	size_t parents[SLZW_CODE_LIMIT];
+	slzw_ndx_t parents[SLZW_CODE_LIMIT];
 	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
 	/*
 	 * Initialize root node
@@ -484,11 +486,45 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	for (i = 0; i < ss;) {
 		int new_code;
 		SLZW_DEC_READ(new_code, s, ss, i, acc, accbuf, curr_code_len);
+		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
+			if (last_code == SLZW_CODE_LIMIT) {
+				o[oi++] = lastwc = xbyte[new_code];
+				last_code = new_code;
+				continue;
+			}
+			size_t code, pattern_off = SLZW_CODE_LIMIT - 1;
+			if (new_code == next_inc_code) {
+				pattern[pattern_off--] = lastwc;
+				code = last_code;
+			} else {
+				code = new_code;
+			}
+			for (; code >= SLZW_FIRST;) {
+				pattern[pattern_off--] = xbyte[code];
+				code = parents[code];
+			}
+			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] = xbyte[code];
+			parents[next_inc_code] = last_code;
+			if (next_inc_code < SLZW_CODE_LIMIT)
+				next_inc_code++;
+			if (next_inc_code == 1 << curr_code_len &&
+			    next_inc_code < SLZW_CODE_LIMIT) {
+				curr_code_len++;
+			}
+			last_code = new_code;
+			/*
+			 * Write LZW pattern
+			 */
+			size_t write_size = SLZW_CODE_LIMIT - 1 - pattern_off;
+			memcpy(o + oi, pattern + pattern_off + 1, write_size);
+			oi += write_size;
+			continue;
+		}
 #ifdef SLZW_ENABLE_RLE
 		/*
 		 * Write RLE pattern
 		 */
-		if (new_code == SLZW_RLE || new_code == SLZW_RLE3 || new_code == SLZW_RLE4) {
+		if (new_code >= SLZW_RLE && new_code <= SLZW_RLE4) {
 			union { unsigned a32; char b[4]; } rle;
 			size_t count, cl, ch;
 			SLZW_DEC_READ(cl, s, ss, i, acc, accbuf, SRLE_RUN_BITS_D2);
@@ -517,40 +553,8 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
 			continue;
 		}
-		if (new_code == SLZW_STOP) {
+		if (new_code == SLZW_STOP)
 			break;
-		}
-		if (last_code == SLZW_CODE_LIMIT) {
-			o[oi++] = lastwc = xbyte[new_code];
-			last_code = new_code;
-			continue;
-		}
-		size_t code, pattern_off = SLZW_CODE_LIMIT - 1;
-		if (new_code == next_inc_code) {
-			pattern[pattern_off--] = lastwc;
-			code = last_code;
-		} else {
-			code = new_code;
-		}
-		for (; code >= SLZW_FIRST;) {
-			pattern[pattern_off--] = xbyte[code];
-			code = parents[code];
-		}
-		pattern[pattern_off--] = lastwc = xbyte[next_inc_code] = xbyte[code];
-		parents[next_inc_code] = last_code;
-		if (next_inc_code < SLZW_CODE_LIMIT)
-			next_inc_code++;
-		if (next_inc_code == 1 << curr_code_len &&
-		    next_inc_code < SLZW_CODE_LIMIT) {
-			curr_code_len++;
-		}
-		last_code = new_code;
-		/*
-		 * Write LZW pattern
-		 */
-		size_t write_size = SLZW_CODE_LIMIT - 1 - pattern_off;
-		memcpy(o + oi, pattern + pattern_off + 1, write_size);
-		oi += write_size;
 	}
 	return oi;
 }
