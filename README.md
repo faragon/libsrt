@@ -1,8 +1,3 @@
-*** pre-alpha ***
-(validation, cleanup, dynamic library, documentation, and examples: work in progress)
-
-
-
 libsrt: Simple Real-Time library for the C programming language
 ===
 
@@ -226,4 +221,11 @@ Acknowledgements and references
 ---
 
 See doc/references.md file for acknowledgements and references.
+
+Build status
+---
+
+|Branch      |Status   |
+|------------|---------|
+|master      | [![Build Status](https://api.travis-ci.org/faragon/libsrt.svg?branch=master)](https://api.travis-ci.org/faragon/libsrt)  |
 
