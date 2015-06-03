@@ -150,7 +150,9 @@
   <ItemGroup>
     <ClCompile Include="..\..\sdata.c" />
     <ClCompile Include="..\..\sdbg.c" />
+    <ClCompile Include="..\..\sdmap.c" />
     <ClCompile Include="..\..\senc.c" />
+    <ClCompile Include="..\..\shash.c" />
     <ClCompile Include="..\..\smap.c" />
     <ClCompile Include="..\..\ssearch.c" />
     <ClCompile Include="..\..\sstring.c" />
@@ -163,7 +165,9 @@
     <ClInclude Include="..\..\scommon.h" />
     <ClInclude Include="..\..\sdata.h" />
     <ClInclude Include="..\..\sdbg.h" />
+    <ClInclude Include="..\..\sdmap.h" />
     <ClInclude Include="..\..\senc.h" />
+    <ClInclude Include="..\..\shash.h" />
     <ClInclude Include="..\..\smap.h" />
     <ClInclude Include="..\..\ssearch.h" />
     <ClInclude Include="..\..\sstring.h" />
@@ -175,3 +179,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

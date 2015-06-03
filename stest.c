@@ -1558,7 +1558,6 @@ int test_sv_push_pop_i()
 	for (; i < ntests; i++) {
 		sv_t *a = sv_alloc_t(t[i], 10);
 		sv_t *b = sv_alloca_t(t[i], 10);
-		sint_t r;
 		do {
 			if (!a || !b) {
 				res |= 1 << (i * 4);
