@@ -1,0 +1,18 @@
+language: c
+compiler: gcc
+script: ./make_test.sh
+before_install:
+  - sudo apt-get update  -qq
+  - sudo apt-get install -qq gcc-arm-linux-gnueabi
+  - sudo apt-get install -qq gcc-mips-linux-gnueabi
+  - sudo apt-get install -qq gcc-powerpc-linux-gnueabi
+  - sudo apt-get install -qq clang
+  - sudo apt-get install -qq g++-multilib
+  - sudo apt-get install -qq gcc-multilib
+  - sudo apt-get install -qq valgrind
+
+env:
+  - SLIBSRT_ENV=not_used
+
+matrix:
+  fast_finish: true
