@@ -3,11 +3,6 @@
 
 Short-term
 ---
-* Fix tests failing on MIPS64-LE (MIPS 20Kc):
-	test_sm_alloc(): 00000002 <--------
-	test_sm_alloca(): 00000002 <--------
-	test_sm_sort_to_vectors(): 00000004 <--------
-	test_sm_double_rotation(): 00000003 <--------
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"

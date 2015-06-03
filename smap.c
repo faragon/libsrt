@@ -13,17 +13,17 @@
  * Internal functions
  */
 
-static sint_t cmp_i(const struct SMapuu *a, const struct SMapii *b)
+static int cmp_i(const struct SMapuu *a, const struct SMapii *b)
 {
 	return a->k - b->k;
 }
 
-static sint_t cmp_u(const struct SMapuu *a, const struct SMapuu *b)
+static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-static sint_t cmp_I(const struct SMapIx *a, const struct SMapIx *b)
+static int cmp_I(const struct SMapIx *a, const struct SMapIx *b)
 {
 	return a->k - b->k;
 }
