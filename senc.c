@@ -320,7 +320,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Output encoding control
 	 */
         size_t oi = 0;
-        size_t next_code, curr_code_len, acc = 0;
+        size_t next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, acc = 0;
 	/*
 	 * Initialize data structures
 	 */
