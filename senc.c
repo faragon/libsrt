@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 #define SLZW_ENABLE_RLE
-#if defined(SLZW_ENABLE_RLE) && defined(S_UNALIGNED_MEMORY_ACCESS)
+#if defined(SLZW_ENABLE_RLE) /*&& defined(S_UNALIGNED_MEMORY_ACCESS)*/
 #define SLZW_ENABLE_RLE_ENC
 #endif
 

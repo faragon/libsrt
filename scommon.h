@@ -199,7 +199,8 @@ extern "C" {
  */
 
 #if defined(__i386__) || defined(__x86_64__) || __ARM_ARCH >= 6 ||	\
-    defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__) || 			\
+    ((defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__)) &&		\
+     !defined(__ARM_ARCH_6M__)) ||					\
     defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6Z__) ||		\
     defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6K__) ||		\
     defined(__ARM_ARCH_6T2__) || defined(_ARM_ARCH_7) ||		\
@@ -210,12 +211,13 @@ extern "C" {
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
-#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) || \
-    defined(LITTLE_ENDIAN) || defined(__i386__) || defined(__x86_64__) || \
-    defined(__ARMEL__) || defined(__i960__) || defined(__TIC80__) || \
-    defined(__MIPSEL__) || defined(__AVR__) || defined(__MSP430__) || \
-    defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) || \
-    defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) || \
+#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) ||		   \
+    defined(LITTLE_ENDIAN) || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
+    defined(__i386__) || defined(__x86_64__) ||				   \
+    defined(__ARMEL__) || defined(__i960__) || defined(__TIC80__) ||	   \
+    defined(__MIPSEL__) || defined(__AVR__) || defined(__MSP430__) ||	   \
+    defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		   \
+    defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) ||	   \
     defined(__IEEE_LITTLE_ENDIAN)
 	#define S_IS_LITTLE_ENDIAN 1
 #endif
