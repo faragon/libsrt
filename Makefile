@@ -21,6 +21,9 @@ endif
 ifndef CPP11
 	CPP11=0
 endif
+ifndef CPP0X
+	CPP0X=0
+endif
 ifndef PROFILING
 	PROFILING=0
 endif
@@ -53,9 +56,15 @@ else
 	ifeq ($(CPP11), 1)
 		CPP_MODE=1
 	endif
+	ifeq ($(CPP0X), 1)
+		CPP_MODE=1
+	endif
 	ifeq ($(CPP_MODE), 1)
 		ifeq ($(CPP11), 1)
 			CFLAGS += -std=c++11
+		endif
+		ifeq ($(CPP0X), 1)
+			CFLAGS += -std=c++0x
 		endif
 	else
 		ifeq ($(C99), 1)
