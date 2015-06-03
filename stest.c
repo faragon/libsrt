@@ -1823,9 +1823,9 @@ int test_st_traverse()
 			if (sm_size(m) != 1) { res = 2; break; }	       \
 			sm_ii_insert(&m, 2, 1002);			       \
 			sm_ii_insert(&m, 3, 1003);			       \
-			if (sm_ii_at(m, 1) != 1001) { res = 2; break; }	       \
-			if (sm_ii_at(m, 2) != 1002) { res = 3; break; }	       \
-			if (sm_ii_at(m, 3) != 1003) { res = 4; break; }	       \
+			if (sm_ii_at(m, 1) != 1001) { res = 3; break; }	       \
+			if (sm_ii_at(m, 2) != 1002) { res = 4; break; }	       \
+			if (sm_ii_at(m, 3) != 1003) { res = 5; break; }	       \
 			break;						       \
 		}							       \
 		sm_free_X(&m);						       \
