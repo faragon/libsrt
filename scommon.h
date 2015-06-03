@@ -139,12 +139,12 @@ extern "C" {
  * Constants
  */
 
-#define S_NPOS		((size_t)-1)
+#define S_SIZET_MAX	((size_t)-1)
+#define S_NPOS		S_SIZET_MAX
 #define S_NULL_C	"(null)"
 #define S_NULL_WC	L"(null)"
 #define S_TRUE		(1)
 #define S_FALSE		(0)
-#define S_SIZET_MAX	(UINTPTR_MAX)
 
 #ifdef _MSC_VER
 	#if S_BPWORD == 8
