@@ -109,10 +109,11 @@ static const char h2n[64] = {
 		memset(node_lutref, 0, 256 * sizeof(node_lutref[0]));	\
 		lut_stack_in_use = 1;					\
 		node_stack_in_use = 256;				\
-		SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);	\
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
 		next_code = SLZW_FIRST;					\
 	}
+
+#define SLZW_ENC_CLOSE(o, oi, acc) if (acc) o[++oi] = 0;
 
 #define SLZW_DEC_READ(nc, s, ss, i, acc, accbuf, curr_code_len) {	\
 		size_t cbits = curr_code_len;				\
@@ -452,18 +453,19 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 * out of LUTs
 		 */
 		if (++next_code == SLZW_MAX_CODE ||
-		    lut_stack_in_use == SLZW_MAX_LUTS)
+		    lut_stack_in_use == SLZW_MAX_LUTS) {
+			SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);
 		        SLZW_ENC_RESET(node_codes, node_lutref,
 				       lut_stack_in_use, node_stack_in_use,
 				       next_code, curr_code_len);
+		}
 	}
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
 	SLZW_ENC_WRITE(o, oi, acc, node_codes[curr_node], curr_code_len);
 	SLZW_ENC_WRITE(o, oi, acc, SLZW_STOP, curr_code_len);
-	if (acc)
-		o[++oi] = 0;
+	SLZW_ENC_CLOSE(o, oi, acc);
 	return oi;
 }
 
@@ -472,7 +474,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	RETURN_IF(!s || !o || !ss, 0);
 	size_t i, j;
 	size_t acc = 0, accbuf = 0, oi = 0;
-	size_t last_code, curr_code_len, next_inc_code;
+	size_t last_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
 	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
 	/*
@@ -561,7 +563,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 
 #ifdef STANDALONE_TEST
 
-#define BUF_IN_SIZE (120 * 1024 * 1024)
+#define BUF_IN_SIZE (120LL * 1024 * 1024)
 #define BUF_OUT_SIZE (BUF_IN_SIZE * 2)
 
 static int syntax_error(const char **argv, const int exit_code)
