@@ -77,7 +77,7 @@ extern "C" {
 	#define S_USE_VA_ARGS
 #endif
 
-#if defined(S_MODERN_COMPILER) && !defined(__MSC_VER)
+#if defined(S_MODERN_COMPILER) && !defined(_MSC_VER)
 	#define S_POSIX_LOCALE_SUPPORT
 #endif
 

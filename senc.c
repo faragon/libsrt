@@ -316,7 +316,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Stack allocation control
 	 */
-        size_t node_stack_in_use, lut_stack_in_use;
+	slzw_ndx_t node_stack_in_use, lut_stack_in_use;
 	/*
 	 * Output encoding control
 	 */
@@ -350,9 +350,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				srle_cmp_t *u = (srle_cmp_t *)(s + i),
 				*v = (srle_cmp_t *)(s + i + 1),
 				u0 = u[0];
-				size_t cx, extra_bits, rle_mode, j;
-				size_t range_bits = SRLE_RUN_BITS_D2 * 2 + extra_bits,
-				       max_cs = i + S_NBIT(range_bits),
+				size_t cx, rle_mode, j;
+				size_t max_cs = i + S_NBIT(SRLE_RUN_BITS_D2 * 2),
 				       ss2 = S_MIN(ss, max_cs) - sizeof(srle_cmp_t);
 				if (eq4) {
 					j = i + sizeof(suint32_t) * 2;
@@ -360,11 +359,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 						rle_mode = SLZW_RLE;
 						j &= S_ALIGNMASK;
 						cx = 1;
-						extra_bits = 0;
 					} else {
 						rle_mode = SLZW_RLE4;
 						cx = 4;
-						extra_bits = 2;
 					}
 					for (; j < ss2 ; j += sizeof(srle_cmp_t))
 						if (u0 != *(srle_cmp_t *)(s + j))
@@ -375,7 +372,6 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					j = i + 3 * 4;
 					rle_mode = SLZW_RLE3;
 					cx = 3;
-					extra_bits = 0;
 					for (; j < ss2 ; j += 3)
 						if (p0[0] != *(suint32_t *)(s + j))
 							break;
@@ -435,6 +431,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				slzw_ndx_t new_lut = lut_stack_in_use++;
 				node_lutref[curr_node] = new_lut;
 				memset(&lut_stack[new_lut], 0, sizeof(lut_stack[0]));
+#ifdef _MSC_VER
+#pragma warning(suppress: 6001)
+#endif
 				lut_stack[new_lut][node_child[curr_node]] = alt_n;
 			}
 		}
