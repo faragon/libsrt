@@ -99,7 +99,9 @@ extern "C" {
 	#define S_BPWORD 16
 #endif
 
-#define S_ALIGNMASK (~(S_BPWORD - 1))
+#define S_UALIGNMASK (S_BPWORD - 1)
+#define S_ALIGNMASK (~S_UALIGNMASK)
+
 /*
  * Variable argument helpers
  */
@@ -404,24 +406,29 @@ static unsigned slog2(suint_t i)
 static void s_memset32(unsigned char *o, unsigned data, size_t n)
 {
 	size_t k = 0, n4 = n / 4;
-	size_t ua_head = (intptr_t)o & 3;
 	unsigned *o32;
+#if defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 4
+	size_t ua_head = (intptr_t)o & 3;
 	if (ua_head && n4) {
 		S_ST_U32(o, data);
 		S_ST_U32(o + n - 4, data);
 		o32 = (unsigned *)(o + 4 - ua_head);
-#ifdef S_IS_LITTLE_ENDIAN
+	#ifdef S_IS_LITTLE_ENDIAN
 		data = S_ROL32(data, ua_head * 8);
-#else
+	#else
 		data = S_ROR32(data, ua_head * 8);
-#endif
+	#endif
 		k = 0;
 		n4--;
-	} else {
+		for (; k < n4; k++)
+			o32[k] = data;
+	} else
+#endif
+	{
 		o32 = (unsigned *)o;
+		for (; k < n4; k++)
+			S_ST_U32(o32 + k, data);
 	}
-	for (; k < n4; k++)
-		S_ST_U32(o32 + k, data);
 }
 
 static void s_memset24(unsigned char *o, unsigned char *data, size_t n)
