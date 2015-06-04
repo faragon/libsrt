@@ -1,3 +1,5 @@
+master branch: [![Build Status](https://travis-ci.org/faragon/libsrt.svg?branch=master)](https://travis-ci.org/faragon/libsrt)
+
 libsrt: Simple Real-Time library for the C programming language
 ===
 
@@ -221,11 +223,4 @@ Acknowledgements and references
 ---
 
 See doc/references.md file for acknowledgements and references.
-
-Build status
----
-
-|Branch   |Status   |
-|---------|---------|
-|master   | [![Build Status](https://travis-ci.org/faragon/libsrt.svg?branch=master)](https://travis-ci.org/faragon/libsrt) |
 
