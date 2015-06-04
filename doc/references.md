@@ -182,6 +182,14 @@ Predictability
 * Static Timing Analysis for Hard Real-Time Systems (Reinhard Wilhelm, Sebastian Altmeyer, ...)
 * Timing-Predictable Memory Allocation In Hard Real-Time Systems (Jörg Herter) [2014]
 
+Data compression
+---
+
+* Improving LZW (R. Nigel Horspool) http://webhome.cs.uvic.ca/~nigelh/Publications/improvingLZW.pdf
+* https://en.wikipedia.org/wiki/Lempel%E2%80%93Ziv%E2%80%93Welch
+* http://www2.scssoft.com/~petr/gfx/lzw.html
+* https://es.wikipedia.org/wiki/Run-length\_encoding
+
 C language
 ---
 
