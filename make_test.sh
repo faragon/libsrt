@@ -71,7 +71,7 @@ done
 if type valgrind >/dev/null 2>/dev/null
 then
 	echo -n "Valgrind test..." | tee -a $LOG
-	if make clean >/dev/null 2>/dev/null ; make DEBUG=1 PROFILING=1 >>$LOG 2>&1 ; valgrind --track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./stest >>$LOG 2>&1 ; then
+	if make clean >/dev/null 2>/dev/null ; make DEBUG=1 >>$LOG 2>&1 ; valgrind --track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./stest >>$LOG 2>&1 ; then
 		echo " OK" | tee -a $LOG
 	else 	echo " ERROR" | tee -a $LOG
 		ERRORS=$((ERRORS + 1))
