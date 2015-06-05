@@ -7,6 +7,7 @@
  */
 
 #include "senc.h"
+#include "sbitio.h"
 #include <stdlib.h>
 
 #define SLZW_ENABLE_RLE
@@ -85,26 +86,7 @@ static const char h2n[64] = {
 #define DB64C2(b, c)	(b << 4 | c >> 2)
 #define DB64C3(c, d)	(c << 6 | d)
 
-#define SLZW_ENC_WRITE(ob, oi, acc, code, curr_code_len) {	\
-		size_t c = code, code_bits = curr_code_len;	\
-		if (acc) {					\
-			size_t xbits = 8 - acc;			\
-			ob[oi++] |= (c << acc);			\
-			c >>= xbits;				\
-			code_bits -= xbits;			\
-		}						\
-		size_t copy_size = code_bits / 8;		\
-		switch (copy_size) {				\
-		case 3: ob[oi++] = c; c >>= 8;			\
-		case 2: ob[oi++] = c; c >>= 8;			\
-		case 1: ob[oi++] = c; c >>= 8;			\
-		}						\
-		acc = code_bits % 8;				\
-		if (acc)					\
-			ob[oi] = c;				\
-	}
-
-#define SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,	\
+#define SLZW_ENC_RESET(node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
 		memset(node_lutref, 0, 256 * sizeof(node_lutref[0]));	\
 		lut_stack_in_use = 1;					\
@@ -113,32 +95,9 @@ static const char h2n[64] = {
 		next_code = SLZW_FIRST;					\
 	}
 
-#define SLZW_ENC_CLOSE(o, oi, acc) if (acc) o[++oi] = 0;
-
-#define SLZW_DEC_READ(nc, s, ss, i, acc, accbuf, curr_code_len) {	\
-		size_t cbits = curr_code_len;				\
-		nc = 0;							\
-		if (acc) {						\
-			nc |= accbuf;					\
-			cbits -= acc;					\
-		}							\
-		if (cbits >= 8) {					\
-			nc |= (s[i++] << acc);				\
-			cbits -= 8;					\
-			acc += 8;					\
-		}							\
-		if (cbits > 0) {					\
-			accbuf = s[i++];				\
-			nc |= ((accbuf & S_NBITMASK(cbits)) << acc);	\
-			accbuf >>= cbits;				\
-			acc = 8 - cbits;				\
-		} else {						\
-			acc = 0;					\
-		}							\
-	}
-
-#define SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code,	\
+#define SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code,	\
 		       parents) {					\
+		int j;							\
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
 		last_code = SLZW_CODE_LIMIT;				\
 		next_inc_code = SLZW_FIRST;				\
@@ -309,8 +268,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * node_lutref[i]: 0: empty, < 0: -next_node, > 0: 256-child LUT ref.
 	 * node_child[i]: if node_lutref[0] < 0: next node byte (one-child node)
 	 */
-        slzw_ndx_t node_codes[SLZW_CODE_LIMIT],
-		   node_lutref[SLZW_CODE_LIMIT],
+        slzw_ndx_t node_codes[SLZW_CODE_LIMIT], node_lutref[SLZW_CODE_LIMIT],
 		   lut_stack[SLZW_MAX_LUTS][SLZW_LUT_CHILD_ELEMS];
         unsigned char node_child[SLZW_CODE_LIMIT];
 	/*
@@ -320,8 +278,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Output encoding control
 	 */
-        size_t oi = 0;
-        size_t next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, acc = 0;
+	size_t oi = 0, next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, acc;
+	sbitio_write_init(&acc);
 	/*
 	 * Initialize data structures
 	 */
@@ -332,7 +290,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		node_codes[j + 2] = j + 2;
 		node_codes[j + 3] = j + 3;
 	}
-	SLZW_ENC_RESET(node_codes, node_lutref, lut_stack_in_use,
+	SLZW_ENC_RESET(node_lutref, lut_stack_in_use,
 		       node_stack_in_use, next_code, curr_code_len);
 	/*
 	 * Encoding loop
@@ -381,15 +339,15 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					       count_csx = count_cs * cx,
 					       ch = count_cs >> SRLE_RUN_BITS_D2,
 					       cl = count_cs & S_NBITMASK(SRLE_RUN_BITS_D2);
-					SLZW_ENC_WRITE(o, oi, acc, rle_mode, curr_code_len);
-					SLZW_ENC_WRITE(o, oi, acc, cl, SRLE_RUN_BITS_D2);
-					SLZW_ENC_WRITE(o, oi, acc, ch, SRLE_RUN_BITS_D2);
-					SLZW_ENC_WRITE(o, oi, acc, s[i], 8);
+					sbitio_write(o, &oi, &acc, rle_mode, curr_code_len);
+					sbitio_write(o, &oi, &acc, cl, SRLE_RUN_BITS_D2);
+					sbitio_write(o, &oi, &acc, ch, SRLE_RUN_BITS_D2);
+					sbitio_write(o, &oi, &acc, s[i], 8);
 					if (cx >= 3) {
-						SLZW_ENC_WRITE(o, oi, acc, s[i + 1], 8);
-						SLZW_ENC_WRITE(o, oi, acc, s[i + 2], 8);
+						sbitio_write(o, &oi, &acc, s[i + 1], 8);
+						sbitio_write(o, &oi, &acc, s[i + 2], 8);
 						if (cx >= 4)
-							SLZW_ENC_WRITE(o, oi, acc, s[i + 3], 8);
+							sbitio_write(o, &oi, &acc, s[i + 3], 8);
 					}
 					i += count_csx;
 				}
@@ -444,7 +402,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		node_codes[new_node] = next_code;
 		node_lutref[new_node] = 0;
-		SLZW_ENC_WRITE(o, oi, acc, node_codes[curr_node], curr_code_len);
+		sbitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len);
 		if (next_code == (1 << curr_code_len))
 			curr_code_len++;
 		/*
@@ -453,8 +411,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		if (++next_code == SLZW_MAX_CODE ||
 		    lut_stack_in_use == SLZW_MAX_LUTS) {
-			SLZW_ENC_WRITE(o, oi, acc, SLZW_RESET, curr_code_len);
-		        SLZW_ENC_RESET(node_codes, node_lutref,
+			sbitio_write(o, &oi, &acc, SLZW_RESET, curr_code_len);
+		        SLZW_ENC_RESET(node_lutref,
 				       lut_stack_in_use, node_stack_in_use,
 				       next_code, curr_code_len);
 		}
@@ -462,31 +420,35 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
-	SLZW_ENC_WRITE(o, oi, acc, node_codes[curr_node], curr_code_len);
-	SLZW_ENC_WRITE(o, oi, acc, SLZW_STOP, curr_code_len);
-	SLZW_ENC_CLOSE(o, oi, acc);
+	sbitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len);
+	sbitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len);
+	sbitio_write_close(o, &oi, &acc);
 	return oi;
 }
 
 size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
-	size_t i, j;
-	size_t acc = 0, accbuf = 0, oi = 0;
+	size_t i, acc, accbuf, oi;
 	size_t last_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
 	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
 	/*
+	 * Init read buffer
+	 */
+	oi = 0;
+	sbitio_read_init(&acc, &accbuf);
+	/*
 	 * Initialize root node
 	 */
 	slzw_setseq256s8((unsigned *)xbyte);
-	SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
+	SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code, parents);
 	/*
 	 * Code expand loop
 	 */
 	for (i = 0; i < ss;) {
 		int new_code;
-		SLZW_DEC_READ(new_code, s, ss, i, acc, accbuf, curr_code_len);
+		new_code = sbitio_read(s, &i, &acc, &accbuf, curr_code_len);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {
 				o[oi++] = lastwc = xbyte[new_code];
@@ -528,18 +490,18 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		if (new_code >= SLZW_RLE && new_code <= SLZW_RLE4) {
 			union { unsigned a32; unsigned char b[4]; } rle;
 			size_t count, cl, ch;
-			SLZW_DEC_READ(cl, s, ss, i, acc, accbuf, SRLE_RUN_BITS_D2);
-			SLZW_DEC_READ(ch, s, ss, i, acc, accbuf, SRLE_RUN_BITS_D2);
+			cl = sbitio_read(s, &i, &acc, &accbuf, SRLE_RUN_BITS_D2);
+			ch = sbitio_read(s, &i, &acc, &accbuf, SRLE_RUN_BITS_D2);
 			count = ch << SRLE_RUN_BITS_D2 | cl;
-			SLZW_DEC_READ(rle.b[0], s, ss, i, acc, accbuf, 8);
+			rle.b[0] = sbitio_read(s, &i, &acc, &accbuf, 8);
 			if (new_code == SLZW_RLE) {
 				memset(o + oi, rle.b[0], count);
 			} else {
-				SLZW_DEC_READ(rle.b[1], s, ss, i, acc, accbuf, 8);
-				SLZW_DEC_READ(rle.b[2], s, ss, i, acc, accbuf, 8);
+				rle.b[1] = sbitio_read(s, &i, &acc, &accbuf, 8);
+				rle.b[2] = sbitio_read(s, &i, &acc, &accbuf, 8);
 				if (new_code == SLZW_RLE4) {
 					count *= 4;
-					SLZW_DEC_READ(rle.b[3], s, ss, i, acc, accbuf, 8);
+					rle.b[3] = sbitio_read(s, &i, &acc, &accbuf, 8);
 					s_memset32(o + oi, rle.a32, count);
 				} else {
 					count *= 3;
@@ -551,7 +513,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		}
 #endif
 		if (new_code == SLZW_RESET) {
-			SLZW_DEC_RESET(j, curr_code_len, last_code, next_inc_code, parents);
+			SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code, parents);
 			continue;
 		}
 		if (new_code == SLZW_STOP)
