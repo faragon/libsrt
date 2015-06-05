@@ -118,7 +118,7 @@ $(OBJECTS): $(HEADERS)
 $(LIBSRT): $(OBJECTS)
 	ar rcs $(LIBSRT) $(OBJECTS)
 $(EXES): $% $(LIBSRT)
-run_tests:
+run_tests: stest
 	@./$(TEST)
 clean:
 	@rm -f $(OBJECTS) $(LIBSRT) *\.gcno *\.gcda *\.out callgrind* out\.txt
