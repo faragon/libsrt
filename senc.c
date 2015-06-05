@@ -447,7 +447,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Code expand loop
 	 */
 	for (i = 0; i < ss;) {
-		int new_code;
+		size_t new_code;
 		new_code = sbitio_read(s, &i, &acc, &accbuf, curr_code_len);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {

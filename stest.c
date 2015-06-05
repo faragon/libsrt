@@ -691,7 +691,7 @@ int test_ss_cat(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	int res = (sa && sb) ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0 : (ss_cat(&sa, sb, sb) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
@@ -758,7 +758,7 @@ int test_ss_cat_cn()
 	const char *a = "12345", *b = "67890";
 	ss_t *sa = ss_dup_c(a);
 	int res = sa ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%s%s", a, b);
 	res |= res ? 0 : (ss_cat_cn(&sa, b, 5) ? 0 : 2) |
 			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
@@ -770,7 +770,7 @@ int test_ss_cat_c(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a);
 	int res = sa ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0 : (ss_cat_c(&sa, b, b) ? 0 : 2) |
 			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
@@ -783,7 +783,7 @@ int test_ss_cat_wn()
 	const wchar_t *a = L"12345", *b = L"67890";
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%S%S", a, b);
 	res |= res ? 0 : (ss_cat_wn(&sa, b, 5) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
@@ -795,7 +795,7 @@ int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 {
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%S%S%S%S", a, b, b, b);
 	res |= res ? 0 : (ss_cat_w(&sa, b, b, b) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
@@ -943,7 +943,7 @@ int test_ss_cat_char()
 	const wchar_t *a = L"12345", *b = L"6";
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
-	char btmp[16384];
+	char btmp[8192];
 	sprintf(btmp, "%S%S", a, b);
 	res |= res ? 0 : (ss_cat_char(&sa, b[0]) ? 0 : 2) |
 			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
