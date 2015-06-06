@@ -1,5 +1,7 @@
 master branch: [![Build Status (gcc/clang/tcc)](https://travis-ci.org/faragon/libsrt.svg?branch=master)](https://travis-ci.org/faragon/libsrt) [![Build Status (vs win32)](https://ci.appveyor.com/api/projects/status/bw52jnfgv7qff6x4/branch/master?svg=true)](https://ci.appveyor.com/project/faragon/libsrt)
 
+master branch analysis: [![Build Status](https://scan.coverity.com/projects/5366/badge.svg)](https://scan.coverity.com/projects/5366)
+
 libsrt: Simple Real-Time library for the C programming language
 ===
 
