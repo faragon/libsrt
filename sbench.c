@@ -65,6 +65,7 @@ int bench_search(const int alg, const int param1, const int count)
 {
 	int res = 0;
 	const char *ba = NULL, *bb = NULL;
+	char *ba1 = NULL;
 	switch (param1) {
 	case 0: case 1: case 2: case 3:
 		ba = (char *)xa[param1];
@@ -72,7 +73,7 @@ int bench_search(const int alg, const int param1, const int count)
 		break;
 	case 4: {
 			const size_t ba_s = 100000;
-			char *ba1 = (char *)malloc(ba_s + 1);
+			ba1 = (char *)malloc(ba_s + 1);
 			memset(ba1, '0', ba_s);
 			ba1[ba_s] = 0;
 			ba1[0] = ba1[ba_s - 2] = '1';
@@ -84,7 +85,7 @@ int bench_search(const int alg, const int param1, const int count)
 	case 5:
 		{
 			const size_t max_size = 100 * 1024 * 1024;
-			char *ba1 = (char *)malloc(max_size);
+			ba1 = (char *)malloc(max_size);
 			int f = open("100.txt", O_RDONLY, 0777);
 			if (f < 0)
 				exit(1);
@@ -116,6 +117,7 @@ int bench_search(const int alg, const int param1, const int count)
 			res = 1;	/* error */
 	}
 	ss_free(&a, &b);
+	free(ba1);
 	return res;
 }
 
