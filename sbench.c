@@ -196,7 +196,8 @@ int bench_misc(const int alg, const int param1, const int count)
 int main(int argc, char **argv)
 {
 	if (argc == 5) {
-		int grp = atoi(argv[1]), alg = atoi(argv[2]), param = atoi(argv[3]), count = atoi(argv[4]);
+		int grp = atoi(argv[1]), alg = atoi(argv[2]), param = atoi(argv[3]), count0 = atoi(argv[4]);
+		int count = count0 > 0 ? count0 : 0;
 		if (grp >= 0 && grp < BENCH_GROUPS && alg >= 0 &&
 		    alg < BENCH_ALGS_PER_GROUP && algs[grp][alg] &&
 		    algs[grp][alg][0]) {
