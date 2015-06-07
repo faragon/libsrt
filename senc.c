@@ -151,7 +151,6 @@ static void slzw_setseq256s8(unsigned *p)
 static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t cbits, size_t *normal_count, size_t *esc_count)
 {
 	size_t c;
-#if SLZW_ESC_RATIO > 0
 	if (*esc_count <= *normal_count / SLZW_ESC_RATIO) {
 		c = sbitio_read(b, i, acc, accbuf, 8);
 		if (c == 255) {
@@ -160,9 +159,7 @@ static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, si
 		} else {
 			(*normal_count)++;
 		}
-	} else
-#endif
-	{
+	} else {
 		c = sbitio_read(b, i, acc, accbuf, cbits);
 		(*normal_count)++;
 	}
@@ -173,7 +170,6 @@ static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, si
 
 static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits, size_t *normal_count, size_t *esc_count)
 {
-#if SLZW_ESC_RATIO > 0
 	if (*esc_count <= *normal_count / SLZW_ESC_RATIO) {
 		if (c < 255) {
 	                sbitio_write(b, i, acc, c, 8);
@@ -183,20 +179,10 @@ static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c,
 			sbitio_write(b, i, acc, c, cbits);
 			(*esc_count)++;
 		}
-	} else
-#endif
-	{
+	} else {
 		sbitio_write(b, i, acc, c, cbits);
 		(*normal_count)++;
 	}
-#if 0
-	char *label = "";
-	switch (c) {
-	#define zCASE(a) case a: label = #a; break
-	zCASE(SLZW_RESET); zCASE(SLZW_STOP); zCASE(SLZW_RLE); zCASE(SLZW_RLE3); zCASE(SLZW_RLE4);
-	}
-	fprintf(stderr, "%04u (%02u) %s\n", (unsigned)c, (unsigned)cbits, label);
-#endif
 }
 
 /*
