@@ -140,15 +140,10 @@ static size_t senc_hex_aux(const unsigned char *s, const size_t ss, unsigned cha
 
 static void slzw_setseq256s8(unsigned *p)
 {
-	union { unsigned a32; char b[4]; } acc;
-	acc.b[0] = 0;
-	acc.b[1] = 1;
-	acc.b[2] = 2;
-	acc.b[3] = 3;
-	unsigned j;
+	unsigned j, acc = S_HTON_U32(0x00010203);
 	for (j = 0; j < 256 / 4; j++) {
-		p[j] = acc.a32;
-		acc.a32 += 0x04040404;
+		p[j] = acc;
+		acc += 0x04040404;
 	}
 }
 
