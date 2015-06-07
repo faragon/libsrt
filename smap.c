@@ -436,7 +436,7 @@ sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIS n;
 	n.x.k = k;
-	ss_cpy(&n.v, v);
+	n.v = ss_dup_s(v);
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
