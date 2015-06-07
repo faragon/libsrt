@@ -513,7 +513,7 @@ sv_t *sv_cat(sv_t **v, const sv_t *v1, ...)
 sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...)
 {
 	ASSERT_RETURN_IF(!v, sv_void);
-	const sv_t *v0 = v ? *v : NULL;
+	const sv_t *v0 = *v;
 	const size_t v0s = v0 ? get_size(v0) : 0;
 	if (aux_grow(v, v1, nargs)) {
 		const sv_t *v1a = v1 == v0 ? *v : v1;
