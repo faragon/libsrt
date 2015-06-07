@@ -523,7 +523,7 @@ int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 				(!strcmp(ss_to_c(a), expected_utf8) ? 0 : 2) |
 				(ss_len(a) == strlen(expected_utf8) ? 0 : 4);
 	char tmp[512];
-	sprintf(tmp, "%S%S", in, in);
+	sprintf(tmp, "%ls%ls", in, in);
 	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
@@ -784,7 +784,7 @@ int test_ss_cat_wn()
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
 	char btmp[8192];
-	sprintf(btmp, "%S%S", a, b);
+	sprintf(btmp, "%ls%ls", a, b);
 	res |= res ? 0 : (ss_cat_wn(&sa, b, 5) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
@@ -796,7 +796,7 @@ int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
 	char btmp[8192];
-	sprintf(btmp, "%S%S%S%S", a, b, b, b);
+	sprintf(btmp, "%ls%ls%ls%ls", a, b, b, b);
 	res |= res ? 0 : (ss_cat_w(&sa, b, b, b) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
@@ -944,7 +944,7 @@ int test_ss_cat_char()
 	ss_t *sa = ss_dup_w(a);
 	int res = sa ? 0 : 1;
 	char btmp[8192];
-	sprintf(btmp, "%S%S", a, b);
+	sprintf(btmp, "%ls%ls", a, b);
 	res |= res ? 0 : (ss_cat_char(&sa, b[0]) ? 0 : 2) |
 			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
@@ -1021,7 +1021,7 @@ int test_ss_to_w(const char *in)
 	if (!res) {
 		char b1[16384], b2[16384];
 		int sb1 = sprintf(b1, "%s", ss_to_c(a));
-		int sb2 = sprintf(b2, "%S", out);
+		int sb2 = sprintf(b2, "%ls", out);
 		res |= (sb1 == sb2 ? 0 : 8) | (!memcmp(b1, b2, sb1) ? 0 : 16);
 	}
 	free(out);
