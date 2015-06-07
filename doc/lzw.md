@@ -10,7 +10,9 @@ Copyright (c) 2015 F. Aragon. All rights reserved.
 
 LZW data compression algorithm (Welch, 1984) is derivated from LZW78 (Lempel and Ziv, 1978). LZW implementation equals to a LZW with first N codes already entered (e.g. N = 256, for coding general purpose per-byte encoding).
 
-An hybrid LZW + RLE is implmented, being RLE opcodes injected/mixed into the LZW stream for covering 1, 2 and 4-byte patterns (that improves compression speed on sparse data). Current implementation encodes at 75-300 MB/s and decodes at 100-300 MB/s on Intel Core i5 @3GHz (one thread). On "flat" areas (same byte repeated many times), when RLE opcodes can be injected in the LZW stream, speed is much faster: up to 6 GB/s compression and 12 GB/s decompression (i5 @3GHz with dual channel DDR3 memory). For ARM 11 @700MHz (e.g. Raspberry Pi 1), encoding speed is 2-12 MB/s for "normal" data and up to 130 MB/s for 1/2/4 byte repeated sequences (when most LZW opcodes are RLE), being decoding speed 2-34 MB/s for "normal" data and up to 400 MB/s for the case of data with most LZW codes being RLE.
+An hybrid LZW + RLE is implmented, being RLE opcodes injected/mixed into the LZW stream for covering 1, 2 and 4-byte patterns (that improves compression speed on sparse data). Current implementation encodes at 75-300 MB/s and decodes at 100-500 MB/s on Intel Core i5 @3GHz (one thread). On "flat" areas (same byte repeated many times), when RLE opcodes can be injected in the LZW stream, speed is much faster: up to 6 GB/s compression and 20 GB/s decompression (i5 @3GHz with dual channel DDR3 memory). For ARM 11 @700MHz (e.g. Raspberry Pi 1), encoding speed is 2-12 MB/s for "normal" data and up to 130 MB/s for 1/2/4 byte repeated sequences (when most LZW opcodes are RLE), being decoding speed 2-34 MB/s for "normal" data and up to 400 MB/s for the case of data with most LZW codes being RLE.
+
+Uncompressible data is kept below input data length + 5% (this figure could change, still being tuned).
 
 For LZW and RLE algorithm overview you can check following links:
 
