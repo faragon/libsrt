@@ -73,6 +73,7 @@ static const char h2n[64] = {
 #define SLZW_FIRST		(SLZW_OP_END + 1)
 #define SLZW_LUT_CHILD_ELEMS	256
 #define SLZW_MAX_LUTS		(SLZW_CODE_LIMIT / 8)
+#define SLZW_ESC_RATIO		(1 << (17 - SLZW_MAX_TREE_BITS))
 
 /*
  * Macros
@@ -145,6 +146,57 @@ static void slzw_setseq256s8(unsigned *p)
 		p[j] = acc;
 		acc += 0x04040404;
 	}
+}
+
+static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t cbits, size_t *normal_count, size_t *esc_count)
+{
+	size_t c;
+#if SLZW_ESC_RATIO > 0
+	if (*esc_count <= *normal_count / SLZW_ESC_RATIO) {
+		c = sbitio_read(b, i, acc, accbuf, 8);
+		if (c == 255) {
+			c = sbitio_read(b, i, acc, accbuf, cbits);
+			(*esc_count)++;
+		} else {
+			(*normal_count)++;
+		}
+	} else
+#endif
+	{
+		c = sbitio_read(b, i, acc, accbuf, cbits);
+		(*normal_count)++;
+	}
+	return c;
+}
+
+
+
+static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits, size_t *normal_count, size_t *esc_count)
+{
+#if SLZW_ESC_RATIO > 0
+	if (*esc_count <= *normal_count / SLZW_ESC_RATIO) {
+		if (c < 255) {
+	                sbitio_write(b, i, acc, c, 8);
+			(*normal_count)++;
+		} else {
+	                sbitio_write(b, i, acc, 255, 8);
+			sbitio_write(b, i, acc, c, cbits);
+			(*esc_count)++;
+		}
+	} else
+#endif
+	{
+		sbitio_write(b, i, acc, c, cbits);
+		(*normal_count)++;
+	}
+#if 0
+	char *label = "";
+	switch (c) {
+	#define zCASE(a) case a: label = #a; break
+	zCASE(SLZW_RESET); zCASE(SLZW_STOP); zCASE(SLZW_RLE); zCASE(SLZW_RLE3); zCASE(SLZW_RLE4);
+	}
+	fprintf(stderr, "%04u (%02u) %s\n", (unsigned)c, (unsigned)cbits, label);
+#endif
 }
 
 /*
@@ -273,6 +325,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Output encoding control
 	 */
+	size_t normal_count = 0, esc_count = 0;
 	size_t oi = 0, next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, acc;
 	sbitio_write_init(&acc);
 	/*
@@ -334,7 +387,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					       count_csx = count_cs * cx,
 					       ch = count_cs >> SRLE_RUN_BITS_D2,
 					       cl = count_cs & S_NBITMASK(SRLE_RUN_BITS_D2);
-					sbitio_write(o, &oi, &acc, rle_mode, curr_code_len);
+					slzw_bitio_write(o, &oi, &acc, rle_mode, curr_code_len, &normal_count, &esc_count);
 					sbitio_write(o, &oi, &acc, cl, SRLE_RUN_BITS_D2);
 					sbitio_write(o, &oi, &acc, ch, SRLE_RUN_BITS_D2);
 					sbitio_write(o, &oi, &acc, s[i], 8);
@@ -397,7 +450,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		node_codes[new_node] = next_code;
 		node_lutref[new_node] = 0;
-		sbitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len);
+		slzw_bitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len, &normal_count, &esc_count);
 		if (next_code == (1 << curr_code_len))
 			curr_code_len++;
 		/*
@@ -406,7 +459,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		if (++next_code == SLZW_MAX_CODE ||
 		    lut_stack_in_use == SLZW_MAX_LUTS) {
-			sbitio_write(o, &oi, &acc, SLZW_RESET, curr_code_len);
+			slzw_bitio_write(o, &oi, &acc, SLZW_RESET, curr_code_len, &normal_count, &esc_count);
 		        SLZW_ENC_RESET(node_lutref,
 				       lut_stack_in_use, node_stack_in_use,
 				       next_code, curr_code_len);
@@ -415,8 +468,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
-	sbitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len);
-	sbitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len);
+	slzw_bitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len, &normal_count, &esc_count);
+	slzw_bitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len, &normal_count, &esc_count);
 	sbitio_write_close(o, &oi, &acc);
 	return oi;
 }
@@ -425,6 +478,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
 	size_t i, acc, accbuf, oi;
+	size_t normal_count = 0, esc_count = 0;
 	size_t last_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
 	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
@@ -443,7 +497,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 */
 	for (i = 0; i < ss;) {
 		size_t new_code;
-		new_code = sbitio_read(s, &i, &acc, &accbuf, curr_code_len);
+		new_code = slzw_bitio_read(s, &i, &acc, &accbuf, curr_code_len, &normal_count, &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {
 				o[oi++] = lastwc = xbyte[new_code];
