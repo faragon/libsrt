@@ -90,6 +90,7 @@ int bench_search(const int alg, const int param1, const int count)
 			if (f < 0)
 				exit(1);
 			int l = read(f, ba1, max_size);
+			close(f);
 			ba1[l - 1] = 0;
 			bb = "the profoundest";
 			ba = ba1;
