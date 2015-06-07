@@ -197,14 +197,10 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 			return current_max_size;
 		}
 		size_t header_size, elem_size;
-		if (f) {
-			header_size = f->header_size;
-			elem_size = !f->elem_size_off ? 0 :
-				    s_load_size_t((void *)*d,
-						  f->elem_size_off);
-		} else {
-			header_size =elem_size = 0;
-		}
+		header_size = f->header_size;
+		elem_size = !f->elem_size_off ? 0 :
+			    s_load_size_t((void *)*d,
+					  f->elem_size_off);
 		size_t new_alloc_size = sd_size_to_alloc_size(header_size, elem_size, max_size, f);
 		sd_t *d1 = (sd_t *)realloc(*d, new_alloc_size);
 		if (!d1) {
