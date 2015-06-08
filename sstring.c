@@ -401,7 +401,7 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 	/* Check if it is necessary to allocate more memory: */
 	size_t sso_req = at + ss + extra;
 	char *po0;
-	if (sso_req > sso_max || (aliasing && extra > 0)) { /* BEHAVIOR */
+	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) { /* BEHAVIOR */
 		if (*s && (*s)->ext_buffer) {
 			S_ERROR("not enough memory: strings stored in the "
 				"stored in fixed-length buffer can not be "
