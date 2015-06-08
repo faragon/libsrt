@@ -624,7 +624,7 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 			memcpy(o, get_str_r(*s), at);
 	} else {
 		o0 = o = get_str(*s);
-		if (*s == src) {
+		if (*s && *s == src) {
 			aliasing = S_TRUE;
 		} else {
 			if (ss_reserve(s, out_size) < out_size) /* BEHAVIOR */
