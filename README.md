@@ -215,6 +215,11 @@ Changelog
 
 v0.0 (20150421) *pre-alpha*
 
+Observations
+---
+
+Big endian targets not working properly, yet.
+
 "to do" list
 ---
 
