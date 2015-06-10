@@ -63,6 +63,8 @@ size_t senc_HEX(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o);
+size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o);
+size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o);
 
 #define senc_b16 senc_HEX
 #define sdec_b16 sdec_hex

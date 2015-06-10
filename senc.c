@@ -108,7 +108,7 @@ static const char h2n[64] = {
 		next_code = SLZW_FIRST;					\
 	}
 
-#define SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code,	parents) { \
+#define SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code, parents) { \
 		int j;							   \
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		   \
 		last_code = SLZW_CODE_LIMIT;				   \
