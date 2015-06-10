@@ -210,7 +210,7 @@ static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c,
 	}
 }
 
-static size_t srle_run(const char *s, size_t i, size_t ss, size_t min_run, size_t max_run, size_t *run_elem_size, sbool_t lzw_mode)
+static size_t srle_run(const unsigned char *s, size_t i, size_t ss, size_t min_run, size_t max_run, size_t *run_elem_size, sbool_t lzw_mode)
 {
 	RETURN_IF(i + min_run >= ss, 0);
 	suint32_t *p0 = (suint32_t *)(s + i), *p3 = (suint32_t *)(s + i + 3);
