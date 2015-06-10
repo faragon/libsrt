@@ -431,7 +431,7 @@ static void s_memset32(unsigned char *o, unsigned data, size_t n)
 	}
 }
 
-static void s_memset24(unsigned char *o, unsigned char *data, size_t n)
+static void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 {
 	size_t k = 0;
 	if (n >= 15) {
