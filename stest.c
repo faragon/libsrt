@@ -2133,6 +2133,12 @@ int main(int argc, char **argv)
 #else
 	setlocale(LC_ALL, "");
 #endif
+	sbool_t unicode_support = towlower(0xc0) == 0xc0 ? S_FALSE : S_TRUE;
+	if (!unicode_support) {
+		fprintf(stderr, "warning: OS without built-in Unicode "
+			"support (not required by libsrt, but used for "
+			"some tests -those will be skipped-)\n");
+	}
 	STEST_START;
 	STEST_ASSERT(test_ss_alloc(0));
 	STEST_ASSERT(test_ss_alloc(16));
@@ -2311,7 +2317,8 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_to_c(""));
 	STEST_ASSERT(test_ss_to_c("hello"));
 #if !defined(S_NOT_UTF8_SPRINTF)
-	STEST_ASSERT(test_ss_to_w("hello\xc3\x91"));
+	if (unicode_support)
+		STEST_ASSERT(test_ss_to_w("hello\xc3\x91"));
 #endif
 	STEST_ASSERT(test_ss_find("full text", "text", 5));
 	STEST_ASSERT(test_ss_find("full text", "hello", S_NPOS));
@@ -2356,25 +2363,27 @@ int main(int argc, char **argv)
 	 * Windows require the specific locale for doing case conversions properly
 	 */
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(S_MINIMAL_BUILD)
-	const size_t wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff : 0x3fffff;
-	size_t test_tolower = 0;
-	for (i = 0; i <= wchar_range; i++) {
-		unsigned l0 = towlower(i), l = sc_tolower(i);
-		if (l != l0) {
-			fprintf(stderr, "%x %x [%x system reported]\n", i, l, l0);
-			test_tolower++;
+	if (unicode_support) {
+		const size_t wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff : 0x3fffff;
+		size_t test_tolower = 0;
+		for (i = 0; i <= wchar_range; i++) {
+			unsigned l0 = towlower(i), l = sc_tolower(i);
+			if (l != l0) {
+				fprintf(stderr, "%x %x [%x system reported]\n", i, l, l0);
+				test_tolower++;
+			}
 		}
-	}
-	STEST_ASSERT(test_tolower);
-	size_t test_toupper = 0;
-	for (i = 0; i <= wchar_range; i++) {
-		unsigned u0 = towupper(i), u = sc_toupper(i);
-		if (u != u0) {
-			fprintf(stderr, "%x %x [%x system reported]\n", i, u, u0);
-			test_toupper++;
+		STEST_ASSERT(test_tolower);
+		size_t test_toupper = 0;
+		for (i = 0; i <= wchar_range; i++) {
+			unsigned u0 = towupper(i), u = sc_toupper(i);
+			if (u != u0) {
+				fprintf(stderr, "%x %x [%x system reported]\n", i, u, u0);
+				test_toupper++;
+			}
 		}
+		STEST_ASSERT(test_toupper);
 	}
-	STEST_ASSERT(test_toupper);
 #endif /* #ifndef _MSC_VER */
 	/*
 	 * Vector
