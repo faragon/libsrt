@@ -623,13 +623,13 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		if (at > 0)
 			memcpy(o, get_str_r(*s), at);
 	} else {
-		o0 = o = get_str(*s);
 		if (s && *s && *s == src) {
 			aliasing = S_TRUE;
 		} else {
 			if (ss_reserve(s, out_size) < out_size) /* BEHAVIOR */
 				return ss_check(s);
 		}
+		o0 = o = get_str(*s);
 	}
 	typedef void (*memcpy_t)(void *, const void *, size_t);
 	memcpy_t f_cpy;
