@@ -787,7 +787,6 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 	const size_t ts = get_size(t);
 	RETURN_IF(!ts, 0);	/* empty */
 	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
-	stndx_t c = t->root;
 	sv_t *curr = sv_alloc_t(SV_U32, ts/2),
 	     *next = sv_alloc_t(SV_U32, ts/2);
 	sv_push_u(&curr, t->root);

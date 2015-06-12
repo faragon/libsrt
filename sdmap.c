@@ -132,7 +132,6 @@ sdm_t *sdm_dup(const sdm_t *src)
 	const sm_t **maps = sdm_submaps_r(src);
 	ASSERT_RETURN_IF(!maps, NULL);
 	ASSERT_RETURN_IF(!maps[0], NULL);
-	size_t nmaps = sdm_size(src);
 	enum eSM_Type t = (enum eSM_Type)maps[0]->f.type;
 	ASSERT_RETURN_IF(t < SM_FIRST || t >SM_LAST, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);

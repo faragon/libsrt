@@ -360,7 +360,8 @@ static void s_move_elems(void *t, const size_t t_off, const void *s, const size_
 
 static void s_copy_elems(void *t, const size_t t_off, const void *s, const size_t s_off, const size_t n, const size_t e_size)
 {
-        memcpy((char *)t + t_off * e_size, (const char *)s + s_off * e_size, n * e_size);
+	if (t && s && n)
+	        memcpy((char *)t + t_off * e_size, (const char *)s + s_off * e_size, n * e_size);
 }
 
 static size_t s_load_size_t(const void *aligned_base_address, const size_t offset)

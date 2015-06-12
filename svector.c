@@ -134,7 +134,8 @@ static size_t get_size(const sv_t *v)
 
 static void set_size(sv_t *v, const size_t size)
 {
-	((struct SData_Full *)v)->size = size; /* faster than sd_set_size */
+	if (v)
+		((struct SData_Full *)v)->size = size; /* faster than sd_set_size */
 }
 
 static size_t get_alloc_size(const sv_t *v)
@@ -147,8 +148,7 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 {
 	const size_t alloc_size = SDV_HEADER_SIZE + elem_size *
 						    initial_num_elems_reserve;
-	void *buffer = malloc(alloc_size);
-	return sv_alloc_raw(t, elem_size, S_FALSE, buffer, alloc_size);
+	return sv_alloc_raw(t, elem_size, S_FALSE, malloc(alloc_size), alloc_size);
 }
 
 static size_t sv_get_max_size(const sv_t *v)

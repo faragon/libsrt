@@ -25,7 +25,7 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 {
 	if (!log)
 		return;
-	const size_t elems = sd_get_size((sd_t *)v), len = sv_len(v);
+	const size_t elems = sd_get_size((sd_t *)v);
 	enum eSV_Type t = v ? (enum eSV_Type)v->sv_type : SV_GEN;
 	const size_t elem_size = v ? v->elem_size : 0;
 	ss_cat_printf(log, 512, "sv_t: t: %s, elem size: %zu, sz: %zu, { ",
@@ -51,7 +51,6 @@ struct st_log_context_data
 static int aux_st_log_traverse(const struct STraverseParams *tp)
 {
 	struct st_log_context_data *d = (struct st_log_context_data *)tp->context;
-	ss_t **log = d->log;
 	if (!tp->cn) {
 		ss_cat_printf(d->log, 128, "\nLevel: %u\n", (unsigned)tp->level);
 	}

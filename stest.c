@@ -1016,8 +1016,6 @@ int test_ss_to_w(const char *in)
 	size_t out_size = 0;
 	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);
 	res |= ((ssa > 0 && out_size > 0) ? 0 : 4);
-
-	size_t ll = ss_len(a);
 	if (!res) {
 		char b1[16384], b2[16384];
 		int sb1 = sprintf(b1, "%s", ss_to_c(a));
@@ -1772,7 +1770,7 @@ int test_st_traverse()
 		ST_A_INS(3, 'd'); ST_A_INS(4, 'e'); ST_A_INS(5, 'f');
 		ST_A_INS(0, 'a'); ST_A_INS(1, 'b'); ST_A_INS(2, 'c');
 		ss_cpy_c(&log, "");
-		ssize_t levels = st_traverse_preorder(t, test_traverse, (void *)&log);
+		st_traverse_preorder(t, test_traverse, (void *)&log);
 
 		const char *out = ss_to_c(log);
 		if (strcmp(out, "ebadchgfi") != 0) {
@@ -1780,21 +1778,21 @@ int test_st_traverse()
 			break;
 		}
 		ss_cpy_c(&log, "");
-		levels = st_traverse_levelorder(t, test_traverse, (void *)&log);
+		st_traverse_levelorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
 		if (strcmp(out, "ebhadgicf") != 0) {
 			res |= 2;
 			break;
 		}
 		ss_cpy_c(&log, "");
-		levels = st_traverse_inorder(t, test_traverse, (void *)&log);
+		st_traverse_inorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
 		if (strcmp(out, "abcdefghi") != 0) {
 			res |= 4;
 			break;
 		}
 		ss_cpy_c(&log, "");
-		levels = st_traverse_postorder(t, test_traverse, (void *)&log);
+		st_traverse_postorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
 		if (strcmp(out, "acdbfgihe") != 0) {
 			res |= 8;
@@ -1995,7 +1993,7 @@ int test_sm_sort_to_vectors()
 		 * Check all elements after every delete (O(n^2))
 		 */
 		for (j = test_elems; j > 0 && !res; j--) {
-			ssize_t r = sm_sort_to_vectors(m, &kv2, &vv2);
+			sm_sort_to_vectors(m, &kv2, &vv2);
 			for (i = 0; i < j/*test_elems*/; i++) {
 				int k = (int)sv_i_at(kv2, i);
 				int v = (int)sv_i_at(vv2, i);
@@ -2062,11 +2060,6 @@ int test_sm_double_rotation()
 		for (i = 1; i <= (ssize_t)test_elems; i++) {
 			if ((i % 2))
 				continue;
-			if (i == 6) {
-				int a = 1;
-				int b = a;
-				sbool_t r = st_assert((st_t *)m);
-			}
 			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res = 4;

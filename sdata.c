@@ -101,7 +101,6 @@ void sd_set_alloc_size(sd_t *d, const size_t alloc_size)
 sd_t *sd_alloc(const size_t header_size, const size_t elem_size, const size_t initial_reserve, const struct sd_conf *f)
 {
 	const size_t alloc_size = sd_size_to_alloc_size(header_size, elem_size, initial_reserve, f);
-	const sbool_t use_big_struct = sd_alloc_size_to_is_big(alloc_size, f);
 	sd_t *d = (sd_t *)malloc(alloc_size);
 	if (d) {
 		f->sx_reset(d, alloc_size, S_FALSE);
@@ -213,7 +212,6 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		if (f->sx_reconfig && current_max_size < max_size) {
 			const size_t mt1 = sd_alloc_size_to_mt_size(sd_get_alloc_size(*d), f);
 			const size_t mt2 = sd_alloc_size_to_mt_size(new_alloc_size, f);
-			const int mt_delta = (int)mt2 - (int)mt1;
 			if (mt1 >= mt2) /* Current type is enough */
 				sd_set_alloc_size(*d, new_alloc_size);
 			else /* Structure rewrite required */

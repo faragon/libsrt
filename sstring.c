@@ -141,32 +141,35 @@ static struct sd_conf ssf = {	get_max_size,
 
 static unsigned is_unicode_size_cached(const ss_t *s)
 {
-	return s->other1;
+	return s ? s->other1 : 0;
 }
 
 static unsigned get_unicode_size_h(const ss_t *s)
 {
-	return s->other2;
+	return s ? s->other2 : 0;
 }
 
 static unsigned has_encoding_errors(const ss_t *s)
 {
-	return s->other3;
+	return s ? s->other3 : 0;
 }
 
 static void set_unicode_size_cached(ss_t *s, const sbool_t is_cached)
 {
-	s->other1 = is_cached;
+	if (s)
+		s->other1 = is_cached;
 }
 
 static void set_unicode_size_h(ss_t *s, const sbool_t is_h_bit_on)
 {
-	s->other2 = is_h_bit_on;
+	if (s)
+		s->other2 = is_h_bit_on;
 }
 
 static void set_encoding_errors(ss_t *s, const sbool_t has_errors)
 {
-	s->other3 = has_errors;
+	if (s)
+		s->other3 = has_errors;
 }
 
 static size_t get_size(const ss_t *s)
@@ -187,6 +190,7 @@ static size_t get_max_size(const ss_t *s)
 
 static size_t get_unicode_size(const ss_t *s)
 {
+	RETURN_IF(!s, 0);
 	return s->is_full ? ((struct SSTR_Full *)s)->unicode_size :
 	((get_unicode_size_h(s) << 8) | ((struct SSTR_Small *)s)->unicode_size_l);
 }
@@ -681,12 +685,9 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 	const sbool_t aliasing = *s == src;
 	if (src_size < n) { /* fill */
 		if (ss_reserve(s, out_size) >= out_size) {
-			const char *p;
 			char *o = get_str(*s);
-			if (aliasing) {
-				p = o;
-			} else {
-				p = get_str_r(src);
+			if (!aliasing) {
+				const char *p = get_str_r(src);
 				memcpy(o + at, p, src_size);
 			}
 			memset(o + at + src_size, fill_byte,
