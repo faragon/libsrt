@@ -2121,6 +2121,28 @@ int test_sdm_alloc()
 	return nelems == nelems_check ? 0 : 2;
 }
 
+int test_endianess()
+{
+	int res = 0;
+	char a[4] = { 0, 1, 2, 3 };
+	unsigned ua = *(unsigned *)a;
+#if S_IS_LITTLE_ENDIAN
+	unsigned ub = 0x03020100;
+#else
+	unsigned ub = 0x00010203;
+#endif
+	if (ua != ub)
+		res |= 1;
+	if (S_HTON_U32(ub) != 0x00010203)
+		res |= 2;
+	return res;
+}
+
+int test_sbitio()
+{
+	return 0; /* TODO */
+}
+
 /*
  * Test execution
  */
@@ -2140,6 +2162,7 @@ int main(int argc, char **argv)
 			"some tests -those will be skipped-)\n");
 	}
 	STEST_START;
+#if 0
 	STEST_ASSERT(test_ss_alloc(0));
 	STEST_ASSERT(test_ss_alloc(16));
 	STEST_ASSERT(test_ss_alloca(32));
@@ -2455,6 +2478,12 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_sm_enum());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
+#endif
+	/*
+	 * Low level stuff
+	 */
+	STEST_ASSERT(test_endianess());
+	STEST_ASSERT(test_sbitio());
 	/*
 	 * Distributed map
 	 */

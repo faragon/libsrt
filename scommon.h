@@ -213,13 +213,12 @@ extern "C" {
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
-#if defined(__LITTLE_ENDIAN__) || defined(__LITTLE_ENDIAN) ||		   \
-    defined(LITTLE_ENDIAN) || __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
-    defined(__i386__) || defined(__x86_64__) ||				   \
-    defined(__ARMEL__) || defined(__i960__) || defined(__TIC80__) ||	   \
-    defined(__MIPSEL__) || defined(__AVR__) || defined(__MSP430__) ||	   \
-    defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		   \
-    defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) ||	   \
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
+    defined(__i386__) || defined(__x86_64__) ||	defined(__ARMEL__) ||	    \
+    defined(__i960__) || defined(__TIC80__) || defined(__MIPSEL__) ||	    \
+    defined(__AVR__) || defined(__MSP430__) ||				    \
+    defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		    \
+    defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) ||	    \
     defined(__IEEE_LITTLE_ENDIAN)
 	#define S_IS_LITTLE_ENDIAN 1
 #endif
@@ -240,15 +239,15 @@ extern "C" {
 	#define S_ST_U32(a, v) *(unsigned *)(a) = v
 #else
 	#if S_IS_LITTLE_ENDIAN
-		#define S_LD_U32(a) *(unsigned char *)(a) ||	\
-			*((unsigned char *)(a) + 1) << 8 ||	\
-			*((unsigned char *)(a) + 2) << 16 ||	\
-			*((unsigned char *)(a) + 3) << 24
+		#define S_LD_U32(a) (*(unsigned char *)(a) |	\
+			*((unsigned char *)(a) + 1) << 8 |	\
+			*((unsigned char *)(a) + 2) << 16 |	\
+			*((unsigned char *)(a) + 3) << 24)
 	#else
-		#define S_LD_U32(a) *(unsigned char *)(a) <<24 ||	\
-			*((unsigned char *)(a) + 1) << 16 ||		\
-			*((unsigned char *)(a) + 2) << 8 ||		\
-			*((unsigned char *)(a) + 3)
+		#define S_LD_U32(a) (*(unsigned char *)(a) << 24 |	\
+			*((unsigned char *)(a) + 1) << 16 |		\
+			*((unsigned char *)(a) + 2) << 8 |		\
+			*((unsigned char *)(a) + 3))
 
 	#endif
 	#define S_ST_U32(a, v) { unsigned int w = v; memcpy((a), &w, sizeof(w)); }
@@ -413,7 +412,7 @@ static void s_memset32(unsigned char *o, unsigned data, size_t n)
 		S_ST_U32(o, data);
 		S_ST_U32(o + n - 4, data);
 		o32 = (unsigned *)(o + 4 - ua_head);
-	#ifdef S_IS_LITTLE_ENDIAN
+	#if S_IS_LITTLE_ENDIAN
 		data = S_ROL32(data, ua_head * 8);
 	#else
 		data = S_ROR32(data, ua_head * 8);
