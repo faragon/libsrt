@@ -16,6 +16,7 @@
 #include "smap.h"
 #include "sdmap.h"
 #include "sdbg.h"
+#include <stdio.h>
 
 /*
  * Unit testing helpers
