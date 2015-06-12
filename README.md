@@ -1,4 +1,4 @@
-master branch: [![Build Status (gcc/clang/tcc)](https://travis-ci.org/faragon/libsrt.svg?branch=master)](https://travis-ci.org/faragon/libsrt) [![Build Status (vs win32)](https://ci.appveyor.com/api/projects/status/bw52jnfgv7qff6x4/branch/master?svg=true)](https://ci.appveyor.com/project/faragon/libsrt)
+master branch: [![Build Status (gcc/clang/tcc)](https://travis-ci.org/faragon/libsrt.svg?branch=master)](https://travis-ci.org/faragon/libsrt) [![Build Status (vs win32)](https://ci.appveyor.com/api/projects/status/bw52jnfgv7qff6x4/branch/master?svg=true)](https://ci.appveyor.com/project/faragon/libsrt) [![Build Status](https://drone.io/github.com/faragon/libsrt/status.png)](https://drone.io/github.com/faragon/libsrt/latest)
 
 master branch analysis: [![Build Status](https://scan.coverity.com/projects/5366/badge.svg)](https://scan.coverity.com/projects/5366)
 
