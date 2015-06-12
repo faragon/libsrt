@@ -78,5 +78,16 @@ then
 	fi
 fi
 
+if type scan-build >/dev/null 2>/dev/null
+then
+	echo -n "Clang static analyzer..." | tee -a $LOG
+	make clean
+	if scan-build make CC=clang 2>&1 >clang_analysis.txt ; then
+		echo " OK" | tee -a $LOG
+	else	echo " ERROR" | tee -a $LOG
+		ERRORS=$((ERRORS + 1))
+	fi
+fi
+
 exit $ERRORS
 
