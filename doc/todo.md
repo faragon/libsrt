@@ -7,7 +7,7 @@ Short-term
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"
 * Make last-inserted nodes cache, in order to speed-up delete.
-* Add st_shl and st_shr for shifting elements on a vector.
+* Add st_shl and st_shr for shifting elements on a vector (without real data shift).
 * sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
 * Write some simple examples
 
@@ -18,13 +18,11 @@ Mid-term
  * ..._allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
 * Think about adding more types
  * stable: read-only "frozen" tree/map
- * shashmap: smap implemented with hash tables
- * sgraph: graph type (adjacency list and adjacency matrix) with some algorithms for solving typical problems easily: MST, SAT / hamiltonian paths/circuits, minimal path, linear programming (e.g. simplex method), etc.
 * Vector enhancements
  * Sort
 * Map enhancements
  * Apply function to map: for all, for range, etc.
-* Tree enhancementsA
+* Tree enhancements
  * Iterato: In addition to the callback, add an iterator for traversal.
  * min, max, range query
  * Compare, substract, add.
@@ -36,7 +34,7 @@ Mid-term
  * Quote strings (e.g. like in sds)
  * String analysis (naive Bayes, weight/entropy)
  * Check if some important string functionality is missing.
- * Unicode: to_lower, to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
+ * Unicode: to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
 * Other
  * Bindings for other languages
 * Add some simple data compression (e.g. 4KB LZW or 32KB LZ77 + Huffman coding)

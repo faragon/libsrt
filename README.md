@@ -58,7 +58,7 @@ Generic advantages
 * Compatibility
  * C99 and C++ compatible
  * CPU-independent: endian-agnostic, aligned memory accesses.
- * E.g. GCC C and C++ (C89, C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio 2013 "project" is provided just for running the test.
+ * E.g. GCC C and C++ (C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio 2013 "project" is provided just for running the test.
 
 
 Generic disadvantages/limitations
@@ -70,12 +70,13 @@ Generic disadvantages/limitations
 
 * Concurrent read-only operations is safe, but concurrent read/write must be protected by the user (e.g. using mutexes or spinlocks). That can be seen as a disadvantage or as a "feature" (it is faster).
 
-* Not fully C89 compatible, unless following language extensions are available:
+* It may work in C89 mode only if following language extensions are available:
  * \_\_VA\_ARGS\_\_ macro
  * alloca()
  * type of bit-field in 'struct'
  * %S printf extension (only for unit testing)
  * Format functions (\*printf) rely on system C library, so be aware if you write multi-platform software before using compiler-specific extensions or targetting different C standards).
+ * Allow mixed code and variable declaration.
 
 * Focused to reduce verbosity:
  * ss\_cat(&t, s1, ..., sN);
@@ -214,11 +215,6 @@ Changelog
 ---
 
 v0.0 (20150421) *pre-alpha*
-
-Observations
----
-
-Big endian targets not working properly, yet.
 
 "to do" list
 ---
