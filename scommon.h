@@ -18,41 +18,14 @@ extern "C" {
 	#include <BaseTsd.h>
 	#include <malloc.h>
 	#include <io.h>
-	typedef SSIZE_T ssize_t;
 	/* MS VC don't support UTF-8 in sprintf, not even using _setmbcp(65001)
 	 * and "multi-byte character set" compile mode.
 	 */
 	#define S_NOT_UTF8_SPRINTF
-#elif defined(__BCC__)
-	#define TOY_C_COMPILER
-#elif defined(__SDCC)
-	/* e.g. sdcc -mz180 allinone.c */
-	#define TOY_C_COMPILER
-#elif defined(__WATCOMC__)
-	#include <io.h>
-	#include <wctype.h>
-	#include <alloca.h>
-	#if defined(__HUGE__) || defined(__LARGE___) || defined(__MEDIUM__) || \
-	    defined(__COMPACT__) || defined(__SMALL__) || defined(__TINY__)
-		#define TOY_C_COMPILER
-	#else
-	#endif
-#elif defined(__DMC__)
-	#include <unistd.h>
-	typedef int ssize_t;
 #else
 	#include <sys/types.h>
 	#include <alloca.h>
 	#include <unistd.h>
-#endif
-#ifdef TOY_C_COMPILER
-	typedef long sint32_t;
-	typedef unsigned long suint32_t;
-#else
-	#include <wctype.h>
-	#include <wchar.h>
-	typedef int sint32_t;
-	typedef unsigned int suint32_t;
 #endif
 #include <stddef.h>
 #include <stdarg.h>
@@ -65,6 +38,8 @@ extern "C" {
 #include <stdio.h>
 #include <ctype.h>
 #include <stdint.h>
+#include <wctype.h>
+#include <wchar.h>
 
 /*
  * Context
@@ -194,6 +169,47 @@ extern "C" {
 #define ASSERT_RETURN_IF(a, v) S_ASSERT(!(a)); if (a) return (v)
 
 /*
+ * Types
+ */
+
+#if defined(_MSC_VER)
+	typedef SSIZE_T ssize_t;
+	typedef __int64 sint_t;
+	typedef unsigned __int64 suint_t;
+#elif	LONG_MAX == INT_MAX /* 32 bit or 64 bit (LLP64) mode */
+	#ifdef S_MODERN_COMPILER
+		typedef long long sint_t;
+		typedef unsigned long long suint_t;
+	#else /* no 64 bit container support: */
+		typedef long sint_t;
+		typedef unsigned long suint_t;
+	#endif
+#else /* 64 bit mode (LP64) */
+	#ifdef S_MODERN_COMPILER
+		typedef ssize_t sint_t;
+		typedef size_t suint_t;
+	#else
+		typedef long sint_t;
+		typedef unsigned long suint_t;
+	#endif
+#endif
+#if S_BPWORD >= 4
+	typedef int sint32_t;
+	typedef unsigned int suint32_t;
+#else
+	typedef long sint32_t;
+	typedef unsigned long suint32_t;
+#endif
+typedef unsigned char sbool_t;
+
+#define SINT_MIN (8LL << ((sizeof(sint_t) * 8) - 4))
+#define SINT_MAX (~SINT_MIN)
+#define SINT32_MAX ((sint32_t)(0x7fffffff))
+#define SINT32_MIN ((sint32_t)(0x80000000))
+#define SUINT32_MAX 0xffffffff
+#define SUINT32_MIN 0
+
+/*
  * Low-level stuff
  * - Aligned memory access CPU support detection
  * - Endianess
@@ -214,7 +230,7 @@ extern "C" {
 #endif
 
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
-    defined(__i386__) || defined(__x86_64__) ||	defined(__ARMEL__) ||	    \
+    defined(__i386__) || defined(__x86_64__) || defined(__ARMEL__) ||	    \
     defined(__i960__) || defined(__TIC80__) || defined(__MIPSEL__) ||	    \
     defined(__AVR__) || defined(__MSP430__) ||				    \
     defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		    \
@@ -250,7 +266,7 @@ extern "C" {
 			*((unsigned char *)(a) + 3))
 
 	#endif
-	#define S_ST_U32(a, v) { unsigned int w = v; memcpy((a), &w, sizeof(w)); }
+	#define S_ST_U32(a, v) { suint32_t w = v; memcpy((a), &w, sizeof(w)); }
 #endif
 
 #if defined(MSVC) && defined(_M_X86)
@@ -274,10 +290,15 @@ extern "C" {
 	#define S_PREFETCH_W(address)
 #endif
 
-/* debug and alloc counter */
+/*
+ * Debug and alloc counter (used by the test)
+ */
+#ifdef _DEBUG
+	#define S_DEBUG
+#endif
 #ifdef S_DEBUG
-	#define S_ASSERT(a)						     \
-		!(a) &&							     \
+	#define S_ASSERT(a)						    \
+		!(a) &&							    \
 		fprintf(stderr, "S_ASSERT[function: %s, line: %i]: '%s'\n", \
 		__FUNCTION__, __LINE__, #a)
 	#define S_ERROR(msg) \
@@ -288,45 +309,6 @@ extern "C" {
 	#define S_ASSERT(a)
 	#define S_ERROR(msg)
 	#define S_PROFILE_ALLOC_CALL
-#endif
-
-/*
- * Types
- */
-
-#if defined(_MSC_VER) || defined(__WATCOMC__)
-	typedef __int64 sint_t;
-	typedef unsigned __int64 suint_t;
-#elif	LONG_MAX == INT_MAX /* 32 bit or 64 bit (LLP64) mode */
-	#ifdef S_MODERN_COMPILER
-		typedef long long sint_t;
-		typedef unsigned long long suint_t;
-	#else /* no 64 bit container support: */
-		typedef long sint_t;
-		typedef unsigned long suint_t;
-	#endif
-#else /* 64 bit mode (LP64) */
-	#ifdef S_MODERN_COMPILER
-		typedef ssize_t sint_t;
-		typedef size_t suint_t;
-	#else
-		typedef long sint_t;
-		typedef unsigned long suint_t;
-	#endif
-#endif
-
-#define SINT_MIN (8LL << ((sizeof(sint_t) * 8) - 4))
-#define SINT_MAX (~SINT_MIN)
-
-#define SINT32_MAX ((sint32_t)(0x7fffffff))
-#define SINT32_MIN ((sint32_t)(0x80000000))
-#define SUINT32_MAX 0xffffffff
-#define SUINT32_MIN 0
-
-typedef unsigned char sbool_t;
-
-#ifdef _DEBUG
-	#define S_DEBUG
 #endif
 
 /*
