@@ -523,7 +523,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	for (i = 0; i < ss;) {
 		size_t new_code = slzw_bitio_read(s, &i, &acc, &accbuf, curr_code_len, &normal_count, &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
-			if (last_code >= SLZW_MAX_CODE) {
+			if (last_code == SLZW_CODE_LIMIT) {
 				o[oi++] = lastwc = xbyte[new_code];
 				last_code = new_code;
 				continue;
