@@ -2161,7 +2161,7 @@ int ss_popchar(ss_t **s)
 		return EOF;
 	size_t off = get_size(*s) - 1;
 	char *s_str = get_str(*s);
-	for (; off != -1; off--) {
+	for (; off != S_SIZET_MAX; off--) {
 		if (SSU8_VALID_START(s_str[off])) {
 			int u_char = EOF;
 			ss_utf8_to_wc(s_str, off, get_size(*s), &u_char, *s);

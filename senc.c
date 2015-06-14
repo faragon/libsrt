@@ -523,12 +523,12 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	for (i = 0; i < ss;) {
 		size_t new_code = slzw_bitio_read(s, &i, &acc, &accbuf, curr_code_len, &normal_count, &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
-			if (last_code == SLZW_CODE_LIMIT) {
+			if (last_code >= SLZW_MAX_CODE) {
 				o[oi++] = lastwc = xbyte[new_code];
 				last_code = new_code;
 				continue;
 			}
-			size_t code, pattern_off = SLZW_CODE_LIMIT - 1;
+			size_t code, pattern_off = SLZW_MAX_CODE;
 			if (new_code == next_inc_code) {
 				pattern[pattern_off--] = lastwc;
 				code = last_code;
@@ -778,7 +778,7 @@ int main(int argc, const char **argv)
 		free(buf0);
 		return syntax_error(argv, 3);
 	}
-	switch (argv[1][3] == 'x') {
+	switch (argv[1][3]) {
 	case 'x': imax = 100000; break;
 	case 'X': imax = 1000000; break;
 	default:  imax = 1;

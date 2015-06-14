@@ -98,10 +98,12 @@ static const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
 static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 {
 	S_ASSERT(n);
-	if (d == ST_Left)
-		n->l = v;
-	else
-		n->r = v;
+	if (n) {
+		if (d == ST_Left)
+			n->l = v;
+		else
+			n->r = v;
+	}
 }
 
 static stndx_t get_lr(const stn_t *n, const enum STNDir d)
@@ -660,7 +662,8 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	 * so it will fit always in the stack (e.g. 2^63 nodes would require
 	 * allocating only about 4KB of stack space for the path).
 	 */
-	struct TPath *p = (struct TPath *)alloca(sizeof(struct TPath) * rbt_max_depth);
+	struct TPath *p = (struct TPath *)alloca(sizeof(struct TPath) *
+						 (rbt_max_depth + 3));
 	ASSERT_RETURN_IF(!p, -1);
 	if (f)
 		f(&tp);
