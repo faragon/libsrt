@@ -237,7 +237,7 @@ size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f)
 	return *d ? f->sx_get_max_size(*d) : 0;
 }
 
-sd_t *sd_shrink_to_fit(sd_t **d, const struct sd_conf *f)
+sd_t *sd_shrink(sd_t **d, const struct sd_conf *f)
 {
 	ASSERT_RETURN_IF(!d, f->sx_void);
 	RETURN_IF(!*d, f->sx_check(d));

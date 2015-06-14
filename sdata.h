@@ -37,7 +37,7 @@ extern "C" {
 	void pfix##_free_aux(const size_t nargs, pfix##_t **c, ...);	\
 	size_t pfix##_grow(pfix##_t **c, const size_t extra_elems);	\
 	size_t pfix##_reserve(pfix##_t **c, const size_t max_elems);	\
-	pfix##_t *pfix##_shrink_to_fit(pfix##_t **c);			\
+	pfix##_t *pfix##_shrink(pfix##_t **c);				\
 	size_t pfix##_get_size(const pfix##_t *c);			\
 	void pfix##_set_size(pfix##_t *c, const size_t ss);		\
 	size_t pfix##_len(const pfix##_t *c);
@@ -57,8 +57,8 @@ extern "C" {
 		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		   \
 		return sd_reserve((sd_t **)c, max_elems, &pfix##f);	   \
 	}								   \
-	pfix##_t *pfix##_shrink_to_fit(pfix##_t **c) {			   \
-		return (pfix##_t *)sd_shrink_to_fit((sd_t **)c, &pfix##f); \
+	pfix##_t *pfix##_shrink(pfix##_t **c) {				   \
+		return (pfix##_t *)sd_shrink((sd_t **)c, &pfix##f);	   \
 	}								   \
 	size_t pfix##_get_size(const pfix##_t *c) {			   \
 		return sd_get_size((sd_t *)c);				   \
@@ -143,7 +143,7 @@ void sd_free_va(const size_t elems, sd_t **first, va_list ap);
 void sd_reset(sd_t *d, const sbool_t use_big_struct, const size_t alloc_size, const sbool_t ext_buf);
 size_t sd_grow(sd_t **d, const size_t extra_size, const struct sd_conf *f);
 size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f);
-sd_t *sd_shrink_to_fit(sd_t **d, const struct sd_conf *f);
+sd_t *sd_shrink(sd_t **d, const struct sd_conf *f);
 
 #ifdef __cplusplus
 };      /* extern "C" { */

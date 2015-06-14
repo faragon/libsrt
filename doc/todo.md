@@ -8,7 +8,6 @@ Short-term
 * add overflow checks, using "s_size_t_overflow"
 * Make last-inserted nodes cache, in order to speed-up delete.
 * Add st_shl and st_shr for shifting elements on a vector (without real data shift).
-* sstring renaming/cleanup (e.g. ss_dup_s -> ss_dup, *_shrink_to_fit -> *_shrink, replace -> replaceall), add tests for the stack allocation limits.
 * Write some simple examples
 
 Mid-term

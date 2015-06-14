@@ -65,7 +65,7 @@ sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
 		  const size_t buffer_size);
 sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_reserve);
 void sm_free_aux(const size_t nargs, sm_t **s, ...);
-sm_t *sm_shrink_to_fit(sm_t **s);
+sm_t *sm_shrink(sm_t **s);
 size_t sm_elem_size(const enum eSM_Type t);
 sm_t *sm_dup(const sm_t *src);
 sbool_t sm_reset(sm_t *m);

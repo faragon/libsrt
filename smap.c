@@ -192,9 +192,9 @@ void sm_free_aux(const size_t nargs, sm_t **m, ...)
 
 /* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators| */
 
-sm_t *sm_shrink_to_fit(sm_t **m)
+sm_t *sm_shrink(sm_t **m)
 {
-	return (sm_t *)st_shrink_to_fit((st_t **)m);
+	return (sm_t *)st_shrink((st_t **)m);
 }
 
 /* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)| */

@@ -67,10 +67,10 @@ int test_ss_alloca(const size_t max_size)
 	return res;
 }
 
-int test_ss_shrink_to_fit()
+int test_ss_shrink()
 {
 	ss_t *a = ss_dup_printf(1024, "hello");
-	int res = !a ? 1 : (ss_shrink_to_fit(&a) ? 0 : 2) |
+	int res = !a ? 1 : (ss_shrink(&a) ? 0 : 2) |
 			   (ss_capacity(a) == ss_len(a) ? 0 : 4);
 	ss_free(&a);
 	return res;
@@ -1240,11 +1240,11 @@ int test_sv_reserve()
 	sv_t *v = alloc(type, r);					\
 	res |= !v ? 1<<(ntest*3) :					\
 		(push(&v, pushval) &&					\
-		 sv_shrink_to_fit(&v) &&				\
+		 sv_shrink(&v) &&					\
 		 sv_capacity(v) == sv_len(v)) ? 0 : 2<<(ntest*3);	\
 	sv_free(&v)
 
-int test_sv_shrink_to_fit()
+int test_sv_shrink()
 {
 	int res = 0;
 	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1, 100);
@@ -1292,7 +1292,7 @@ int test_sv_len()
 	sv_t *v = alloc(type, 2);					\
 	res |= !v ? 1<<(ntest*3) :					\
 		(sv_capacity(v) == 2 &&	sv_reserve(&v, 100) &&		\
-		 sv_capacity(v) SDCMP 100 && sv_shrink_to_fit(&v) &&	\
+		 sv_capacity(v) SDCMP 100 && sv_shrink(&v) &&		\
 		 sv_capacity(v) == 1) ? 0 : 2<<(ntest*3);		\
 	sv_free(&v)
 
@@ -1832,7 +1832,7 @@ int test_st_traverse()
 TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free);
 TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, );
 
-int test_sm_shrink_to_fit()
+int test_sm_shrink()
 {
 	return 0; /* TODO */
 }
@@ -2158,7 +2158,7 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_alloc(0));
 	STEST_ASSERT(test_ss_alloc(16));
 	STEST_ASSERT(test_ss_alloca(32));
-	STEST_ASSERT(test_ss_shrink_to_fit());
+	STEST_ASSERT(test_ss_shrink());
 #ifdef SD_ENABLE_HEURISTIC_GROW
 	unsigned expected_low = 1;
 #else
@@ -2407,7 +2407,7 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_sv_alloca());
 	STEST_ASSERT(test_sv_grow());
 	STEST_ASSERT(test_sv_reserve());
-	STEST_ASSERT(test_sv_shrink_to_fit());
+	STEST_ASSERT(test_sv_shrink());
 	STEST_ASSERT(test_sv_len());
 	STEST_ASSERT(test_sv_capacity());
 	STEST_ASSERT(test_sv_len_left());
@@ -2445,7 +2445,7 @@ int main(int argc, char **argv)
 	 */
 	STEST_ASSERT(test_sm_alloc());
 	STEST_ASSERT(test_sm_alloca());
-	STEST_ASSERT(test_sm_shrink_to_fit());
+	STEST_ASSERT(test_sm_shrink());
 	STEST_ASSERT(test_sm_size());
 	STEST_ASSERT(test_sm_dup());
 	STEST_ASSERT(test_sm_ii32_at());

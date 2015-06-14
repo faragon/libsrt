@@ -854,7 +854,7 @@ size_t ss_grow(ss_t **c, const size_t extra_elems)
 size_t ss_reserve(ss_t **c, const size_t max_elems)
 
 #API: |Free unused space|string|same string (optional usage)|O(1)|
-ss_t *ss_shrink_to_fit(ss_t **c)
+ss_t *ss_shrink(ss_t **c)
 
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|
 size_t ss_get_size(const ss_t *c)

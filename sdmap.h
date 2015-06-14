@@ -36,7 +36,7 @@ struct S_DMap
 
 sdm_t *sdm_alloc(const enum eSM_Type t, const size_t number_of_submaps, const size_t initial_num_elems_reserve);
 void sdm_free_aux(const size_t nargs, sdm_t **s, ...);
-void sdm_shrink_to_fit(sdm_t **s);
+void sdm_shrink(sdm_t **s);
 sdm_t *sdm_dup(const sdm_t *src);
 sbool_t sdm_reset(sdm_t *m);
 

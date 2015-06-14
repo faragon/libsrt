@@ -117,9 +117,9 @@ void sdm_free_aux(const size_t nargs, sdm_t **dm, ...)
 
 /* #API: |Make the dynamic map use the minimum possible memory|map||O(1) for allocators using memory remap; O(n) for naive allocators| */
 
-void sdm_shrink_to_fit(sdm_t **dm)
+void sdm_shrink(sdm_t **dm)
 {
-        SDM_FUN_PPDMAP(dm, sm_shrink_to_fit);
+        SDM_FUN_PPDMAP(dm, sm_shrink);
 }
 
 /* #API: |Duplicate distributed map|input map|output map|O(n)| */

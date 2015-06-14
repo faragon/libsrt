@@ -376,7 +376,7 @@ size_t sv_grow(sv_t **c, const size_t extra_elems)
 size_t sv_reserve(sv_t **c, const size_t max_elems)
 
 #API: |Free unused space|vector|same vector (optional usage)|O(1)|
-sv_t *sv_shrink_to_fit(sv_t **c)
+sv_t *sv_shrink(sv_t **c)
 
 #API: |Get vector size|vector|vector bytes used in UTF8 format|O(1)|
 size_t sv_get_size(const sv_t *c)
