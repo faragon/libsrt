@@ -119,7 +119,7 @@ void ss_clear_errors(ss_t *s);
  * Allocation from other sources: "dup"
  */
 
-ss_t *ss_dup_s(const ss_t *src);
+ss_t *ss_dup(const ss_t *src);
 ss_t *ss_dup_sub(const ss_t *src, const sv_t *offsets, const size_t nth);
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n);
 ss_t *ss_dup_substr_u(const ss_t *src, const size_t char_off, const size_t n);

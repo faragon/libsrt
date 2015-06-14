@@ -102,7 +102,7 @@ int test_ss_resize_x()
 	const char *i1 = "\xc3\x91" "1234567890__";
 	const char *i2 = "\xc3\x91" "12";
 	const char *i3 = "\xc3\x91" "123";
-	ss_t *a = ss_dup_c(i0), *b = ss_dup_s(a);
+	ss_t *a = ss_dup_c(i0), *b = ss_dup(a);
 	int res = a && b ? 0 : 1;
 	res |= res ? 0: ((ss_resize(&a, 14, '_') &&
 			 !strcmp(ss_to_c(a), i1)) ? 0 : 2) |
@@ -227,10 +227,10 @@ int test_ss_max()
 	return res;
 }
 
-int test_ss_dup_s()
+int test_ss_dup()
 {
 	ss_t *b = ss_dup_c("hello");
-	ss_t *a = ss_dup_s(b);
+	ss_t *a = ss_dup(b);
 	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
@@ -2155,7 +2155,6 @@ int main(int argc, char **argv)
 			"some tests -those will be skipped-)\n");
 	}
 	STEST_START;
-#if 0
 	STEST_ASSERT(test_ss_alloc(0));
 	STEST_ASSERT(test_ss_alloc(16));
 	STEST_ASSERT(test_ss_alloca(32));
@@ -2202,7 +2201,7 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_capacity());
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());
-	STEST_ASSERT(test_ss_dup_s());
+	STEST_ASSERT(test_ss_dup());
 	STEST_ASSERT(test_ss_dup_sub());
 	STEST_ASSERT(test_ss_dup_substr());
 	STEST_ASSERT(test_ss_dup_substr_u());
@@ -2471,7 +2470,6 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_sm_enum());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
-#endif
 	/*
 	 * Low level stuff
 	 */

@@ -123,7 +123,7 @@ static struct sd_conf ssf = {	get_max_size,
 				ss_reset,
 				ss_reconfig,
 				ss_alloc,
-				ss_dup_s,
+				ss_dup,
 				ss_check,
 				(sd_t *)&ss_void0,
 				S_ALLOC_SMALL,
@@ -986,7 +986,7 @@ void ss_clear_errors(ss_t *s)
 
 /* #API: |Duplicate string|string|Output result|O(n)| */
 
-ss_t *ss_dup_s(const ss_t *src)
+ss_t *ss_dup(const ss_t *src)
 {
 	ss_t *s = NULL;
 	return ss_cpy(&s, src);
