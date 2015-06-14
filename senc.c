@@ -478,7 +478,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 * Reset tree if tree code limit is reached or if running
 		 * out of LUTs
 		 */
-		if (++next_code == SLZW_MAX_CODE ||
+		if (++next_code == SLZW_CODE_LIMIT ||
 		    lut_stack_in_use == SLZW_MAX_LUTS) {
 			slzw_bitio_write(o, &oi, &acc, SLZW_RESET,
 					 curr_code_len, &normal_count,
