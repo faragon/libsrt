@@ -60,7 +60,7 @@ extern "C" {
 	#define S_USE_VA_ARGS
 #endif
 
-#if __STDC_VERSION__ < 199901L
+#if __STDC_VERSION__ < 199901L && !defined(_MSC_VER)
 	int snprintf(char *str, size_t size, const char *format, ...);
 	int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
