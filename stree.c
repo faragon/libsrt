@@ -294,8 +294,7 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
  */
 
 st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
-		   const size_t num_elems, void *buffer,
-		   const size_t buffer_size)
+		   void *buffer, const size_t buffer_size)
 {
 	RETURN_IF(!f || !f->node_size || !buffer, st_void);
 	st_t *t = (st_t *)buffer;
@@ -308,8 +307,7 @@ st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
 {
 	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
-	return st_alloc_raw(f, S_FALSE, initial_reserve, malloc(alloc_size),
-								alloc_size);
+	return st_alloc_raw(f, S_FALSE, malloc(alloc_size), alloc_size);
 }
 
 SD_BUILDFUNCS(st)

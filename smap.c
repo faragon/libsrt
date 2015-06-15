@@ -152,12 +152,11 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 /* #API: |Generic map allocation (including using of external buffer, e.g. stack or others) Before using this, check if sm_alloc or sm_alloca work better for your case|map type; using an already allocated external buffer; reserve memory for n elements; external buffer; external buffer size|allocated map|O(1)| */
 
 sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
-		   const size_t n, void *buffer,
-		   const size_t buffer_size)
+		   void *buffer, const size_t buffer_size)
 {
 	struct STConf f;
 	smf_setup(t, &f);
-	return (sm_t *)st_alloc_raw(&f, ext_buf, n, buffer, buffer_size);
+	return (sm_t *)st_alloc_raw(&f, ext_buf, buffer, buffer_size);
 }
 
 /* #API: |Allocate map|map type; initial reserve|map|O(1)| */

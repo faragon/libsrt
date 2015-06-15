@@ -57,12 +57,10 @@ typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
 #define sm_alloca(type, num_elems)					\
 	sm_alloc_raw(							\
 	type, S_TRUE,							\
-	num_elems,							\
 	alloca(ST_SIZE_TO_ALLOC_SIZE(num_elems, sm_elem_size(type))),	\
 	ST_SIZE_TO_ALLOC_SIZE(num_elems, sm_elem_size(type)))
 sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
-		  const size_t num_elems, void *buffer,
-		  const size_t buffer_size);
+		  void *buffer, const size_t buffer_size);
 sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_reserve);
 void sm_free_aux(const size_t nargs, sm_t **s, ...);
 sm_t *sm_shrink(sm_t **s);

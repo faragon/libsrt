@@ -61,13 +61,14 @@ size_t sd_get_size(const sd_t *d)
 {
 	RETURN_IF(!d, 0);
 	return d->is_full ? ((struct SData_Full *)d)->size :
-		((d->size_h << 8) | ((struct SData_Small *)d)->size_l);
+		(size_t)((d->size_h << 8) | ((struct SData_Small *)d)->size_l);
 }
 
 size_t sd_get_alloc_size(const sd_t *d)
 {
 	return d->is_full ? ((struct SData_Full *)d)->alloc_size :
-		((d->alloc_size_h << 8) | ((struct SData_Small *)d)->alloc_size_l);
+		(size_t)((d->alloc_size_h << 8) |
+			 ((struct SData_Small *)d)->alloc_size_l);
 }
 
 void sd_set_size(sd_t *d, const size_t size)

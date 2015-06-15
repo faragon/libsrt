@@ -394,7 +394,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Encoding loop
 	 */
 	size_t i = 0;
-	slzw_ndx_t curr_node;
+	slzw_ndx_t curr_node = 0;
 	for (; i < ss;) {
 #ifdef SLZW_ENABLE_RLE_ENC
 		/*
@@ -472,7 +472,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		node_lutref[new_node] = 0;
 		slzw_bitio_write(o, &oi, &acc, node_codes[curr_node],
 			         curr_code_len, &normal_count, &esc_count);
-		if (next_code == (1 << curr_code_len))
+		if (next_code == (size_t)(1 << curr_code_len))
+
 			curr_code_len++;
 		/*
 		 * Reset tree if tree code limit is reached or if running
@@ -543,7 +544,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			parents[next_inc_code] = last_code;
 			if (next_inc_code < SLZW_CODE_LIMIT)
 				next_inc_code++;
-			if (next_inc_code == 1 << curr_code_len &&
+			if (next_inc_code == (size_t)(1 << curr_code_len) &&
 			    next_inc_code < SLZW_CODE_LIMIT) {
 				curr_code_len++;
 			}
@@ -620,7 +621,7 @@ static size_t senc_rle_flush(const unsigned char *s, const size_t i, const size_
 size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
-	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size, op;
+	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size;
 	for (; i < ss;) {
 		run_length = srle_run(s, i, ss, 10, (suint32_t)-1, &run_elem_size, S_FALSE);
 		if (!run_length) {
@@ -770,8 +771,8 @@ int main(int argc, const char **argv)
 	if (!mode)
 		return syntax_error(argv, 2);
 	size_t lo = 0, i = 0, imax;
-	char *buf0 = (char *)malloc(BUF_IN_SIZE + buf_out_max);
-	char *buf = buf0, *bufo = buf0 + BUF_IN_SIZE;
+	unsigned char *buf0 = (unsigned char *)malloc(BUF_IN_SIZE + buf_out_max),
+		      *buf = buf0, *bufo = buf0 + BUF_IN_SIZE;
 	int f_in = 0, f_out = 1;
 	ssize_t l = posix_read(f_in, buf, BUF_IN_SIZE);
 	if (l <= 0) {

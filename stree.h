@@ -101,12 +101,11 @@ typedef int (*st_traverse)(const struct STraverseParams *p);
  */
 
 #define st_alloca(f, num_elems)				 		  \
-	st_alloc_raw(f, S_TRUE, num_elems,				  \
+	st_alloc_raw(f, S_TRUE,						  \
 		     alloca(ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size)), \
 		     ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size))
 st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
-		   const size_t num_elems, void *buffer,
-		   const size_t buffer_size);
+		   void *buffer, const size_t buffer_size);
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve);
 
 SD_BUILDPROTS(st)

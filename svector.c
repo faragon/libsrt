@@ -66,16 +66,16 @@ static struct sd_conf svf = {	(size_t (*)(const sd_t *))sv_get_max_size,
 		*(TS *)st = (TS)*c;	\
 	}
 
-SV_STx(svsti8, char, const sint_t);
-SV_STx(svstu8, unsigned char, const suint_t);
-SV_STx(svsti16, short, const sint_t);
-SV_STx(svstu16, unsigned short, const suint_t);
-SV_STx(svsti32, sint32_t, const sint_t);
-SV_STx(svstu32, suint32_t, const suint_t);
-SV_STx(svsti64, sint_t, const sint_t);
-SV_STx(svstu64, suint_t, const suint_t);
+SV_STx(svsti8, char, const sint_t)
+SV_STx(svstu8, unsigned char, const suint_t)
+SV_STx(svsti16, short, const sint_t)
+SV_STx(svstu16, unsigned short, const suint_t)
+SV_STx(svsti32, sint32_t, const sint_t)
+SV_STx(svstu32, suint32_t, const suint_t)
+SV_STx(svsti64, sint_t, const sint_t)
+SV_STx(svstu64, suint_t, const suint_t)
 
-void static svstvoid(void *st, const sint_t *c)
+static void svstvoid(void *st, const sint_t *c)
 { /* do nothing */
 }
 
@@ -99,14 +99,14 @@ static T_SVSTX svstx_f[SV_LAST + 1] = {	svsti8, (T_SVSTX)svstu8,
 		return out;						\
 	}
 
-SV_LDx(svldi8, char, sint_t);
-SV_LDx(svldu8, unsigned char, suint_t);
-SV_LDx(svldi16, short, sint_t);
-SV_LDx(svldu16, unsigned short, suint_t);
-SV_LDx(svldi32, sint32_t, sint_t);
-SV_LDx(svldu32, suint32_t, suint_t);
-SV_LDx(svldi64, sint_t, sint_t);
-SV_LDx(svldu64, suint_t, suint_t);
+SV_LDx(svldi8, char, sint_t)
+SV_LDx(svldu8, unsigned char, suint_t)
+SV_LDx(svldi16, short, sint_t)
+SV_LDx(svldu16, unsigned short, suint_t)
+SV_LDx(svldi32, sint32_t, sint_t)
+SV_LDx(svldu32, suint32_t, suint_t)
+SV_LDx(svldi64, sint_t, sint_t)
+SV_LDx(svldu64, suint_t, suint_t)
 
 sint_t *svldvoid(const void *ld, sint_t *out, const size_t index)
 { /* dummy function */
@@ -445,7 +445,7 @@ size_t sv_get_buffer_size(const sv_t *v)
 
 size_t sv_elem_size(const enum eSV_Type t)
 {
-	return t >= SV_I8 && t <= SV_GEN? svt_sizes[t] : 0;
+	return t >= SV_I8 && t <= SV_GEN ? svt_sizes[t] : 0;
 }
 
 /*
@@ -590,7 +590,6 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 
 #define SV_FIND_iu(v, off, target)						\
 	ASSERT_RETURN_IF(!v || v->sv_type < SV_I8 || v->sv_type > SV_U64, S_NPOS);	\
-	size_t pos = S_NPOS;							\
 	char i8; unsigned char u8; short i16; unsigned short u16;		\
 	int i32; unsigned u32; sint_t i64; suint_t u64;				\
 	void *src;								\

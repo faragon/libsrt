@@ -47,7 +47,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 #define SS_CCAT_STACK 128
 
 #define SS_COPYCAT_AUX(s, cat, TYPE, nargs, s1, STRLEN, SS_CAT_XN)		\
-	for (;s1;) {								\
+	for (; s1;) {								\
 		va_list ap;							\
 		size_t *sizes,							\
 		        pstack[SS_CCAT_STACK],					\
@@ -556,7 +556,6 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 		     tail_size = ss0 - cut_size - head_size;
 	size_t out_size = ss0 - cut_size,
 	       prefix_usize = 0;
-	unsigned char cached_usize = S_FALSE;
 	if (*s == src) { /* aliasing: copy-only */
 		char *po = get_str(*s);
 		memmove(po + head_size, ps + head_size + cut_size, tail_size);
@@ -1069,9 +1068,9 @@ ss_t *ss_dup_toupper(const ss_t *src)
 		return f_cpy(&s, src);	\
 	}
 
-MK_SS_DUP_TO_ENC(ss_dup_tob64, ss_cpy_tob64);
-MK_SS_DUP_TO_ENC(ss_dup_tohex, ss_cpy_tohex);
-MK_SS_DUP_TO_ENC(ss_dup_toHEX, ss_cpy_toHEX);
+MK_SS_DUP_TO_ENC(ss_dup_tob64, ss_cpy_tob64)
+MK_SS_DUP_TO_ENC(ss_dup_tohex, ss_cpy_tohex)
+MK_SS_DUP_TO_ENC(ss_dup_toHEX, ss_cpy_toHEX)
 
 
 /*
@@ -1343,9 +1342,9 @@ ss_t *ss_cpy_toupper(ss_t **s, const ss_t *src)
 		return aux_toenc(s, S_FALSE, src, f_enc);	\
 	}
 
-MK_SS_CPY_TO_ENC(ss_cpy_tob64, senc_b64);
-MK_SS_CPY_TO_ENC(ss_cpy_tohex, senc_hex);
-MK_SS_CPY_TO_ENC(ss_cpy_toHEX, senc_HEX);
+MK_SS_CPY_TO_ENC(ss_cpy_tob64, senc_b64)
+MK_SS_CPY_TO_ENC(ss_cpy_tohex, senc_hex)
+MK_SS_CPY_TO_ENC(ss_cpy_toHEX, senc_HEX)
 
 /*
 #API: |Overwrite string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|
@@ -1660,9 +1659,9 @@ ss_t *ss_cat_toupper(ss_t **s, const ss_t *src)
 		return aux_toenc(s, S_TRUE, src, f_enc);	\
 	}
 
-MK_SS_CAT_TO_ENC(ss_cat_tob64, senc_b64);
-MK_SS_CAT_TO_ENC(ss_cat_tohex, senc_hex);
-MK_SS_CAT_TO_ENC(ss_cat_toHEX, senc_HEX);
+MK_SS_CAT_TO_ENC(ss_cat_tob64, senc_b64)
+MK_SS_CAT_TO_ENC(ss_cat_tohex, senc_hex)
+MK_SS_CAT_TO_ENC(ss_cat_toHEX, senc_HEX)
 
 /*
 #API: |Concatenate string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|
@@ -1801,9 +1800,9 @@ ss_t *ss_toupper(ss_t **s)
 		return aux_toenc(s, S_FALSE, src, f_enc);	\
 	}
 
-MK_SS_TO_ENC(ss_tob64, senc_b64);
-MK_SS_TO_ENC(ss_tohex, senc_hex);
-MK_SS_TO_ENC(ss_toHEX, senc_HEX);
+MK_SS_TO_ENC(ss_tob64, senc_b64)
+MK_SS_TO_ENC(ss_tohex, senc_hex)
+MK_SS_TO_ENC(ss_toHEX, senc_HEX)
 
 /*
 #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|

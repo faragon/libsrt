@@ -178,8 +178,7 @@ int bench_case(const int alg, const int param1, const int count)
 
 int bench_misc(const int alg, const int param1, const int count)
 {
-	int res = 0;
-	size_t c = 0;
+	int res = 0, c = 0;
 	const char *in = param1 < 4 ? xc[param1] : "";
 	ss_t *sa = ss_dup_c(in);
 	switch (alg) {
