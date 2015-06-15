@@ -20,6 +20,9 @@
 ifndef C99
 	C99=0
 endif
+ifndef C11
+	C11=0
+endif
 ifndef CPP11
 	CPP11=0
 endif
@@ -69,13 +72,23 @@ else
 			CFLAGS += -std=c++0x
 		endif
 	else
-		ifeq ($(C99), 1)
-			CFLAGS += -std=c99
+		ifeq ($(C11), 1)
+			CFLAGS += -std=c1x
 		else
-			CFLAGS += -std=c89
+			ifeq ($(C99), 1)
+				CFLAGS += -std=c99
+			else
+				CFLAGS += -std=c89
+			endif
 		endif
 	endif
 	ifeq ($(PEDANTIC), 1)
+		ifneq (,$(findstring $(CC),gcc-g++))
+			CFLAGS += -Wall -Wextra
+		endif
+		ifneq (,$(findstring $(CC),clang-clang++))
+			CFLAGS += -Weverything
+		endif
 		CFLAGS += -pedantic
 	endif
 endif

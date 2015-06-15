@@ -37,9 +37,17 @@ extern "C" {
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <stdint.h>
 #include <wctype.h>
 #include <wchar.h>
+
+/*
+ * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
+ * (WG14/N1256 Committee Draft 20070907 ISO/IEC 9899:TC3, 7.18.2, page 257)
+ */
+#ifdef __cplusplus
+#define __STDC_LIMIT_MACROS
+#endif
+#include <stdint.h>
 
 /*
  * Context
@@ -50,6 +58,11 @@ extern "C" {
 	defined(__DMC__)
 	#define S_MODERN_COMPILER
 	#define S_USE_VA_ARGS
+#endif
+
+#if __STDC_VERSION__ < 199901L
+	int snprintf(char *str, size_t size, const char *format, ...);
+	int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 
 #if defined(S_MODERN_COMPILER) && !defined(_MSC_VER)
@@ -250,23 +263,40 @@ typedef unsigned char sbool_t;
 #endif
 #define S_HTON_U32(a) S_NTOH_U32(a)
 
+#define S_LD_X(a, T) *(T *)(a)
+#define S_ST_X(a, T, v) S_LD_X(a, T) = v
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	#define S_LD_U32(a) *(unsigned *)(a)
-	#define S_ST_U32(a, v) *(unsigned *)(a) = v
-#else
+	#define S_LD_U32(a) S_LD_X(a, unsigned)
+	#define S_LD_SZT(a) S_LD_X(a, size_t)
+	#define S_ST_U32(a, v) S_ST_X(a, unsigned, v)
+	#define S_ST_SZT(a, v) S_ST_X(a, size_t, v)
+#else /* Aligned access supported only for 32 and >= 64 bit CPUs */
 	#if S_IS_LITTLE_ENDIAN
-		#define S_LD_U32(a) (*(unsigned char *)(a) |	\
+		#define S_UALD_U32(a) (*(unsigned char *)(a) |	\
 			*((unsigned char *)(a) + 1) << 8 |	\
 			*((unsigned char *)(a) + 2) << 16 |	\
 			*((unsigned char *)(a) + 3) << 24)
+		#define S_UALD_U64(a)	\
+			((S_UALD_U32(a + 4) << 32) | S_UALD_U32(a))
 	#else
-		#define S_LD_U32(a) (*(unsigned char *)(a) << 24 |	\
+		#define S_UALD_U32(a) (*(unsigned char *)(a) << 24 |	\
 			*((unsigned char *)(a) + 1) << 16 |		\
 			*((unsigned char *)(a) + 2) << 8 |		\
 			*((unsigned char *)(a) + 3))
-
+		#define S_UALD_U64(a)	\
+			((S_UALD_U32(a) << 32) | S_UALD_U32(a + 4))
 	#endif
-	#define S_ST_U32(a, v) { suint32_t w = v; memcpy((a), &w, sizeof(w)); }
+	#define S_LD_U32(a)		 			\
+		(((uintptr_t)(a) & S_UALIGNMASK) ?		\
+			S_UALD_U32(a) : S_LD_X(a, unsigned))
+	#define S_LD_U64(a)		 			\
+		(((uintptr_t)(a) & S_UALIGNMASK) ?		\
+			S_UALD_U64(a) : S_LD_X(a, suint_t))
+	#define S_LD_SZT(a)
+		(sizeof(size_t) == 4 ? S_LD_U32(a) : S_LD_U64(a))
+	#define S_UAST_X(a, T, v) { T w = (T)v; memcpy((a), &w, sizeof(w)); }
+	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)
+	#define S_ST_U32(a, v) S_UAST_X(a, suint32_t, v)
 #endif
 
 #if defined(MSVC) && defined(_M_X86)
@@ -348,7 +378,7 @@ static void s_copy_elems(void *t, const size_t t_off, const void *s, const size_
 
 static size_t s_load_size_t(const void *aligned_base_address, const size_t offset)
 {
-	return *(size_t *)(((char *)aligned_base_address) + offset);
+	return S_LD_SZT(((char *)aligned_base_address) + offset);
 }
 
 static sbool_t s_size_t_overflow(const size_t a, const size_t b)
