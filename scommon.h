@@ -292,7 +292,7 @@ typedef unsigned char sbool_t;
 	#define S_LD_U64(a)		 			\
 		(((uintptr_t)(a) & S_UALIGNMASK) ?		\
 			S_UALD_U64(a) : S_LD_X(a, suint_t))
-	#define S_LD_SZT(a)
+	#define S_LD_SZT(a) \
 		(sizeof(size_t) == 4 ? S_LD_U32(a) : S_LD_U64(a))
 	#define S_UAST_X(a, T, v) { T w = (T)v; memcpy((a), &w, sizeof(w)); }
 	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)

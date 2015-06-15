@@ -1808,6 +1808,7 @@ int test_st_traverse()
 	TODO: add more test_sm_*
 */
 
+#define TEST_SM_ALLOC_DONOTHING(a)
 #define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
 	int fn()							       \
 	{								       \
@@ -1829,8 +1830,8 @@ int test_st_traverse()
 		return res;						       \
 	}
 
-TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free);
-TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, );
+TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, TEST_SM_ALLOC_DONOTHING)
 
 int test_sm_shrink()
 {
@@ -2128,6 +2129,22 @@ int test_endianess()
 		res |= 1;
 	if (S_HTON_U32(ub) != 0x00010203)
 		res |= 2;
+	return res;
+}
+
+int test_alignment()
+{
+	int res = 0;
+	char ac[4] = { 0 }, bc[4] = { 0 };
+	char cc[sizeof(size_t)];
+	unsigned a = 0x12345678, b = 0x87654321;
+	size_t c = ((size_t)-1) & a;
+	S_ST_U32(&ac, a);
+	S_ST_U32(&bc, b);
+	S_ST_SZT(&cc, c);
+	res |= S_LD_U32(ac) != a ? 1 : 0;
+	res |= S_LD_U32(bc) != b ? 2 : 0;
+	res |= S_LD_SZT(cc) != c ? 4 : 0;
 	return res;
 }
 
@@ -2474,6 +2491,7 @@ int main(int argc, char **argv)
 	 * Low level stuff
 	 */
 	STEST_ASSERT(test_endianess());
+	STEST_ASSERT(test_alignment());
 	STEST_ASSERT(test_sbitio());
 	/*
 	 * Distributed map

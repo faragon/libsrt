@@ -74,7 +74,8 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size)
 	if (!s || !s_size)
 		return 0;
 	size_t i = 0, unicode_size = 0;
-#ifdef  S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
+#if defined(S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION) && \
+    defined(S_UNALIGNED_MEMORY_ACCESS)
 	const size_t size_cutted = s_size >= 6? s_size - 6 : 0;
 	static const unsigned char m1[4] = { SSU8_M1, SSU8_M1, SSU8_M1, SSU8_M1 };
 	static const unsigned char s1[4] = { SSU8_S1, SSU8_S1, SSU8_S1, SSU8_S1 };
