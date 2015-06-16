@@ -6,9 +6,9 @@ Short-term
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"
-* Make last-inserted nodes cache, in order to speed-up delete.
 * Add st_shl and st_shr for shifting elements on a vector (without real data shift).
 * Write some simple examples
+* Add built-in funcs: int __builtin_popcount/__popcnt, __builtin_parity / _popcnt(a) & 1;
 
 Mid-term
 ---
@@ -22,7 +22,8 @@ Mid-term
 * Map enhancements
  * Apply function to map: for all, for range, etc.
 * Tree enhancements
- * Iterato: In addition to the callback, add an iterator for traversal.
+ * Make last-inserted nodes cache, in order to speed-up delete.
+ * Iterator: In addition to the callback, add an iterator for traversal.
  * min, max, range query
  * Compare, substract, add.
 * String enhancements
