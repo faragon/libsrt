@@ -91,17 +91,19 @@ then
 	fi
 fi
 
-# Documentation test
-echo "Documentation test..."
-DOC_OUT=doc_out/
-mkdir $DOC_OUT 2>/dev/null
-for i in $(ls *\.c) ; do
-	echo -n "$i: " >&2
-	if doc/c2doc.py "Documentation for $i" < "$i" >"$DOC_OUT/$i.html" ; then
-		echo "OK" >&2
-	else	ERRORS=$((ERRORS + 1))
-	fi
-done
+if type python3 >/dev/null 2>/dev/null
+then
+	echo "Documentation test..."
+	DOC_OUT=doc_out/
+	mkdir $DOC_OUT 2>/dev/null
+	for i in $(ls *\.c) ; do
+		echo -n "$i: " >&2
+		if doc/c2doc.py "Documentation for $i" < "$i" >"$DOC_OUT/$i.html" ; then
+			echo "OK" >&2
+		else	ERRORS=$((ERRORS + 1))
+		fi
+	done
+fi
 
 exit $ERRORS
 
