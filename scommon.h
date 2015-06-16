@@ -214,6 +214,8 @@ extern "C" {
 	typedef unsigned long suint32_t;
 #endif
 typedef unsigned char sbool_t;
+typedef sint_t sint64_t;
+typedef suint_t suint64_t;
 
 #define SINT_MIN (8LL << ((sizeof(sint_t) * 8) - 4))
 #define SINT_MAX (~SINT_MIN)
@@ -284,7 +286,7 @@ typedef unsigned char sbool_t;
 			*((unsigned char *)(a) + 2) << 8 |		\
 			*((unsigned char *)(a) + 3))
 		#define S_UALD_U64(a)	\
-			((S_UALD_U32(a) << 32) | S_UALD_U32(a + 4))
+			(((suint64_t)S_UALD_U32(a) << 32) | S_UALD_U32(a + 4))
 	#endif
 	#define S_LD_U32(a)		 			\
 		(((uintptr_t)(a) & S_UALIGNMASK) ?		\

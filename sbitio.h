@@ -59,7 +59,7 @@ static size_t sbitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t
 		code_bits -= *acc;
 	}
 	if (code_bits >= 8) {
-		code |= (b[(*i)++] << *acc);
+		code |= ((size_t)b[(*i)++] << *acc);
 		code_bits -= 8;
 		*acc += 8;
 	}
