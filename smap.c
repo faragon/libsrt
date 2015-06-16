@@ -149,10 +149,9 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 * Allocation
 */
 
-/* #API: |Generic map allocation (including using of external buffer, e.g. stack or others) Before using this, check if sm_alloc or sm_alloca work better for your case|map type; using an already allocated external buffer; reserve memory for n elements; external buffer; external buffer size|allocated map|O(1)| */
+/* #API: |Generic map allocation (including using of external buffer, e.g. stack or others) Before using this, check if sm_alloc or sm_alloca work better for your case|map type; using an already allocated external buffer; external buffer; external buffer size|allocated map|O(1)| */
 
-sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf,
-		   void *buffer, const size_t buffer_size)
+sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, const size_t buffer_size)
 {
 	struct STConf f;
 	smf_setup(t, &f);
@@ -542,7 +541,7 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k)
  * Enumeration / export data
  */
 
-/* #API: |Enumerate map elements (unordered)|map|Element offset (0..n-1)|O(1)| */
+/* #API: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)| */
 
 const stn_t *sm_enum(const sm_t *m, const stndx_t i)
 {

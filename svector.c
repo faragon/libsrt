@@ -381,7 +381,7 @@ sv_t *sv_shrink(sv_t **c)
 #API: |Get vector size|vector|vector bytes used in UTF8 format|O(1)|
 size_t sv_get_size(const sv_t *c)
 
-#API: |Set vector size (bytes used in UTF8 format)|vector||O(1)|
+#API: |Set vector size (bytes used in UTF8 format)|vector;set vector number of elements||O(1)|
 void sv_set_size(sv_t *c, const size_t s)
 
 #API: |Equivalent to sv_get_size|vector|Number of bytes (UTF-8 vector length)|O(1)|
@@ -728,7 +728,7 @@ size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 	return op_cnt;
 }
 
-/* #API: |Push/add element (integer)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
+/* #API: |Push/add element (integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
 
 sbool_t sv_push_i(sv_t **v, const sint_t c)
 {
@@ -738,7 +738,7 @@ sbool_t sv_push_i(sv_t **v, const sint_t c)
 	return S_TRUE;
 }
 
-/* #API: |Push/add element (unsigned integer)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
+/* #API: |Push/add element (unsigned integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)| */
 
 sbool_t sv_push_u(sv_t **v, const suint_t c)
 {

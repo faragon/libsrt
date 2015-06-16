@@ -858,7 +858,7 @@ ss_t *ss_shrink(ss_t **c)
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|
 size_t ss_get_size(const ss_t *c)
 
-#API: |Set string size (bytes used in UTF8 format)|string||O(1)|
+#API: |Set string size (bytes used in UTF8 format)|string;new size||O(1)|
 void ss_set_size(ss_t *c, const size_t s)
 
 #API: |Equivalent to ss_get_size|string|Number of bytes (UTF-8 string length)|O(1)|
@@ -1371,7 +1371,7 @@ ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off, const siz
 	return aux_erase_u(s, S_FALSE, src, char_off, n);
 }
 
-/* #API: |Overwrite string with input string plus replace operation|output string; input string; input string; offset for starting the replace operation (0 for the whole input string); pattern to be replaced; patter replacement||O(n)| */
+/* #API: |Overwrite string with input string plus replace operation|output string; input string; offset for starting the replace operation (0 for the whole input string); pattern to be replaced; patter replacement||O(n)| */
 
 ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
 {
@@ -1815,7 +1815,7 @@ ss_t *ss_tohex(ss_t **s, const ss_t *src)
 ss_t *ss_toHEX(ss_t **s, const ss_t *src)
 */
 
-/* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable; S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)| */
+/* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)| */
 
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode)
 {
@@ -2030,7 +2030,7 @@ size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
  * Format
  */
 
-/* #API: |printf operation on string|output string; printf "format"; printf "format" parameters|output string reference (optional usage)|O(n)| */
+/* #API: |printf operation on string|output string; printf max output size -including the 0 terminator- (bytes); printf "format";printf "format" parameters|output string reference (optional usage)|O(n)| */
 
 int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 {
@@ -2176,7 +2176,7 @@ int ss_popchar(ss_t **s)
  * Hashing
  */
 
-/* #API: |Simple hash: 32-bit checksum|string; 0: compare all string; 1 <= n < N compare first N elements |32-bit hash|O(n)| */
+/* #API: |Simple hash: 32-bit checksum|string; 0: compare all string, 1 <= n < N compare first N elements|32-bit hash|O(n)| */
 
 unsigned ss_csum32(const ss_t *s, const size_t n)
 {

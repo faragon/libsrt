@@ -334,7 +334,7 @@ st_t *st_dup(const st_t *t)
 	return t2;
 }
 
-/* #API: |Insert element into tree|tree|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)| */
+/* #API: |Insert element into tree|tree; element to insert|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)| */
 
 sbool_t st_insert(st_t **tt, const stn_t *n)
 {
@@ -615,7 +615,7 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 	return cn;
 }
 
-/* #API: |Fast unsorted enumeration|tree|Reference to the located node; NULL if not found|O(1)| */
+/* #API: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)| */
 
 const stn_t *st_enum(const st_t *t, const stndx_t index)
 {
