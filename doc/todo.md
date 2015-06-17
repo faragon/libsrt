@@ -9,6 +9,8 @@ Short-term
 * Add st_shl and st_shr for shifting elements on a vector (without real data shift).
 * Write some simple examples
 * Add built-in funcs: int __builtin_popcount/__popcnt, __builtin_parity / _popcnt(a) & 1;
+* Add bit vectors in some way (a subset of bitset, e.g. just for counting)
+* Add a (k, void) new types to smap (e.g for cases of existance check)
 
 Mid-term
 ---
