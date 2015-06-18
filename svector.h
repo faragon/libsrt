@@ -46,6 +46,7 @@ struct SVector
 	struct SData_Full df;
 	char sv_type;
 	size_t elem_size;
+	size_t aux, aux2;	 /* Used by derived types */
 };
 
 typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
@@ -167,6 +168,25 @@ sbool_t sv_push_u(sv_t **v, const suint_t c);
 void *sv_pop(sv_t *v);
 sint_t sv_pop_i(sv_t *v);
 suint_t sv_pop_u(sv_t *v);
+
+/*
+ * Functions intended for helping compiler optimization
+ */
+
+static size_t __sv_get_max_size(const sv_t *v)
+{
+	return (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
+}
+
+static const void *__sv_get_buffer_r(const sv_t *v)
+{
+	return (const void *)(((const char *)v) + SDV_HEADER_SIZE);
+}
+
+static void *__sv_get_buffer(sv_t *v)
+{
+	return (void *)(((char *)v) + SDV_HEADER_SIZE);
+}
 
 #ifdef __cplusplus
 };      /* extern "C" { */

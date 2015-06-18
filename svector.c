@@ -20,7 +20,6 @@
  * Static functions forward declaration
  */
 
-static size_t sv_get_max_size(const sv_t *v);
 static sd_t *aux_dup_sd(const sd_t *d);
 static sv_t *sv_check(sv_t **v);
 
@@ -40,7 +39,7 @@ static size_t svt_sizes[SV_LAST+1] = {	sizeof(char),
 					};
 static struct SVector sv_void0 = EMPTY_SV;
 static sv_t *sv_void = (sv_t *)&sv_void0;
-static struct sd_conf svf = {	(size_t (*)(const sd_t *))sv_get_max_size,
+static struct sd_conf svf = {	(size_t (*)(const sd_t *))__sv_get_max_size,
 				NULL,
 				NULL,
 				NULL,
@@ -151,33 +150,18 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 	return sv_alloc_raw(t, elem_size, S_FALSE, malloc(alloc_size), alloc_size);
 }
 
-static size_t sv_get_max_size(const sv_t *v)
-{
-	return (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
-}
-
-static const void *get_buffer_r(const sv_t *v)
-{
-	return (const void *)(((const char *)v) + SDV_HEADER_SIZE);
-}
-
-static void *get_buffer(sv_t *v)
-{
-	return (void *)(((char *)v) + SDV_HEADER_SIZE);
-}
-
 static void sv_copy_elems(sv_t *v, const size_t v_off, const sv_t *src,
 		     const size_t src_off, const size_t n)
 {
-	s_copy_elems(get_buffer(v), v_off, get_buffer_r(src), src_off, n,
-		     v->elem_size);
+	s_copy_elems(__sv_get_buffer(v), v_off, __sv_get_buffer_r(src),
+		     src_off, n, v->elem_size);
 }
 
 static void sv_move_elems(sv_t *v, const size_t v_off, const sv_t *src,
 		     const size_t src_off, const size_t n)
 {
-	s_move_elems(get_buffer(v), v_off, get_buffer_r(src), src_off, n,
-		     v->elem_size);
+	s_move_elems(__sv_get_buffer(v), v_off, __sv_get_buffer_r(src),
+		     src_off, n, v->elem_size);
 }
 
 static sv_t *sv_check(sv_t **v)
@@ -249,7 +233,7 @@ static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_elems)
 		*v = src->sv_type == SV_GEN ?
 			sv_alloc(src->elem_size, max_elems) :
 			sv_alloc_t((const enum eSV_Type)src->sv_type, max_elems);
-		return sv_get_max_size(*v);
+		return __sv_get_max_size(*v);
 	}
 	return sd_reserve((sd_t **)v, max_elems, &svf);
 }
@@ -304,8 +288,8 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 		const sbool_t aliasing = *v == src;
 		if (sv_reserve(v, out_size) >= out_size) {
 			if (!aliasing) {
-				void *po = get_buffer(*v);
-				const void *psrc = get_buffer_r(src);
+				void *po = __sv_get_buffer(*v);
+				const void *psrc = __sv_get_buffer_r(src);
 				const size_t elem_size = src->elem_size;
 				s_copy_elems(po, at, psrc, 0, n, elem_size);
 			}
@@ -317,12 +301,12 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 
 static char *ptr_to_elem(sv_t *v, const size_t i)
 {
-	return (char *)get_buffer(v) + i * v->elem_size;
+	return (char *)__sv_get_buffer(v) + i * v->elem_size;
 }
 
 static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
 {
-	return (const char *)get_buffer_r(v) + i * v->elem_size;
+	return (const char *)__sv_get_buffer_r(v) + i * v->elem_size;
 }
 
 /*
@@ -334,7 +318,7 @@ static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
 sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 
 #API: |Allocate generic vector in the stack|element size; space preallocated to store n elements|vector|O(1)|
-sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
+sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve)
 */
 
 sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
@@ -346,6 +330,7 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 	sd_reset((sd_t *)v, S_TRUE, buffer_size, ext_buf);
 	v->sv_type = t;
 	v->elem_size = elem_size;
+	v->aux = v->aux2 = 0;
 	return v;
 }
 
@@ -414,7 +399,7 @@ size_t sv_len_left(const sv_t *v)
 
 sbool_t sv_set_len(sv_t *v, const size_t elems)
 {
-	const size_t max_size = sv_get_max_size(v);
+	const size_t max_size = __sv_get_max_size(v);
 	const sbool_t resize_ok = elems <= max_size ? S_TRUE : S_FALSE;
 	sd_set_size((sd_t *)v, S_MIN(elems, max_size));
 	return resize_ok;
@@ -424,14 +409,14 @@ sbool_t sv_set_len(sv_t *v, const size_t elems)
 
 const void *sv_get_buffer_r(const sv_t *v)
 {
-	return !v ? 0 : get_buffer_r(v);
+	return !v ? 0 : __sv_get_buffer_r(v);
 }
 
 /* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)| */
 
 void *sv_get_buffer(sv_t *v)
 {
-	return !v ? 0 : get_buffer(v);
+	return !v ? 0 : __sv_get_buffer(v);
 }
 
 /* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)| */
@@ -578,7 +563,7 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	ASSERT_RETURN_IF(!v || v->sv_type < SV_I8 || v->sv_type > SV_GEN, S_NPOS);
 	size_t pos = S_NPOS;
 	const size_t size = get_size(v);
-	const void *p = get_buffer_r(v); /* in order to do pointer arithmetic */
+	const void *p = __sv_get_buffer_r(v); /* in order to do pointer arithmetic */
 	const size_t elem_size = v->elem_size;
 	const size_t off_max = size * v->elem_size;
 	size_t i = off * elem_size;
@@ -659,7 +644,7 @@ const void *sv_at(const sv_t *v, const size_t index)
 	ASSERT_RETURN_IF(!v, def_val);				\
 	const size_t size = get_size(v);			\
 	RETURN_IF(index >= size, def_val);			\
-	const void *p = get_buffer_r(v);			\
+	const void *p = __sv_get_buffer_r(v);			\
 	sint_t tmp;						\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, index));
 
