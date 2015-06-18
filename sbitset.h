@@ -61,14 +61,14 @@ sb_t *sb_dup(const sb_t *src)
 
 static size_t sb_maxbitset(const sb_t *b)
 {
-	return b->aux;
+	return b ? b->aux : 0;
 }
 
 /* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)| */
 
 static size_t sb_popcount(const sb_t *b)
 {
-	return b->aux2;
+	return b ? b->aux2 : 0;
 }
 
 /*
@@ -95,6 +95,13 @@ static void sb_set(sb_t **b, const size_t nth)
 	if (b) {
 		const size_t pos = nth / 8, mask = 1 << (nth % 8);
 		unsigned char *buf;
+		if (!(*b)) { /* BEHAVIOR: if NULL, assume heap allocation */
+			*b = sb_alloc(nth);
+			if (!(*b)) {
+				S_ERROR("not enough memory");
+				return;
+			}
+		}
 		if (pos >= (*b)->aux) {
 			const size_t pinc = pos + 1 + (mask ? 1 : 0);
 			if (sv_reserve(b, pinc) < pinc) {
@@ -133,6 +140,7 @@ static void sb_clear(sb_t **b, const size_t nth)
 		}
 		/* else: implicitly considered as set to 0 */
 	}
+	/* else: NULL bitset is implicitly considered as set to 0 */
 }
 
 #ifdef __cplusplus
