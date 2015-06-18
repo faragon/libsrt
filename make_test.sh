@@ -93,13 +93,13 @@ fi
 
 if type python3 >/dev/null 2>/dev/null
 then
-	echo "Documentation test..."
+	echo "Documentation test..." | tee -a $LOG
 	DOC_OUT=doc_out/
 	mkdir $DOC_OUT 2>/dev/null
-	for i in $(ls *\.c) ; do
+	for i in $(ls *\.c) sbitset.h ; do
 		echo -n "$i: " >&2
 		if doc/c2doc.py "Documentation for $i" < "$i" >"$DOC_OUT/$i.html" ; then
-			echo "OK" >&2
+			echo "OK" >&2 | tee -a $LOG
 		else	ERRORS=$((ERRORS + 1))
 		fi
 	done

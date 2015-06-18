@@ -10,7 +10,6 @@ Short-term
 * Write some simple examples
 * Add built-in funcs: int __builtin_popcount/__popcnt, __builtin_parity / _popcnt(a) & 1;
 * Add a (k=*, void) new types to smap (e.g for cases of existance check)
-* Add bit vectors to svector (a la bitset)
 * Move to sdata accessors like get_buffer, etc.
 
 Mid-term

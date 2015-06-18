@@ -42,7 +42,7 @@ def fundoc2html( doc ) :
 	fun_desc = doc[0][1]
 	fun_params = doc[1][0]
 	fun_params_desc = doc[1][1]
-	fun_ret = doc[2][0]
+	fun_ret = doc[2][0].replace("static ", "")
 	fun_ret_desc = doc[2][1]
 	proto = '<i>' + fun_ret + '</i><b>' + fun_name + '</b>('
 	i = 0
