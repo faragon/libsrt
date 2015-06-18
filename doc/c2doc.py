@@ -61,6 +61,8 @@ def fundoc2html( doc ) :
 		params += '<li><b>' + fun_params[i].strip() + '</b>: ' + \
 			  fun_params_desc[i] + '</li>'
 		i += 1
+	if len(fun_ret_desc) :
+		params += '<li><b><b>Return</b> (<i>' + fun_ret.strip() + '</i>): ' + fun_ret_desc + '</li>'
 	params += '</ul><br>'
 	return  proto + params + '<br>'
 
