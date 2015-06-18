@@ -31,11 +31,7 @@ typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 #define sb_shrink(b)		sv_shrink(b)
 #define sb_dup(b)		sv_dup(b)
 #define sb_reset(b)		sv_reset(b)
-#ifdef S_USE_VA_ARGS
-#define sb_free(...)		sv_free(__VA_ARGS__)
-#else
-#define sb_free(...)
-#endif
+#define sb_free			sv_free
 
 /*
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|
@@ -78,7 +74,6 @@ static size_t sb_popcount(const sb_t *b)
 /*
  * Operations
  */
-
 
 /* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)| */
 
