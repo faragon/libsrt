@@ -383,9 +383,9 @@ static size_t s_load_size_t(const void *aligned_base_address, const size_t offse
 	return S_LD_SZT(((char *)aligned_base_address) + offset);
 }
 
-static sbool_t s_size_t_overflow(const size_t a, const size_t b)
+static sbool_t s_size_t_overflow(const size_t off, const size_t inc)
 {
-	return a > (S_SIZET_MAX - b) ? S_TRUE : S_FALSE;
+	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }
 
 /*
