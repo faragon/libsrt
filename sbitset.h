@@ -10,6 +10,17 @@ extern "C" {
  * Bit set/array/vector handling.
  *
  * Copyright (c) 2015 F. Aragon. All rights reserved.
+ *
+ * Features:
+ * - Fast: over 300 million bit set per second on i5-3330 @3GHz
+ * - Very fast: O(1) bit "population count" (vs e.g. g++ O(n) std::bitset)
+ * - Safe: bound checked
+ * - Supports both stack and heap allocation
+ * - Supports dynamic-size bit set (when using heap allocation)
+ * - Lazy initialization (and allocation, if using heap): no "memset" to 0
+ *   is done until required, and is applied to the affected area. Also bit
+ *   set to 0 on non set areas requires doing nothing, as unitialized area
+ *   can be both not initialized or even not allocated (when using heap memory)
  */ 
 
 #include "svector.h"
@@ -87,7 +98,7 @@ static int sb_test(const sb_t *b, const size_t nth)
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
-/* #API: |Set nth bit to 1|bitset; bit offset||O(1)| */
+/* #API: |Set nth bit to 1|bitset; bit offset||O(1) with the exception of O(n) for first case of not covering unitializated areas -for real-time requirement, force set + clear at last expected writabple position-| */
 
 static void sb_set(sb_t **b, const size_t nth)
 {
@@ -122,7 +133,7 @@ static void sb_set(sb_t **b, const size_t nth)
 	}
 }
 
-/* #API: |Set nth bit to 1|bitset; bit offset||O(1)| */
+/* #API: |Set nth bit to 0|bitset; bit offset||O(1)| */
 
 static void sb_clear(sb_t **b, const size_t nth)
 {
