@@ -119,13 +119,13 @@ CFLAGS += $(COMMON_FLAGS)
 CXXFLAGS += $(COMMON_FLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
-#DATE   =$(shell date)
-SOURCES	=sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
-HEADERS	=scommon.h $(SOURCES:.c=.h)
-OBJECTS	=$(SOURCES:.c=.o)
-LIBSRT	=libsrt.a
-TEST	=stest
-EXES	=$(TEST) sbench
+VPATH   = $(PWD)/src
+SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
+HEADERS	= scommon.h $(SOURCES:.c=.h)
+OBJECTS	= $(SOURCES:.c=.o)
+LIBSRT	= libsrt.a
+TEST	= stest
+EXES	= $(TEST) sbench
 
 # Rules:
 all: $(EXES) run_tests
