@@ -44,6 +44,7 @@ def fundoc2html( doc ) :
 	fun_params_desc = doc[1][1]
 	fun_ret = doc[2][0].replace("static ", "")
 	fun_ret_desc = doc[2][1]
+	fun_o = doc[3][0]
 	proto = '<i>' + fun_ret + '</i><b>' + fun_name + '</b>('
 	i = 0
 	while i < len(fun_params) :
@@ -62,7 +63,9 @@ def fundoc2html( doc ) :
 			  fun_params_desc[i] + '</li>'
 		i += 1
 	if len(fun_ret_desc) :
-		params += '<li><b><b>Return</b> (<i>' + fun_ret.strip() + '</i>): ' + fun_ret_desc + '</li>'
+		params += '<li><b>Return</b> (<i>' + fun_ret.strip() + '</i>): ' + fun_ret_desc + '</li>'
+	if len(fun_o) :
+		params += '<li><b>Complexity:</b> ' + fun_o.strip() + '</li>'
 	params += '</ul><br>'
 	return  proto + params + '<br>'
 
