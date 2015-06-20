@@ -843,13 +843,13 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 SD_BUILDFUNCS(ss)
 
 /*
-#API: |Free one or more strings|string;more strings (optional)||O(1)|
+#API: |Free one or more strings (heap)|string;more strings (optional)||O(1)|
 void ss_free(ss_t **c, ...)
 
-#API: |Ensure space for extra elements|string;number of extra eelements|extra size allocated|O(1)|
+#API: |Reserve space for extra elements (relative to current string size)|string;number of extra elements|extra size allocated|O(1)|
 size_t ss_grow(ss_t **c, const size_t extra_elems)
 
-#API: |Ensure space for elements|string;absolute element reserve|reserved elements|O(1)|
+#API: |Reserve space for at least N bytes (absolute reserve)|string;absolute element reserve|reserved elements|O(1)|
 size_t ss_reserve(ss_t **c, const size_t max_elems)
 
 #API: |Free unused space|string|same string (optional usage)|O(1)|
@@ -864,7 +864,7 @@ void ss_set_size(ss_t *c, const size_t s)
 #API: |Equivalent to ss_get_size|string|Number of bytes (UTF-8 string length)|O(1)|
 size_t ss_get_len(const ss_t *c)
 
-#API: |Allocate string (stack)|space preAllocated to store n elements|allocated string|O(1)|
+#API: |Allocate string (stack)|space preallocated to store n elements|allocated string|O(1)|
 ss_t *ss_alloca(const size_t initial_reserve)
 */
 
@@ -891,7 +891,7 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
  * Accessors
  */
 
-/* #API: |String length (Unicode)|string|number of Unicode characters|O(1)| */
+/* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed| */
 
 size_t ss_len_u(const ss_t *s)
 {
@@ -1270,7 +1270,7 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off, const si
 }
 
 
-/* #API: |Overwrite string with C string copy (strict aliasing is assumed)|output string; input string; input string bytes|output string reference (optional usage)|On(n)| */
+/* #API: |Overwrite string with C string copy (strict aliasing is assumed)|output string; input string; input string bytes|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 {
@@ -1553,7 +1553,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off, const size_
 	return ss_cat_cn_raw(s, src_str, src_off, sub_size, src_unicode_size);
 }
 
-/* #API: |Concatenate substring (Unicode character mode)|output string; input string; input substring character offset; input string substring size (characters)|output string reference (optional usage)||O(n)| */
+/* #API: |Concatenate substring (Unicode character mode)|output string; input string; input substring character offset; input string substring size (characters)|output string reference (optional usage)|O(n)| */
 
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 							const size_t n)

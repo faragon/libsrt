@@ -314,10 +314,10 @@ static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
  */
 
 /*
-#API: |Allocate typed vector in the stack|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|
+#API: |Allocate typed vector (stack)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|
 sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 
-#API: |Allocate generic vector in the stack|element size; space preallocated to store n elements|vector|O(1)|
+#API: |Allocate generic vector (stack)|element size; space preallocated to store n elements|vector|O(1)|
 sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve)
 */
 
@@ -334,14 +334,14 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 	return v;
 }
 
-/* #API: |Allocate generic vector in the heap|element size; space preallocated to store n elements|vector|O(1)| */
+/* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements|vector|O(1)| */
 
 sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve)
 {
 	return sv_alloc_base(SV_GEN, elem_size, initial_num_elems_reserve);
 }
 
-/* #API: |Allocate typed vector in the heap|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)| */
+/* #API: |Allocate typed vector (heap)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)| */
 
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 {
@@ -351,7 +351,7 @@ sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 SD_BUILDFUNCS(sv)
 
 /*
-#API: |Free one or more vectors|vector;more vectors (optional)||O(1)|
+#API: |Free one or more vectors (heap)|vector;more vectors (optional)||O(1)|
 void sv_free(sv_t **c, ...)
 
 #API: |Ensure space for extra elements|vector;number of extra eelements|extra size allocated|O(1)|
@@ -372,7 +372,7 @@ void sv_set_size(sv_t *c, const size_t s)
 #API: |Equivalent to sv_get_size|vector|Number of bytes (UTF-8 vector length)|O(1)|
 size_t sv_get_len(const sv_t *c)
 
-#API: |Allocate vector (stack)|space preAllocated to store n elements|allocated vector|O(1)|
+#API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|
 sv_t *sv_alloca(const size_t initial_reserve)
 */
 
@@ -689,7 +689,7 @@ sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 }
 
 /*
-#API: |Push/add multiple elements (generic data)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1) for one element; O(n) generic case|
+#API: |Push/add multiple elements (generic data)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|
 sbool_t sv_push(sv_t **v, const void *c1, ...)
 */
 
@@ -755,7 +755,7 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	sint_t tmp;					\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, 0));
 
-/* #API: |Pop/extract element (generic data)|vector|Element reference|O(i1)| */
+/* #API: |Pop/extract element (generic data)|vector|Element reference|O(1)| */
 
 void *sv_pop(sv_t *v)
 {
@@ -764,7 +764,7 @@ void *sv_pop(sv_t *v)
 	return p;
 }
 
-/* #API: |Pop/extract element (integer)|vector|Integer element|O(i1)| */
+/* #API: |Pop/extract element (integer)|vector|Integer element|O(1)| */
 
 sint_t sv_pop_i(sv_t *v)
 {
@@ -773,7 +773,7 @@ sint_t sv_pop_i(sv_t *v)
 	SV_POP_IU(sint_t);
 }
 
-/* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(i1)| */
+/* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(1)| */
 
 suint_t sv_pop_u(sv_t *v)
 {

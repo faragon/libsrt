@@ -158,7 +158,12 @@ sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, c
 	return (sm_t *)st_alloc_raw(&f, ext_buf, buffer, buffer_size);
 }
 
-/* #API: |Allocate map|map type; initial reserve|map|O(1)| */
+/*
+#API: |Allocate map (stack)|map type; initial reserve|map|O(1)|
+sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
+*/
+
+/* #API: |Allocate map (heap)|map type; initial reserve|map|O(1)| */
 
 sm_t *sm_alloc(const enum eSM_Type t, const size_t n)
 {
@@ -168,7 +173,7 @@ sm_t *sm_alloc(const enum eSM_Type t, const size_t n)
 }
 
 /*
-#API: |Free one or more maps|map; more maps (optional)||O(1) for simple maps, O(n) for maps having nodes with strings|
+#API: |Free one or more maps (heap)|map; more maps (optional)||O(1) for simple maps, O(n) for maps having nodes with strings|
 void sm_free(sm_t **m, ...)
 */
 

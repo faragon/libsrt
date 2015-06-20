@@ -56,7 +56,7 @@ static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
  * Allocation
  */
 
-/* #API: |Allocate distributed map|map type; number of submaps; initial reserve|map|O(1)| */
+/* #API: |Allocate distributed map (heap)|map type; number of submaps; initial reserve|map|O(1)| */
 
 sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t initial_reserve)
 {

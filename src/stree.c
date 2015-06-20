@@ -304,6 +304,14 @@ st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
 	return t;
 }
 
+/*
+#API: |Allocate tree (stack)|tree configuration;space preallocated to store n elements|allocated tree|O(1)|
+sv_t *st_alloca(const struct STConf *f, const size_t initial_reserve)
+*/
+
+
+/* #API: |Allocate tree (heap)|tree configuration;space preallocated to store n elements|allocated tree|O(1)| */
+
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
 {
 	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
