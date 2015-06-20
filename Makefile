@@ -119,7 +119,7 @@ CFLAGS += $(COMMON_FLAGS)
 CXXFLAGS += $(COMMON_FLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
-VPATH   = $(PWD)/src
+VPATH   = src
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
 HEADERS	= scommon.h $(SOURCES:.c=.h)
 OBJECTS	= $(SOURCES:.c=.o)
