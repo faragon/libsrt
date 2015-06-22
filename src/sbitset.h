@@ -157,6 +157,5 @@ static void sb_clear(sb_t **b, const size_t nth)
 #ifdef __cplusplus
 }; /* extern "C" { */
 #endif
-
 #endif /* #ifndef SBITSET_H */
 
