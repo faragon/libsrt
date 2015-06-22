@@ -115,17 +115,18 @@ ifeq ($(FORCE32), 1)
 	COMMON_FLAGS += -m32
 endif
 
-CFLAGS += $(COMMON_FLAGS)
+CFLAGS += $(COMMON_FLAGS) -Isrc
 CXXFLAGS += $(COMMON_FLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
-VPATH   = src
+VPATH   = src:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
 HEADERS	= scommon.h $(SOURCES:.c=.h)
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a
 TEST	= stest
-EXES	= $(TEST) sbench
+EXAMPLES = bench counter enc
+EXES	= $(TEST) $(EXAMPLES)
 
 # Rules:
 all: $(EXES) run_tests
@@ -133,9 +134,10 @@ $(OBJECTS): $(HEADERS)
 $(LIBSRT): $(OBJECTS)
 	ar rcs $(LIBSRT) $(OBJECTS)
 $(EXES): $% $(LIBSRT)
+
 run_tests: stest
 	@./$(TEST)
 clean:
-	@rm -f $(OBJECTS) $(LIBSRT) *\.gcno *\.gcda *\.out callgrind* out\.txt
+	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.gcno *\.gcda *\.out callgrind* out\.txt
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 
