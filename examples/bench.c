@@ -1,13 +1,10 @@
 /*
- * sbench.c
+ * bench.c
  *
- * sstring benchmarks (this is quick and weird stuff, it will be changed
- * for "orthodox" benchmaks -or removed completely-)
+ * Some libsrt string benchmarks (this is quick and weird stuff, it will be
+ * changed for "orthodox" benchmaks -or removed completely-)
  *
  * Copyright (c) 2015 F. Aragon. All rights reserved.
-
-   ** work in progress **
-
  */
  
 #include "sstring.h"
