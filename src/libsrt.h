@@ -13,16 +13,15 @@ extern "C" {
  *
  */
 
-#include <sstring.h>
-#include <svector.h>
-#include <sbitset.h>
-#include <stree.h>
-#include <smap.h>
-#include <sdmap.h>
+#include "sstring.h"
+#include "svector.h"
+#include "sbitset.h"
+#include "stree.h"
+#include "smap.h"
+#include "sdmap.h"
 
 #ifdef __cplusplus
 }; /* extern "C" { */
 #endif
-
 #endif /* #ifndef LIBSRT_H */
 
