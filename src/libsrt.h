@@ -19,6 +19,7 @@ extern "C" {
 #include "stree.h"
 #include "smap.h"
 #include "sdmap.h"
+#include "senc.h"
 
 #ifdef __cplusplus
 }; /* extern "C" { */
