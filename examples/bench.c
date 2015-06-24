@@ -6,11 +6,8 @@
  *
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  */
- 
-#include "sstring.h"
-#include "schar.h"
-#include "ssearch.h"
-#include "scommon.h"
+
+#include <libsrt.h>
 
 /*
  * Search benchmark parameters
