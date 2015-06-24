@@ -119,7 +119,6 @@ static void sb_set(sb_t **b, const size_t nth)
 				S_ERROR("not enough memory");
 				return;
 			}
-			const size_t max = __sv_get_max_size(*b);
 			buf = (unsigned char *)__sv_get_buffer(*b);
 			memset(buf + (*b)->aux, 0, pinc - (*b)->aux);
 			(*b)->aux = pinc;
@@ -142,7 +141,6 @@ static void sb_clear(sb_t **b, const size_t nth)
 		const size_t pos = nth / 8;
 		if (pos < (*b)->aux) {
 			unsigned char *buf = (unsigned char *)__sv_get_buffer(*b);
-			unsigned char prev = buf[pos];
 			size_t mask = 1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;
@@ -152,6 +150,18 @@ static void sb_clear(sb_t **b, const size_t nth)
 		/* else: implicitly considered as set to 0 */
 	}
 	/* else: NULL bitset is implicitly considered as set to 0 */
+}
+
+/* #API: |Force evaluation of first N bits (equivalent to set to 0 all not previously referenced bits)|bitset; bit offset||O(n)| */
+
+static void sb_eval(sb_t **b, const size_t nth)
+{
+	if (b) {
+		int prev = sb_test(*b, nth);
+		sb_set(b, nth);
+		if (!prev)
+			sb_clear(b, nth);
+	}
 }
 
 #ifdef __cplusplus
