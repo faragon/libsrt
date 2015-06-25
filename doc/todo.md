@@ -39,7 +39,6 @@ Mid-term
  * Unicode: to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
 * Other
  * Bindings for other languages
-* Add some simple data compression (e.g. 4KB LZW or 32KB LZ77 + Huffman coding)
 * Win32-specific optimizations
  * Study if using VirtualAlloc could be used as faster realloc.
 * Write examples
