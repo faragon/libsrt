@@ -3,6 +3,7 @@
 
 Short-term
 ---
+* there is a bug in memory allocation of sv\_\* (found in a system with 512MB memory -without swap- when running the "counter" example with "4 0" input parameters)
 * copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
 * add overflow checks, using "s_size_t_overflow"
