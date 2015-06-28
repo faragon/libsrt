@@ -71,6 +71,30 @@ extern "C" {
 	}								   \
 
 /*
+ * Artificial memory allocation limits (tests/debug)
+ */
+
+#ifdef SD_MAX_MALLOC_SIZE
+static void *__sd_malloc(size_t size)
+{
+	return size <= SD_MAX_MALLOC_SIZE ? malloc(size) : NULL;
+}
+static void *__sd_calloc(size_t nmemb, size_t size)
+{
+	return size <= SD_MAX_MALLOC_SIZE ? calloc(1, size) : NULL;
+}
+static void *__sd_realloc(void *ptr, size_t size)
+{
+	return size <= SD_MAX_MALLOC_SIZE ? realloc(ptr, size) : NULL;
+}
+#else
+#define __sd_malloc malloc
+#define __sd_calloc calloc
+#define __sd_realloc realloc
+#endif
+#define __sd_free free
+
+/*
  * Generic data structures
  */
 

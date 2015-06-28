@@ -147,7 +147,7 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 {
 	const size_t alloc_size = SDV_HEADER_SIZE + elem_size *
 						    initial_num_elems_reserve;
-	return sv_alloc_raw(t, elem_size, S_FALSE, malloc(alloc_size), alloc_size);
+	return sv_alloc_raw(t, elem_size, S_FALSE, __sd_malloc(alloc_size), alloc_size);
 }
 
 static void sv_copy_elems(sv_t *v, const size_t v_off, const sv_t *src,

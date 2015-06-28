@@ -7,6 +7,7 @@
  */ 
 
 #include "sdmap.h"
+#include "sdata.h"
 #include "scommon.h"
 
 /*
@@ -62,7 +63,7 @@ sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t init
 {
 	ASSERT_RETURN_IF(nsubmaps < 1, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
-	sdm_t *dm = (sdm_t *)malloc(alloc_size);
+	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);
 	ASSERT_RETURN_IF(!dm, NULL);
 	memset(dm, 0, alloc_size);
 	size_t i = 0, nelems = (initial_reserve / nsubmaps) + 1;
@@ -135,7 +136,7 @@ sdm_t *sdm_dup(const sdm_t *src)
 	enum eSM_Type t = (enum eSM_Type)maps[0]->f.type;
 	ASSERT_RETURN_IF(t < SM_FIRST || t >SM_LAST, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
-	sdm_t *dm = (sdm_t *)malloc(alloc_size);
+	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);
 	ASSERT_RETURN_IF(!dm, NULL);
 	size_t i = 0;
 	for (; i < nsubmaps; i++ ) {

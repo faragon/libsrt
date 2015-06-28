@@ -102,7 +102,7 @@ void sd_set_alloc_size(sd_t *d, const size_t alloc_size)
 sd_t *sd_alloc(const size_t header_size, const size_t elem_size, const size_t initial_reserve, const struct sd_conf *f)
 {
 	const size_t alloc_size = sd_size_to_alloc_size(header_size, elem_size, initial_reserve, f);
-	sd_t *d = (sd_t *)malloc(alloc_size);
+	sd_t *d = (sd_t *)__sd_malloc(alloc_size);
 	if (d) {
 		f->sx_reset(d, alloc_size, S_FALSE);
 		S_PROFILE_ALLOC_CALL;
@@ -199,10 +199,9 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		size_t header_size, elem_size;
 		header_size = f->header_size;
 		elem_size = !f->elem_size_off ? 0 :
-			    s_load_size_t((void *)*d,
-					  f->elem_size_off);
+			    s_load_size_t((void *)*d, f->elem_size_off);
 		size_t new_alloc_size = sd_size_to_alloc_size(header_size, elem_size, max_size, f);
-		sd_t *d1 = (sd_t *)realloc(*d, new_alloc_size);
+		sd_t *d1 = (sd_t *)__sd_realloc(*d, new_alloc_size);
 		if (!d1) {
 			S_ERROR("not enough memory (realloc error)");
 			sd_set_alloc_errors(*d, S_TRUE);

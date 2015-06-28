@@ -56,7 +56,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 		if (nargs <= SS_CCAT_STACK) {					\
 			sizes = pstack;						\
 		} else {							\
-			pheap = (size_t *)malloc(sizeof(size_t) * nargs);	\
+			pheap = (size_t *)__sd_malloc(sizeof(size_t) * nargs);	\
 			if (!pheap) {						\
 				ss_set_alloc_errors(*s);			\
 				break;						\

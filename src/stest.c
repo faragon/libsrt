@@ -1011,7 +1011,7 @@ int test_ss_to_w(const char *in)
 {
 	ss_t *a = ss_dup_c(in);
 	const size_t ssa = ss_len(a);
-	wchar_t *out = a ? (wchar_t *)malloc(sizeof(wchar_t) * (ssa + 1)) :
+	wchar_t *out = a ? (wchar_t *)__sd_malloc(sizeof(wchar_t) * (ssa + 1)) :
 			  NULL;
 	size_t out_size = 0;
 	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);

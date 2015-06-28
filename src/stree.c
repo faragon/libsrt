@@ -315,7 +315,7 @@ sv_t *st_alloca(const struct STConf *f, const size_t initial_reserve)
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
 {
 	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
-	return st_alloc_raw(f, S_FALSE, malloc(alloc_size), alloc_size);
+	return st_alloc_raw(f, S_FALSE, __sd_malloc(alloc_size), alloc_size);
 }
 
 SD_BUILDFUNCS(st)
