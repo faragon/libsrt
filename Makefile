@@ -48,6 +48,9 @@ endif
 COMMON_FLAGS = -pipe
 
 # Configure compiler context:
+
+UNAME_M = $(shell uname -m)
+
 ifeq ($(CC), tcc)
 	PROFILING=0
 else
@@ -112,7 +115,16 @@ else
 	COMMON_FLAGS += -fomit-frame-pointer
 endif
 ifeq ($(FORCE32), 1)
-	COMMON_FLAGS += -m32
+	ifeq ($(UNAME_M), x86_64)
+		COMMON_FLAGS += -m32
+	endif
+	ifeq ($(UNAME_M), mips64)
+		COMMON_FLAGS += -mips32
+	endif
+else
+	ifeq ($(UNAME_M), mips64)
+		COMMON_FLAGS += -mabi=64 -mips64
+	endif
 endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc
