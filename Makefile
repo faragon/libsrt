@@ -46,6 +46,7 @@ COMMON_FLAGS = -pipe
 
 # Configure compiler context:
 
+UNAME = $(shell uname)
 UNAME_M = $(shell uname -m)
 
 ifeq ($(CC), tcc)
@@ -114,8 +115,9 @@ endif
 
 OCTEON = 0
 ifeq ($(UNAME_M), mips64)
-	COMMON_FLAGS += -mabi=64
-	OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
+	ifeq ($(UNAME), Linux)
+		OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
+	endif
 endif
 
 ifeq ($(FORCE32), 1)
