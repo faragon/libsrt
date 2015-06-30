@@ -9,8 +9,6 @@
 # Build with clang++ using C++11 standard: make CC=clang++ CPP11=1
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
 # Build with gcc cross compiler: make CC=powerpc-linux-gnu-gcc
-# EdgeRouter Lite (Octeon+, 32-bit mode): make CFLAGS="-mips64r2 -mabi=32 -fomit-frame-pointer -O2"
-# EdgeRouter Lite (Octeon+, 64-bit mode): make CFLAGS="-mips64r2 -mabi=64 -fomit-frame-pointer -O2"
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
@@ -113,16 +111,32 @@ ifeq ($(PROFILING), 1)
 else
 	COMMON_FLAGS += -fomit-frame-pointer
 endif
+
+OCTEON = 0
+ifeq ($(UNAME_M), mips64)
+	COMMON_FLAGS += -mabi=64
+	OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
+endif
+
 ifeq ($(FORCE32), 1)
 	ifeq ($(UNAME_M), x86_64)
 		COMMON_FLAGS += -m32
 	endif
 	ifeq ($(UNAME_M), mips64)
-		COMMON_FLAGS += -mips32
+		ifeq ($(OCTEON), 1)
+			COMMON_FLAGS += -mips64r2
+		else
+			COMMON_FLAGS += -mips32
+		endif
 	endif
 else
 	ifeq ($(UNAME_M), mips64)
-		COMMON_FLAGS += -mabi=64 -mips64
+		COMMON_FLAGS += -mabi=64
+		ifeq ($(OCTEON), 1)
+			COMMON_FLAGS += -mips64r2
+		else
+			COMMON_FLAGS += -mips64
+		endif
 	endif
 endif
 
