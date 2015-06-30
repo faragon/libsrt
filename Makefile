@@ -9,7 +9,6 @@
 # Build with clang++ using C++11 standard: make CC=clang++ CPP11=1
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
 # Build with gcc cross compiler: make CC=powerpc-linux-gnu-gcc
-# Raspberry Pi forcing ARMv6: make CFLAGS="-march=armv6 -fomit-frame-pointer -O2"
 # EdgeRouter Lite (Octeon+, 32-bit mode): make CFLAGS="-mips64r2 -mabi=32 -fomit-frame-pointer -O2"
 # EdgeRouter Lite (Octeon+, 64-bit mode): make CFLAGS="-mips64r2 -mabi=64 -fomit-frame-pointer -O2"
 #
@@ -125,6 +124,11 @@ else
 	ifeq ($(UNAME_M), mips64)
 		COMMON_FLAGS += -mabi=64 -mips64
 	endif
+endif
+
+# ARM11 (Raspberri Pi I): the flag will enable HW unaligned access
+ifeq ($(UNAME_M), armv6l)
+	COMMON_FLAGS += -march=armv6
 endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc
