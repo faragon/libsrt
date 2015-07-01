@@ -1,7 +1,7 @@
 #
 # Makefile for sstring.
 #
-# e.g.
+# Examples:
 # Build with defaults: make
 # Build with gcc and profiling: make CC=gcc PROFILING=1
 # Build with gcc using C89/90 standard: make CC=gcc C99=0
@@ -13,7 +13,8 @@
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
 
-# Default flag (can be overriden in command line):
+# Makefile parameters
+
 ifndef C99
 	C99=0
 endif
@@ -44,7 +45,7 @@ endif
 
 COMMON_FLAGS = -pipe
 
-# Configure compiler context:
+# Configure compiler context
 
 UNAME = $(shell uname)
 UNAME_M = $(shell uname -m)
@@ -160,7 +161,8 @@ TEST	= stest
 EXAMPLES = bench counter enc
 EXES	= $(TEST) $(EXAMPLES)
 
-# Rules:
+# Rules for building: library, test, examples
+
 all: $(EXES) run_tests
 $(OBJECTS): $(HEADERS)
 $(LIBSRT): $(OBJECTS)
