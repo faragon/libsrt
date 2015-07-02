@@ -102,7 +102,7 @@ static int sb_test(const sb_t *b, const size_t nth)
 
 static void sb_set(sb_t **b, const size_t nth)
 {
-	S_ASSERT(!b);
+	S_ASSERT(b);
 	if (b) {
 		const size_t pos = nth / 8, mask = 1 << (nth % 8);
 		unsigned char *buf;
