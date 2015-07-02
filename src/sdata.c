@@ -184,12 +184,21 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 #ifdef SD_ENABLE_HEURISTIC_GROW
 			size_t grow_pct = max_size < SD_GROW_CACHE_MIN_ELEMS ?
 				SD_GROW_PCT_CACHED : SD_GROW_PCT_NONCACHED;
-			max_size = (max_size * (100 + grow_pct)) / 100;
+			size_t inc = max_size > 10000 ?
+					(max_size / 100) * grow_pct :
+					(max_size * grow_pct) / 100;
+			/*
+			 * On 32-bit systems, over 2GB allocations the
+			 * heuristic increment will be in 16MB steps
+			 */
+			if (s_size_t_overflow(max_size, inc))
+				inc = 16 * 1024 * 1024;
+			if (!s_size_t_overflow(max_size, inc))
+				max_size += inc;
 #endif
-		} else {
-			if (max_size == 0) /* BEHAVIOR: minimum alloc size: 1 */
-				max_size = 1;
 		}
+		if (max_size == 0) /* BEHAVIOR: minimum alloc size: 1 */
+			max_size = 1;
 		if ((*d)->ext_buffer) {
 			S_ERROR("out of memore on fixed-size "
 				 "allocated space");
