@@ -74,18 +74,43 @@ extern "C" {
  * Artificial memory allocation limits (tests/debug)
  */
 
-#ifdef SD_MAX_MALLOC_SIZE
+#if defined(SD_MAX_MALLOC_SIZE) && !defined(SD_DEBUG_ALLOC)
 static void *__sd_malloc(size_t size)
 {
 	return size <= SD_MAX_MALLOC_SIZE ? malloc(size) : NULL;
 }
 static void *__sd_calloc(size_t nmemb, size_t size)
 {
-	return size <= SD_MAX_MALLOC_SIZE ? calloc(1, size) : NULL;
+	return size <= SD_MAX_MALLOC_SIZE ? calloc(nmemb, size) : NULL;
 }
 static void *__sd_realloc(void *ptr, size_t size)
 {
 	return size <= SD_MAX_MALLOC_SIZE ? realloc(ptr, size) : NULL;
+}
+#elif defined(SD_DEBUG_ALLOC)
+#ifndef SD_MAX_MALLOC_SIZE
+#define SD_MAX_MALLOC_SIZE ((size_t)-1)
+#endif
+static void *__sd_alloc_check(void *p, size_t size, char *from_label)
+{
+	fprintf(stderr, "[libsrt %s @%s] alloc size: " FMT_ZU "\n",
+		(p ? "OK" : "ERROR"), from_label, size);
+	return p;
+}
+static void *__sd_malloc(size_t size)
+{
+	void *p = size <= SD_MAX_MALLOC_SIZE ? malloc(size) : NULL;
+	return __sd_alloc_check(p, size, "malloc");
+}
+static void *__sd_calloc(size_t nmemb, size_t size)
+{
+	void *p = size <= SD_MAX_MALLOC_SIZE ? calloc(nmemb, size) : NULL;
+	return __sd_alloc_check(p, nmemb * size, "calloc");
+}
+static void *__sd_realloc(void *ptr, size_t size)
+{
+	void *p = size <= SD_MAX_MALLOC_SIZE ? realloc(ptr, size) : NULL;
+	return __sd_alloc_check(p, size, "realloc");
 }
 #else
 #define __sd_malloc malloc
