@@ -8,14 +8,7 @@
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  */
  
-#include "scommon.h"
-#include "sstring.h"
-#include "schar.h"
-#include "svector.h"
-#include "stree.h"
-#include "smap.h"
-#include "sdmap.h"
-#include "sdbg.h"
+#include "../src/libsrt.h"
 
 /*
  * Unit testing helpers
