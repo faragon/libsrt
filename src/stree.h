@@ -130,13 +130,13 @@ size_t st_reserve(st_t **c, const size_t max_elems)
 st_t *st_shrink(st_t **c)
 
 #API: |Get tree size|tree|number of tree nodes|O(1)|
-size_t st_get_size(const st_t *c)
+size_t st_size(const st_t *c)
 
 #API: |Set tree size (for integer-only trees) |tree;set tree number of elements||O(1)|
 void st_set_size(st_t *c, const size_t s)
 
-#API: |Equivalent to st_get_size|tree|number of tree nodes|O(1)|
-size_t st_get_len(const st_t *c)
+#API: |Equivalent to st_size|tree|number of tree nodes|O(1)|
+size_t st_len(const st_t *c)
 */
 
 #define st_free(...) st_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)

@@ -104,13 +104,13 @@ size_t ss_reserve(ss_t **c, const size_t max_elems)
 ss_t *ss_shrink(ss_t **c)
 
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|
-size_t ss_get_size(const ss_t *c)
+size_t ss_size(const ss_t *c)
 
 #API: |Set string size (bytes used in UTF8 format)|string;new size||O(1)|
 void ss_set_size(ss_t *c, const size_t s)
 
-#API: |Equivalent to ss_get_size|string|Number of bytes (UTF-8 string length)|O(1)|
-size_t ss_get_len(const ss_t *c)
+#API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|
+size_t ss_len(const ss_t *c)
 */
 
 /*

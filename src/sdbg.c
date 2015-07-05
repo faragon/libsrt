@@ -71,7 +71,7 @@ void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f)
 	if (levels == 0)
 		ss_cat_c(log, "empty tree");
 	else
-		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_get_size(t));
+		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_size(t));
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
@@ -139,7 +139,7 @@ void sm_log_obj(ss_t **log, const sm_t *m)
 	if (levels == 0)
 		ss_cat_c(log, "empty map");
 	else
-		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_get_size(m));
+		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_size(m));
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
