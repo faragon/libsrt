@@ -3,12 +3,8 @@
 
 Short-term
 ---
-* there is a bug in memory allocation of sv\_\* (found in a system with 512MB memory -without swap- when running the "counter" example with "4 0" input parameters)
-* copy behavior: cut on size limit (stack storage and size_t limits)
 * size/len incoherences (e.g. get_len / get_size)
-* add overflow checks, using "s_size_t_overflow"
 * Add st_shl and st_shr for shifting elements on a vector (without real data shift).
-* Write some simple examples
 * Add built-in funcs: int __builtin_popcount/__popcnt, __builtin_parity / _popcnt(a) & 1;
 * Add a (k=*, void) new types to smap (e.g for cases of existance check)
 * Move to sdata accessors like get_buffer, etc.
