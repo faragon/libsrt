@@ -100,15 +100,44 @@ typedef int (*st_traverse)(const struct STraverseParams *p);
  * Functions
  */
 
+/*
+#API: |Allocate tree (stack)|tree configuration;space preallocated to store n elements|allocated tree|O(1)|
+sv_t *st_alloca(const struct STConf *f, const size_t initial_reserve)
+*/
 #define st_alloca(f, num_elems)				 		  \
 	st_alloc_raw(f, S_TRUE,						  \
 		     alloca(ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size)), \
 		     ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size))
 st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
 		   void *buffer, const size_t buffer_size);
+
+/* #API: |Allocate tree (heap)|tree configuration;space preallocated to store n elements|allocated tree|O(1)| */
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve);
 
 SD_BUILDPROTS(st)
+
+/*
+#API: |Free one or more trees (heap)|tree;more trees (optional)||O(1)|
+void st_free(st_t **c, ...)
+
+#API: |Ensure space for extra elements|tree;number of extra eelements|extra size allocated|O(1)|
+size_t st_grow(st_t **c, const size_t extra_elems)
+
+#API: |Ensure space for elements|tree;absolute element reserve|reserved elements|O(1)|
+size_t st_reserve(st_t **c, const size_t max_elems)
+
+#API: |Free unused space|tree|same tree (optional usage)|O(1)|
+st_t *st_shrink(st_t **c)
+
+#API: |Get tree size|tree|number of tree nodes|O(1)|
+size_t st_get_size(const st_t *c)
+
+#API: |Set tree size (for integer-only trees) |tree;set tree number of elements||O(1)|
+void st_set_size(st_t *c, const size_t s)
+
+#API: |Equivalent to st_get_size|tree|number of tree nodes|O(1)|
+size_t st_get_len(const st_t *c)
+*/
 
 #define st_free(...) st_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
 
@@ -116,15 +145,34 @@ SD_BUILDPROTS(st)
  * Operations
  */
 
+/* #API: |Duplicate tree|tree|output tree|O(n)| */
 st_t *st_dup(const st_t *t);
+
+/* #API: |Insert element into tree|tree; element to insert|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)| */
 sbool_t st_insert(st_t **t, const stn_t *n);
+
+/* #API: |Delete tree element|tree; element to delete; node delete handling callback (optional if e.g. nodes use no extra dynamic memory references)|S_TRUE: found and deleted; S_FALSE: not found|O(log n)| */
 sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback);
+
+/* #API: |Locate node|tree; node|Reference to the located node; NULL if not found|O(log n)| */
 const stn_t *st_locate(const st_t *t, const stn_t *n);
+
+/* #API: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)| */
 const stn_t *st_enum(const st_t *t, const stndx_t index);
+
+/* #API: |Full tree traversal: pre-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
 ssize_t st_traverse_preorder(const st_t *t, st_traverse f, void *context);
+
+/* #API: |Full tree traversal: in-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
 ssize_t st_traverse_inorder(const st_t *t, st_traverse f, void *context);
+
+/* #API: |Full tree traversal: post-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
 ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context);
+
+/* #API: |Bread-first tree traversal|tree; traverse callback; callback contest|Number of levels stepped down|O(n); Aux space: n/2 * sizeof(stndx_t)| */
 ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context);
+
+/* #API: |Tree check (debug purposes)|tree|S_TREE: OK, S_FALSE: breaks RB tree rules|O(n)| */
 sbool_t st_assert(const st_t *t);
 
 #ifdef __cplusplus

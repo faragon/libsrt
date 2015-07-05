@@ -57,8 +57,6 @@ static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
  * Allocation
  */
 
-/* #API: |Allocate distributed map (heap)|map type; number of submaps; initial reserve|map|O(1)| */
-
 sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t initial_reserve)
 {
 	ASSERT_RETURN_IF(nsubmaps < 1, NULL);
@@ -88,11 +86,6 @@ sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t init
 	return dm;
 }
 
-/*
-#API: |Free one or more distributed maps|map; more distributed maps (optional)||O(1) for simple dmaps, O(n) for dmaps having nodes with strings|
-void sdm_free(sdm_t **dm, ...)
-*/
-
 static void sdm_free_aux1(sdm_t **dm)
 {
 	if (dm && *dm) {
@@ -116,14 +109,10 @@ void sdm_free_aux(const size_t nargs, sdm_t **dm, ...)
 	va_end(ap);
 }
 
-/* #API: |Make the dynamic map use the minimum possible memory|map||O(1) for allocators using memory remap; O(n) for naive allocators| */
-
 void sdm_shrink(sdm_t **dm)
 {
         SDM_FUN_PPDMAP(dm, sm_shrink);
 }
-
-/* #API: |Duplicate distributed map|input map|output map|O(n)| */
 
 sdm_t *sdm_dup(const sdm_t *src)
 {
@@ -156,8 +145,6 @@ sdm_t *sdm_dup(const sdm_t *src)
 	return dm;
 }
 
-/* #API: |Reset/clean distributed map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings| */
-
 sbool_t sdm_reset(sdm_t *dm)
 {
 	sbool_t res_ok = S_TRUE;
@@ -169,8 +156,6 @@ sbool_t sdm_reset(sdm_t *dm)
  * Routing
  */
 
-/* #API: |Set routing functions|map; routing function for integer keys (if NULL, a "fair" hash will be used); routing function for string keys (if NULL, also a "fair" hash will be used)||O(1)| */
-
 void sdm_set_routing(sdm_t *dm, sdm_i_hash_t irf, sdm_s_hash_t srf)
 {
 	if (dm) {
@@ -179,15 +164,11 @@ void sdm_set_routing(sdm_t *dm, sdm_i_hash_t irf, sdm_s_hash_t srf)
 	}
 }
 
-/* #API: |Get route to subtree (integer key)|dmap; key|subtree id|O(1)| */
-
 size_t sdm_i_route(const sdm_t *dm, const sint_t k)
 {
 	S_ASSERT(dm);
 	return dm ? dm->ih(dm, k) : 0;
 }
-
-/* #API: |Get route to subtree (string key)|dmap; key|subtree id|O(1)| */
 
 size_t sdm_s_route(const sdm_t *dm, const ss_t *k)
 {
@@ -199,22 +180,16 @@ size_t sdm_s_route(const sdm_t *dm, const ss_t *k)
  * Accessors
  */
 
-/* #API: |Get number of submaps|dmap|Number of submaps|O(1)| */
-
 size_t sdm_size(const sdm_t *dm)
 {
 	S_ASSERT(dm);
 	return dm ? dm->nmaps : 0;
 }
 
-/* #API: |Get submap pointer vector|dmap|map vector|O(1)| */
-
 sm_t **sdm_submaps(sdm_t *dm)
 {
 	return (sm_t **)sdm_submaps_r(dm);
 }
-
-/* #API: |Get submap pointer vector (read-only)|dmap|map vector|O(1)| */
 
 const sm_t **sdm_submaps_r(const sdm_t *dm)
 {

@@ -38,7 +38,7 @@ extern "C" {
 	size_t pfix##_grow(pfix##_t **c, const size_t extra_elems);	\
 	size_t pfix##_reserve(pfix##_t **c, const size_t max_elems);	\
 	pfix##_t *pfix##_shrink(pfix##_t **c);				\
-	size_t pfix##_get_size(const pfix##_t *c);			\
+	size_t pfix##_size(const pfix##_t *c);				\
 	void pfix##_set_size(pfix##_t *c, const size_t ss);		\
 	size_t pfix##_len(const pfix##_t *c);
 
@@ -60,7 +60,7 @@ extern "C" {
 	pfix##_t *pfix##_shrink(pfix##_t **c) {				   \
 		return (pfix##_t *)sd_shrink((sd_t **)c, &pfix##f);	   \
 	}								   \
-	size_t pfix##_get_size(const pfix##_t *c) {			   \
+	size_t pfix##_size(const pfix##_t *c) {				   \
 		return sd_get_size((sd_t *)c);				   \
 	}								   \
 	void pfix##_set_size(pfix##_t *c, const size_t s) {		   \

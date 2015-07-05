@@ -304,14 +304,6 @@ st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
 	return t;
 }
 
-/*
-#API: |Allocate tree (stack)|tree configuration;space preallocated to store n elements|allocated tree|O(1)|
-sv_t *st_alloca(const struct STConf *f, const size_t initial_reserve)
-*/
-
-
-/* #API: |Allocate tree (heap)|tree configuration;space preallocated to store n elements|allocated tree|O(1)| */
-
 st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
 {
 	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
@@ -323,9 +315,6 @@ SD_BUILDFUNCS(st)
 /*
  * Operations
  */
-
-
-/* #API: |Duplicate tree|tree|output tree|O(n)| */
 
 st_t *st_dup(const st_t *t)
 {
@@ -341,8 +330,6 @@ st_t *st_dup(const st_t *t)
 	sd_set_alloc_size((sd_t *)t2, t2_alloc_size);
 	return t2;
 }
-
-/* #API: |Insert element into tree|tree; element to insert|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)| */
 
 sbool_t st_insert(st_t **tt, const stn_t *n)
 {
@@ -445,8 +432,6 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 	}
 	return S_TRUE;
 }
-
-/* #API: |Delete tree element|tree; element to delete; node delete handling callback (optional if e.g. nodes use no extra dynamic memory references)|S_TRUE: found and deleted; S_FALSE: not found|O(log n)| */
 
 sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 {
@@ -610,8 +595,6 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	return found.n ? S_TRUE : S_FALSE;
 }
 
-/* #API: |Locate node|tree; node|Reference to the located node; NULL if not found|O(log n)| */
-
 const stn_t *st_locate(const st_t *t, const stn_t *n)
 {
 	const stn_t *cn = get_node_r(t, t->root);
@@ -622,8 +605,6 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 			break;
 	return cn;
 }
-
-/* #API: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)| */
 
 const stn_t *st_enum(const st_t *t, const stndx_t index)
 {
@@ -767,28 +748,20 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	return tp.max_level + 1;
 }
 
-/* #API: |Full tree traversal: pre-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
-
 ssize_t st_traverse_preorder(const st_t *t, st_traverse f, void *context)
 {
 	return st_tr_aux(t, f, context, TR_Preorder);
 }
-
-/* #API: |Full tree traversal: in-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
 
 ssize_t st_traverse_inorder(const st_t *t, st_traverse f, void *context)
 {
 	return st_tr_aux(t, f, context, TR_Inorder);
 }
 
-/* #API: |Full tree traversal: post-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
-
 ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context)
 {
 	return st_tr_aux(t, f, context, TR_Postorder);
 }
-
-/* #API: |Bread-first tree traversal|tree; traverse callback; callback contest|Number of levels stepped down|O(n); Aux space: n/2 * sizeof(stndx_t)| */
 
 ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 {
@@ -806,7 +779,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 			f(&tp);
 		}
 		size_t i = 0;
-		size_t le = sv_get_size(curr);
+		size_t le = sv_size(curr);
 		for (i = 0; i < le; i++) {
 			stndx_t n = (stndx_t)sv_u_at(curr, i);
 			const stn_t *node = get_node_r(t, n);
@@ -820,7 +793,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 			if (node->r != ST_NIL)
 				sv_push_u(&next, node->r);
 		}
-		size_t ne = sv_get_size(next);
+		size_t ne = sv_size(next);
 		if (ne == 0)	/* next level is empty */
 			break;
 		sv_t *tmp = curr;
@@ -831,8 +804,6 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 	sv_free(&curr, &next);
 	return tp.max_level + 1;
 }
-
-/* #API: |Tree check (debug purposes)|tree|S_TREE: OK, S_FALSE: breaks RB tree rules|O(n)| */
 
 sbool_t st_assert(const st_t *t)
 {
