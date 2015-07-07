@@ -63,7 +63,11 @@ extern "C" {
 #endif
 
 #ifdef S_C99_SUPPORT
-	#define S_INLINE inline static
+	#ifdef _MSC_VER
+		#define S_INLINE __inline static
+	#else
+		#define S_INLINE inline static
+	#endif
 #elif defined(S_MODERN_COMPILER)
 	#define S_INLINE __inline__ static
 #else
