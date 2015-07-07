@@ -123,7 +123,7 @@ sdm_t *sdm_dup(const sdm_t *src)
 	ASSERT_RETURN_IF(!maps, NULL);
 	ASSERT_RETURN_IF(!maps[0], NULL);
 	enum eSM_Type t = (enum eSM_Type)maps[0]->f.type;
-	ASSERT_RETURN_IF(t < SM_FIRST || t >SM_LAST, NULL);
+	ASSERT_RETURN_IF(t > SM_LAST, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
 	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);
 	ASSERT_RETURN_IF(!dm, NULL);

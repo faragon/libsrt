@@ -173,7 +173,7 @@ struct sd_conf
 #define EMPTY_SData_IF0 { 0, 1, 0, 0, 1, 0, 0, 0 }
 #define EMPTY_SData_IF1 { 1, 1, 0, 0, 1, 0, 0, 0 }
 #define EMPTY_SData_Small(alloc_size) { EMPTY_SData_IF0, 0, alloc_size }
-#define EMPTY_SData_Full(alloc_size) { EMPTY_SData_IF1, 0, 0, alloc_size }
+#define EMPTY_SData_Full(alloc_size) { EMPTY_SData_IF1, { 0, 0, 0 }, 0, alloc_size }
 
 /*
  * Functions

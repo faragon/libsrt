@@ -229,6 +229,7 @@ size_t ss_find_bmh(const char *s0, const size_t off, const size_t ss0,
 size_t ss_find_libc(const char *s, const size_t off, const size_t ss,
 						const char *t, const size_t ts)
 {
+	RETURN_IF(!ss || !ts, S_NPOS);
 	const char *l = strstr(s + off, t);
 	return l ? (size_t)(l - s) : S_NPOS;
 }

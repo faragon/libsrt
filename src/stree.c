@@ -163,18 +163,6 @@ static void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
 	tgt->is_red = ir;
 }
 
-static stndx_t get_l(const st_t *t, stndx_t node_id)
-{
-	RETURN_IF(node_id == ST_NIL, ST_NIL);
-	return get_node_r(t, node_id)->l;
-}
-
-static stndx_t get_r(const st_t *t, stndx_t node_id)
-{
-	RETURN_IF(node_id == ST_NIL, ST_NIL);
-	return get_node_r(t, node_id)->r;
-}
-
 static sbool_t is_red(const st_t *t, stndx_t node_id)
 {
 	RETURN_IF(node_id == ST_NIL, S_FALSE);
@@ -185,12 +173,6 @@ static void set_red(st_t *t, const stndx_t node_id, const sbool_t red)
 {
 	if (node_id != ST_NIL)
 		get_node(t, node_id)->is_red = red;
-}
-
-static void flip_red(st_t *t, stndx_t node_id)
-{
-	if (node_id != ST_NIL)
-		get_node(t, node_id)->is_red ^= 1;
 }
 
 /* counter-direction */

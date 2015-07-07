@@ -84,7 +84,7 @@ typedef int (*st_traverse)(const struct STraverseParams *p);
 * Constants
 */
 
-#define EMPTY_STC { 0, 0, 0 }
+#define EMPTY_STC { 0, 0, 0, 0, 0, 0, 0 }
 #define EMPTY_ST { EMPTY_SData_Full(sizeof(st_t)), 0, EMPTY_STC }
 #define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
 

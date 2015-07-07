@@ -22,8 +22,7 @@ extern "C" {
 
 enum eSM_Type
 {
-        SM_FIRST,
-	SM_I32I32 = SM_FIRST,
+	SM_I32I32,
 	SM_U32U32,
         SM_IntInt,
         SM_IntStr,

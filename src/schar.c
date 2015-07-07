@@ -633,7 +633,7 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 		for (; off < szm4; off += 4) {
 			suint32_t *c32 = (suint32_t *)(s + off);
 			const suint32_t a = *c32;
-			if ((a & *(suint32_t *)m1) == 0) {
+			if ((a & S_LD_U32(m1)) == 0) {
 				suint32_t b = (msk1 & a) + msk4;
 				b = (msk1 & b) + msk2;
 				b = ((b & ~a) >> 2) & msk3;
