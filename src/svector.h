@@ -37,8 +37,8 @@ enum eSV_Type
 	SV_U32,
 	SV_I64,
 	SV_U64,
-	SV_GEN,
-	SV_LAST = SV_GEN
+	SV_LAST_INT = SV_U64,
+	SV_GEN
 };
 
 struct SVector
@@ -51,7 +51,7 @@ struct SVector
 
 typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
 
-#define EMPTY_SV { EMPTY_SData_Full(sizeof(struct SVector)), SV_U8, 0 }
+#define EMPTY_SV { EMPTY_SData_Full(sizeof(struct SVector)), SV_U8, 0, 0, 0 }
 
 /*
  * Variable argument functions
@@ -270,17 +270,17 @@ suint_t sv_pop_u(sv_t *v);
  * Functions intended for helping compiler optimization
  */
 
-static size_t __sv_get_max_size(const sv_t *v)
+S_INLINE size_t __sv_get_max_size(const sv_t *v)
 {
 	return (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
 }
 
-static const void *__sv_get_buffer_r(const sv_t *v)
+S_INLINE const void *__sv_get_buffer_r(const sv_t *v)
 {
 	return (const void *)(((const char *)v) + SDV_HEADER_SIZE);
 }
 
-static void *__sv_get_buffer(sv_t *v)
+S_INLINE void *__sv_get_buffer(sv_t *v)
 {
 	return (void *)(((char *)v) + SDV_HEADER_SIZE);
 }

@@ -70,14 +70,14 @@ sb_t *sb_dup(const sb_t *src)
 
 /* #API: |Get position of last bit set to 1 plus 1|bitset|Offset of last bit set to 1, plus 1|O(1)| */
 
-static size_t sb_maxbitset(const sb_t *b)
+S_INLINE size_t sb_maxbitset(const sb_t *b)
 {
 	return b ? b->aux : 0;
 }
 
 /* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)| */
 
-static size_t sb_popcount(const sb_t *b)
+S_INLINE size_t sb_popcount(const sb_t *b)
 {
 	return b ? b->aux2 : 0;
 }
@@ -88,7 +88,7 @@ static size_t sb_popcount(const sb_t *b)
 
 /* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)| */
 
-static int sb_test(const sb_t *b, const size_t nth)
+S_INLINE int sb_test(const sb_t *b, const size_t nth)
 {
 	S_ASSERT(b);
 	RETURN_IF(!b, 0);
@@ -100,7 +100,7 @@ static int sb_test(const sb_t *b, const size_t nth)
 
 /* #API: |Set nth bit to 1|bitset; bit offset||O(1) with the exception of O(n) for first case of not covering unitializated areas -for real-time requirement, force set + clear at last expected writabple position-| */
 
-static void sb_set(sb_t **b, const size_t nth)
+S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
 	S_ASSERT(b);
 	if (b) {
@@ -134,7 +134,7 @@ static void sb_set(sb_t **b, const size_t nth)
 
 /* #API: |Set nth bit to 0|bitset; bit offset||O(1)| */
 
-static void sb_clear(sb_t **b, const size_t nth)
+S_INLINE void sb_clear(sb_t **b, const size_t nth)
 {
 	S_ASSERT(!b);
 	if (b && *b) {
@@ -154,7 +154,7 @@ static void sb_clear(sb_t **b, const size_t nth)
 
 /* #API: |Force evaluation of first N bits (equivalent to set to 0 all not previously referenced bits)|bitset; bit offset||O(n)| */
 
-static void sb_eval(sb_t **b, const size_t nth)
+S_INLINE void sb_eval(sb_t **b, const size_t nth)
 {
 	if (b) {
 		int prev = sb_test(*b, nth);

@@ -27,15 +27,14 @@ static sv_t *sv_check(sv_t **v);
  * Constants
  */
 
-static size_t svt_sizes[SV_LAST+1] = {	sizeof(char),
-					sizeof(unsigned char),
-					sizeof(short),
-					sizeof(unsigned short),
-					sizeof(int),
-					sizeof(unsigned int),
-					sizeof(sint_t),
-					sizeof(suint_t),
-					0
+static size_t svt_sizes[SV_LAST_INT + 1] = {	sizeof(char),
+						sizeof(unsigned char),
+						sizeof(short),
+						sizeof(unsigned short),
+						sizeof(int),
+						sizeof(unsigned int),
+						sizeof(sint_t),
+						sizeof(suint_t)
 					};
 static struct SVector sv_void0 = EMPTY_SV;
 static sv_t *sv_void = (sv_t *)&sv_void0;
@@ -74,17 +73,12 @@ SV_STx(svstu32, suint32_t, const suint_t)
 SV_STx(svsti64, sint_t, const sint_t)
 SV_STx(svstu64, suint_t, const suint_t)
 
-static void svstvoid(void *st, const sint_t *c)
-{ /* do nothing */
-}
-
 typedef void (*T_SVSTX)(void *, const sint_t *);
 
-static T_SVSTX svstx_f[SV_LAST + 1] = {	svsti8, (T_SVSTX)svstu8,
-					svsti16, (T_SVSTX)svstu16,
-					svsti32, (T_SVSTX)svstu32,
-					svsti64, (T_SVSTX)svstu64,
-					svstvoid
+static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
+						svsti16, (T_SVSTX)svstu16,
+						svsti32, (T_SVSTX)svstu32,
+						svsti64, (T_SVSTX)svstu64
 					};
 
 /*
@@ -107,19 +101,12 @@ SV_LDx(svldu32, suint32_t, suint_t)
 SV_LDx(svldi64, sint_t, sint_t)
 SV_LDx(svldu64, suint_t, suint_t)
 
-sint_t *svldvoid(const void *ld, sint_t *out, const size_t index)
-{ /* dummy function */
-	*out = SV_DEFAULT_SIGNED_VAL;
-	return out;
-}
-
 typedef sint_t *(*T_SVLDX)(const void *, sint_t *, const size_t);
 
-static T_SVLDX svldx_f[SV_LAST + 1] = {	svldi8, (T_SVLDX)svldu8,
-					svldi16, (T_SVLDX)svldu16,
-					svldi32, (T_SVLDX)svldu32,
-					svldi64, (T_SVLDX)svldu64,
-					svldvoid
+static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
+						svldi16, (T_SVLDX)svldu16,
+						svldi32, (T_SVLDX)svldu32,
+						svldi64, (T_SVLDX)svldu64
 					};
 
 /*
@@ -135,11 +122,6 @@ static void set_size(sv_t *v, const size_t size)
 {
 	if (v)
 		((struct SData_Full *)v)->size = size; /* faster than sd_set_size */
-}
-
-static size_t get_alloc_size(const sv_t *v)
-{
-	return !v ? 0 : SDV_HEADER_SIZE + v->elem_size * get_size(v);
 }
 
 static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
@@ -378,7 +360,7 @@ size_t sv_get_buffer_size(const sv_t *v)
 
 size_t sv_elem_size(const enum eSV_Type t)
 {
-	return t >= SV_I8 && t <= SV_GEN ? svt_sizes[t] : 0;
+	return t > SV_LAST_INT ? 0 : svt_sizes[t];
 }
 
 /*
@@ -553,8 +535,12 @@ const void *sv_at(const sv_t *v, const size_t index)
 	return (const void *)ptr_to_elem_r(v, index);
 }
 
+#define SV_AT_INT_CHECK(v)	\
+	RETURN_IF(v->sv_type > SV_LAST_INT, SV_DEFAULT_SIGNED_VAL)
+
 #define SV_IU_AT(T, def_val)					\
-	ASSERT_RETURN_IF(!v, def_val);				\
+	RETURN_IF(!v, def_val);					\
+	SV_AT_INT_CHECK(v);					\
 	const size_t size = get_size(v);			\
 	RETURN_IF(index >= size, def_val);			\
 	const void *p = __sv_get_buffer_r(v);			\
@@ -577,27 +563,31 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
  * Vector "push": add element in the last position
  */
 
-#define SV_PUSH_START(n)					\
-	ASSERT_RETURN_IF(!v || !sv_grow(v, n) || !*v, S_FALSE); \
-	const size_t sz = get_size(*v);				\
-	const size_t elem_size = (*v)->elem_size;		\
+#define SV_PUSH_GROW(v, n)	\
+	RETURN_IF(!v || !sv_grow(v, n) || !*v, S_FALSE);
+#define SV_INT_CHECK(v)	\
+	RETURN_IF((*v)->sv_type > SV_LAST_INT, S_FALSE);
+#define SV_PUSH_START(v)		\
+	const size_t sz = get_size(*v);	\
 	char *p = ptr_to_elem(*v, sz);
 
-#define SV_PUSH_END(n)	\
+#define SV_PUSH_END(v, n)	\
 	set_size(*v, sz + n);
 
 sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 {
-	ASSERT_RETURN_IF(!src || !n, S_FALSE);
-	SV_PUSH_START(n);
-	SV_PUSH_END(n);
+	RETURN_IF(!src || !n, S_FALSE);
+	SV_PUSH_GROW(v, n);
+	SV_PUSH_START(v);
+	SV_PUSH_END(v, n);
+	const size_t elem_size = (*v)->elem_size;
 	memcpy(p, src, elem_size * n);
 	return S_TRUE;
 }
 
 size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 {
-	ASSERT_RETURN_IF(!v || !*v || !nargs, S_FALSE);
+	RETURN_IF(!v || !*v || !nargs, S_FALSE);
 	size_t op_cnt = 0;
 	va_list ap;
 	if (sv_grow(v, nargs) == 0)
@@ -617,16 +607,20 @@ size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 
 sbool_t sv_push_i(sv_t **v, const sint_t c)
 {
-	SV_PUSH_START(1);
-	SV_PUSH_END(1);
+	SV_PUSH_GROW(v, 1);
+	SV_INT_CHECK(v);
+	SV_PUSH_START(v);
+	SV_PUSH_END(v, 1);
 	svstx_f[(*v)->sv_type](p, &c);
 	return S_TRUE;
 }
 
 sbool_t sv_push_u(sv_t **v, const suint_t c)
 {
-	SV_PUSH_START(1);
-	SV_PUSH_END(1);
+	SV_PUSH_GROW(v, 1);
+	SV_INT_CHECK(v);
+	SV_PUSH_START(v);
+	SV_PUSH_END(v, 1);
 	svstx_f[(*v)->sv_type](p, (sint_t *)&c);
 	return S_TRUE;
 }
@@ -643,13 +637,13 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	ASSERT_RETURN_IF(!v, def_val);		\
 	const size_t sz = get_size(v);		\
 	ASSERT_RETURN_IF(!sz, def_val);		\
-	const size_t elem_size = v->elem_size;	\
 	char *p = ptr_to_elem(v, sz - 1);
 
 #define SV_POP_END			\
 	set_size(v, sz - 1);
 
 #define SV_POP_IU(T)					\
+	SV_AT_INT_CHECK(v);				\
 	sint_t tmp;					\
 	return *(T *)(svldx_f[v->sv_type](p, &tmp, 0));
 

@@ -15,12 +15,12 @@ extern "C" {
 
 #include "scommon.h"
 
-static void sbitio_write_init(size_t *acc)
+S_INLINE void sbitio_write_init(size_t *acc)
 {
 	*acc = 0;
 }
 
-static void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits)
+S_INLINE void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits)
 {
 	if (*acc) {
 		size_t xbits = 8 - *acc;
@@ -39,19 +39,19 @@ static void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, siz
 		b[*i] = c;
 }
 
-static void sbitio_write_close(unsigned char *b, size_t *i, size_t *acc)
+S_INLINE void sbitio_write_close(unsigned char *b, size_t *i, size_t *acc)
 {
 	if (*acc)
 		b[++*i] = 0;
 	*acc = 0;
 }
 
-static void sbitio_read_init(size_t *acc, size_t *accbuf)
+S_INLINE void sbitio_read_init(size_t *acc, size_t *accbuf)
 {
 	*acc = *accbuf = 0;
 }
 
-static size_t sbitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t code_bits)
+S_INLINE size_t sbitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t code_bits)
 {
 	size_t code = 0;
 	if (*acc) {

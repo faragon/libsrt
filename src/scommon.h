@@ -53,11 +53,21 @@ extern "C" {
  * Context
  */
 
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || \
-	defined(__GNUC__) || defined (__TINYC__) || _MSC_VER >= 1800 || \
-	defined(__DMC__)
+#if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || _MSC_VER >= 1800
+	#define S_C99_SUPPORT
+#endif
+
+#if defined(S_C99_SUPPORT) || defined(__GNUC__) || defined (__TINYC__)
 	#define S_MODERN_COMPILER
 	#define S_USE_VA_ARGS
+#endif
+
+#ifdef S_C99_SUPPORT
+	#define S_INLINE inline static
+#elif defined(S_MODERN_COMPILER)
+	#define S_INLINE __inline__ static
+#else
+	#define S_INLINE static
 #endif
 
 #if __STDC_VERSION__ < 199901L && !defined(_MSC_VER)
@@ -367,23 +377,23 @@ typedef suint_t suint64_t;
  * Helper functions intended to be inlined
  */
 
-static void s_move_elems(void *t, const size_t t_off, const void *s, const size_t s_off, const size_t n, const size_t e_size)
+S_INLINE void s_move_elems(void *t, const size_t t_off, const void *s, const size_t s_off, const size_t n, const size_t e_size)
 {
         memmove((char *)t + t_off * e_size, (const char *)s + s_off * e_size, n * e_size);
 }
 
-static void s_copy_elems(void *t, const size_t t_off, const void *s, const size_t s_off, const size_t n, const size_t e_size)
+S_INLINE void s_copy_elems(void *t, const size_t t_off, const void *s, const size_t s_off, const size_t n, const size_t e_size)
 {
 	if (t && s && n)
 	        memcpy((char *)t + t_off * e_size, (const char *)s + s_off * e_size, n * e_size);
 }
 
-static size_t s_load_size_t(const void *aligned_base_address, const size_t offset)
+S_INLINE size_t s_load_size_t(const void *aligned_base_address, const size_t offset)
 {
 	return S_LD_SZT(((char *)aligned_base_address) + offset);
 }
 
-static sbool_t s_size_t_overflow(const size_t off, const size_t inc)
+S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
 {
 	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }
@@ -392,7 +402,7 @@ static sbool_t s_size_t_overflow(const size_t off, const size_t inc)
  * Integer log2(N) approximation
  */
 
-static unsigned slog2(suint_t i)
+S_INLINE unsigned slog2(suint_t i)
 {
 	unsigned o = 0, test;
 	#define SLOG2STEP(mask, bits)				\
@@ -417,7 +427,7 @@ static unsigned slog2(suint_t i)
  * Custom "memset" functions
  */
 
-static void s_memset32(unsigned char *o, unsigned data, size_t n)
+S_INLINE void s_memset32(unsigned char *o, unsigned data, size_t n)
 {
 	size_t k = 0, n4 = n / 4;
 	unsigned *o32;
@@ -445,7 +455,7 @@ static void s_memset32(unsigned char *o, unsigned data, size_t n)
 	}
 }
 
-static void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
+S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 {
 	size_t k = 0;
 	if (n >= 15) {
