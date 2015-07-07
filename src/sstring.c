@@ -75,7 +75,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 			}							\
 		}								\
 		va_end(ap);							\
-		if (cat && ss_grow(s, extra_size) ||				\
+		if ((cat && ss_grow(s, extra_size)) ||				\
 		    ss_reserve(s, extra_size) >= extra_size) {			\
 			if (!cat)						\
 				ss_clear(s);					\
@@ -446,14 +446,17 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 #endif
 		const size_t csize = ss_utf8_to_wc(ps, i, ss, &c, *s);
 		const int c2 = towX(c);
+		size_t csize2;
 		if (c2 == c) {
-			i += csize;
-			continue;
+			csize2 = csize;
+			if (!aliasing)
+				memcpy(po, ps + i, csize2);
+		} else {
+			csize2 = sc_wc_to_utf8(c2, u8, 0, SSU8_MAX_SIZE);
+			memcpy(po, u8, csize2);
 		}
-		const size_t csize2 = sc_wc_to_utf8(c2, u8, 0, SSU8_MAX_SIZE);
-		memcpy(po, u8, csize2);
-		po += csize2;
 		i += csize;
+		po += csize2;
 	}
 	if (out) {	/* Case of using a secondary string was required */
 		ss_t *s_bck = *s;
