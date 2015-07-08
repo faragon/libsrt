@@ -512,13 +512,13 @@ ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 	default: return 0;
 	}
 	if (v2x.kv) {
-		if (v2x.kv->sv_type != kt)
+		if (v2x.kv->sv_type != (char)kt)
 			sv_free(&v2x.kv);
 		else
 			sv_reserve(&v2x.kv, m->df.size);
 	}
 	if (v2x.vv) {
-		if (v2x.vv->sv_type != vt)
+		if (v2x.vv->sv_type != (char)vt)
 			sv_free(&v2x.vv);
 		else
 			sv_reserve(&v2x.vv, m->df.size);

@@ -545,7 +545,7 @@ const void *sv_at(const sv_t *v, const size_t index)
 	RETURN_IF(index >= size, def_val);			\
 	const void *p = __sv_get_buffer_r(v);			\
 	sint_t tmp;						\
-	return *(T *)(svldx_f[v->sv_type](p, &tmp, index));
+	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, index));
 
 sint_t sv_i_at(const sv_t *v, const size_t index)
 {
@@ -611,7 +611,7 @@ sbool_t sv_push_i(sv_t **v, const sint_t c)
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
 	SV_PUSH_END(v, 1);
-	svstx_f[(*v)->sv_type](p, &c);
+	svstx_f[(int)(*v)->sv_type](p, &c);
 	return S_TRUE;
 }
 
@@ -621,7 +621,7 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
 	SV_PUSH_END(v, 1);
-	svstx_f[(*v)->sv_type](p, (sint_t *)&c);
+	svstx_f[(int)(*v)->sv_type](p, (sint_t *)&c);
 	return S_TRUE;
 }
 
@@ -642,10 +642,10 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 #define SV_POP_END			\
 	set_size(v, sz - 1);
 
-#define SV_POP_IU(T)					\
-	SV_AT_INT_CHECK(v);				\
-	sint_t tmp;					\
-	return *(T *)(svldx_f[v->sv_type](p, &tmp, 0));
+#define SV_POP_IU(T)						\
+	SV_AT_INT_CHECK(v);					\
+	sint_t tmp;						\
+	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, 0));
 
 void *sv_pop(sv_t *v)
 {

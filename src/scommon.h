@@ -136,7 +136,6 @@ extern "C" {
 	#define S_NARGS_SDMR(...) (sizeof((const sdm_t * []){__VA_ARGS__})/sizeof(const sdm_t *))
 	#define S_NARGS_SDMPW(...) (sizeof((sdm_t ** []){__VA_ARGS__})/sizeof(sdm_t **))
 	#define S_NARGS_SDMPR(...) (sizeof((const sdm_t ** []){__VA_ARGS__})/sizeof(const sdm_t **))
-
 #endif
 
 /*
