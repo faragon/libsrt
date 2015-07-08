@@ -92,7 +92,8 @@ int bench_search(const int alg, const int param1, const int count)
 		break;
 	}
 	ss_t *a = ss_dup_c(ba), *b = ss_dup_c(bb);
-	size_t j = 0, ssa = ss_len(a), ssb = ss_len(b);
+	int j = 0;
+	size_t ssa = ss_len(a), ssb = ss_len(b);
 	switch ((ba && bb) ? alg : -1) {
 		case 0:	for (; j < count; ss_find(a, 0, b), j++);
 			break;
@@ -116,10 +117,15 @@ int bench_search(const int alg, const int param1, const int count)
 	return res;
 }
 
+static void tox_check(int c_in, int c_out)
+{
+	if (c_out < 0 && c_in >= 0)
+		fprintf(stderr, "conversion error: %i -> %i\n", c_in, c_out);
+}
+
 int bench_case(const int alg, const int param1, const int count)
 {
-	int res = 0;
-	size_t c = 0, x = 0, y = 0;
+	int res = 0, c = 0, x = 0, y = 0;
 	const char *in = param1 < 4 ? xc[param1] : "";
 	ss_t *sa = ss_dup_c(in);
 	switch (param1 < 4 ? alg : -1) {
@@ -146,22 +152,22 @@ int bench_case(const int alg, const int param1, const int count)
 	case 2:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				towlower(x);
+				tox_check(x, towlower(x));
 		break;
 	case 3:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				sc_tolower(x);
+				tox_check(x, sc_tolower(x));
 		break;
 	case 4:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				towupper(x);
+				tox_check(x, towupper(x));
 		break;
 	case 5:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				sc_toupper(x);
+				tox_check(x, sc_toupper(x));
 		break;
 	default:
 		res = 1;

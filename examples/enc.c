@@ -57,14 +57,13 @@ int main(int argc, const char **argv)
 	if (!mode)
 		return syntax_error(argv, 2);
 	unsigned l32;
-	size_t li = 0, lo = 0, lo2, i = 0, imax;
-	int f_in = 0, f_out = 1, l;
+	size_t li = 0, lo = 0, lo2;
 	size_t ibuf_size = 3 * 4 * 4096; /* 3 * 4: LCM */
 	size_t obuf_size = ibuf_size * 2; /* Max req: bin to hex */
 	size_t xbuf_size = S_MAX(ibuf_size, obuf_size);
 	size_t is; /* input elem size */
 	unsigned char buf[xbuf_size], bufo[xbuf_size];
-	int exit_code = 0;
+	int exit_code = 0, l;
 	switch (mode) {
 	case SENC_b64: is = 3; break;
 	case SDEC_b64: is = 4; break;
@@ -133,7 +132,7 @@ int main(int argc, const char **argv)
 					goto done;
 				}
 				l = read(0, buf, l32);
-				if (l != l32) {
+				if ((unsigned)l != l32) {
 					fprintf(stderr, "Read error\n");
 					exit_code = 4;
 					goto done;
