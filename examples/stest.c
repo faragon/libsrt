@@ -1347,8 +1347,8 @@ int test_sv_elem_size()
 	sv_t *v = alloc(type, 0);					\
 	push(&v, pushval);						\
 	sv_t *v##2 = sv_dup(v);						\
-	res |= !v ? 1<<(ntest*3) :					\
-		((check) && (check2)) ? 0 : 2<<(ntest*3);		\
+	res |= !v ? 1 << (ntest*3) :					\
+		((check) && (check2)) ? 0 : 2 << (ntest*3);		\
 	sv_free(&v, &v##2);
 
 int test_sv_dup()
@@ -1360,7 +1360,7 @@ int test_sv_dup()
 		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
 		    sizeof(struct AA), &aa1);
 	#define SVIAT(v) sv_i_at(v, 0) == val
-	#define SVUAT(v) sv_u_at(v, 0) == val
+	#define SVUAT(v) sv_u_at(v, 0) == (unsigned)val
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
 	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_DUP(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, val);
@@ -1446,7 +1446,7 @@ int test_sv_cat()
 		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
 		    sizeof(struct AA), &aa1);
 	#define SVIAT(v) sv_i_at(v, 3) == val
-	#define SVUAT(v) sv_u_at(v, 3) == val
+	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)val
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
 	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, val);
@@ -1554,7 +1554,6 @@ int test_sv_push_pop_i()
 				res |= 1 << (i * 4);
 				break;
 			}
-			sint_t v = -1;
 			if (!sv_push_i(&a, i) || !sv_push_i(&b, i)) {
 				res |= 2 << (i * 4);
 				break;
@@ -1587,9 +1586,9 @@ int test_sv_push_pop_u()
 		if (!(a && b && sv_push_u(&a, (suint_t)-1) &&
 		      sv_push_u(&b, init[i]) &&
 		      (r = sv_pop_u(a)) && r == sv_pop_i(b) &&
-		      r == expected[i] &&
+		      r == (sint_t)expected[i] &&
 		      sv_len(a) == 0 && sv_len(b) == 0))
-			res |= 1<<i;
+			res |= 1 << i;
 		sv_free(&a);
 	}
 	return res;
@@ -1612,6 +1611,7 @@ static int cmp1(const struct MyNode1 *a, const struct MyNode1 *b)
 	return a->k - b->k;
 }
 
+#ifdef S_EXTRA_TREE_TEST_DEBUG
 static void ndx2s(char *out, const size_t out_max, const stndx_t id)
 {
 	if (id == ST_NIL)
@@ -1631,10 +1631,12 @@ static ss_t *ss_cat_stn_MyNode1(ss_t **s, const stn_t *n, const stndx_t id)
 		     (unsigned)id, node->k, node->v, l, r, n->is_red );
 	return *s;
 }
+#endif
 
 int test_st_alloc()
 {
-	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };
+	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1,
+			    0, 0, 0, 0 };
 	st_t *t = st_alloc(&f, 1000);
 #ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
 	struct MyNode1 n;
@@ -1651,34 +1653,42 @@ int test_st_alloc()
 	return res;
 }
 
-#define ST_ENV_TEST_AUX							\
-	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };\
-	st_t *t = st_alloc(&f, 1000);					\
-	if (!t)								\
-		return 1;						\
-	ss_t *log = NULL;						\
-	/*struct MyNode1 n0 = { EMPTY_STN, 0, 0 };*/			\
-	struct MyNode1 n0;						\
-	memset(&n0, 0, sizeof(n0));					\
-	n0.n.l = n0.n.r = ST_NIL;					\
-	n0.n.is_red = S_FALSE;						\
-	stn_t *n = (stn_t *)&n0;					\
-	sbool_t r;
-#define ST_ENV_TEST_AUX_LEAVE						\
-	st_free(&t);							\
-	ss_free(&log);
-#define ST_A_INS(key, val) {						\
-			n0.k = key;					\
-			n0.v = val;					\
-			r = st_insert(&t, n);				\
-			/*st_log_obj(&log, t, ss_cat_stn_MyNode1);*/	\
+#define ST_ENV_TEST_AUX						\
+	struct STConf f = { 0, sizeof(struct MyNode1),		\
+			    (st_cmp_t)cmp1, 0, 0, 0, 0 };	\
+	st_t *t = st_alloc(&f, 1000);				\
+	if (!t)							\
+		return 1;					\
+	ss_t *log = NULL;					\
+	/*struct MyNode1 n0 = { EMPTY_STN, 0, 0 };*/		\
+	struct MyNode1 n0;					\
+	memset(&n0, 0, sizeof(n0));				\
+	n0.n.l = n0.n.r = ST_NIL;				\
+	n0.n.is_red = S_FALSE;					\
+	stn_t *n = (stn_t *)&n0;				\
+	sbool_t r = S_FALSE;
+#define ST_ENV_TEST_AUX_LEAVE	\
+	st_free(&t);		\
+	ss_free(&log);		\
+	if (!r)			\
+		res |= 0x40000000;
+/* #define S_EXTRA_TREE_TEST_DEBUG */
+#ifdef S_EXTRA_TREE_TEST_DEBUG
+	#define STLOGMYT(t) st_log_obj(&log, t, ss_cat_stn_MyNode1)
+#else
+	#define STLOGMYT(t)
+#endif
+#define ST_A_INS(key, val) {			\
+			n0.k = key;		\
+			n0.v = val;		\
+			r = st_insert(&t, n);	\
+			STLOGMYT(t);		\
 		}
-#define ST_A_DEL(key) {							\
-			n0.k = key;					\
-			r = st_delete(t, n, NULL);			\
-			/*st_log_obj(&log, t, ss_cat_stn_MyNode1);*/	\
+#define ST_A_DEL(key) {					\
+			n0.k = key;			\
+			r = st_delete(t, n, NULL);	\
+			STLOGMYT(t);			\
 		}
-
 #define ST_CHK_BRK(t, len, err)			\
 		if (st_len(t) != (len)) {	\
 			res = err;		\
@@ -1691,14 +1701,14 @@ int test_st_insert_del()
 	int res = 0;
 	const struct MyNode1 *nr;
 	int i = 0;
-	const int tree_elems = 90;
+	const size_t tree_elems = 90;
 	const int cbase = ' ';
 	for (;;) {
 		/* Case 1: add in order, delete in order */
-		for (i = 0; i < tree_elems; i++)
+		for (i = 0; i < (int)tree_elems; i++)
 			ST_A_INS(i, cbase + i);
 		ST_CHK_BRK(t, tree_elems, 1);
-		for (i = 0; i < (tree_elems - 1); i++)
+		for (i = 0; i < ((int)tree_elems - 1); i++)
 			ST_A_DEL(i);
 		ST_CHK_BRK(t, 1, 2);
 		n0.k = tree_elems - 1;
@@ -1713,7 +1723,7 @@ int test_st_insert_del()
 		for (i = tree_elems - 1; i >= 0; i--)
 			ST_A_INS(i, cbase + i);
 		ST_CHK_BRK(t, tree_elems, 4);
-		for (i = 0; i < (tree_elems - 1); i++)
+		for (i = 0; i < ((int)tree_elems - 1); i++)
 			ST_A_DEL(i);
 		ST_CHK_BRK(t, 1, 5);
 		n0.k = tree_elems - 1;
@@ -1725,7 +1735,7 @@ int test_st_insert_del()
 		ST_A_DEL(tree_elems - 1);
 		ST_CHK_BRK(t, 0, tree_elems);
 		/* Case 3: add in order, delete in reverse order */
-		for (i = 0; i < tree_elems; i++)
+		for (i = 0; i < (int)tree_elems; i++)
 			ST_A_INS(i, cbase + i);	/* ST_A_INS(2, 'c');  <- double rotation */
 		ST_CHK_BRK(t, tree_elems, 8);
 		for (i = (tree_elems - 1); i > 0; i--)
@@ -1805,7 +1815,6 @@ int test_st_traverse()
 #define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
 	int fn()							       \
 	{								       \
-		struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1 };\
 		sm_t *m = sm_alloc_X(SM_IntInt, 1000);			       \
 		int res = 0;						       \
 		for (;;) {						       \
@@ -2150,7 +2159,7 @@ int test_sbitio()
  * Test execution
  */
 
-int main(int argc, char **argv)
+int main()
 {
 	/* setlocale: required for this test, not for using ss_* calls */
 #ifdef S_POSIX_LOCALE_SUPPORT
@@ -2314,9 +2323,10 @@ int main(int argc, char **argv)
 	STEST_ASSERT(test_ss_cat_printf_va());
 	STEST_ASSERT(test_ss_cat_char());
 	STEST_ASSERT(test_ss_popchar());
+	STEST_ASSERT(test_ss_tolower("aBcDeFgHiJkLmNoPqRsTuVwXyZ", "abcdefghijklmnopqrstuvwxyz"));
+	STEST_ASSERT(test_ss_toupper("aBcDeFgHiJkLmNoPqRsTuVwXyZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
 #if !defined(S_MINIMAL_BUILD)
 	STEST_ASSERT(test_ss_tolower("\xc3\x91", "\xc3\xb1"));
-	STEST_ASSERT(test_ss_toupper("aBcDeFgHi", "ABCDEFGHI"));
 	STEST_ASSERT(test_ss_toupper("\xc3\xb1", "\xc3\x91"));
 	STEST_ASSERT(!ss_set_turkish_mode(1));
 	STEST_ASSERT(test_ss_tolower("I", "\xc4\xb1")); /* 0x49 -> 0x131 */
