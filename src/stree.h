@@ -24,7 +24,7 @@ extern "C" {
 #ifdef S_TREE_HUGE /* Up to 2^63 - 1 nodes */
 	#define ST_NODE_BITS 63
 	#define ST_NIL	((((suint_t)1)<<ST_NODE_BITS) - 1)
-	typedef unsigned long long stndx_t;
+	typedef suint_t stndx_t;
 #else /* Up to 2^31 - 1 nodes */
 	#if S_BPWORD >=4 
 		#define ST_NODE_BITS 31
@@ -33,7 +33,7 @@ extern "C" {
 		#define ST_NODE_BITS (S_BPWORD * 8 - 1)
 		#define ST_NIL	((((unsigned)1)<<ST_NODE_BITS) - 1)
 	#endif
-	typedef unsigned int stndx_t;
+	typedef suint32_t stndx_t;
 #endif
 
 typedef int (*st_cmp_t)(const void *tree_node, const void *new_node);
@@ -53,7 +53,7 @@ struct S_Node
 	struct {
 		stndx_t is_red : 1;
 		stndx_t l : ST_NODE_BITS;
-	};
+	} x;
 	stndx_t r;
 };
 

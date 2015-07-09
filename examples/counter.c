@@ -6,7 +6,7 @@
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  */
 
-#include <libsrt.h>
+#include "../src/libsrt.h"
 
 static int syntax_error(const char **argv, const int exit_code)
 {

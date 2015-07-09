@@ -1575,7 +1575,7 @@ int test_sv_push_pop_i()
 int test_sv_push_pop_u()
 {
 	suint_t init[] = { (suint_t)-1, (suint_t)-1, (suint_t)-1, (suint_t)-1 },
-		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffff };
+		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
 	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
 	size_t i = 0, ntests = sizeof(t)/sizeof(t[0]);
 	int res = 0;
@@ -1638,14 +1638,7 @@ int test_st_alloc()
 	struct STConf f = { 0, sizeof(struct MyNode1), (st_cmp_t)cmp1,
 			    0, 0, 0, 0 };
 	st_t *t = st_alloc(&f, 1000);
-#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
-	struct MyNode1 n;
-	memset(&n, 0, sizeof(n));
-	n.n.l = n.n.r = ST_NIL;
-	n.n.is_red = S_FALSE;
-#else
 	struct MyNode1 n = { EMPTY_STN, 0, 0 };
-#endif
 	int res = !t ? 1 : st_len(t) != 0 ? 2 :
 			   (!st_insert(&t, (const stn_t *)&n) ||
 			    st_len(t) != 1) ? 4 : 0;
@@ -1660,11 +1653,7 @@ int test_st_alloc()
 	if (!t)							\
 		return 1;					\
 	ss_t *log = NULL;					\
-	/*struct MyNode1 n0 = { EMPTY_STN, 0, 0 };*/		\
-	struct MyNode1 n0;					\
-	memset(&n0, 0, sizeof(n0));				\
-	n0.n.l = n0.n.r = ST_NIL;				\
-	n0.n.is_red = S_FALSE;					\
+	struct MyNode1 n0 = { EMPTY_STN, 0, 0 };		\
 	stn_t *n = (stn_t *)&n0;				\
 	sbool_t r = S_FALSE;
 #define ST_ENV_TEST_AUX_LEAVE	\
@@ -2167,9 +2156,15 @@ int main()
 #else
 	setlocale(LC_ALL, "");
 #endif
-	sbool_t unicode_support = towlower(0xc0) == 0xc0 ? S_FALSE : S_TRUE;
+	sbool_t unicode_support = S_TRUE;
+	int chkl, check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
+	for (chkl = 0; chkl < sizeof(check)/sizeof(check[0]); chkl++)
+		if (towlower(check[chkl]) == check[chkl]) {
+			unicode_support = S_FALSE;
+			break;
+		}
 	if (!unicode_support) {
-		fprintf(stderr, "warning: OS without built-in Unicode "
+		fprintf(stderr, "warning: OS without full built-in Unicode "
 			"support (not required by libsrt, but used for "
 			"some tests -those will be skipped-)\n");
 	}
@@ -2233,9 +2228,9 @@ int main()
 	STEST_ASSERT(test_ss_dup_int(-1, "-1"));
 	STEST_ASSERT(test_ss_dup_int(2147483647, "2147483647"));
 	STEST_ASSERT(test_ss_dup_int(-2147483647, "-2147483647"));
-	STEST_ASSERT(test_ss_dup_int(9223372036854775807,
+	STEST_ASSERT(test_ss_dup_int(9223372036854775807LL,
 	       		      "9223372036854775807"));
-	STEST_ASSERT(test_ss_dup_int(-9223372036854775807,
+	STEST_ASSERT(test_ss_dup_int(-9223372036854775807LL,
 	       		      "-9223372036854775807"));
 	STEST_ASSERT(test_ss_dup_tolower("HELLO", "hello"));
 	STEST_ASSERT(test_ss_dup_toupper("hello", "HELLO"));
@@ -2272,8 +2267,8 @@ int main()
 	STEST_ASSERT(test_ss_cpy_int(-1, "-1"));
 	STEST_ASSERT(test_ss_cpy_int(2147483647, "2147483647"));
 	STEST_ASSERT(test_ss_cpy_int(-2147483647, "-2147483647"));
-	STEST_ASSERT(test_ss_cpy_int(9223372036854775807, "9223372036854775807"));
-	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807, "-9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_int(9223372036854775807LL, "9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807LL, "-9223372036854775807"));
 	STEST_ASSERT(test_ss_cpy_tolower("HELLO", "hello"));
 	STEST_ASSERT(test_ss_cpy_toupper("hello", "HELLO"));
 	STEST_ASSERT(test_ss_cpy_tob64("01", "MDE="));

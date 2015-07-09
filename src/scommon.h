@@ -253,7 +253,8 @@ typedef suint_t suint64_t;
     defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
     defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
     defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
-    defined(__ARM_FEATURE_UNALIGNED)
+    defined(__ARM_FEATURE_UNALIGNED) ||					\
+    defined(__ppc__) || defined(__POWERPC__)
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
@@ -302,10 +303,10 @@ typedef suint_t suint64_t;
 			(((suint64_t)S_UALD_U32(a) << 32) | S_UALD_U32(a + 4))
 	#endif
 	#define S_LD_U32(a)		 			\
-		(((uintptr_t)(a) & S_UALIGNMASK) ?		\
+		(((uintptr_t)(a) & (uintptr_t)S_UALIGNMASK) ?		\
 			S_UALD_U32(a) : S_LD_X(a, unsigned))
 	#define S_LD_U64(a)		 			\
-		(((uintptr_t)(a) & S_UALIGNMASK) ?		\
+		(((uintptr_t)(a) & (uintptr_t)S_UALIGNMASK) ?		\
 			S_UALD_U64(a) : S_LD_X(a, suint_t))
 	#define S_LD_SZT(a) \
 		(sizeof(size_t) == 4 ? S_LD_U32(a) : S_LD_U64(a))

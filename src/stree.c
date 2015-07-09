@@ -28,8 +28,8 @@
  */
 
 #define STN_SET_RBB(t, cn) {			\
-		cn->is_red = S_TRUE;		\
-		set_red(t, cn->l, S_FALSE);	\
+		cn->x.is_red = S_TRUE;		\
+		set_red(t, cn->x.l, S_FALSE);	\
 		set_red(t, cn->r, S_FALSE);	\
 	}
 
@@ -100,7 +100,7 @@ static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 	S_ASSERT(n);
 	if (n) {
 		if (d == ST_Left)
-			n->l = v;
+			n->x.l = v;
 		else
 			n->r = v;
 	}
@@ -108,7 +108,7 @@ static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 
 static stndx_t get_lr(const stn_t *n, const enum STNDir d)
 {
-	return d == ST_Left ? n->l : n->r;
+	return d == ST_Left ? n->x.l : n->r;
 }
 
 static size_t get_max_size(const st_t *t)
@@ -126,9 +126,9 @@ static stn_t *locate_parent(st_t *t, const struct NodeContext *son, enum STNDir 
 	if (t->root == son->x)
 		return son->n;
 	stn_t *cn = get_node(t, t->root);
-	for (; cn && cn->l != son->x && cn->r != son->x;)
+	for (; cn && cn->x.l != son->x && cn->r != son->x;)
 		cn = get_node(t, get_lr(cn, t->f.cmp(cn, son->n) < 0 ? ST_Right : ST_Left));
-	*d = cn && cn->l == son->x ? ST_Left : ST_Right;
+	*d = cn && cn->x.l == son->x ? ST_Left : ST_Right;
 	return cn;
 }
 
@@ -159,20 +159,20 @@ static void copy_node(const st_t *t, stn_t *tgt, const stn_t *src)
 static void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
 {
 	update_node_data(t, tgt, src);
-	tgt->l = tgt->r = ST_NIL;
-	tgt->is_red = ir;
+	tgt->x.l = tgt->r = ST_NIL;
+	tgt->x.is_red = ir;
 }
 
 static sbool_t is_red(const st_t *t, stndx_t node_id)
 {
 	RETURN_IF(node_id == ST_NIL, S_FALSE);
-	return get_node_r(t, node_id)->is_red;
+	return get_node_r(t, node_id)->x.is_red;
 }
 
 static void set_red(st_t *t, const stndx_t node_id, const sbool_t red)
 {
 	if (node_id != ST_NIL)
-		get_node(t, node_id)->is_red = red;
+		get_node(t, node_id)->x.is_red = red;
 }
 
 /* counter-direction */
@@ -246,20 +246,20 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 	ASSERT_RETURN_IF(!t, 0);
 	RETURN_IF(ndx == ST_NIL, 1);
 	const stn_t *n = get_node_r(t, ndx);
-	if (is_red(t, ndx) && (is_red(t, n->l) || is_red(t, n->r))) {
+	if (is_red(t, ndx) && (is_red(t, n->x.l) || is_red(t, n->r))) {
 #ifdef DEBUG_stree
 		fprintf(stderr, "st_assert: violation: two red nodes\n");
 #endif
 		return 0;
 	}
-	if (n->l != ST_NIL && t->f.cmp(get_node_r(t, n->l), n) >= 0 &&
+	if (n->x.l != ST_NIL && t->f.cmp(get_node_r(t, n->x.l), n) >= 0 &&
 	    n->r != ST_NIL && t->f.cmp(get_node_r(t, n->r), n) <= 0) {
 #ifdef DEBUG_stree
 		fprintf(stderr, "st_assert: tree structure violation\n");
 #endif
 		return 0;
 	}
-	size_t l = st_assert_aux(t, n->l), r = st_assert_aux(t, n->r);
+	size_t l = st_assert_aux(t, n->x.l), r = st_assert_aux(t, n->r);
 	if (l && r) {
 		if (l == r)
 			return is_red(t, ndx) ? l : l + 1;
@@ -335,13 +335,7 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 	/*
 	 * Prepare a 4-level node tracking window
 	 */
-#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
-	stn_t auxn;
-	auxn.l = auxn.r = ST_NIL;
-	auxn.is_red = S_FALSE;
-#else
 	stn_t auxn = EMPTY_STN;
-#endif
 	auxn.r = t->root;
 	struct NodeContext w[CW_SIZE] = {
 		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
@@ -366,7 +360,7 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 			/* Update parent node: */
 			set_lr(w[cp].n, d, w[c].x);
 			if (get_lr(w[cp].n, cd(d)) != ST_NIL)
-				w[c].n->is_red = S_TRUE;
+				w[c].n->x.is_red = S_TRUE;
 			/* Ensure root is black: */
 			set_red(t, t->root, S_FALSE);
 			/* Increase tree size: */
@@ -374,13 +368,13 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 			done = S_TRUE;
 		} else {
 			/* Two red sons? -> red parent + black sons */
-			if (is_red(t, w[c].n->l) && is_red(t, w[c].n->r))
+			if (is_red(t, w[c].n->x.l) && is_red(t, w[c].n->r))
 				STN_SET_RBB(t, w[c].n);
 		}
 		/* Check for double red case (current and parent are red) */
 		const size_t cpp = (c + 2) % CW_SIZE,
 			     cppp = (c + 1) % CW_SIZE;
-		if (w[cpp].n && w[c].n->is_red && w[cp].n->is_red) {
+		if (w[cpp].n && w[c].n->x.is_red && w[cp].n->x.is_red) {
 			const enum STNDir xld = cd(ld);
 			const stndx_t pd = get_lr(w[cp].n, ld);
 			const stndx_t v = w[c].x == pd ?
@@ -427,13 +421,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	 * would be enough, using 4 in order to avoid the division by 3,
 	 * which is more expensive than by 4 in many CPUs).
 	 */
-#ifdef __TINYC__ /* Workaround for TCC (0.9.25 bug)   */
-	stn_t auxn;
-	auxn.l = auxn.r = ST_NIL;
-	auxn.is_red = S_FALSE;
-#else
 	stn_t auxn = EMPTY_STN;
-#endif
 	auxn.r = t->root;
 	struct NodeContext w[CW_SIZE] = {
 		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
@@ -462,7 +450,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			/* Push child red node down */
 			stndx_t nd = get_lr(w[c].n, d);
 			stn_t *ndn = get_node(t, nd);
-			if (w[c].n->is_red || (ndn && ndn->is_red))
+			if (w[c].n->x.is_red || (ndn && ndn->x.is_red))
 				break;
 			const enum STNDir xd = cd(d);
 			if (is_red(t, get_lr(w[c].n, xd))) {
@@ -511,7 +499,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			stn_t *cpp_d2n = get_node(t, get_lr(w[cpp].n, d2));
 			/* Fix coloring */
 			STN_SET_RBB(t, cpp_d2n);
-			w[c].n->is_red = cpp_d2n->is_red;
+			w[c].n->x.is_red = cpp_d2n->x.is_red;
 			break;
 		}
 		w[cppp].x = get_lr(w[c].n, d);
@@ -539,9 +527,9 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			found.x = w[c].x;
 		}
 		if (!w[cp].n) { /* Root node deletion (???) */
-			t->root = w[c].n->l != ST_NIL ? w[c].n->l : w[c].n->r;
+			t->root = w[c].n->x.l != ST_NIL ? w[c].n->x.l : w[c].n->r;
 		} else {
-			enum STNDir ds = w[c].n->l == ST_NIL ? ST_Right : ST_Left;
+			enum STNDir ds = w[c].n->x.l == ST_NIL ? ST_Right : ST_Left;
 			enum STNDir dt = w[cp].n->r == w[c].x ? ST_Right : ST_Left;
 			set_lr(w[cp].n, dt, get_lr(w[c].n, ds));
 		}
@@ -664,10 +652,10 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				tp.cn = p[tp.level].cn;
 				f(&tp);
 			}
-			if (p[tp.level].cn->l != ST_NIL) {
+			if (p[tp.level].cn->x.l != ST_NIL) {
 				p[tp.level].s = 1;
 				tp.level++;
-				p[tp.level].c = p[tp.level - 1].cn->l;
+				p[tp.level].c = p[tp.level - 1].cn->x.l;
 			} else {
 				if (f_ino) {
 					tp.c = p[tp.level].c;
@@ -770,8 +758,8 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 				tp.cn = node;
 				f(&tp);
 			}
-			if (node->l != ST_NIL)
-				sv_push_u(&next, node->l);
+			if (node->x.l != ST_NIL)
+				sv_push_u(&next, node->x.l);
 			if (node->r != ST_NIL)
 				sv_push_u(&next, node->r);
 		}

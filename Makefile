@@ -172,6 +172,6 @@ $(EXES): $% $(LIBSRT)
 run_tests: stest
 	@./$(TEST)
 clean:
-	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.gcno *\.gcda *\.out callgrind* out\.txt
+	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out callgrind* out\.txt
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 

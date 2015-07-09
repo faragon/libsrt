@@ -123,10 +123,10 @@ static int aux_sm_log_traverse(const struct STraverseParams *tp)
 	}
 	char id[128], l[128], r[128];
 	ndx2s(id, sizeof(id), tp->c);
-	ndx2s(l, sizeof(l), tp->cn->l);
+	ndx2s(l, sizeof(l), tp->cn->x.l);
 	ndx2s(r, sizeof(r), tp->cn->r);
 	ss_cat_printf(log, 128, "[%s: (%s, %s) -> (%s, %s; r:%u)] ",
-		id, k, v, l, r, tp->cn->is_red);
+		id, k, v, l, r, tp->cn->x.is_red);
 	return 0;
 }
 

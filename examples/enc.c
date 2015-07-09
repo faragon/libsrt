@@ -6,7 +6,7 @@
  * Copyright (c) 2015 F. Aragon. All rights reserved.
  */
 
-#include <libsrt.h>
+#include "../src/libsrt.h"
 
 #define SENC_b64 1
 #define SDEC_b64 2
