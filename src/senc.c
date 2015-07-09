@@ -562,7 +562,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 * Write RLE pattern
 		 */
 		if (new_code >= SLZW_RLE1 && new_code <= SLZW_RLE4) {
-			union { unsigned a32; unsigned char b[4]; } rle;
+			union s_u32 rle;
 			size_t count, cl, ch;
 			cl = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_RBITSD2);
 			ch = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_RBITSD2);

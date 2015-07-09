@@ -74,19 +74,14 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size)
 	if (!s || !s_size)
 		return 0;
 	size_t i = 0, unicode_size = 0;
-#if defined(S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION) && \
-    defined(S_UNALIGNED_MEMORY_ACCESS)
+#ifdef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
 	const size_t size_cutted = s_size >= 6? s_size - 6 : 0;
-	static const unsigned char m1[4] = { SSU8_M1, SSU8_M1, SSU8_M1, SSU8_M1 };
-	static const unsigned char s1[4] = { SSU8_S1, SSU8_S1, SSU8_S1, SSU8_S1 };
+	const union s_u32 m1 = { .b = { SSU8_M1, SSU8_M1, SSU8_M1, SSU8_M1 } };
 	for (; i < size_cutted;) {
-		const int *si = (int *)(s + i);
-		if (((size_t)(si) & 3) == 0) {	/* 4-byte aligned data */
-			if ((*si & *(int *)m1) == *(int *)s1) {
-				i += 4;
-				unicode_size += 4;
-				continue;
-			}
+		if ((S_LD_U32(s + i) & m1.a32) == m1.a32) {
+			i += 4;
+			unicode_size += 4;
+			continue;
 		}
 		i += sc_utf8_char_size(s, i, s_size);
 		unicode_size++;

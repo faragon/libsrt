@@ -230,6 +230,11 @@ typedef unsigned char sbool_t;
 typedef sint_t sint64_t;
 typedef suint_t suint64_t;
 
+union s_u32 {
+	unsigned a32;
+	unsigned char b[4];
+};
+
 #define SINT_MIN (8LL << ((sizeof(sint_t) * 8) - 4))
 #define SINT_MAX (~SINT_MIN)
 #define SINT32_MAX ((sint32_t)(0x7fffffff))
