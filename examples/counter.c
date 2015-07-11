@@ -40,7 +40,8 @@ int main(int argc, const char **argv)
 	sb_t *bs = sb_alloc(0);
 	int exit_code = 0;
 	size_t count = 0;
-	size_t cmax = csize == 4 ? 0xffffffff : 0xffffffff & ((1 << (csize * 8)) - 1);
+	size_t cmax = csize == 4 ? 0xffffffff :
+				   0xffffffff & ((1 << (csize * 8)) - 1);
 	size_t climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
 	sb_eval(&bs, cmax);
 	unsigned char buf[3 * 4 * 128];

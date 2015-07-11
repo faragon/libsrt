@@ -14,17 +14,27 @@
  */
 
 const char *xa[4] = {
-	"111111x1111113111111111111111111111111111111111111111111111111111111111111111111111111111111141111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111112k1",
+	"111111x11111131111111111111111111111111111111111111111111111111111111"
+	"111111111111111111111111411111111111111111111111111111111111111111111"
+	"111111111111111111111111111111111111111111111111111111111111111111111"
+	"12k1",
 	"11111111111111111112k1",
-	"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcba",
-	"45____________________________________________________________________________________________________________________________12345678901234567890123y_123456781234567812345678123456781234567812345678123456781234567812345678_______12345678901234567890123y______12345678901234567890123y45678901234567890123456789012345678901234567890123x456789012k"
+	"abcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcda"
+	"bcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab"
+	"cdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcba",
+	"45___________________________________________________________________"
+	"_________________________________________________________123456789012"
+	"34567890123y_12345678123456781234567812345678123456781234567812345678"
+	"1234567812345678_______12345678901234567890123y______1234567890123456"
+	"7890123y45678901234567890123456789012345678901234567890123x456789012k"
 	};
 
 const char *xb[4] = {
 	"1111111112k1",
 	"112k1",
 	"dcba",
-	"_______________________________________________________________________________________________________________123"
+	"_____________________________________________________________________"
+	"__________________________________________123"
 	};
 
 /*
@@ -32,10 +42,24 @@ const char *xb[4] = {
  */
 
 const char *xc[4] = {
-	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91",
-	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac",
-	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	"aaaaaaaaaaaaaaaa",
+	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91"
+	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91"
+	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91"
+	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91"
+	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91",
+	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac"
+	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac"
+	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac"
+	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac"
+	"\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac" "\xe2\x82\xac",
+	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2" "\xf0\xa4\xad\xa2"
+	"\xf0\xa4\xad\xa2"
 	};
 
 #define BENCH_GROUPS		3
@@ -51,7 +75,8 @@ const char *algs[BENCH_GROUPS][BENCH_ALGS_PER_GROUP] = {
 #endif
 		  ""
 		},
-		{ "ss_tolower", "ss_toupper", "towlower", "sc_tolower", "towupper", "sc_toupper", "" },
+		{ "ss_tolower", "ss_toupper", "towlower", "sc_tolower",
+		  "towupper", "sc_toupper", "" },
 		{ "ss_len_u", "", "", "", "", "", "" }
 	};
 
@@ -95,22 +120,22 @@ int bench_search(const int alg, const int param1, const int count)
 	int j = 0;
 	size_t ssa = ss_len(a), ssb = ss_len(b);
 	switch ((ba && bb) ? alg : -1) {
-		case 0:	for (; j < count; ss_find(a, 0, b), j++);
-			break;
-		case 1:	for (; j < count; ss_find_csum_fast(ba, 0, ssa, bb, ssb), j++);
-			break;
-		case 2:	for (; j < count; ss_find_csum_slow(ba, 0, ssa, bb, ssb), j++);
-			break;
+	case 0:	for (; j < count; ss_find(a, 0, b), j++);
+		break;
+	case 1:	for (; j < count; ss_find_csum_fast(ba, 0, ssa, bb, ssb), j++);
+		break;
+	case 2:	for (; j < count; ss_find_csum_slow(ba, 0, ssa, bb, ssb), j++);
+		break;
 #ifndef S_MINIMAL_BUILD
-		case 3:	for (; j < count; ss_find_libc(ba, 0, ssa, bb, ssb), j++);
-			break;
-		case 4:	for (; j < count; ss_find_bf(ba, 0, ssa, bb, ssb), j++);
-			break;
-		case 5:	for (; j < count; ss_find_bmh(ba, 0, ssa, bb, ssb), j++);
-			break;
+	case 3:	for (; j < count; ss_find_libc(ba, 0, ssa, bb, ssb), j++);
+		break;
+	case 4:	for (; j < count; ss_find_bf(ba, 0, ssa, bb, ssb), j++);
+		break;
+	case 5:	for (; j < count; ss_find_bmh(ba, 0, ssa, bb, ssb), j++);
+		break;
 #endif
-		default:
-			res = 1;	/* error */
+	default:
+		res = 1;	/* error */
 	}
 	ss_free(&a, &b);
 	free(ba1);
@@ -196,8 +221,9 @@ int bench_misc(const int alg, const int param1, const int count)
 int main(int argc, char **argv)
 {
 	if (argc == 5) {
-		int grp = atoi(argv[1]), alg = atoi(argv[2]), param = atoi(argv[3]), count0 = atoi(argv[4]);
-		int count = count0 > 0 ? count0 : 0;
+		int grp = atoi(argv[1]), alg = atoi(argv[2]),
+		    param = atoi(argv[3]), count0 = atoi(argv[4]),
+		    count = count0 > 0 ? count0 : 0;
 		if (grp >= 0 && grp < BENCH_GROUPS && alg >= 0 &&
 		    alg < BENCH_ALGS_PER_GROUP && algs[grp][alg] &&
 		    algs[grp][alg][0]) {
@@ -210,7 +236,8 @@ int main(int argc, char **argv)
 		}
 	}
 	fprintf(stderr, "Syntax: %s bench_group_id alg_id param_id count\n"
-			"(groups: 0..%i, algorithms: 0..%i, count 0..2147483647)\n",
+			"(groups: 0..%i, algorithms: 0..%i, "
+			"count 0..2147483647)\n",
 			argv[0], BENCH_GROUPS, BENCH_ALGS_PER_GROUP);
 	int i = 0, j;
 	for (; i < BENCH_GROUPS; i++) {
@@ -220,11 +247,10 @@ int main(int argc, char **argv)
 				break;
 			if (!algs[i][j][0]) /* alg with empty name: skip */
 				continue;
-			fprintf(stderr, "\t\t algorithm %i: %s\n", j, algs[i][j]);
+			fprintf(stderr, "\t\t algorithm %i: %s\n",
+				j, algs[i][j]);
 		}
 	}
 	return 1;
 }
-
-
 

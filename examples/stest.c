@@ -26,9 +26,11 @@
 		}							\
 	}
 #ifdef S_DEBUG
-#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, fprintf(stderr, "%s...\n", #a))
+#define STEST_ASSERT(a) \
+	STEST_ASSERT_BASE(a, fprintf(stderr, "%s...\n", #a))
 #else
-#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, ;)
+#define STEST_ASSERT(a) \
+	STEST_ASSERT_BASE(a, ;)
 #endif
 
 /*
@@ -378,8 +380,10 @@ int test_ss_dup_resize_u()
 {
 	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_resize_u(a, 11, 'z'),
 	     *c = ss_dup_resize_u(a, 3, 'z');
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
+	int res = (!a || !b) ?
+		1 :
+		(!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
+		(!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -504,7 +508,8 @@ int test_ss_cpy_c(const char *in)
 					 (ss_len(a) == strlen(in) ? 0 : 4);
 	char tmp[512];
 	sprintf(tmp, "%s%s", in, in);
-	res |= res ? 0 : ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
+	res |= res ? 0 :
+		ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
 }

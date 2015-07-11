@@ -74,9 +74,8 @@ int main(int argc, const char **argv)
 	for (;;) {
 		if (is) {
 			l = read(0, buf, ibuf_size);
-			if (l <= 0) {
+			if (l <= 0)
 				goto done;
-			}
 			li += l;
 			switch (mode) {
 			case SENC_b64:
