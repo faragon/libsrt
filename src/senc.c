@@ -62,7 +62,7 @@ static const char h2n[64] = {
 	#define SLZW_RLE3       (SLZW_RLE1 + 1)
 	#define SLZW_RLE4       (SLZW_RLE3 + 1)
 	#define SLZW_RLE_CSIZE	16
-	#define SLZW_RLE_RBITSD2 9
+	#define SLZW_RLE_BITSD2 9
 	#if S_BPWORD >= 8
 		typedef suint_t srle_cmp_t;
 	#else
@@ -127,7 +127,8 @@ static int hex2nibble(const int h)
 	return h2n[(h - 48) & 0x3f];
 }
 
-static size_t senc_hex_aux(const unsigned char *s, const size_t ss, unsigned char *o, const char *t)
+static size_t senc_hex_aux(const unsigned char *s, const size_t ss,
+			   unsigned char *o, const char *t)
 {
 	RETURN_IF(!s, ss * 2);
 	ASSERT_RETURN_IF(!o, 0);
@@ -166,7 +167,9 @@ static sbool_t slzw_short_codes(size_t normal_count, size_t esc_count)
 		S_TRUE : S_FALSE;
 }
 
-static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t cbits, size_t *normal_count, size_t *esc_count)
+static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc,
+			      size_t *accbuf, size_t cbits,
+			      size_t *normal_count, size_t *esc_count)
 {
 	size_t c;
 	if (slzw_short_codes(*normal_count, *esc_count)) {
@@ -184,21 +187,25 @@ static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc, si
 	return c;
 }
 
-static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits, size_t *normal_count, size_t *esc_count)
+static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc,
+			     size_t c, size_t cbits, size_t *normal_count,
+			     size_t *esc_count)
 {
 	if (slzw_short_codes(*normal_count, *esc_count)) {
 		if (c < 255) {
 	                sbitio_write(b, i, acc, c, 8);
 			(*normal_count)++;
 #if SLZW_DEBUG
-			fprintf(stderr, "%u (8 (%u))\n", (unsigned)c, (unsigned)cbits);
+			fprintf(stderr, "%u (8 (%u))\n",
+				(unsigned)c, (unsigned)cbits);
 #endif
 		} else {
 	                sbitio_write(b, i, acc, 255, 8);
 			sbitio_write(b, i, acc, c, cbits);
 			(*esc_count)++;
 #if SLZW_DEBUG
-			fprintf(stderr, "%u (prefix + %u)\n", (unsigned)c, (unsigned)cbits);
+			fprintf(stderr, "%u (prefix + %u)\n",
+				(unsigned)c, (unsigned)cbits);
 #endif
 		}
 	} else {
@@ -210,11 +217,14 @@ static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c,
 	}
 }
 
-static size_t srle_run(const unsigned char *s, size_t i, size_t ss, size_t min_run, size_t max_run, size_t *run_elem_size, sbool_t lzw_mode)
+static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
+		       size_t min_run, size_t max_run, size_t *run_elem_size,
+		       sbool_t lzw_mode)
 {
 	RETURN_IF(i + min_run >= ss, 0);
 	suint32_t *p0 = (suint32_t *)(s + i), *p3 = (suint32_t *)(s + i + 3);
-	size_t run_length = 0, eq4 = p0[0] == p0[1], eq3 = !eq4 && p0[0] == p3[0];
+	size_t run_length = 0, eq4 = p0[0] == p0[1],
+	       eq3 = !eq4 && p0[0] == p3[0];
 	for (; eq4 || eq3;) {
 		srle_cmp_t *u = (srle_cmp_t *)(s + i),
 		*v = (srle_cmp_t *)(s + i + 1),
@@ -240,10 +250,9 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss, size_t min_r
 				if (p0[0] != *(suint32_t *)(s + j))
 					break;
 		}
-		if (j - i >= min_run) {
+		if (j - i >= min_run)
 			run_length = (j - i - (lzw_mode ? *run_elem_size : 0)) /
 				     *run_elem_size;
-		}
 		break;
 	}
 	return run_length;
@@ -401,18 +410,19 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 * Attempt RLE at current offset
 		 */
 		size_t run_length, run_elem_size, max_run, rle_mode;
-		max_run = i + S_NBIT(SLZW_RLE_RBITSD2 * 2);
-		run_length = srle_run(s, i, ss, SLZW_RLE_CSIZE, max_run, &run_elem_size, S_TRUE);
+		max_run = i + S_NBIT(SLZW_RLE_BITSD2 * 2);
+		run_length = srle_run(s, i, ss, SLZW_RLE_CSIZE, max_run,
+				      &run_elem_size, S_TRUE);
 		rle_mode = !run_length ? 0 : run_elem_size == 1 ? SLZW_RLE1 :
 			   run_elem_size == 3 ? SLZW_RLE3 :
 			   run_elem_size == 4 ? SLZW_RLE4 : 0;
 		if (rle_mode) {
-			size_t ch = run_length >> SLZW_RLE_RBITSD2,
-			       cl = run_length & S_NBITMASK(SLZW_RLE_RBITSD2);
+			size_t ch = run_length >> SLZW_RLE_BITSD2,
+			       cl = run_length & S_NBITMASK(SLZW_RLE_BITSD2);
 			slzw_bitio_write(o, &oi, &acc, rle_mode, curr_code_len,
 					 &normal_count, &esc_count);
-			sbitio_write(o, &oi, &acc, cl, SLZW_RLE_RBITSD2);
-			sbitio_write(o, &oi, &acc, ch, SLZW_RLE_RBITSD2);
+			sbitio_write(o, &oi, &acc, cl, SLZW_RLE_BITSD2);
+			sbitio_write(o, &oi, &acc, ch, SLZW_RLE_BITSD2);
 			sbitio_write(o, &oi, &acc, s[i], 8);
 			if (run_elem_size >= 3) {
 				sbitio_write(o, &oi, &acc, s[i + 1], 8);
@@ -456,11 +466,13 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				slzw_ndx_t alt_n = -node_lutref[curr_node];
 				slzw_ndx_t new_lut = lut_stack_in_use++;
 				node_lutref[curr_node] = new_lut;
-				memset(&lut_stack[new_lut], 0, sizeof(lut_stack[0]));
+				memset(&lut_stack[new_lut], 0,
+				       sizeof(lut_stack[0]));
 #ifdef _MSC_VER
 #pragma warning(suppress: 6001)
 #endif
-				lut_stack[new_lut][node_child[curr_node]] = alt_n;
+				lut_stack[new_lut][node_child[curr_node]] =
+									alt_n;
 			}
 		}
 		if (node_lutref[curr_node] > 0)
@@ -492,9 +504,11 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
-	slzw_bitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len, &normal_count, &esc_count);
+	slzw_bitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len,
+			 &normal_count, &esc_count);
 #if SLZW_USE_STOP_CODE
-	slzw_bitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len, &normal_count, &esc_count);
+	slzw_bitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len, &normal_count,
+			 &esc_count);
 #endif
 	sbitio_write_close(o, &oi, &acc);
 	return oi;
@@ -503,11 +517,11 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
-	size_t i, acc, accbuf, oi;
-	size_t normal_count = 0, esc_count = 0;
-	size_t last_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
+	size_t i, acc, accbuf, oi, normal_count = 0, esc_count = 0, last_code,
+	       curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
-	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT], lastwc = 0;
+	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT],
+		      lastwc = 0;
 	/*
 	 * Init read buffer
 	 */
@@ -521,8 +535,11 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Code expand loop
 	 */
+	size_t new_code;
 	for (i = 0; i < ss;) {
-		size_t new_code = slzw_bitio_read(s, &i, &acc, &accbuf, curr_code_len, &normal_count, &esc_count);
+		new_code = slzw_bitio_read(s, &i, &acc, &accbuf,
+					   curr_code_len, &normal_count,
+					   &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {
 				o[oi++] = lastwc = xbyte[new_code];
@@ -540,7 +557,8 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				pattern[pattern_off--] = xbyte[code];
 				code = parents[code];
 			}
-			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] = xbyte[code];
+			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] =
+								xbyte[code];
 			parents[next_inc_code] = last_code;
 			if (next_inc_code < SLZW_CODE_LIMIT)
 				next_inc_code++;
@@ -564,9 +582,9 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		if (new_code >= SLZW_RLE1 && new_code <= SLZW_RLE4) {
 			union s_u32 rle;
 			size_t count, cl, ch;
-			cl = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_RBITSD2);
-			ch = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_RBITSD2);
-			count = ch << SLZW_RLE_RBITSD2 | cl;
+			cl = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
+			ch = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
+			count = ch << SLZW_RLE_BITSD2 | cl;
 			rle.b[0] = sbitio_read(s, &i, &acc, &accbuf, 8);
 			if (new_code == SLZW_RLE1) {
 				memset(o + oi, rle.b[0], count);
@@ -575,7 +593,8 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				rle.b[2] = sbitio_read(s, &i, &acc, &accbuf, 8);
 				if (new_code == SLZW_RLE4) {
 					count *= 4;
-					rle.b[3] = sbitio_read(s, &i, &acc, &accbuf, 8);
+					rle.b[3] = sbitio_read(s, &i, &acc,
+							       &accbuf, 8);
 					s_memset32(o + oi, rle.a32, count);
 				} else {
 					count *= 3;
@@ -587,7 +606,8 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		}
 #endif
 		if (new_code == SLZW_RESET) {
-			SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code, parents);
+			SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code,
+				       parents);
 			continue;
 		}
 #if SLZW_USE_STOP_CODE
@@ -598,12 +618,14 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	return oi;
 }
 
-static size_t senc_rle_flush(const unsigned char *s, const size_t i, const size_t i_done, unsigned char *o, size_t oi)
+static size_t senc_rle_flush(const unsigned char *s, const size_t i,
+			     const size_t i_done, unsigned char *o, size_t oi)
 {
 	size_t d = i - i_done;
 	if (d > 0) {
 #if SLZW_DEBUG
-		fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi, (d <= SRLE_RUN_MASK_SHORT ? "St" : "ST"), (unsigned)d);
+		fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi,
+			(d <= SRLE_RUN_MASK_SHORT ? "St" : "ST"), (unsigned)d);
 #endif
 		if (d <= SRLE_RUN_MASK_SHORT) {
 			o[oi++] = SRLE_OP_ST_SHORT | d;
@@ -623,7 +645,8 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 	RETURN_IF(!s || !o || !ss, 0);
 	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size;
 	for (; i < ss;) {
-		run_length = srle_run(s, i, ss, 10, (suint32_t)-1, &run_elem_size, S_FALSE);
+		run_length = srle_run(s, i, ss, 10, (suint32_t)-1,
+				      &run_elem_size, S_FALSE);
 		if (!run_length) {
 			i++;
 			continue;
@@ -631,7 +654,9 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 		oi = senc_rle_flush(s, i, i_done, o, oi);
 		if (run_length <= SRLE_RUN_MASK_SHORT) {
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi, (run_elem_size == 4 ? "r4" : "r3"), (unsigned)run_length);
+			fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi,
+				(run_elem_size == 4 ? "r4" : "r3"),
+				(unsigned)run_length);
 #endif
 			if (run_elem_size == 1) {
 				run_length /= 4;
@@ -643,7 +668,10 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 				o[oi++] = SRLE_OP_RLE3_SHORT | run_length;
 		} else {
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi, (run_elem_size == 4 ? "R4" : run_elem_size == 3 ? "R3" : "R1"), (unsigned)run_length);
+			fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi,
+				(run_elem_size == 4 ? "R4" :
+				 run_elem_size == 3 ? "R3" : "R1"),
+				(unsigned)run_length);
 #endif
 			if (run_elem_size == 1)
 				o[oi++] = SRLE_OP_RLE1;
@@ -683,7 +711,10 @@ size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 			op_sz = ops == SRLE_OP_ST_SHORT ? 0 :
 				ops == SRLE_OP_RLE4_SHORT ? 4 : 3;
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u:%u] %s(%u)\n", (unsigned)(i - 1), (unsigned)oi, (!op_sz? "st" : op_sz == 4 ? "r4" : "r3"), (unsigned)cnt);
+			fprintf(stderr, "[%u:%u] %s(%u)\n", (unsigned)(i - 1),
+				(unsigned)oi,
+				(!op_sz? "st" : op_sz == 4 ? "r4" : "r3"),
+				(unsigned)cnt);
 #endif
 			break;
 		default:
@@ -693,18 +724,22 @@ size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 			op == SRLE_OP_RLE4 ? 4 : 3;
 			i += 4;
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u:%u] OP%u(%u)\n", (unsigned)(i - 5), (unsigned)oi, (unsigned)op_sz, (unsigned)cnt);
+			fprintf(stderr, "[%u:%u] OP%u(%u)\n",
+				(unsigned)(i - 5), (unsigned)oi,
+				(unsigned)op_sz, (unsigned)cnt);
 #endif
 		}
 		if (op_sz == 0) {
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u] ST(%u)\n", (unsigned)(i), (unsigned)cnt);
+			fprintf(stderr, "[%u] ST(%u)\n", (unsigned)(i),
+				(unsigned)cnt);
 #endif
 			memcpy(o + oi, s + i, cnt);
 			i += cnt;
 		} else {
 #if SLZW_DEBUG
-			fprintf(stderr, "[%u] RLE%u(%u)\n", (unsigned)(i), (unsigned)op_sz, (unsigned)cnt);
+			fprintf(stderr, "[%u] RLE%u(%u)\n", (unsigned)(i),
+				(unsigned)op_sz, (unsigned)cnt);
 #endif
 			if (op_sz == 1) {
 				memset(o + oi, s[i++], cnt);

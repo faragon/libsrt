@@ -50,9 +50,11 @@ struct st_log_context_data
 
 static int aux_st_log_traverse(const struct STraverseParams *tp)
 {
-	struct st_log_context_data *d = (struct st_log_context_data *)tp->context;
+	struct st_log_context_data *d =
+				(struct st_log_context_data *)tp->context;
 	if (!tp->cn) {
-		ss_cat_printf(d->log, 128, "\nLevel: %u\n", (unsigned)tp->level);
+		ss_cat_printf(d->log, 128, "\nLevel: %u\n",
+			      (unsigned)tp->level);
 	}
 	else {
 		d->tf(d->log, tp->cn, tp->c);
@@ -67,11 +69,13 @@ void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f)
 		return;
 	struct st_log_context_data context = { log, f };
 	ss_cpy_c(log, "");
-	ssize_t levels = st_traverse_levelorder(t, aux_st_log_traverse, &context);
+	ssize_t levels = st_traverse_levelorder(t, aux_st_log_traverse,
+						&context);
 	if (levels == 0)
 		ss_cat_c(log, "empty tree");
 	else
-		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_size(t));
+		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n",
+			      (int)levels, (unsigned)st_size(t));
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
@@ -135,15 +139,19 @@ void sm_log_obj(ss_t **log, const sm_t *m)
 	if (!log)
 		return;
 	ss_cpy_c(log, "");
-	ssize_t levels = st_traverse_levelorder((const st_t *)m, (st_traverse)aux_sm_log_traverse, log);
+	ssize_t levels = st_traverse_levelorder(
+				(const st_t *)m,
+				(st_traverse)aux_sm_log_traverse, log);
 	if (levels == 0)
 		ss_cat_c(log, "empty map");
 	else
-		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n", (int)levels, (unsigned)st_size(m));
+		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n",
+			      (int)levels, (unsigned)st_size(m));
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
-void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf_size)
+void s_hex_dump(ss_t **log, const char *label, const char *buf,
+		const size_t buf_size)
 {
 	if (!log)
 		return;

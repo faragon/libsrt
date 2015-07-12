@@ -90,7 +90,8 @@ void sd_set_alloc_size(sd_t *d, const size_t alloc_size)
 			((struct SData_Full *)d)->alloc_size = alloc_size;
 		} else {
 			d->alloc_size_h = (alloc_size & 0x100) ? 1 : 0;
-			((struct SData_Small *)d)->alloc_size_l = alloc_size & 0xff;
+			((struct SData_Small *)d)->alloc_size_l =
+							alloc_size & 0xff;
 		}
 	}
 }
@@ -99,9 +100,11 @@ void sd_set_alloc_size(sd_t *d, const size_t alloc_size)
  * Allocation
  */
 
-sd_t *sd_alloc(const size_t header_size, const size_t elem_size, const size_t initial_reserve, const struct sd_conf *f)
+sd_t *sd_alloc(const size_t header_size, const size_t elem_size,
+	       const size_t initial_reserve, const struct sd_conf *f)
 {
-	const size_t alloc_size = sd_size_to_alloc_size(header_size, elem_size, initial_reserve, f);
+	size_t alloc_size = sd_size_to_alloc_size(header_size, elem_size,
+						  initial_reserve, f);
 	sd_t *d = (sd_t *)__sd_malloc(alloc_size);
 	if (d) {
 		f->sx_reset(d, alloc_size, S_FALSE);
@@ -116,7 +119,7 @@ sd_t *sd_alloc(const size_t header_size, const size_t elem_size, const size_t in
 sd_t *sd_alloc_into_ext_buf(void *buffer, const size_t buffer_size,
 			    const struct sd_conf *f)
 {
-	const size_t metainfo_sz_req = sd_alloc_size_to_mt_size(buffer_size, f);
+	size_t metainfo_sz_req = sd_alloc_size_to_mt_size(buffer_size, f);
 	S_ASSERT(buffer && buffer_size >= metainfo_sz_req);
 	if (!buffer || buffer_size < metainfo_sz_req)
 		return NULL;    /* not enough memory */
@@ -148,7 +151,7 @@ void sd_free_va(const size_t elems, sd_t **first, va_list ap)
 }
 
 void sd_reset(sd_t *d, const sbool_t use_big_struct,
-		     const size_t alloc_size, const sbool_t ext_buf)
+	      const size_t alloc_size, const sbool_t ext_buf)
 {
 	if (d) {
 		d->is_full = use_big_struct;
@@ -209,7 +212,9 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		header_size = f->header_size;
 		elem_size = !f->elem_size_off ? 0 :
 			    s_load_size_t((void *)*d, f->elem_size_off);
-		size_t new_alloc_size = sd_size_to_alloc_size(header_size, elem_size, max_size, f);
+		size_t new_alloc_size = sd_size_to_alloc_size(
+						header_size, elem_size,
+						max_size, f);
 		sd_t *d1 = (sd_t *)__sd_realloc(*d, new_alloc_size);
 		if (!d1) {
 			S_ERROR("not enough memory (realloc error)");
@@ -219,8 +224,10 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		*d = d1;
 		S_PROFILE_ALLOC_CALL;
 		if (f->sx_reconfig && current_max_size < max_size) {
-			const size_t mt1 = sd_alloc_size_to_mt_size(sd_get_alloc_size(*d), f);
-			const size_t mt2 = sd_alloc_size_to_mt_size(new_alloc_size, f);
+			size_t mt1 = sd_alloc_size_to_mt_size(
+					sd_get_alloc_size(*d), f);
+			size_t mt2 = sd_alloc_size_to_mt_size(
+					new_alloc_size, f);
 			if (mt1 >= mt2) /* Current type is enough */
 				sd_set_alloc_size(*d, new_alloc_size);
 			else /* Structure rewrite required */
@@ -253,8 +260,9 @@ sd_t *sd_shrink(sd_t **d, const struct sd_conf *f)
 	size_t csize = sd_get_size(*d);
 	if (*d && csize < f->sx_get_max_size(*d) &&
 	    !(*d)->ext_buffer) { /* shrink only for heap-allocated */
-		/* non-trivial resize structure (involving full->small switch) */
-		if (f->sx_dup && f->range_small > 0 && csize <= S_ALLOC_SMALL && (*d)->is_full) {
+		/* non-trivial resize structure (full->small switch) */
+		if (f->sx_dup && f->range_small > 0 &&
+		    csize <= S_ALLOC_SMALL && (*d)->is_full) {
 			sd_t *d2 = f->sx_dup(*d);
 			if  (d2) {
 				sd_free(d);

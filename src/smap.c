@@ -149,7 +149,8 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 * Allocation
 */
 
-sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, const size_t buffer_size)
+sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer,
+		   const size_t buffer_size)
 {
 	struct STConf f;
 	smf_setup(t, &f);
@@ -535,7 +536,8 @@ ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 	case SM_StrInt: traverse_f = aux_si_sort; break;
 	case SM_StrStr: case SM_StrPtr: traverse_f = aux_sp_ss_sort; break;
 	}
-	ssize_t r = st_traverse_inorder((const st_t *)m, traverse_f, (void *)&v2x);
+	ssize_t r = st_traverse_inorder((const st_t *)m, traverse_f,
+					(void *)&v2x);
 	*kv = v2x.kv;
 	*vv = v2x.vv;
 	return r;

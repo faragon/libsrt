@@ -57,7 +57,8 @@ static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
  * Allocation
  */
 
-sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps, const size_t initial_reserve)
+sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps,
+		 const size_t initial_reserve)
 {
 	ASSERT_RETURN_IF(nsubmaps < 1, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);

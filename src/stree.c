@@ -87,7 +87,8 @@ struct NodeContext
 static stn_t *get_node(st_t *t, const stndx_t node_id)
 {
 	RETURN_IF(node_id == ST_NIL, NULL);
-	return (stn_t *)((char *)t + SDT_HEADER_SIZE + t->f.node_size * node_id);
+	return (stn_t *)((char *)t + SDT_HEADER_SIZE +
+			 t->f.node_size * node_id);
 }
 
 static const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
@@ -121,13 +122,16 @@ static st_t *st_check(st_t **t)
 	return t ? *t : NULL;
 }
 
-static stn_t *locate_parent(st_t *t, const struct NodeContext *son, enum STNDir *d)
+static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
+			    enum STNDir *d)
 {
 	if (t->root == son->x)
 		return son->n;
 	stn_t *cn = get_node(t, t->root);
 	for (; cn && cn->x.l != son->x && cn->r != son->x;)
-		cn = get_node(t, get_lr(cn, t->f.cmp(cn, son->n) < 0 ? ST_Right : ST_Left));
+		cn = get_node(t, get_lr(cn,
+					t->f.cmp(cn, son->n) < 0 ?
+						ST_Right : ST_Left));
 	*d = cn && cn->x.l == son->x ? ST_Left : ST_Right;
 	return cn;
 }
@@ -185,30 +189,30 @@ static enum STNDir cd(const enum STNDir d)
  * Node rotation auxiliary functions
  */
 
-#define F_rotate1X				\
-	stndx_t y = get_lr(xn, xd);		\
-	stn_t *yn = get_node(t, y);		\
-	set_lr(xn, xd, get_lr(yn, d));		\
-	set_lr(yn, d, x);			\
-	set_red(t, x, S_TRUE);			\
+#define F_rotate1X			\
+	stndx_t y = get_lr(xn, xd);	\
+	stn_t *yn = get_node(t, y);	\
+	set_lr(xn, xd, get_lr(yn, d));	\
+	set_lr(yn, d, x);		\
+	set_red(t, x, S_TRUE);		\
 	set_red(t, y, S_FALSE);
 
 static stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-							const enum STNDir xd)
+		     const enum STNDir xd)
 {
 	F_rotate1X;
 	return y;
 }
 
 static void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-					const enum STNDir xd, stn_t *xpn)
+		    const enum STNDir xd, stn_t *xpn)
 {
 	F_rotate1X;
 	set_lr(xpn, d, y);
 }
 
 static stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-					const enum STNDir xd, stndx_t *y_out)
+		      const enum STNDir xd, stndx_t *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
@@ -216,7 +220,7 @@ static stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
 }
 
 static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-							const enum STNDir xd)
+		     const enum STNDir xd)
 {
 	const stndx_t child = get_lr(xn, xd);
 	stn_t *child_node = get_node(t, child);
@@ -455,7 +459,8 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			const enum STNDir xd = cd(d);
 			if (is_red(t, get_lr(w[c].n, xd))) {
 				stndx_t y;
-				stn_t *yn = rot1x_y(t, w[c].n, w[c].x, d, xd, &y);
+				stn_t *yn = rot1x_y(t, w[c].n, w[c].x, d,
+						    xd, &y);
 				if (w[cp].n)
 					set_lr(w[cp].n, d0, y);
 				/* Fix tree root if required: */
@@ -527,10 +532,13 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			found.x = w[c].x;
 		}
 		if (!w[cp].n) { /* Root node deletion (???) */
-			t->root = w[c].n->x.l != ST_NIL ? w[c].n->x.l : w[c].n->r;
+			t->root = w[c].n->x.l != ST_NIL ? w[c].n->x.l :
+							  w[c].n->r;
 		} else {
-			enum STNDir ds = w[c].n->x.l == ST_NIL ? ST_Right : ST_Left;
-			enum STNDir dt = w[cp].n->r == w[c].x ? ST_Right : ST_Left;
+			enum STNDir ds = w[c].n->x.l == ST_NIL ? ST_Right :
+								 ST_Left;
+			enum STNDir dt = w[cp].n->r == w[c].x ? ST_Right :
+								ST_Left;
 			set_lr(w[cp].n, dt, get_lr(w[c].n, ds));
 		}
 		/*
@@ -571,7 +579,8 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 	int r;
 	for (;;)
 		if (!(r = t->f.cmp(cn, n)) ||
-		    !(cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right : ST_Left))))
+		    !(cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right :
+							    ST_Left))))
 			break;
 	return cn;
 }
@@ -607,7 +616,7 @@ enum eTMode
  */
 
 static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
-							const enum eTMode m)
+			 const enum eTMode m)
 {
 	ASSERT_RETURN_IF(!t, -1);
 	const size_t ts = get_size(t);

@@ -46,55 +46,56 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 
 #define SS_CCAT_STACK 128
 
-#define SS_COPYCAT_AUX(s, cat, TYPE, nargs, s1, STRLEN, SS_CAT_XN)		\
-	for (; s1;) {								\
-		va_list ap;							\
-		size_t *sizes,							\
-		        pstack[SS_CCAT_STACK],					\
-		       *pheap = NULL;						\
-		TYPE *s_next;							\
-		if (nargs <= SS_CCAT_STACK) {					\
-			sizes = pstack;						\
-		} else {							\
-			pheap = (size_t *)__sd_malloc(sizeof(size_t) * nargs);	\
-			if (!pheap) {						\
-				ss_set_alloc_errors(*s);			\
-				break;						\
-			}							\
-			sizes = pheap;						\
-		}								\
-		sizes[0] = STRLEN(s1);						\
-		size_t extra_size = sizes[0];					\
-		va_start(ap, s1);						\
-		size_t i;							\
-		for (i = 1; i < nargs; i++) {					\
-			s_next = va_arg(ap, TYPE *);				\
-			if (s_next) {						\
-				sizes[i] = STRLEN(s_next);			\
-				extra_size += sizes[i];				\
-			}							\
-		}								\
-		va_end(ap);							\
-		if ((cat && ss_grow(s, extra_size)) ||				\
-		    ss_reserve(s, extra_size) >= extra_size) {			\
-			if (!cat)						\
-				ss_clear(s);					\
-			SS_CAT_XN(s, s1, sizes[0]);				\
-			va_start(ap, s1);					\
-			for (i = 1; i < nargs; i++) {				\
-				s_next = va_arg(ap, TYPE *);			\
-				if (!s_next)					\
-					continue;				\
-				SS_CAT_XN(s, s_next, sizes[i]);			\
-			}							\
-			va_end(ap);						\
-		} else {							\
-			if (extra_size > 0)					\
-				ss_set_alloc_errors(*s);			\
-		}								\
-		if (pheap)							\
-			free(pheap);						\
-		break;								\
+#define SS_COPYCAT_AUX(s, cat, TYPE, nargs, s1, STRLEN, SS_CAT_XN)	\
+	for (; s1;) {							\
+		va_list ap;						\
+		size_t *sizes,						\
+		        pstack[SS_CCAT_STACK],				\
+		       *pheap = NULL;					\
+		TYPE *s_next;						\
+		if (nargs <= SS_CCAT_STACK) {				\
+			sizes = pstack;					\
+		} else {						\
+			pheap = (size_t *)__sd_malloc(sizeof(size_t) *	\
+						      nargs);		\
+			if (!pheap) {					\
+				ss_set_alloc_errors(*s);		\
+				break;					\
+			}						\
+			sizes = pheap;					\
+		}							\
+		sizes[0] = STRLEN(s1);					\
+		size_t extra_size = sizes[0];				\
+		va_start(ap, s1);					\
+		size_t i;						\
+		for (i = 1; i < nargs; i++) {				\
+			s_next = va_arg(ap, TYPE *);			\
+			if (s_next) {					\
+				sizes[i] = STRLEN(s_next);		\
+				extra_size += sizes[i];			\
+			}						\
+		}							\
+		va_end(ap);						\
+		if ((cat && ss_grow(s, extra_size)) ||			\
+		    ss_reserve(s, extra_size) >= extra_size) {		\
+			if (!cat)					\
+				ss_clear(s);				\
+			SS_CAT_XN(s, s1, sizes[0]);			\
+			va_start(ap, s1);				\
+			for (i = 1; i < nargs; i++) {			\
+				s_next = va_arg(ap, TYPE *);		\
+				if (!s_next)				\
+					continue;			\
+				SS_CAT_XN(s, s_next, sizes[i]);		\
+			}						\
+			va_end(ap);					\
+		} else {						\
+			if (extra_size > 0)				\
+				ss_set_alloc_errors(*s);		\
+		}							\
+		if (pheap)						\
+			free(pheap);					\
+		break;							\
 	}
 
 /*
@@ -280,7 +281,8 @@ static void ss_reset(ss_t *s, const size_t alloc_size, const sbool_t ext_buf)
 
 static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz)
 {
-	size_t size = get_size(s), unicode_size = get_unicode_size(s); char *s_str = get_str(s);
+	size_t size = get_size(s), unicode_size = get_unicode_size(s);
+	char *s_str = get_str(s);
 	/* Compute offset on target location: */
 	struct SSTR_Small sm;
 	struct SSTR_Full sf;
@@ -373,7 +375,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const sint_t num)
 }
 
 static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
-							sint32_t (*towX)(sint32_t))
+			 sint32_t (*towX)(sint32_t))
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
@@ -405,8 +407,8 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 	/* Check if it is necessary to allocate more memory: */
 	size_t sso_req = at + ss + extra;
 	char *po0;
-	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) { /* BEHAVIOR */
-		if (*s && (*s)->ext_buffer) {
+	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) {
+		if (*s && (*s)->ext_buffer) { /* BEHAVIOR */
 			S_ERROR("not enough memory: strings stored in the "
 				"stored in fixed-length buffer can not be "
 				"resized.");
@@ -550,7 +552,7 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 		     ss0 = get_size(src),
 		     head_size = sc_unicode_count_to_utf8_size(ps, 0, ss0,
 							char_off, NULL);
-	ASSERT_RETURN_IF(head_size >= ss0, ss_check(s)); /* cut out of bounds */
+	RETURN_IF(head_size >= ss0, ss_check(s)); /* BEHAVIOR */
 	size_t actual_n = 0;
 	const size_t cus = *s ? get_unicode_size(*s) : 0,
 		     cut_size = sc_unicode_count_to_utf8_size(ps,
@@ -717,17 +719,17 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, const ss_t *src,
 		     current_u_chars = ss_len_u(src);
 	RETURN_IF(u_chars == current_u_chars, ss_check(s)); /* same */
 	const sbool_t aliasing = *s == src;
-	const size_t src_size = get_size(src);
+	const size_t srcs = get_size(src);
 	if (current_u_chars < u_chars) { /* fill */
 		const size_t new_elems = u_chars - current_u_chars,
-			     out_size = at + src_size + new_elems * char_size;
+			     out_size = at + srcs + new_elems * char_size;
 		if (ss_reserve(s, out_size) >= out_size) {
 			if (!cat && !aliasing) /* copy */
 				ss_clear(s);
 			if (!aliasing) {
-				memcpy(get_str(*s) + at, get_str_r(src), src_size);
+				memcpy(get_str(*s) + at, get_str_r(src), srcs);
 				inc_unicode_size(*s, current_u_chars);
-				inc_size(*s, src_size);
+				inc_size(*s, srcs);
 			}
 			size_t i = 0;
 			for (; i < new_elems; i++)
@@ -736,8 +738,9 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, const ss_t *src,
 	} else { /* cut */
 		const char *ps = get_str_r(src);
 		size_t actual_unicode_count = 0;
-		const size_t head_size = sc_unicode_count_to_utf8_size(ps, 0, src_size,
-						u_chars, &actual_unicode_count),
+		const size_t head_size = sc_unicode_count_to_utf8_size(
+						ps, 0, srcs, u_chars,
+						&actual_unicode_count),
 			     out_size = at + head_size;
 		S_ASSERT(u_chars == actual_unicode_count);
 		if (!aliasing) { /* copy or cat */
@@ -1018,7 +1021,8 @@ ss_t *ss_dup_erase_u(const ss_t *src, const size_t char_off, const size_t n)
 	return aux_erase_u(&s, S_FALSE, src, char_off, n);
 }
 
-ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
+ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1,
+		     const ss_t *s2)
 {
 	ss_t *s = NULL;
 	return aux_replace(&s, S_FALSE, src, off, s1, s2);
@@ -1127,7 +1131,8 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 	return ss_check(s);
 }
 
-ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n)
+ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
+		      const size_t n)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	ASSERT_RETURN_IF(!src || !n, ss_clear(s)); /* BEHAVIOR: empty */
@@ -1218,12 +1223,14 @@ ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 	return aux_erase(s, S_FALSE, src, off, n);
 }
 
-ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off, const size_t n)
+ss_t *ss_cpy_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
+		     const size_t n)
 {
 	return aux_erase_u(s, S_FALSE, src, char_off, n);
 }
 
-ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
+ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off,
+		     const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_FALSE, src, off, s1, s2);
 }
@@ -1320,7 +1327,8 @@ ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
 			for (i = 1; i < nargs; i++) {
 				s_next = va_arg(ap, const ss_t *);
 				if (s_next)
-					ss_cat_aliasing(s, s0, ss0, uss0, s_next);
+					ss_cat_aliasing(s, s0, ss0, uss0,
+							s_next);
 			}
 			va_end(ap);
 		}
@@ -1357,7 +1365,8 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	return ss_cat_cn_raw(s, src_str, src_off, src_size, src_unicode_size);
 }
 
-ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off, const size_t sub_size)
+ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
+		    const size_t sub_size)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF(!src, ss_check(s)); /* same string */
@@ -1385,8 +1394,8 @@ ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 	if (src) {
 		const char *psrc = get_str_r(src);
 		const size_t ssrc = get_size(src),
-			     off_size = sc_unicode_count_to_utf8_size(psrc, 0,
-							ssrc, char_off, NULL);
+			     off_size = sc_unicode_count_to_utf8_size(
+						psrc, 0, ssrc, char_off, NULL);
 		/* BEHAVIOR: cut out of bounds, append nothing */
 		if (off_size >= ssrc)
 			return *s;
@@ -1420,8 +1429,8 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 			size_t i = 0,
 			       char_count = 0;
 			for (; i < src_size; i++) {
-				const size_t l = sc_wc_to_utf8(src[i], utf8,
-							     0, SSU8_MAX_SIZE);
+				size_t l = sc_wc_to_utf8(src[i], utf8,
+							 0, SSU8_MAX_SIZE);
 				memcpy(get_str(*s) + get_size(*s), utf8, l);
 				inc_size(*s, l);
 				char_count++;
@@ -1477,7 +1486,8 @@ ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
 	return aux_erase_u(s, S_TRUE, src, char_off, n);
 }
 
-ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1, const ss_t *s2)
+ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off,
+		     const ss_t *s1, const ss_t *s2)
 {
 	return aux_replace(s, S_TRUE, src, off, s1, s2);
 }
@@ -1561,7 +1571,7 @@ ss_t *ss_toupper(ss_t **s)
         return aux_toXcase(s, S_FALSE, *s, fsc_toupper);
 }
 
-#define MK_SS_TO_ENC(f, f_enc)				\
+#define MK_SS_TO_ENC(f, f_enc)					\
 	ss_t *f(ss_t **s, const ss_t *src) {			\
 		return aux_toenc(s, S_FALSE, src, f_enc);	\
 	}
@@ -1673,7 +1683,7 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 		const size_t ss = get_size(s);
 		for (; i < ss && i < nmax;) {
 			int c = 0;
-			const size_t l = ss_utf8_to_wc(p, i, ss, &c, (ss_t *)s);
+			size_t l = ss_utf8_to_wc(p, i, ss, &c, (ss_t *)s);
 			o[o_s++] = c;
 			i += l;
 		}
@@ -1809,11 +1819,12 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 		const char *s1_str = get_str_r(s1), *s2_str = get_str_r(s2);
 		size_t i = s1off, j = 0;
 		int u1 = 0, u2 = 0, utf8_cut = 0;
+		size_t chs1, chs2;
 		for (; i < s1_max && j < s2_max;) {
-			const size_t chs1 = ss_utf8_to_wc(s1_str, i,
-						s1_max, &u1, (ss_t *)s1),
-				     chs2 = ss_utf8_to_wc(s2_str, j,
-						s2_max, &u2, (ss_t *)s2);
+			chs1 = ss_utf8_to_wc(
+				s1_str, i, s1_max, &u1, (ss_t *)s1);
+			chs2 = ss_utf8_to_wc(
+				s2_str, j, s2_max, &u2, (ss_t *)s2);
 			if ((i + chs1) > s1_max || (j + chs2) > s2_max) {
 				res = chs1 == chs2 ? 0 : chs1 < chs2 ? -1 : 1;
 				utf8_cut = 1;

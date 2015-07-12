@@ -116,7 +116,7 @@
 	}
 
 size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss,
-						const char *t, const size_t ts)
+			 const char *t, const size_t ts)
 {
 	S_FIND_CSUM_PIPELINE1(FCSUM_SLOW);
 	S_FIND_CSUM_PIPELINE2(FCSUM_SLOW);
@@ -127,7 +127,7 @@ size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss,
 }
 
 size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
-						const char *t, const size_t ts)
+			 const char *t, const size_t ts)
 {
 	S_FIND_CSUM_PIPELINE1(FCSUM_FAST);
 	S_FIND_CSUM_PIPELINE2(FCSUM_FAST);
@@ -166,7 +166,7 @@ size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
  * Brute force search: O(n*m)
  */
 size_t ss_find_bf(const char *s0, const size_t off, const size_t ss,
-						const char *t, const size_t ts)
+		  const char *t, const size_t ts)
 {
 	const char t0 = t[0],
 		  *s = s0 + off, *s_top = s0 + ss - ts,
@@ -208,7 +208,7 @@ ss_find_next:;
  * BMH search: O(m*n)
  */
 size_t ss_find_bmh(const char *s0, const size_t off, const size_t ss0,
-					const char *t0, const size_t ts)
+		   const char *t0, const size_t ts)
 {
 	const unsigned char *s = (const unsigned char *)(s0 + off),
 					*t = (const unsigned char *)t0;
@@ -235,5 +235,4 @@ size_t ss_find_libc(const char *s, const size_t off, const size_t ss,
 }
 
 #endif	/* S_ENABLE_EXAMPLES */
-
 
