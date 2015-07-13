@@ -18,6 +18,10 @@
 #define SENC_rle 8
 #define SDEC_rle 9
 
+#define IBUF_SIZE (3 * 4 * 4096) /* 3 * 4: LCM */
+#define OBUF_SIZE (IBUF_SIZE * 2) /* Max req: bin to hex */
+#define XBUF_SIZE (S_MAX(IBUF_SIZE, OBUF_SIZE))
+
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
@@ -58,12 +62,10 @@ int main(int argc, const char **argv)
 		return syntax_error(argv, 2);
 	unsigned l32;
 	size_t li = 0, lo = 0, lo2;
-	size_t ibuf_size = 3 * 4 * 4096; /* 3 * 4: LCM */
-	size_t obuf_size = ibuf_size * 2; /* Max req: bin to hex */
-	size_t xbuf_size = S_MAX(ibuf_size, obuf_size);
 	size_t is; /* input elem size */
-	unsigned char buf[xbuf_size], bufo[xbuf_size];
-	int exit_code = 0, l;
+	unsigned char buf[XBUF_SIZE], bufo[XBUF_SIZE];
+	int exit_code = 0;
+	ssize_t l;
 	switch (mode) {
 	case SENC_b64: is = 3; break;
 	case SDEC_b64: is = 4; break;
@@ -73,10 +75,10 @@ int main(int argc, const char **argv)
 	}
 	for (;;) {
 		if (is) {
-			l = read(0, buf, ibuf_size);
+			l = read(0, buf, IBUF_SIZE);
 			if (l <= 0)
 				goto done;
-			li += l;
+			li += (size_t)l;
 			switch (mode) {
 			case SENC_b64:
 				lo2 = senc_b64(buf, (size_t)l, bufo);
@@ -101,10 +103,10 @@ int main(int argc, const char **argv)
 			switch (mode) {
 			case SENC_lzw:
 			case SENC_rle:
-				l = read(0, &buf, ibuf_size);
+				l = read(0, &buf, IBUF_SIZE);
 				if (l <= 0)
 					goto done;
-				li += l;
+				li += (size_t)l;
 				lo2 = mode == SENC_lzw ?
 					senc_lzw(buf, (size_t)l, bufo + 4) :
 					senc_rle(buf, (size_t)l, bufo + 4);
@@ -123,9 +125,9 @@ int main(int argc, const char **argv)
 					fprintf(stderr, "Format error\n");
 					goto done;
 				}
-				li += l;
+				li += (size_t)l;
 				l32 = S_NTOH_U32(l32);
-				if (l32 > xbuf_size) {
+				if (l32 > XBUF_SIZE) {
 					fprintf(stderr, "Format error\n");
 					exit_code = 3;
 					goto done;
@@ -136,7 +138,7 @@ int main(int argc, const char **argv)
 					exit_code = 4;
 					goto done;
 				}
-				li += l;
+				li += (size_t)l;
 				lo2 = mode == SDEC_lzw ?
 					sdec_lzw(buf, (size_t)l, bufo) :
 					sdec_rle(buf, (size_t)l, bufo);

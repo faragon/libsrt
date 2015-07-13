@@ -1549,8 +1549,7 @@ int test_sv_push_pop()
 int test_sv_push_pop_i()
 {
 	enum eSV_Type t[] = { SV_I8, SV_I16, SV_I32, SV_I64 };
-	size_t i = 0, ntests = sizeof(t)/sizeof(t[0]);
-	int res = 0;
+	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
 		sv_t *a = sv_alloc_t(t[i], 10);
 		sv_t *b = sv_alloca_t(t[i], 10);
@@ -1582,8 +1581,7 @@ int test_sv_push_pop_u()
 	suint_t init[] = { (suint_t)-1, (suint_t)-1, (suint_t)-1, (suint_t)-1 },
 		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
 	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
-	size_t i = 0, ntests = sizeof(t)/sizeof(t[0]);
-	int res = 0;
+	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
 		sv_t *a = sv_alloc_t(t[i], 10);
 		sv_t *b = sv_alloca_t(t[i], 10);
@@ -2114,8 +2112,12 @@ int test_sdm_alloc()
 int test_endianess()
 {
 	int res = 0;
-	char a[4] = { 0, 1, 2, 3 };
-	unsigned ua = *(unsigned *)a;
+	union s_u32 a;
+	a.b[0] = 0;
+	a.b[1] = 1;
+	a.b[2] = 2;
+	a.b[3] = 3;
+	unsigned ua = a.a32;
 #if S_IS_LITTLE_ENDIAN
 	unsigned ub = 0x03020100;
 #else
@@ -2162,9 +2164,10 @@ int main()
 	setlocale(LC_ALL, "");
 #endif
 	sbool_t unicode_support = S_TRUE;
-	int chkl, check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
-	for (chkl = 0; chkl < sizeof(check)/sizeof(check[0]); chkl++)
-		if (towlower(check[chkl]) == check[chkl]) {
+	int check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
+	size_t chkl = 0;
+	for (; chkl < sizeof(check)/sizeof(check[0]); chkl++)
+		if ((int)towlower(check[chkl]) == check[chkl]) {
 			unicode_support = S_FALSE;
 			break;
 		}
