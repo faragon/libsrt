@@ -29,12 +29,6 @@
  * Internal functions
  */
 
-static void sd_set_alloc_errors(sd_t *d, const sbool_t has_errors)
-{
-	if (d)
-		d->alloc_errors = has_errors;
-}
-
 size_t sd_alloc_size_to_mt_size(const size_t a_size, const struct sd_conf *f)
 {
 	ASSERT_RETURN_IF(!f, 0);
@@ -60,7 +54,7 @@ static size_t sd_size_to_alloc_size(const size_t header_size,
 size_t sd_get_size(const sd_t *d)
 {
 	RETURN_IF(!d, 0);
-	return d->is_full ? ((struct SData_Full *)d)->size :
+	return d->is_full ? ((const struct SData_Full *)d)->size :
 		(size_t)((d->size_h << 8) | ((struct SData_Small *)d)->size_l);
 }
 
@@ -160,7 +154,7 @@ void sd_reset(sd_t *d, const sbool_t use_big_struct,
 			d->size_h = 0;
 			d->alloc_size_h = 0;
 		}
-		sd_set_alloc_errors(d, S_FALSE);
+		sd_reset_alloc_errors(d);
 		sd_set_size(d, 0);
 		sd_set_alloc_size(d, alloc_size);
 		d->other1 = 0;
@@ -174,6 +168,7 @@ size_t sd_grow(sd_t **d, const size_t extra_size, const struct sd_conf *f)
 {
 	ASSERT_RETURN_IF(!d, 0);
 	size_t size = *d ? sd_get_size(*d) : 0;
+	ASSERT_RETURN_IF(s_size_t_overflow(size, extra_size), 0);
 	size_t new_size = sd_reserve(d, size + extra_size, f);
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
 }
@@ -205,7 +200,7 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		if ((*d)->ext_buffer) {
 			S_ERROR("out of memore on fixed-size "
 				 "allocated space");
-			sd_set_alloc_errors(*d, S_TRUE);
+			sd_set_alloc_errors(*d);
 			return current_max_size;
 		}
 		size_t header_size, elem_size;
@@ -218,7 +213,7 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 		sd_t *d1 = (sd_t *)__sd_realloc(*d, new_alloc_size);
 		if (!d1) {
 			S_ERROR("not enough memory (realloc error)");
-			sd_set_alloc_errors(*d, S_TRUE);
+			sd_set_alloc_errors(*d);
 			return current_max_size;
 		}
 		*d = d1;

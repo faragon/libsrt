@@ -30,7 +30,6 @@ enum eSM_Type
         SM_StrInt,
 	SM_StrStr,
 	SM_StrPtr,
-        SM_LAST = SM_StrStr,
 	SM_TotalTypes
 };
 

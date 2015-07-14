@@ -179,6 +179,18 @@ struct sd_conf
  * Functions
  */
 
+S_INLINE void sd_set_alloc_errors(sd_t *d)
+{
+	if (d)
+		d->alloc_errors = 1;
+}
+
+S_INLINE void sd_reset_alloc_errors(sd_t *d)
+{
+	if (d)
+		d->alloc_errors = 0;
+}
+
 size_t sd_alloc_size_to_mt_size(const size_t a_size, const struct sd_conf *f);
 sbool_t sd_alloc_size_to_is_big(const size_t s, const struct sd_conf *f);
 size_t sd_get_size(const sd_t *s);

@@ -287,10 +287,22 @@ union s_u32 {
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	#define S_LD_U32(a) S_LD_X(a, unsigned)
-	#define S_LD_SZT(a) S_LD_X(a, size_t)
-	#define S_ST_U32(a, v) S_ST_X(a, unsigned, v)
-	#define S_ST_SZT(a, v) S_ST_X(a, size_t, v)
+	S_INLINE unsigned s_load_u32(const void *a) {
+		return S_LD_X(a, const unsigned);
+	}
+	S_INLINE size_t s_load_szt(const void *a) {
+		return S_LD_X(a, const size_t);
+	}
+	S_INLINE void s_st_u32(void *a, unsigned v) {
+		S_ST_X(a, unsigned, v);
+	}
+	S_INLINE void s_st_szt(void *a, unsigned v) {
+		S_ST_X(a, size_t, v);
+	}
+	#define S_LD_U32(a) s_load_u32((const void *)(a))
+	#define S_LD_SZT(a) s_load_szt((const void *)(a))
+	#define S_ST_U32(a, v) s_st_u32((void *)(a), v)
+	#define S_ST_SZT(a, v) s_st_szt((void *)(a), v)
 #else /* Aligned access supported only for 32 and >= 64 bit CPUs */
 	#if S_IS_LITTLE_ENDIAN
 		#define S_UALD_U32(a) (*(unsigned char *)(a) |	\
@@ -399,7 +411,7 @@ S_INLINE void s_copy_elems(void *t, const size_t t_off, const void *s, const siz
 
 S_INLINE size_t s_load_size_t(const void *aligned_base_address, const size_t offset)
 {
-	return S_LD_SZT(((char *)aligned_base_address) + offset);
+	return S_LD_SZT(((const char *)aligned_base_address) + offset);
 }
 
 S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
@@ -436,7 +448,7 @@ S_INLINE unsigned slog2(suint_t i)
  * Custom "memset" functions
  */
 
-S_INLINE void s_memset32(unsigned char *o, unsigned data, size_t n)
+S_INLINE void s_memset32(void *o, unsigned data, size_t n)
 {
 	size_t k = 0, n4 = n / 4;
 	unsigned *o32;
@@ -444,8 +456,8 @@ S_INLINE void s_memset32(unsigned char *o, unsigned data, size_t n)
 	size_t ua_head = (intptr_t)o & 3;
 	if (ua_head && n4) {
 		S_ST_U32(o, data);
-		S_ST_U32(o + n - 4, data);
-		o32 = (unsigned *)(o + 4 - ua_head);
+		S_ST_U32((char *)o + n - 4, data);
+		o32 = (unsigned *)((char *)o + 4 - ua_head);
 	#if S_IS_LITTLE_ENDIAN
 		data = S_ROL32(data, ua_head * 8);
 	#else
@@ -474,7 +486,7 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 			k = 4 - ua_head;
 		}
 		unsigned *o32 = (unsigned *)(o + k);
-		union { unsigned a32; char b[4]; } d[3];
+		union s_u32 d[3];
 		size_t i, j, copy_size = n - k, c12 = (copy_size / 12);
 		for (i = 0; i < 3; i ++)
 			for (j = 0; j < 4; j++)

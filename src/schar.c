@@ -624,8 +624,8 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 	    (ssc_toX != sc_tolower && ssc_toX != sc_toupper))
 		return off;
 	const int op_mod = ssc_toX == sc_tolower? 1 : -1;
-	static const unsigned char m1[4] =
-					{ SSU8_SX, SSU8_SX, SSU8_SX, SSU8_SX };
+	union s_u32 m1;
+	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
 	const suint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
 	const suint32_t msk4 = op_mod > 0? 0x25252525 : 0x05050505;
 	if ((off & 3) == 0) {	/* aligned input */
@@ -633,7 +633,7 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 		for (; off < szm4; off += 4) {
 			suint32_t *c32 = (suint32_t *)(s + off);
 			const suint32_t a = *c32;
-			if ((a & S_LD_U32(m1)) == 0) {
+			if ((a & m1.a32) == 0) {
 				suint32_t b = (msk1 & a) + msk4;
 				b = (msk1 & b) + msk2;
 				b = ((b & ~a) >> 2) & msk3;

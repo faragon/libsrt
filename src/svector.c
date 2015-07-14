@@ -192,8 +192,12 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		return *v = (sv_t *)aux_dup_sd((const sd_t *)src);
 	if (src && (*v)->sv_type == src->sv_type) {
 		const sbool_t aliasing = *v == src;
-		const size_t at = (cat && *v) ? get_size(*v) : 0,
-			     out_size = at + ss;
+		const size_t at = (cat && *v) ? get_size(*v) : 0;
+		if (s_size_t_overflow(at, ss)) {
+			sd_set_alloc_errors((sd_t *)*v);
+			return *v;
+		}
+		const size_t out_size = at + ss;
 		if (sv_reserve(v, out_size) >= out_size) {
 			if (!aliasing)
 				sv_copy_elems(*v, at, src, 0, ss);
@@ -254,7 +258,6 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 			sv_copy_elems(*v, at, src, 0, off);
 			sv_copy_elems(*v, at + off, src, off + n, copy_size);
 			set_size(*v, out_size);
-		} else {
 		}
 	}
 	return sv_check(v);

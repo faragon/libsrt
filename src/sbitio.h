@@ -30,9 +30,9 @@ S_INLINE void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, s
 	}
 	size_t copy_size = cbits / 8;
 	switch (copy_size) {
-	case 3: b[(*i)++] = c; c >>= 8;
-	case 2: b[(*i)++] = c; c >>= 8;
-	case 1: b[(*i)++] = c; c >>= 8;
+	case 3: b[(*i)++] = (unsigned char)c; c >>= 8;
+	case 2: b[(*i)++] = (unsigned char)c; c >>= 8;
+	case 1: b[(*i)++] = (unsigned char)c; c >>= 8;
 	}
 	*acc = cbits % 8;
 	if (*acc)
