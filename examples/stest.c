@@ -1747,7 +1747,7 @@ int test_st_insert_del()
 	return res;
 }
 
-static int test_traverse(const struct STraverseParams *tp)
+static int test_traverse(struct STraverseParams *tp)
 {
 	ss_t **log = (ss_t **)tp->context;
 	struct MyNode1 *node = (struct MyNode1 *)tp->cn;

@@ -191,8 +191,9 @@ static size_t ss_get_max_size(const ss_t *s)
 static size_t get_unicode_size(const ss_t *s)
 {
 	RETURN_IF(!s, 0);
-	return s->is_full ? ((struct SSTR_Full *)s)->unicode_size :
-	((get_unicode_size_h(s) << 8) | ((struct SSTR_Small *)s)->unicode_size_l);
+	return s->is_full ? ((const struct SSTR_Full *)s)->unicode_size :
+			    ((get_unicode_size_h(s) << 8) |
+			     ((const struct SSTR_Small *)s)->unicode_size_l);
 }
 
 static char *get_str(ss_t *s)
@@ -203,8 +204,8 @@ static char *get_str(ss_t *s)
 
 static const char *get_str_r(const ss_t *s)
 {
-	return s->is_full ? ((struct SSTR_Full *)s)->str :
-				     ((struct SSTR_Small *)s)->str;
+	return s->is_full ? ((const struct SSTR_Full *)s)->str :
+			    ((const struct SSTR_Small *)s)->str;
 }
 
 static size_t get_str_off(const ss_t *s)
@@ -334,7 +335,7 @@ static size_t ss_utf8_to_wc(const char *s, const size_t off,
 	int encoding_errors = 0;
 	const size_t csize = sc_utf8_to_wc(s, off, max_off, unicode_out,
 							&encoding_errors);
-	if (encoding_errors) {
+	if (encoding_errors && s_unicode_error_out) {
 		S_ERROR("broken UTF8");
 		set_encoding_errors(s_unicode_error_out, S_TRUE);
 	}
@@ -480,7 +481,7 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src, senc_f_t f)
 		     out_size = at + f(NULL, in_size, NULL);
 	if (ss_reserve(s, out_size) >= out_size) {
 		const ss_t *src1 = aliasing ? *s : src;
-		f((unsigned char *)get_str_r(src1), in_size,
+		f((const unsigned char *)get_str_r(src1), in_size,
 		  (unsigned char *)get_str(*s) + at);
 		if (at == 0) {
 			set_unicode_size_cached(*s, S_TRUE);
@@ -691,15 +692,14 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 	} else { /* else: cut (implicit) */
 		if (ss_reserve(s, out_size) >= out_size) {
 			if (!aliasing)
-				memcpy(get_str(*s) + at, get_str_r(src),
-								n);
+				memcpy(get_str(*s) + at, get_str_r(src), n);
 			set_size(*s, out_size);
 		}
 	}
 	return *s;
 }
 
-static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, const ss_t *src,
+static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 			  const size_t u_chars, int fill_char)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
@@ -859,7 +859,7 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
  * Accessors
  */
 
-size_t ss_len_u(const ss_t *s)
+size_t ss_len_u(ss_t *s)
 {
 	S_ASSERT(s);
 	if (!s)
@@ -867,12 +867,11 @@ size_t ss_len_u(const ss_t *s)
 	if (is_unicode_size_cached(s))
 		return get_unicode_size(s);
 	/* Not cached, so cache it: */
-	ss_t *w = (ss_t *)s; /* object will not be change but cached data */
-	const char *p = get_str_r(w);
-	const size_t ss = sd_get_size(w),
+	const char *p = get_str_r(s);
+	const size_t ss = sd_get_size(s),
 		     cached_uc_size = sc_utf8_count_chars(p, ss);
-	set_unicode_size_cached(w, S_TRUE);
-	set_unicode_size(w, cached_uc_size);
+	set_unicode_size_cached(s, S_TRUE);
+	set_unicode_size(s, cached_uc_size);
 	return cached_uc_size;
 }
 
@@ -1028,7 +1027,7 @@ ss_t *ss_dup_resize(const ss_t *src, const size_t n, char fill_byte)
 	return aux_resize(&s, S_FALSE, src, n, fill_byte);
 }
 
-ss_t *ss_dup_resize_u(const ss_t *src, const size_t n, int fill_char)
+ss_t *ss_dup_resize_u(ss_t *src, const size_t n, int fill_char)
 {
 	ss_t *s = NULL;
 	return aux_resize_u(&s, S_FALSE, src, n, fill_char);
@@ -1234,7 +1233,7 @@ ss_t *ss_cpy_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte)
 	return aux_resize(s, S_FALSE, src, n, fill_byte);
 }
 
-ss_t *ss_cpy_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char)
+ss_t *ss_cpy_resize_u(ss_t **s, ss_t *src, const size_t n, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, src, n, fill_char);
 }
@@ -1334,7 +1333,7 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF((!src || !offs), ss_check(s)); /* same string */
-	char *src_str = NULL, *src_aux;
+	const char *src_str = NULL, *src_aux;
 	const size_t elems = sv_size(offs) / 2;
 	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
 	size_t src_off = get_str_off(src), src_size;
@@ -1349,10 +1348,10 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 		   to keep the reference to the data valid. */
 		if (!ss_grow(s, src_size))
 			return *s; /* not enough memory */
-		src_str = (char *)*s;
+		src_str = (const char *)*s;
 	} else {
-		src_aux = (char *)src;
-		src_str = (char *)src_aux;
+		src_aux = (const char *)src;
+		src_str = (const char *)src_aux;
 	}
 	const size_t src_unicode_size = is_unicode_size_cached(src) ?
 					get_unicode_size(src) : 0;
@@ -1364,7 +1363,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF(!src, ss_check(s)); /* same string */
-	char *src_str = NULL, *src_aux;
+	const char *src_str = NULL, *src_aux;
 	size_t src_unicode_size = 0;
 	const size_t src_off = get_str_off(src) + sub_off; 
 	if (*s == src && !(*s)->ext_buffer) {
@@ -1372,10 +1371,10 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 		   to keep the reference to the data valid. */
 		if (!ss_grow(s, sub_size))
 			return *s; /* not enough memory */
-		src_str = (char *)*s;
+		src_str = (const char *)*s;
 	} else {
-		src_aux = (char *)src;
-		src_str = (char *)src_aux;
+		src_aux = (const char *)src;
+		src_str = (const char *)src_aux;
 	}
 	src_unicode_size = 0;
 	return ss_cat_cn_raw(s, src_str, src_off, sub_size, src_unicode_size);
@@ -1403,8 +1402,7 @@ ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 
 ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 {
-	char *src_aux = (char *)src;
-	return ss_cat_cn_raw(s, src_aux, 0, src_size, 0);
+	return ss_cat_cn_raw(s, src, 0, src_size, 0);
 }
 
 ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
@@ -1486,7 +1484,7 @@ ss_t *ss_cat_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte)
 	return aux_resize(s, S_TRUE, src, n, fill_byte);
 }
 
-ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char)
+ss_t *ss_cat_resize_u(ss_t **s, ss_t *src, const size_t n, int fill_char)
 {
 	return aux_resize_u(s, S_TRUE, src, n, fill_char);
 }
@@ -1672,7 +1670,7 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 		const size_t ss = sd_get_size(s);
 		for (; i < ss && i < nmax;) {
 			int c = 0;
-			size_t l = ss_utf8_to_wc(p, i, ss, &c, (ss_t *)s);
+			size_t l = ss_utf8_to_wc(p, i, ss, &c, NULL);
 			o[o_s++] = c;
 			i += l;
 		}
@@ -1811,9 +1809,9 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 		size_t chs1, chs2;
 		for (; i < s1_max && j < s2_max;) {
 			chs1 = ss_utf8_to_wc(
-				s1_str, i, s1_max, &u1, (ss_t *)s1);
+				s1_str, i, s1_max, &u1, NULL);
 			chs2 = ss_utf8_to_wc(
-				s2_str, j, s2_max, &u2, (ss_t *)s2);
+				s2_str, j, s2_max, &u2, NULL);
 			if ((i + chs1) > s1_max || (j + chs2) > s2_max) {
 				res = chs1 == chs2 ? 0 : chs1 < chs2 ? -1 : 1;
 				utf8_cut = 1;
@@ -1848,7 +1846,7 @@ int ss_getchar(const ss_t *s, size_t *autoinc_off)
 		return EOF;
 	int c = EOF;
 	const char *p = get_str_r(s);
-	*autoinc_off += ss_utf8_to_wc(p, *autoinc_off, ss, &c, (ss_t *)s);
+	*autoinc_off += ss_utf8_to_wc(p, *autoinc_off, ss, &c, NULL);
 	return c;
 }
 

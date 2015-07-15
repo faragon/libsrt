@@ -36,7 +36,7 @@ S_INLINE void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, s
 	}
 	*acc = cbits % 8;
 	if (*acc)
-		b[*i] = c;
+		b[*i] = (unsigned char)c;
 }
 
 S_INLINE void sbitio_write_close(unsigned char *b, size_t *i, size_t *acc)

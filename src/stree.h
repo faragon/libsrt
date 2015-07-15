@@ -78,7 +78,7 @@ struct STraverseParams
 	ssize_t max_level;
 };
 
-typedef int (*st_traverse)(const struct STraverseParams *p);
+typedef int (*st_traverse)(struct STraverseParams *p);
 
 /*
 * Constants
@@ -158,7 +158,10 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback);
 const stn_t *st_locate(const st_t *t, const stn_t *n);
 
 /* #API: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)| */
-const stn_t *st_enum(const st_t *t, const stndx_t index);
+stn_t *st_enum(st_t *t, const stndx_t index);
+
+/* #API: |Fast unsorted enumeration (read-only)|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)| */
+const stn_t *st_enum_r(const st_t *t, const stndx_t index);
 
 /* #API: |Full tree traversal: pre-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)| */
 ssize_t st_traverse_preorder(const st_t *t, st_traverse f, void *context);

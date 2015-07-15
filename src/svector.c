@@ -92,14 +92,14 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
 		return out;						\
 	}
 
-SV_LDx(svldi8, char, sint_t)
-SV_LDx(svldu8, unsigned char, suint_t)
-SV_LDx(svldi16, short, sint_t)
-SV_LDx(svldu16, unsigned short, suint_t)
-SV_LDx(svldi32, sint32_t, sint_t)
-SV_LDx(svldu32, suint32_t, suint_t)
-SV_LDx(svldi64, sint_t, sint_t)
-SV_LDx(svldu64, suint_t, suint_t)
+SV_LDx(svldi8, const char, sint_t)
+SV_LDx(svldu8, const unsigned char, suint_t)
+SV_LDx(svldi16, const short, sint_t)
+SV_LDx(svldu16, const unsigned short, suint_t)
+SV_LDx(svldi32, const sint32_t, sint_t)
+SV_LDx(svldu32, const suint32_t, suint_t)
+SV_LDx(svldi64, const sint_t, sint_t)
+SV_LDx(svldu64, const suint_t, suint_t)
 
 typedef sint_t *(*T_SVLDX)(const void *, sint_t *, const size_t);
 
@@ -115,7 +115,7 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
 
 static size_t get_size(const sv_t *v)
 {
-	return ((struct SData_Full *)v)->size;
+	return ((const struct SData_Full *)v)->size;
 }
 
 static void set_size(sv_t *v, const size_t size)
@@ -629,7 +629,7 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
 	SV_PUSH_END(v, 1);
-	svstx_f[(int)(*v)->sv_type](p, (sint_t *)&c);
+	svstx_f[(int)(*v)->sv_type](p, (const sint_t *)&c);
 	return S_TRUE;
 }
 

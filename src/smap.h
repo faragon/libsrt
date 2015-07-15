@@ -180,7 +180,11 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k);
  */
 
 /* #API: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)| */
-const stn_t *sm_enum(const sm_t *m, const stndx_t i);
+stn_t *sm_enum(sm_t *m, const stndx_t i);
+
+/* #API: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)| */
+const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
+
 
 /* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n)| */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);

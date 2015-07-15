@@ -56,9 +56,9 @@ static void aux_sp_delete(void *node)
 
 struct SV2X { sv_t *kv, *vv; };
 
-static int aux_ii32_sort(const struct STraverseParams *tp)
+static int aux_ii32_sort(struct STraverseParams *tp)
 {
-	struct SMapii *cn = (struct SMapii *)tp->cn;
+	const struct SMapii *cn = (const struct SMapii *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->k);
@@ -67,9 +67,9 @@ static int aux_ii32_sort(const struct STraverseParams *tp)
 	return 0;
 }
 
-static int aux_uu32_sort(const struct STraverseParams *tp)
+static int aux_uu32_sort(struct STraverseParams *tp)
 {
-	struct SMapuu *cn = (struct SMapuu *)tp->cn;
+	const struct SMapuu *cn = (const struct SMapuu *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_u(&v2x->kv, cn->k);
@@ -77,9 +77,9 @@ static int aux_uu32_sort(const struct STraverseParams *tp)
 	}
 	return 0;
 }
-static int aux_ii_sort(const struct STraverseParams *tp)
+static int aux_ii_sort(struct STraverseParams *tp)
 {
-	struct SMapII *cn = (struct SMapII *)tp->cn;
+	const struct SMapII *cn = (const struct SMapII *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->x.k);
@@ -88,9 +88,9 @@ static int aux_ii_sort(const struct STraverseParams *tp)
 	return 0;
 }
 
-static int aux_is_ip_sort(const struct STraverseParams *tp)
+static int aux_is_ip_sort(struct STraverseParams *tp)
 {
-	struct SMapIP *cn = (struct SMapIP *)tp->cn;
+	const struct SMapIP *cn = (const struct SMapIP *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->x.k);
@@ -99,9 +99,9 @@ static int aux_is_ip_sort(const struct STraverseParams *tp)
 	return 0;
 }
 
-static int aux_si_sort(const struct STraverseParams *tp)
+static int aux_si_sort(struct STraverseParams *tp)
 {
-	struct SMapII *cn = (struct SMapII *)tp->cn;
+	const struct SMapII *cn = (const struct SMapII *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push(&v2x->kv, &cn->x.k);
@@ -110,9 +110,9 @@ static int aux_si_sort(const struct STraverseParams *tp)
 	return 0;
 }
 
-static int aux_sp_ss_sort(const struct STraverseParams *tp)
+static int aux_sp_ss_sort(struct STraverseParams *tp)
 {
-	struct SMapII *cn = (struct SMapII *)tp->cn;
+	const struct SMapII *cn = (const struct SMapII *)tp->cn;
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push(&v2x->kv, &cn->x.k);
@@ -219,7 +219,7 @@ sbool_t sm_reset(sm_t *m)
 	if (delete_callback) {	/* deletion of dynamic memory elems */
 		stndx_t i = 0;
 		for (; i < (stndx_t)m->df.size; i++) {
-			stn_t *n = (stn_t *)st_enum((const st_t *)m, i);
+			stn_t *n = st_enum(m, i);
 			delete_callback(n);
 		}
 	}
@@ -253,7 +253,7 @@ sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 	ASSERT_RETURN_IF(!m, SINT32_MIN);
 	struct SMapii n;
 	n.k = k;
-	struct SMapii *nr = (struct SMapii *)st_locate(m, (const stn_t *)&n);
+	const struct SMapii *nr = (const struct SMapii *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : (sint32_t)m->f.iaux1;
 }
 
@@ -479,9 +479,14 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k)
  * Enumeration / export data
  */
 
-const stn_t *sm_enum(const sm_t *m, const stndx_t i)
+stn_t *sm_enum(sm_t *m, const stndx_t i)
 {
 	return st_enum(m, i);
+}
+
+const stn_t *sm_enum_r(const sm_t *m, const stndx_t i)
+{
+	return st_enum_r(m, i);
 }
 
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context)

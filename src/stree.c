@@ -83,17 +83,20 @@ struct NodeContext
 /*
  * Internal functions
  */
+#define ST_NO_PREFIX
+#define ST_GET_NODE(t, id, Tprefix)					\
+	RETURN_IF(node_id == ST_NIL, NULL);				\
+	return (Tprefix stn_t *)((Tprefix char *)t + SDT_HEADER_SIZE +	\
+				 t->f.node_size * node_id);
 
 static stn_t *get_node(st_t *t, const stndx_t node_id)
 {
-	RETURN_IF(node_id == ST_NIL, NULL);
-	return (stn_t *)((char *)t + SDT_HEADER_SIZE +
-			 t->f.node_size * node_id);
+	ST_GET_NODE(t, id, ST_NO_PREFIX);
 }
 
 static const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
 {
-	return (const stn_t *)get_node((st_t *)t, node_id);
+	ST_GET_NODE(t, id, const);
 }
 
 static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
@@ -138,7 +141,7 @@ static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
 
 static size_t get_size(const st_t *t)
 {
-	return ((struct SData_Full *)t)->size; /* faster than sd_get_size */
+	return ((const struct SData_Full *)t)->size; /* faster than sd_get_size */
 }
 
 static void set_size(st_t *t, const size_t size)
@@ -585,7 +588,13 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 	return cn;
 }
 
-const stn_t *st_enum(const st_t *t, const stndx_t index)
+stn_t *st_enum(st_t *t, const stndx_t index)
+{
+	ASSERT_RETURN_IF(!t, NULL);
+	return get_node(t, index);
+}
+
+const stn_t *st_enum_r(const st_t *t, const stndx_t index)
 {
 	ASSERT_RETURN_IF(!t, NULL);
 	return get_node_r(t, index);
@@ -597,8 +606,8 @@ const stn_t *st_enum(const st_t *t, const stndx_t index)
 
 struct TPath {
 	stndx_t p, c;		/* parent, current */
-	const stn_t *cn;	/* current (pointer) */
 	int s;			/* state */
+	const stn_t *cn;	/* current (pointer) */
 	};
 
 enum eTMode

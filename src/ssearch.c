@@ -219,7 +219,7 @@ size_t ss_find_bmh(const char *s0, const size_t off, const size_t ss0,
 	for (; ss >= ts; ss -= bad_chars[s[last]], s += bad_chars[s[last]])
 		for (i = last; s[i] == t[i]; i--)
 			if (!i)
-				return (size_t)((char *)s - s0);
+				return (size_t)((const char *)s - s0);
 	return S_NPOS;
 }
 

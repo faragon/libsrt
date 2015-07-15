@@ -134,7 +134,7 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size);
  */
 
 /* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed| */
-size_t ss_len_u(const ss_t *s);
+size_t ss_len_u(ss_t *s);
 
 /* #API: |Allocated space|string|current allocated space (bytes)|O(1)| */
 size_t ss_capacity(const ss_t *s);
@@ -219,7 +219,7 @@ ss_t *ss_dup_replace(const ss_t *src, const size_t off, const ss_t *s1, const ss
 ss_t *ss_dup_resize(const ss_t *src, const size_t n, char fill_byte);
 
 /* #API: |Duplicate and resize (Unicode addressing)|string; new size (characters); fill character|output result|O(n)| */
-ss_t *ss_dup_resize_u(const ss_t *src, const size_t n, int fill_char);
+ss_t *ss_dup_resize_u(ss_t *src, const size_t n, int fill_char);
 
 /* #API: |Duplicate and trim string|string|output result|O(n)| */
 ss_t *ss_dup_trim(const ss_t *src);
@@ -298,7 +298,7 @@ ss_t *ss_cpy_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1
 ss_t *ss_cpy_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte);
 
 /* #API: |Overwrite string with input string copy plus resize operation (byte/UTF-8 mode)|output string; input string; number of bytes of input string; byte for refill|output string reference (optional usage)|O(n)| */
-ss_t *ss_cpy_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char);
+ss_t *ss_cpy_resize_u(ss_t **s, ss_t *src, const size_t n, int fill_char);
 
 /* #API: |Overwrite string with input string plus trim (left and right) space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 ss_t *ss_cpy_trim(ss_t **s, const ss_t *src);
@@ -391,7 +391,7 @@ ss_t *ss_cat_replace(ss_t **s, const ss_t *src, const size_t off, const ss_t *s1
 ss_t *ss_cat_resize(ss_t **s, const ss_t *src, const size_t n, char fill_byte);
 
 /* #API: |Concatenate string with input string copy plus resize operation (Unicode character)|output string; input string; number of characters of input string; character for refill|output string reference (optional usage)|O(n)| */
-ss_t *ss_cat_resize_u(ss_t **s, const ss_t *src, const size_t n, int fill_char);
+ss_t *ss_cat_resize_u(ss_t **s, ss_t *src, const size_t n, int fill_char);
 
 /* #API: |Concatenate string with input string plus trim (left and right) space removal operation|output string; input string|output string reference (optional usage)|O(n)| */
 ss_t *ss_cat_trim(ss_t **s, const ss_t *src);

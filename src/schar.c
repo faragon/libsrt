@@ -631,7 +631,7 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 	if ((off & 3) == 0) {	/* aligned input */
 		const size_t szm4 = max & (~3);
 		for (; off < szm4; off += 4) {
-			suint32_t *c32 = (suint32_t *)(s + off);
+			const suint32_t *c32 = (const suint32_t *)(s + off);
 			const suint32_t a = *c32;
 			if ((a & m1.a32) == 0) {
 				suint32_t b = (msk1 & a) + msk4;

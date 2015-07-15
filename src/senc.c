@@ -21,14 +21,14 @@
  * Constants
  */
 
-static const char b64e[64] = {
+static const unsigned char b64e[64] = {
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
 	'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b',
 	'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
 	'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3',
 	'4', '5', '6', '7', '8', '9', '+', '/'
 	};
-static const char b64d[128] = {
+static const unsigned char b64d[128] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 0, 0,
 	0, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -37,13 +37,13 @@ static const char b64d[128] = {
 	34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50,
 	51, 0, 0, 0, 0, 0
 	};
-static const char n2h_l[16] = {
+static const unsigned char n2h_l[16] = {
 	48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102
 	};
-static const char n2h_u[16] = {
+static const unsigned char n2h_u[16] = {
 	48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 65, 66, 67, 68, 69, 70
 	};
-static const char h2n[64] = {
+static const unsigned char h2n[64] = {
 	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0,
 	0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -222,13 +222,14 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 		       sbool_t lzw_mode)
 {
 	RETURN_IF(i + min_run >= ss, 0);
-	suint32_t *p0 = (suint32_t *)(s + i), *p3 = (suint32_t *)(s + i + 3);
+	const suint32_t *p0 = (const suint32_t *)(s + i),
+			*p3 = (const suint32_t *)(s + i + 3);
 	size_t run_length = 0, eq4 = p0[0] == p0[1],
 	       eq3 = !eq4 && p0[0] == p3[0];
 	for (; eq4 || eq3;) {
-		srle_cmp_t *u = (srle_cmp_t *)(s + i),
-		*v = (srle_cmp_t *)(s + i + 1),
-		u0 = u[0];
+		const srle_cmp_t *u = (const srle_cmp_t *)(s + i),
+				 *v = (const srle_cmp_t *)(s + i + 1),
+				 u0 = u[0];
 		size_t j, ss2 = S_MIN(ss, max_run) - sizeof(srle_cmp_t);
 		if (eq4) {
 			j = i + sizeof(suint32_t) * 2;
@@ -239,7 +240,7 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 				*run_elem_size = 4;
 			}
 			for (; j < ss2 ; j += sizeof(srle_cmp_t))
-				if (u0 != *(srle_cmp_t *)(s + j))
+				if (u0 != *(const srle_cmp_t *)(s + j))
 					break;
 		} else {
 			if (p0[1] != p3[1] || p0[2] != p3[2])
@@ -247,7 +248,7 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 			j = i + 3 * 4;
 			*run_elem_size = 3;
 			for (; j < ss2 ; j += 3)
-				if (p0[0] != *(suint32_t *)(s + j))
+				if (p0[0] != *(const suint32_t *)(s + j))
 					break;
 		}
 		if (j - i >= min_run)

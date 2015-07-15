@@ -25,7 +25,7 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 {
 	if (!log)
 		return;
-	const size_t elems = sd_get_size((sd_t *)v);
+	const size_t elems = sd_get_size((const sd_t *)v);
 	enum eSV_Type t = v ? (enum eSV_Type)v->sv_type : SV_GEN;
 	const size_t elem_size = v ? v->elem_size : 0;
 	ss_cat_printf(log, 512, "sv_t: t: %s, elem size: %zu, sz: %zu, { ",
@@ -48,7 +48,7 @@ struct st_log_context_data
 	ss_cat_stn tf;
 };
 
-static int aux_st_log_traverse(const struct STraverseParams *tp)
+static int aux_st_log_traverse(struct STraverseParams *tp)
 {
 	struct st_log_context_data *d =
 				(struct st_log_context_data *)tp->context;
@@ -87,7 +87,7 @@ static void ndx2s(char *out, const size_t out_max, const stndx_t id)
 		snprintf(out, out_max, "%u", (unsigned)id);
 }
 
-static int aux_sm_log_traverse(const struct STraverseParams *tp)
+static int aux_sm_log_traverse(struct STraverseParams *tp)
 {
 	ss_t **log = (ss_t **)tp->context;
 	if (!tp->cn) {
@@ -96,33 +96,33 @@ static int aux_sm_log_traverse(const struct STraverseParams *tp)
 	}
 	char k[4096] = "", v[4096] = "";
 	switch (tp->t->f.type) {
-	case SM_I32I32:	sprintf(k, "%i", ((struct SMapii *)tp->cn)->k);
-			sprintf(v, "%i", ((struct SMapii *)tp->cn)->v);
+	case SM_I32I32:	sprintf(k, "%i", ((const struct SMapii *)tp->cn)->k);
+			sprintf(v, "%i", ((const struct SMapii *)tp->cn)->v);
 			break;
-	case SM_U32U32:	sprintf(k, "%u", ((struct SMapuu *)tp->cn)->k);
-			sprintf(v, "%u", ((struct SMapuu *)tp->cn)->v);
+	case SM_U32U32:	sprintf(k, "%u", ((const struct SMapuu *)tp->cn)->k);
+			sprintf(v, "%u", ((const struct SMapuu *)tp->cn)->v);
 			break;
 	case SM_IntInt:	case SM_IntStr:
-	case SM_IntPtr:	sprintf(k, FMT_I, ((struct SMapIx *)tp->cn)->k);
+	case SM_IntPtr:	sprintf(k, FMT_I, ((const struct SMapIx *)tp->cn)->k);
 			break;
-	case SM_StrInt:	sprintf(k, "%p", (void *)((struct SMapSI *)tp->cn)->x.k);
+	case SM_StrInt:	sprintf(k, "%p", ((const struct SMapSI *)tp->cn)->x.k);
 			break;
 	case SM_StrStr:
-	case SM_StrPtr:	sprintf(k, "%p", (void *)((struct SMapSx *)tp->cn)->k);
+	case SM_StrPtr:	sprintf(k, "%p", ((const struct SMapSx *)tp->cn)->k);
 			break;
 	}
 	switch (tp->t->f.type) {
-	case SM_IntInt:	sprintf(v, FMT_I, ((struct SMapII *)tp->cn)->v);
+	case SM_IntInt:	sprintf(v, FMT_I, ((const struct SMapII *)tp->cn)->v);
 			break;
-	case SM_StrInt:	sprintf(v, FMT_I, ((struct SMapSI *)tp->cn)->v);
+	case SM_StrInt:	sprintf(v, FMT_I, ((const struct SMapSI *)tp->cn)->v);
 			break;
-	case SM_IntStr:	sprintf(k, "%p", (void *)((struct SMapIS *)tp->cn)->v);
+	case SM_IntStr:	sprintf(k, "%p", ((const struct SMapIS *)tp->cn)->v);
 			break;
-	case SM_IntPtr:	sprintf(k, "%p", (void *)((struct SMapIP *)tp->cn)->v);
+	case SM_IntPtr:	sprintf(k, "%p", ((const struct SMapIP *)tp->cn)->v);
 			break;
-	case SM_StrStr:sprintf(k, "%p", (void *)((struct SMapSS *)tp->cn)->v);
+	case SM_StrStr:sprintf(k, "%p", ((const struct SMapSS *)tp->cn)->v);
 			break;
-	case SM_StrPtr:	sprintf(k, "%p", (void *)((struct SMapSP *)tp->cn)->v);
+	case SM_StrPtr:	sprintf(k, "%p", ((const struct SMapSP *)tp->cn)->v);
 			break;
 	}
 	char id[128], l[128], r[128];

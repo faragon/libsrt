@@ -42,33 +42,33 @@ extern "C" {
 	void pfix##_set_size(pfix##_t *c, const size_t ss);		\
 	size_t pfix##_len(const pfix##_t *c);
 
-#define SD_BUILDFUNCS(pfix)						   \
-	void pfix##_free_aux(const size_t nargs, pfix##_t **c, ...) {	   \
-		va_list ap;						   \
-		va_start(ap, c);					   \
-		sd_free_va(nargs, (sd_t **)c, ap);			   \
-		va_end(ap);						   \
-	}								   \
-	size_t pfix##_grow(pfix##_t **c, const size_t extra_elems) {	   \
-		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		   \
-		return sd_grow((sd_t **)c, extra_elems, &pfix##f);	   \
-	}								   \
-	size_t pfix##_reserve(pfix##_t **c, const size_t max_elems) {	   \
-		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		   \
-		return sd_reserve((sd_t **)c, max_elems, &pfix##f);	   \
-	}								   \
-	pfix##_t *pfix##_shrink(pfix##_t **c) {				   \
-		return (pfix##_t *)sd_shrink((sd_t **)c, &pfix##f);	   \
-	}								   \
-	size_t pfix##_size(const pfix##_t *c) {				   \
-		return sd_get_size((sd_t *)c);				   \
-	}								   \
-	void pfix##_set_size(pfix##_t *c, const size_t s) {		   \
-		sd_set_size((sd_t *)c, s);				   \
-	}								   \
-	size_t pfix##_len(const pfix##_t *c) {				   \
-		return sd_get_size((sd_t *)c);				   \
-	}								   \
+#define SD_BUILDFUNCS(pfix)						\
+	void pfix##_free_aux(const size_t nargs, pfix##_t **c, ...) {	\
+		va_list ap;						\
+		va_start(ap, c);					\
+		sd_free_va(nargs, (sd_t **)c, ap);			\
+		va_end(ap);						\
+	}								\
+	size_t pfix##_grow(pfix##_t **c, const size_t extra_elems) {	\
+		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		\
+		return sd_grow((sd_t **)c, extra_elems, &pfix##f);	\
+	}								\
+	size_t pfix##_reserve(pfix##_t **c, const size_t max_elems) {	\
+		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		\
+		return sd_reserve((sd_t **)c, max_elems, &pfix##f);	\
+	}								\
+	pfix##_t *pfix##_shrink(pfix##_t **c) {				\
+		return (pfix##_t *)sd_shrink((sd_t **)c, &pfix##f);	\
+	}								\
+	size_t pfix##_size(const pfix##_t *c) {				\
+		return sd_get_size((const sd_t *)c);			\
+	}								\
+	void pfix##_set_size(pfix##_t *c, const size_t s) {		\
+		sd_set_size((sd_t *)c, s);				\
+	}								\
+	size_t pfix##_len(const pfix##_t *c) {				\
+		return sd_get_size((const sd_t *)c);				\
+	}								\
 
 /*
  * Artificial memory allocation limits (tests/debug)
