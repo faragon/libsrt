@@ -259,6 +259,8 @@ union s_u32 {
     defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
     defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
     defined(__ARM_FEATURE_UNALIGNED) ||					\
+    defined(_MIPS_ARCH_OCTEON) && _MIPS_ARCH_OCTEON ||			\
+    defined(__OCTEON__) && __OCTEON__ ||				\
     defined(__ppc__) || defined(__POWERPC__)
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
@@ -284,23 +286,26 @@ union s_u32 {
 #endif
 #define S_HTON_U32(a) S_NTOH_U32(a)
 
+#if S_BPWORD <= 4
+	#define S_LD_UW(a) S_LD_U32(a)
+	typedef suint32_t wide_cmp_t;
+#else
+	#define S_LD_UW(a) S_LD_U64(a)
+	typedef suint_t wide_cmp_t;
+#endif
+
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	S_INLINE unsigned s_load_u32(const void *a) {
-		return S_LD_X(a, const unsigned);
-	}
-	S_INLINE size_t s_load_szt(const void *a) {
-		return S_LD_X(a, const size_t);
-	}
 	S_INLINE void s_st_u32(void *a, unsigned v) {
 		S_ST_X(a, unsigned, v);
 	}
 	S_INLINE void s_st_szt(void *a, unsigned v) {
 		S_ST_X(a, size_t, v);
 	}
-	#define S_LD_U32(a) s_load_u32((const void *)(a))
-	#define S_LD_SZT(a) s_load_szt((const void *)(a))
+	#define S_LD_U32(a) S_LD_X(a, const unsigned)
+	#define S_LD_U64(a) S_LD_X(a, const suint_t)
+	#define S_LD_SZT(a) S_LD_X(a, const size_t)
 	#define S_ST_U32(a, v) s_st_u32((void *)(a), v)
 	#define S_ST_SZT(a, v) s_st_szt((void *)(a), v)
 #else /* Aligned access supported only for 32 and >= 64 bit CPUs */
@@ -309,15 +314,18 @@ union s_u32 {
 			*((unsigned char *)(a) + 1) << 8 |	\
 			*((unsigned char *)(a) + 2) << 16 |	\
 			*((unsigned char *)(a) + 3) << 24)
-		#define S_UALD_U64(a)	\
-			((S_UALD_U32(a + 4) << 32) | S_UALD_U32(a))
+		#define S_UALD_U64(a)					\
+			((S_UALD_U32((unsigned char *)(a) + 4) << 32) |	\
+			 S_UALD_U32(a))
 	#else
-		#define S_UALD_U32(a) (*(unsigned char *)(a) << 24 |	\
-			*((unsigned char *)(a) + 1) << 16 |		\
-			*((unsigned char *)(a) + 2) << 8 |		\
-			*((unsigned char *)(a) + 3))
-		#define S_UALD_U64(a)	\
-			(((suint64_t)S_UALD_U32(a) << 32) | S_UALD_U32(a + 4))
+		#define S_UALD_U32(a)				\
+			(*(unsigned char *)(a) << 24 |		\
+			 *((unsigned char *)(a) + 1) << 16 |	\
+			 *((unsigned char *)(a) + 2) << 8 |	\
+			 *((unsigned char *)(a) + 3))
+		#define S_UALD_U64(a)				\
+			(((suint64_t)S_UALD_U32(a) << 32) |	\
+			 S_UALD_U32((unsigned char *)(a) + 4))
 	#endif
 	#define S_LD_U32(a)		 			\
 		(((uintptr_t)(a) & (uintptr_t)S_UALIGNMASK) ?		\

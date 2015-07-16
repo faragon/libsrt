@@ -10,10 +10,7 @@
 #include "sbitio.h"
 #include <stdlib.h>
 
-#define SLZW_ENABLE_RLE
-#if defined(SLZW_ENABLE_RLE) /*&& defined(S_UNALIGNED_MEMORY_ACCESS)*/
-#define SLZW_ENABLE_RLE_ENC
-#endif
+#define SLZW_ENABLE_RLE		1
 #define SLZW_USE_STOP_CODE	0
 #define SLZW_DEBUG		0
 
@@ -57,17 +54,12 @@ static const unsigned char h2n[64] = {
 #define SLZW_OP_START		(1 << SLZW_ROOT_NODE_BITS)
 #define SLZW_RESET		SLZW_OP_START
 #define SLZW_STOP		(SLZW_RESET + 1)
-#ifdef SLZW_ENABLE_RLE
+#if SLZW_ENABLE_RLE
 	#define SLZW_RLE1	(SLZW_STOP + 1)
 	#define SLZW_RLE3       (SLZW_RLE1 + 1)
 	#define SLZW_RLE4       (SLZW_RLE3 + 1)
 	#define SLZW_RLE_CSIZE	16
 	#define SLZW_RLE_BITSD2 9
-	#if S_BPWORD >= 8
-		typedef suint_t srle_cmp_t;
-	#else
-		typedef suint32_t srle_cmp_t;
-	#endif
 	#define SLZW_OP_END	SLZW_RLE4
 #else
 	#define SLZW_OP_END	SLZW_STOP
@@ -128,7 +120,7 @@ static int hex2nibble(const int h)
 }
 
 static size_t senc_hex_aux(const unsigned char *s, const size_t ss,
-			   unsigned char *o, const char *t)
+			   unsigned char *o, const unsigned char *t)
 {
 	RETURN_IF(!s, ss * 2);
 	ASSERT_RETURN_IF(!o, 0);
@@ -224,31 +216,37 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 	RETURN_IF(i + min_run >= ss, 0);
 	const suint32_t *p0 = (const suint32_t *)(s + i),
 			*p3 = (const suint32_t *)(s + i + 3);
-	size_t run_length = 0, eq4 = p0[0] == p0[1],
-	       eq3 = !eq4 && p0[0] == p3[0];
+	suint32_t p00 = S_LD_U32(p0), p01 = S_LD_U32(p0 + 1),
+		  p30 = S_LD_U32(p3 + 0);
+	size_t run_length = 0, eq4 = p00 == p01,
+	       eq3 = !eq4 && p00 == p30;
 	for (; eq4 || eq3;) {
-		const srle_cmp_t *u = (const srle_cmp_t *)(s + i),
-				 *v = (const srle_cmp_t *)(s + i + 1),
-				 u0 = u[0];
-		size_t j, ss2 = S_MIN(ss, max_run) - sizeof(srle_cmp_t);
+		size_t j, ss2;
 		if (eq4) {
+			ss2 = S_MIN(ss, max_run) - sizeof(wide_cmp_t);
+			wide_cmp_t u0 = S_LD_UW(s + i),
+				   v0 = S_LD_UW(s + i + 1);
 			j = i + sizeof(suint32_t) * 2;
-			if (u0 == v[0]) {
+			if (u0 == v0) {
 				j &= S_ALIGNMASK;
 				*run_elem_size = 1;
 			} else {
 				*run_elem_size = 4;
 			}
-			for (; j < ss2 ; j += sizeof(srle_cmp_t))
-				if (u0 != *(const srle_cmp_t *)(s + j))
+			for (; j < ss2 ; j += sizeof(wide_cmp_t))
+				if (u0 != S_LD_UW(s + j))
 					break;
 		} else {
-			if (p0[1] != p3[1] || p0[2] != p3[2])
+			ss2 = S_MIN(ss, max_run) - sizeof(suint32_t);
+			suint32_t p31 = S_LD_U32(p3 + 1),
+				  p32 = S_LD_U32(p3 + 2),
+				  p02 = S_LD_U32(p0 + 2);
+			if (p01 != p31 || p02 != p32)
 				break;
 			j = i + 3 * 4;
 			*run_elem_size = 3;
 			for (; j < ss2 ; j += 3)
-				if (p0[0] != *(const suint32_t *)(s + j))
+				if (p00 != S_LD_U32(s + j))
 					break;
 		}
 		if (j - i >= min_run)
@@ -406,7 +404,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	size_t i = 0;
 	slzw_ndx_t curr_node = 0;
 	for (; i < ss;) {
-#ifdef SLZW_ENABLE_RLE_ENC
+#if SLZW_ENABLE_RLE
 		/*
 		 * Attempt RLE at current offset
 		 */
@@ -576,7 +574,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			oi += write_size;
 			continue;
 		}
-#ifdef SLZW_ENABLE_RLE
+#if SLZW_ENABLE_RLE
 		/*
 		 * Write RLE pattern
 		 */

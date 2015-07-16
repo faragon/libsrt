@@ -8,7 +8,8 @@
 # Build with g++ default C++ settings: make CC=g++
 # Build with clang++ using C++11 standard: make CC=clang++ CPP11=1
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
-# Build with gcc cross compiler: make CC=powerpc-linux-gnu-gcc
+# Build with gcc cross compiler (PPC): make CC=powerpc-linux-gnu-gcc
+# Build with gcc cross compiler (ARM): make CC=arm-linux-gnueabi-gcc
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
@@ -127,7 +128,7 @@ ifeq ($(FORCE32), 1)
 	endif
 	ifeq ($(UNAME_M), mips64)
 		ifeq ($(OCTEON), 1)
-			COMMON_FLAGS += -mips64r2
+			COMMON_FLAGS += -march=octeon
 		else
 			COMMON_FLAGS += -mips32
 		endif
@@ -136,7 +137,7 @@ else
 	ifeq ($(UNAME_M), mips64)
 		COMMON_FLAGS += -mabi=64
 		ifeq ($(OCTEON), 1)
-			COMMON_FLAGS += -mips64r2
+			COMMON_FLAGS += -march=octeon
 		else
 			COMMON_FLAGS += -mips64
 		endif
