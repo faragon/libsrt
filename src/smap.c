@@ -138,6 +138,8 @@ static void smf_setup(const enum eSM_Type t, struct STConf *f)
 	case SM_StrInt: case SM_StrStr: case SM_StrPtr:
 		f->cmp = (st_cmp_t)cmp_s;
 		break;
+	default:
+		break;
 	}
 	f->type = (unsigned)t;
 	f->node_size = sm_elem_size(t);
