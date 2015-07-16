@@ -196,6 +196,8 @@ size_t sm_elem_size(const enum eSM_Type t)
 	case SM_StrInt:	return sizeof(struct SMapSI);
 	case SM_StrStr:	return sizeof(struct SMapSS);
 	case SM_StrPtr: return sizeof(struct SMapSP);
+	default:
+		break;
 	}
 	return 0;
 }
