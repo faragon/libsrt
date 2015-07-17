@@ -48,8 +48,20 @@ COMMON_FLAGS = -pipe
 
 # Configure compiler context
 
-UNAME = $(shell uname)
-UNAME_M = $(shell uname -m)
+ifndef UNAME
+	UNAME = $(shell uname)
+endif
+ifndef UNAME_M
+	UNAME_M = $(shell uname -m)
+endif
+ifndef OCTEON
+	OCTEON = 0
+	ifeq ($(UNAME_M), mips64)
+		ifeq ($(UNAME), Linux)
+			OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
+		endif
+	endif
+endif
 
 ifeq ($(CC), tcc)
 	PROFILING=0
@@ -115,13 +127,6 @@ else
 	COMMON_FLAGS += -fomit-frame-pointer
 endif
 
-OCTEON = 0
-ifeq ($(UNAME_M), mips64)
-	ifeq ($(UNAME), Linux)
-		OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
-	endif
-endif
-
 ifeq ($(FORCE32), 1)
 	ifeq ($(UNAME_M), x86_64)
 		COMMON_FLAGS += -m32
@@ -149,8 +154,7 @@ ifeq ($(UNAME_M), armv6l)
 	COMMON_FLAGS += -march=armv6
 endif
 
-CFLAGS += $(COMMON_FLAGS) -Isrc
-CXXFLAGS += $(COMMON_FLAGS)
+CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
 VPATH   = src:examples
