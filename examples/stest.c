@@ -2133,16 +2133,19 @@ int test_endianess()
 int test_alignment()
 {
 	int res = 0;
-	char ac[4] = { 0 }, bc[4] = { 0 };
-	char cc[sizeof(size_t)];
+	char ac[sizeof(suint32_t)] = { 0 }, bc[sizeof(suint32_t)] = { 0 },
+	     cc[sizeof(size_t)], dd[sizeof(suint64_t)];
 	unsigned a = 0x12345678, b = 0x87654321;
 	size_t c = ((size_t)-1) & a;
+	suint64_t d = (suint64_t)a << 32 | b;
 	S_ST_U32(&ac, a);
 	S_ST_U32(&bc, b);
 	S_ST_SZT(&cc, c);
+	S_ST_U64(&dd, d);
 	res |= S_LD_U32(ac) != a ? 1 : 0;
 	res |= S_LD_U32(bc) != b ? 2 : 0;
 	res |= S_LD_SZT(cc) != c ? 4 : 0;
+	res |= S_LD_U64(dd) != d ? 8 : 0;
 	return res;
 }
 
