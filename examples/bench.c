@@ -13,7 +13,7 @@
  * Search benchmark parameters
  */
 
-const char *xa[4] = {
+static const char *xa[4] = {
 	"111111x11111131111111111111111111111111111111111111111111111111111111"
 	"111111111111111111111111411111111111111111111111111111111111111111111"
 	"111111111111111111111111111111111111111111111111111111111111111111111"
@@ -29,7 +29,7 @@ const char *xa[4] = {
 	"7890123y45678901234567890123456789012345678901234567890123x456789012k"
 	};
 
-const char *xb[4] = {
+static const char *xb[4] = {
 	"1111111112k1",
 	"112k1",
 	"dcba",
@@ -41,7 +41,7 @@ const char *xb[4] = {
  * Case benchmark parameters
  */
 
-const char *xc[4] = {
+static const char *xc[4] = {
 	"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	"aaaaaaaaaaaaaaaa",
 	"\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91" "\xc3\x91"
@@ -65,8 +65,8 @@ const char *xc[4] = {
 #define BENCH_GROUPS		3
 #define BENCH_ALGS_PER_GROUP	7
 
-const char *groups[BENCH_GROUPS] = { "search", "case conversion", "misc" };
-const char *algs[BENCH_GROUPS][BENCH_ALGS_PER_GROUP] = {
+static const char *groups[BENCH_GROUPS] = { "search", "case conversion", "misc" };
+static const char *algs[BENCH_GROUPS][BENCH_ALGS_PER_GROUP] = {
 		{ "ss_find", "ss_find_csum_fast", "ss_find_csum_slow",
 #ifndef S_MINIMAL_BUILD
 		  "ss_find_libc", "ss_find_bf", "ss_find_bmh",
@@ -80,14 +80,14 @@ const char *algs[BENCH_GROUPS][BENCH_ALGS_PER_GROUP] = {
 		{ "ss_len_u", "", "", "", "", "", "" }
 	};
 
-int bench_search(const int alg, const int param1, const int count)
+static int bench_search(const int alg, const int param1, const int count)
 {
 	int res = 0;
 	const char *ba = NULL, *bb = NULL;
 	char *ba1 = NULL;
 	switch (param1) {
 	case 0: case 1: case 2: case 3:
-		ba = (char *)xa[param1];
+		ba = xa[param1];
 		bb = xb[param1];
 		break;
 	case 4: {
@@ -114,6 +114,8 @@ int bench_search(const int alg, const int param1, const int count)
 			bb = "the profoundest";
 			ba = ba1;
 		}
+		break;
+	default:
 		break;
 	}
 	ss_t *a = ss_dup_c(ba), *b = ss_dup_c(bb);
@@ -148,7 +150,7 @@ static void tox_check(int c_in, int c_out)
 		fprintf(stderr, "conversion error: %i -> %i\n", c_in, c_out);
 }
 
-int bench_case(const int alg, const int param1, const int count)
+static int bench_case(const int alg, const int param1, const int count)
 {
 	int res = 0, c = 0, x = 0, y = 0;
 	const char *in = param1 < 4 ? xc[param1] : "";
@@ -201,7 +203,7 @@ int bench_case(const int alg, const int param1, const int count)
 	return res;
 }
 
-int bench_misc(const int alg, const int param1, const int count)
+static int bench_misc(const int alg, const int param1, const int count)
 {
 	int res = 0, c = 0;
 	const char *in = param1 < 4 ? xc[param1] : "";

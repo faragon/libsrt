@@ -65,9 +65,13 @@ int main(int argc, const char **argv)
 			break;
 		case 3:	CNTLOOP(3, buf[i] << 16 | buf[i + 1] << 8 | buf[i + 2]);
 			break;
-		case 4:	CNTLOOP(4, (size_t)buf[i] << 24 | buf[i + 1] << 16 |
-				   buf[i + 2] << 8 | buf[i + 3]);
+		case 4:	CNTLOOP(4, (size_t)buf[i] << 24 |
+				   (size_t)buf[i + 1] << 16 |
+				   (size_t)buf[i + 2] << 8 |
+				   (size_t)buf[i + 3]);
 			break;
+		default:
+			goto done;
 		}
 		#undef CNTLOOP
 	}
