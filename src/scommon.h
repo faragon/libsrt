@@ -200,23 +200,23 @@ extern "C" {
 
 #if defined(_MSC_VER)
 	typedef SSIZE_T ssize_t;
-	typedef __int64 sint_t;
-	typedef unsigned __int64 suint_t;
+	typedef __int64 sint64_t;
+	typedef unsigned __int64 suint64_t;
 #elif	LONG_MAX == INT_MAX /* 32 bit or 64 bit (LLP64) mode */
 	#ifdef S_MODERN_COMPILER
-		typedef long long sint_t;
-		typedef unsigned long long suint_t;
+		typedef long long sint64_t;
+		typedef unsigned long long suint64_t;
 	#else /* no 64 bit container support: */
-		typedef long sint_t;
-		typedef unsigned long suint_t;
+		typedef long sint64_t;
+		typedef unsigned long suint64_t;
 	#endif
 #else /* 64 bit mode (LP64) */
 	#ifdef S_MODERN_COMPILER
-		typedef ssize_t sint_t;
-		typedef size_t suint_t;
+		typedef ssize_t sint64_t;
+		typedef size_t suint64_t;
 	#else
-		typedef long sint_t;
-		typedef unsigned long suint_t;
+		typedef long sint64_t;
+		typedef unsigned long suint64_t;
 	#endif
 #endif
 #if S_BPWORD >= 4
@@ -226,9 +226,9 @@ extern "C" {
 	typedef long sint32_t;
 	typedef unsigned long suint32_t;
 #endif
+typedef sint64_t sint_t;
+typedef suint64_t suint_t;
 typedef unsigned char sbool_t;
-typedef sint_t sint64_t;
-typedef suint_t suint64_t;
 
 union s_u32 {
 	unsigned a32;
@@ -265,6 +265,10 @@ union s_u32 {
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
+#if defined(S_FORCE_DISABLE_UNALIGNED) && defined(S_UNALIGNED_MEMORY_ACCESS)
+	#undef S_UNALIGNED_MEMORY_ACCESS
+#endif
+
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
     defined(__i386__) || defined(__x86_64__) || defined(__ARMEL__) ||	    \
     defined(__i960__) || defined(__TIC80__) || defined(__MIPSEL__) ||	    \
@@ -297,47 +301,65 @@ union s_u32 {
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	S_INLINE void s_st_u32(void *a, unsigned v) {
-		S_ST_X(a, unsigned, v);
+	S_INLINE suint32_t s_ld_u32(const void *a)
+	{
+		return S_LD_X(a, const suint32_t);
 	}
-	S_INLINE void s_st_szt(void *a, unsigned v) {
+	S_INLINE suint64_t s_ld_u64(const void *a)
+	{
+		return S_LD_X(a, const suint64_t);
+	}
+	S_INLINE size_t s_ld_szt(const void *a)
+	{
+		return S_LD_X(a, const size_t);
+	}
+	S_INLINE void s_st_u32(void *a, suint32_t v) {
+		S_ST_X(a, suint32_t, v);
+	}
+	S_INLINE void s_st_u64(void *a, suint64_t v) {
+		S_ST_X(a, suint64_t, v);
+	}
+	S_INLINE void s_st_szt(void *a, suint32_t v) {
 		S_ST_X(a, size_t, v);
 	}
-	#define S_LD_U32(a) S_LD_X(a, const unsigned)
-	#define S_LD_U64(a) S_LD_X(a, const suint_t)
-	#define S_LD_SZT(a) S_LD_X(a, const size_t)
+	#define S_LD_U32(a) s_ld_u32((const void *)(a))
+	#define S_LD_U64(a) s_ld_u64((const void *)(a))
+	#define S_LD_SZT(a) s_ld_szt((const void *)(a))
 	#define S_ST_U32(a, v) s_st_u32((void *)(a), v)
+	#define S_ST_U64(a, v) s_st_u64((void *)(a), v)
 	#define S_ST_SZT(a, v) s_st_szt((void *)(a), v)
 #else /* Aligned access supported only for 32 and >= 64 bit CPUs */
 	#if S_IS_LITTLE_ENDIAN
-		#define S_UALD_U32(a) (*(unsigned char *)(a) |	\
-			*((unsigned char *)(a) + 1) << 8 |	\
-			*((unsigned char *)(a) + 2) << 16 |	\
-			*((unsigned char *)(a) + 3) << 24)
-		#define S_UALD_U64(a)					\
-			((S_UALD_U32((unsigned char *)(a) + 4) << 32) |	\
-			 S_UALD_U32(a))
+		#define S_LD_U32(a)					\
+			((suint32_t)*(unsigned char *)(a) |		\
+			 (suint32_t)*((unsigned char *)(a) + 1) << 8 |	\
+			 (suint32_t)*((unsigned char *)(a) + 2) << 16 |	\
+			 (suint32_t)*((unsigned char *)(a) + 3) << 24)
+		#define S_LD_U64(a)					\
+			((suint64_t)S_LD_U32(a) |			\
+			 (suint64_t)(S_LD_U32((unsigned char *)(a) +	\
+						4)) << 32)
 	#else
-		#define S_UALD_U32(a)				\
-			(*(unsigned char *)(a) << 24 |		\
-			 *((unsigned char *)(a) + 1) << 16 |	\
-			 *((unsigned char *)(a) + 2) << 8 |	\
-			 *((unsigned char *)(a) + 3))
-		#define S_UALD_U64(a)				\
-			(((suint64_t)S_UALD_U32(a) << 32) |	\
-			 S_UALD_U32((unsigned char *)(a) + 4))
+		#define S_LD_U32(a)					\
+			((suint32_t)*(unsigned char *)(a) << 24 |	\
+			 (suint32_t)*((unsigned char *)(a) + 1) << 16 |	\
+			 (suint32_t)*((unsigned char *)(a) + 2) << 8 |	\
+			 (suint32_t)*((unsigned char *)(a) + 3))
+		#define S_LD_U64(a)				\
+			(((suint64_t)S_LD_U32(a)) << 32 |	\
+			 S_LD_U32((unsigned char *)(a) + 4))
 	#endif
-	#define S_LD_U32(a)		 			\
-		(((uintptr_t)(a) & (uintptr_t)S_UALIGNMASK) ?		\
-			S_UALD_U32(a) : S_LD_X(a, unsigned))
-	#define S_LD_U64(a)		 			\
-		(((uintptr_t)(a) & (uintptr_t)S_UALIGNMASK) ?		\
-			S_UALD_U64(a) : S_LD_X(a, suint_t))
-	#define S_LD_SZT(a) \
-		(sizeof(size_t) == 4 ? S_LD_U32(a) : S_LD_U64(a))
+#if S_BPWORD == 4
+	#define S_LD_SZT(a) S_LD_U32(a)
+#elif S_BPWORD == 8
+	#define S_LD_SZT(a) S_LD_U64(a)
+#else
+	#error "Only 32 and 64-bit GPR CPUs are supported (i.e. not 16, nor 48-bit CPUs)"
+#endif
 	#define S_UAST_X(a, T, v) { T w = (T)v; memcpy((a), &w, sizeof(w)); }
-	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)
 	#define S_ST_U32(a, v) S_UAST_X(a, suint32_t, v)
+	#define S_ST_U64(a, v) S_UAST_X(a, suint64_t, v)
+	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)
 #endif
 
 #if defined(MSVC) && defined(_M_X86)
