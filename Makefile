@@ -17,31 +17,31 @@
 # Makefile parameters
 
 ifndef C99
-	C99=0
+	C99 = 0
 endif
 ifndef C11
-	C11=0
+	C11 = 0
 endif
 ifndef CPP11
-	CPP11=0
+	CPP11 = 0
 endif
 ifndef CPP0X
-	CPP0X=0
+	CPP0X = 0
 endif
 ifndef PROFILING
-	PROFILING=0
+	PROFILING = 0
 endif
 ifndef DEBUG
-	DEBUG=0
+	DEBUG = 0
 endif
 ifndef PEDANTIC
-	PEDANTIC=0
+	PEDANTIC = 0
 endif
 ifndef MINIMAL_BUILD
-	MINIMAL_BUILD=0
+	MINIMAL_BUILD = 0
 endif
 ifndef FORCE32
-	FORCE32=0
+	FORCE32 = 0
 endif
 
 COMMON_FLAGS = -pipe
@@ -63,21 +63,32 @@ ifndef OCTEON
 	endif
 endif
 
+CPP_MODE = 0
+GNUC = 0
+CLANG = 0
+ifeq ($(CC), gcc)
+	GNUC = 1
+endif
+ifeq ($(CC), g++)
+	GNUC = 1
+	CPP_MODE = 1
+endif
+ifeq ($(CC), clang)
+	CLANG = 1
+endif
+ifeq ($(CC), clang++)
+	CLANG = 1
+	CPP_MODE = 1
+endif
+
 ifeq ($(CC), tcc)
-	PROFILING=0
+	PROFILING = 0
 else
-	CPP_MODE=0
-	ifeq ($(CC), g++)
-		CPP_MODE=1
-	endif
-	ifeq ($(CC), clang++)
-		CPP_MODE=1
-	endif
 	ifeq ($(CPP11), 1)
-		CPP_MODE=1
+		CPP_MODE = 1
 	endif
 	ifeq ($(CPP0X), 1)
-		CPP_MODE=1
+		CPP_MODE = 1
 	endif
 	ifeq ($(CPP_MODE), 1)
 		ifeq ($(CPP11), 1)
@@ -98,10 +109,10 @@ else
 		endif
 	endif
 	ifeq ($(PEDANTIC), 1)
-		ifneq (,$(findstring $(CC),gcc-g++))
+		ifeq ($(GNUC), 1)
 			CFLAGS += -Wall -Wextra
 		endif
-		ifneq (,$(findstring $(CC),clang-clang++))
+		ifeq ($(CLANG), 1)
 			CFLAGS += -Weverything
 		endif
 		CFLAGS += -pedantic
