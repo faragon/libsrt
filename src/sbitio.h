@@ -75,7 +75,7 @@ S_INLINE size_t sbitio_read(const unsigned char *b, size_t *i, size_t *acc, size
 }
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SBITIO_H */
 

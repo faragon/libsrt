@@ -29,7 +29,7 @@ extern "C" {
 #include "svector.h"
 
 #ifdef __cplusplus
-}; /* extern "C" { */
+} /* extern "C" { */
 #endif
 #endif /* #ifndef LIBSRT_H */
 

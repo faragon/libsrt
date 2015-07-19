@@ -24,7 +24,7 @@ extern "C" {
 unsigned sh_csum32(const void *buf, const size_t buf_size);
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SHASH_H */
 

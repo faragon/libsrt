@@ -29,7 +29,7 @@ void sm_log_obj(ss_t **log, const sm_t *m);
 void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf_size);
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif  /* SDBG_H */
 

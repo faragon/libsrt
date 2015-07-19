@@ -70,7 +70,7 @@ size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o);
 #define sdec_b16 sdec_hex
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SENC_H */
 

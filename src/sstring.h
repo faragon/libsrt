@@ -544,7 +544,7 @@ extern size_t dbg_cnt_alloc_calls;	/* alloc or realloc calls */
 #endif
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SSTRING_H */
 

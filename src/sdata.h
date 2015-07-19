@@ -207,7 +207,7 @@ size_t sd_reserve(sd_t **d, size_t max_size, const struct sd_conf *f);
 sd_t *sd_shrink(sd_t **d, const struct sd_conf *f);
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SDATA_H */
 

@@ -80,8 +80,7 @@ sm_t **sdm_submaps(sdm_t *m);
 const sm_t **sdm_submaps_r(const sdm_t *m);
 
 #ifdef __cplusplus
-}; /* extern "C" { */
+} /* extern "C" { */
 #endif
-
 #endif /* #ifndef SDMAP_H */
 

@@ -286,7 +286,7 @@ S_INLINE void *__sv_get_buffer(sv_t *v)
 }
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SVECTOR_H */
 

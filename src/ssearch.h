@@ -119,7 +119,7 @@ size_t ss_find_libc(const char *s, const size_t off, const size_t ss,
 #endif
 
 #ifdef __cplusplus
-};	/* extern "C" { */
+}	/* extern "C" { */
 #endif
 #endif	/* SSEARCH_H */
 

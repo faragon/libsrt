@@ -165,7 +165,7 @@ S_INLINE void sb_eval(sb_t **b, const size_t nth)
 }
 
 #ifdef __cplusplus
-}; /* extern "C" { */
+} /* extern "C" { */
 #endif
 #endif /* #ifndef SBITSET_H */
 

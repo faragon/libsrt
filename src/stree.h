@@ -179,7 +179,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context);
 sbool_t st_assert(const st_t *t);
 
 #ifdef __cplusplus
-}; /* extern "C" { */
+} /* extern "C" { */
 #endif
 
 #endif /* #ifndef STREE_H */

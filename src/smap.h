@@ -193,7 +193,7 @@ ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
 #ifdef __cplusplus
-}; /* extern "C" { */
+} /* extern "C" { */
 #endif
 
 #endif /* #ifndef SMAP_H */

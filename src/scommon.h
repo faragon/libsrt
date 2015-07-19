@@ -74,7 +74,7 @@ extern "C" {
 	#define S_INLINE static
 #endif
 
-#if __STDC_VERSION__ < 199901L && !defined(_MSC_VER)
+#if __STDC_VERSION__ < 199901L && !defined(_MSC_VER) && !defined(__cplusplus)
 	int snprintf(char *str, size_t size, const char *format, ...);
 	int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
@@ -543,7 +543,7 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 }
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SCOMMON_H */
 

@@ -76,6 +76,6 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 				unsigned *o, sint32_t (*ssc_toX)(const sint32_t));
 
 #ifdef __cplusplus
-};      /* extern "C" { */
+}      /* extern "C" { */
 #endif
 #endif	/* SUTF8_H */
