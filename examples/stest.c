@@ -2283,7 +2283,8 @@ int main()
 	STEST_ASSERT(test_ss_cpy_tolower("HELLO", "hello"));
 	STEST_ASSERT(test_ss_cpy_toupper("hello", "HELLO"));
 	STEST_ASSERT(test_ss_cpy_tob64("01", "MDE="));
-	STEST_ASSERT(test_ss_cpy_toHEX("01", "3031"));
+	STEST_ASSERT(test_ss_cpy_tohex("01z", "30317a"));
+	STEST_ASSERT(test_ss_cpy_toHEX("01z", "30317A"));
 	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_cpy_erase_u());
 	STEST_ASSERT(test_ss_cpy_replace("hello", "ll", "*LL*", "he*LL*o"));
@@ -2316,7 +2317,8 @@ int main()
 	STEST_ASSERT(test_ss_cat_tolower("ABC", "DEF", "ABCdef"));
 	STEST_ASSERT(test_ss_cat_toupper("abc", "def", "abcDEF"));
 	STEST_ASSERT(test_ss_cat_tob64("abc", "01", "abcMDE="));
-	STEST_ASSERT(test_ss_cat_toHEX("abc", "01", "abc3031"));
+	STEST_ASSERT(test_ss_cat_tohex("abc", "01z", "abc30317a"));
+	STEST_ASSERT(test_ss_cat_toHEX("abc", "01z", "abc30317A"));
 	STEST_ASSERT(test_ss_cat_erase("x", "hello", 2, 2, "xheo"));
 	STEST_ASSERT(test_ss_cat_erase_u());
 	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*", "xhe*LL*o"));
