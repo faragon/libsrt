@@ -8,30 +8,42 @@
 
 #include "../src/libsrt.h"
 
-#define SENC_b64 1
-#define SDEC_b64 2
-#define SENC_hex 3
-#define SENC_HEX 4
-#define SDEC_hex 5
-#define SENC_lzw 6
-#define SDEC_lzw 7
-#define SENC_rle 8
-#define SDEC_rle 9
+enum EncMode
+{
+	SENC_none,
+	SENC_b64,
+	SDEC_b64,
+	SENC_hex,
+	SENC_HEX,
+	SDEC_hex,
+	SENC_xml,
+	SDEC_xml,
+	SENC_json,
+	SDEC_json,
+	SENC_lzw,
+	SDEC_lzw,
+	SENC_rle,
+	SDEC_rle
+};
 
-#define IBUF_SIZE (3 * 4 * 4096) /* 3 * 4: LCM */
-#define OBUF_SIZE (IBUF_SIZE * 2) /* Max req: bin to hex */
-#define XBUF_SIZE (S_MAX(IBUF_SIZE, OBUF_SIZE))
+#define IBUF_SIZE	(3 * 4 * 4096) /* 3 * 4: LCM */
+#define OBUF_SIZE	(IBUF_SIZE * 2) /* Max req: bin to hex */
+#define ESC_MAX_SIZE	16
+#define XBUF_SIZE	(S_MAX(IBUF_SIZE, OBUF_SIZE) + ESC_MAX_SIZE)
 
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
-		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ez|-dz]\nExamples:\n"
+		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
+		"-ez|-dz]\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
+		"%s -ex <in >out.xml.esc\n%s -dx <in.xml.esc >out\n"
+		"%s -ej <in >out.json.esc\n%s -dx <in.json.esc >out\n"
 		"%s -ez <in >in.z\n%s -dz <in.z >out\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0);
+		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
@@ -39,7 +51,7 @@ int main(int argc, const char **argv)
 {
 	if (argc < 2)
 		return syntax_error(argv, 1);
-	int mode = 0;
+	enum EncMode mode = SENC_none;
 	if (!strncmp(argv[1], "-eb", 3))
 		mode = SENC_b64;
 	else if (!strncmp(argv[1], "-db", 3))
@@ -50,6 +62,14 @@ int main(int argc, const char **argv)
 		mode = SENC_HEX;
 	else if (!strncmp(argv[1], "-dh", 3))
 		mode = SDEC_hex;
+	else if (!strncmp(argv[1], "-ex", 3))
+		mode = SENC_xml;
+	else if (!strncmp(argv[1], "-dx", 3))
+		mode = SDEC_xml;
+	else if (!strncmp(argv[1], "-ej", 3))
+		mode = SENC_json;
+	else if (!strncmp(argv[1], "-dj", 3))
+		mode = SDEC_json;
 	else if (!strncmp(argv[1], "-ez", 3))
 		mode = SENC_lzw;
 	else if (!strncmp(argv[1], "-dz", 3))
@@ -58,26 +78,28 @@ int main(int argc, const char **argv)
 		mode = SENC_rle;
 	else if (!strncmp(argv[1], "-dr", 3))
 		mode = SDEC_rle;
-	if (!mode)
+	if (mode == SENC_none)
 		return syntax_error(argv, 2);
 	unsigned l32;
 	size_t li = 0, lo = 0, lo2;
 	size_t is; /* input elem size */
-	unsigned char buf[XBUF_SIZE], bufo[XBUF_SIZE];
+	unsigned char buf[XBUF_SIZE], bufo[XBUF_SIZE], esc;
 	int exit_code = 0;
-	ssize_t l;
+	ssize_t j, l, off = 0;
 	switch (mode) {
 	case SENC_b64: is = 3; break;
 	case SDEC_b64: is = 4; break;
 	case SENC_hex: case SENC_HEX: is = 1; break;
 	case SDEC_hex: is = 2; break;
+	case SENC_xml: case SDEC_xml: case SENC_json: case SDEC_json: is = 1; break;
 	default: is = 0;
 	}
 	for (;;) {
 		if (is) {
-			l = read(0, buf, IBUF_SIZE);
+			l = read(0, buf + off, IBUF_SIZE);
 			if (l <= 0)
 				goto done;
+			l += off;
 			li += (size_t)l;
 			switch (mode) {
 			case SENC_b64:
@@ -94,6 +116,29 @@ int main(int argc, const char **argv)
 				break;
 			case SDEC_hex:
 				lo2 = sdec_hex(buf, (size_t)l, bufo);
+				break;
+			case SENC_xml:
+			case SENC_json:
+				off = 0;
+				esc = mode == SENC_xml ? '&' : '\\';
+				if (l > ESC_MAX_SIZE)
+					for (j = l - 7; j >= 0 && j < l; j++)
+						if (buf[j] == esc) {
+							off = l - j;
+							break;
+						}
+				l -= off;
+				lo2 = mode == SENC_xml ?
+					senc_esc_xml(buf, (size_t)l, bufo, 0) :
+					senc_esc_json(buf, (size_t)l, bufo, 0);
+				if (off > 0)
+					memcpy(buf, buf + l, off);
+				break;
+			case SDEC_xml:
+				lo2 = sdec_esc_xml(buf, (size_t)l, bufo);
+				break;
+			case SDEC_json:
+				lo2 = sdec_esc_json(buf, (size_t)l, bufo);
 				break;
 			default:
 				exit_code = 1;

@@ -3,11 +3,8 @@
 
 Short-term
 ---
-* size/len incoherences (e.g. get_len / get_size)
-* Add st_shl and st_shr for shifting elements on a vector (without real data shift).
-* Add built-in funcs: int __builtin_popcount/__popcnt, __builtin_parity / _popcnt(a) & 1;
-* Add a (k=*, void) new types to smap (e.g for cases of existance check)
-* Move to sdata accessors like get_buffer, etc.
+* tree: export to json
+* escape/unscape xml, json, url
 
 Mid-term
 ---
@@ -17,9 +14,10 @@ Mid-term
 * Think about adding more types
  * stable: read-only "frozen" tree/map
 * Vector enhancements
- * Sort
+ * Sort, st_shl and st_shr (shifting elements on a vector, without real data shift)
 * Map enhancements
  * Apply function to map: for all, for range, etc.
+ * Add a (k=\*, void) new types to smap (e.g for cases of existance check)
 * Tree enhancements
  * Make last-inserted nodes cache, in order to speed-up delete.
  * Iterator: In addition to the callback, add an iterator for traversal.
@@ -32,14 +30,11 @@ Mid-term
  * Add SSE 4.2 SIMD intrinsics for increasing from 1GB/s up to the saturation of the memory bus (e.g. 10GB/s per core at 3GHz) \-not 100% sure if that much will be possible, but I have some ideas\-
  * Quote strings (e.g. like in sds)
  * String analysis (naive Bayes, weight/entropy)
- * Check if some important string functionality is missing.
  * Unicode: to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
 * Other
  * Bindings for other languages
-* Win32-specific optimizations
- * Study if using VirtualAlloc could be used as faster realloc.
 * Write examples
- * Key-value database: trivial case (string-string key-value) and zero alloc case (key/value fitting on fixed-size node)
+ * Key-value database: string/int-string/int key-value), zero alloc case (key/value fitting on fixed-size node), KKV (key-key-value)
 
 Long-term (never)
 ---
@@ -47,6 +42,8 @@ Long-term (never)
 * Time/date
 * C++ wrapper
 * Add UTF8 regexp support
+* Win32-specific optimizations
+ * Study if using VirtualAlloc could be used as faster realloc.
 
 QA
 ===
