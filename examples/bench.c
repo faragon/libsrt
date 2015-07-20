@@ -206,7 +206,7 @@ static int bench_case(const int alg, const int param1, const int count)
 static int bench_misc(const int alg, const int param1, const int count)
 {
 	int res = 0, c = 0;
-	const char *in = param1 < 4 ? xc[param1] : "";
+	const char *in = param1 >= 0 && param1 < 4 ? xc[param1] : "";
 	ss_t *sa = ss_dup_c(in);
 	switch (alg) {
 	case 0:
@@ -234,6 +234,8 @@ int main(int argc, char **argv)
 				case 0:	return bench_search(alg, param, count);
 				case 1:	return bench_case(alg, param, count);
 				case 2: return bench_misc(alg, param, count);
+				default:
+					break;
 			}
 		}
 	}

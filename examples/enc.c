@@ -148,7 +148,7 @@ int main(int argc, const char **argv)
 			switch (mode) {
 			case SENC_lzw:
 			case SENC_rle:
-				l = read(0, &buf, IBUF_SIZE);
+				l = read(0, buf, IBUF_SIZE);
 				if (l <= 0)
 					goto done;
 				li += (size_t)l;
