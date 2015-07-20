@@ -153,7 +153,7 @@ static void tox_check(int c_in, int c_out)
 static int bench_case(const int alg, const int param1, const int count)
 {
 	int res = 0, c = 0, x = 0, y = 0;
-	const char *in = param1 < 4 ? xc[param1] : "";
+	const char *in = param1 >= 0 && param1 < 4 ? xc[param1] : "";
 	ss_t *sa = ss_dup_c(in);
 	switch (param1 < 4 ? alg : -1) {
 	case 0:
