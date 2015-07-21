@@ -118,27 +118,27 @@ int main(int argc, const char **argv)
 				lo2 = sdec_hex(buf, (size_t)l, bufo);
 				break;
 			case SENC_xml:
+				lo2 = senc_esc_xml(buf, (size_t)l, bufo, 0);
+				break;
 			case SENC_json:
+				lo2 = senc_esc_json(buf, (size_t)l, bufo, 0);
+				break;
+			case SDEC_xml:
+			case SDEC_json:
 				off = 0;
-				esc = mode == SENC_xml ? '&' : '\\';
+				esc = mode == SDEC_xml ? '&' : '\\';
 				if (l > ESC_MAX_SIZE)
-					for (j = l - 7; j >= 0 && j < l; j++)
-						if (buf[j] == esc) {
+					for (j = l - ESC_MAX_SIZE + 1; j < l; j++)
+						if (buf[j] == esc && buf[j - 1] != esc) {
 							off = l - j;
 							break;
 						}
 				l -= off;
-				lo2 = mode == SENC_xml ?
-					senc_esc_xml(buf, (size_t)l, bufo, 0) :
-					senc_esc_json(buf, (size_t)l, bufo, 0);
+				lo2 = mode == SDEC_xml ?
+					sdec_esc_xml(buf, (size_t)l, bufo) :
+					sdec_esc_json(buf, (size_t)l, bufo);
 				if (off > 0)
 					memcpy(buf, buf + l, off);
-				break;
-			case SDEC_xml:
-				lo2 = sdec_esc_xml(buf, (size_t)l, bufo);
-				break;
-			case SDEC_json:
-				lo2 = sdec_esc_json(buf, (size_t)l, bufo);
 				break;
 			default:
 				exit_code = 1;

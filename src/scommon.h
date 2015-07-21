@@ -542,6 +542,33 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 		memcpy(o + k, data, 3);
 }
 
+S_INLINE void s_memcpy2(unsigned char *o, const unsigned char *i)
+{
+#ifdef S_UNALIGNED_MEMORY_ACCESS
+	S_ST_X(o, unsigned short, S_LD_X(i, unsigned short));
+#else
+	o[0] = i[0];
+	o[1] = i[1];
+#endif
+}
+
+S_INLINE void s_memcpy4(unsigned char *o, const unsigned char *i)
+{
+	S_ST_U32(o, S_LD_U32(i));
+}
+
+S_INLINE void s_memcpy5(unsigned char *o, const unsigned char *i)
+{
+	s_memcpy4(o, i);
+	o[4] = i[4];
+}
+
+S_INLINE void s_memcpy6(unsigned char *o, const unsigned char *i)
+{
+	s_memcpy4(o, i);
+	s_memcpy2(o + 4, i + 4);
+}
+
 #ifdef __cplusplus
 }      /* extern "C" { */
 #endif

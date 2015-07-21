@@ -17,6 +17,14 @@ extern "C" {
  * - RFC 3548/4648 base 16 (hexadecimal) and 64 encoding/decoding.
  * - Fast (~1 GB/s on i5-3330 @3GHz -using one core- and gcc 4.8.2 -O2)
  *
+ * Features (JSON and XML escape/unescape):
+ *
+ * - Aliasing safe.
+ * - JSON escape subset of RFC 4627
+ * - XML escape subset of XML 1.0 W3C 26 Nov 2008 (4.6 Predefined Entities)
+ * - Fast decoding (~1 GB/s on i5-3330 @3GHz -using one core-)
+ * - "Fast" decoding (200-400 MB/s on "; there is room for optimization)
+ *
  * Features (custom LZW implementation):
  *
  * - Encoding time is related to input data entropy. The more random

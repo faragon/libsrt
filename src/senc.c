@@ -46,8 +46,6 @@ static const unsigned char h2n[64] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
-static const char *s_quot = "&quot;", *s_amp = "&amp;", *s_apos = "&apos;",
-		  *s_lt = "&lt;", *s_gt = "&gt;";
 
 #define S_BS	0x08
 #define S_TAB	0x09
@@ -380,11 +378,11 @@ size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
 		switch (s[i]) {
-		case S_QUOT: sso += S_QUOT_SZ; break;
-		case S_AMP: sso += S_AMP_SZ; break;
-		case S_APOS: sso += S_APOS_SZ; break;
-		case S_GT: sso += S_GT_SZ; break;
-		case S_LT: sso += S_LT_SZ; break;
+		case S_QUOT: sso += S_QUOT_SZ - 1; break;
+		case S_AMP: sso += S_AMP_SZ - 1; break;
+		case S_APOS: sso += S_APOS_SZ - 1; break;
+		case S_LT: sso += S_LT_SZ - 1; break;
+		case S_GT: sso += S_GT_SZ - 1; break;
 		default:
 			break;
 		}
@@ -413,18 +411,15 @@ size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 	size_t csz, sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss);
 	ssize_t i = ss - 1, j = sso;
 	for (; i >= 0; i--) {
-		#define CESCXML(a, tag, tag_sz)	\
-			case a: j -= tag_sz; memcpy(o + j, tag, tag_sz); break;
 		switch (s[i]) {
-		CESCXML(S_QUOT, s_quot, S_QUOT_SZ);
-		CESCXML(S_AMP, s_amp, S_AMP_SZ);
-		CESCXML(S_APOS, s_apos, S_AMP_SZ);
-		CESCXML(S_LT, s_lt, S_LT_SZ);
-		CESCXML(S_GT, s_gt, S_GT_SZ);
+		case S_QUOT: j -= 6; s_memcpy6(o + j, "&quot;"); break;
+		case S_AMP: j -= 5; s_memcpy5(o + j, "&amp;"); break;
+		case S_APOS: j -= 6; s_memcpy6(o + j, "&apos;"); break;
+		case S_LT: j -= 4; s_memcpy4(o + j, "&lt;"); break;
+		case S_GT: j -= 4; s_memcpy4(o + j, "&gt;"); break;
 		default:
 			o[--j] = s[i];
 		}
-		#undef CESCXML
 	}
 	return sso;
 }
@@ -432,12 +427,65 @@ size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !ss || !o, 0);
-	/*
-	 * TODO
-	 */
-	return 0;
+	size_t i = 0, j = 0;
+	for (; i < ss; j++) {
+		if (s[i] == '&') {
+			switch (s[i + 1]) {
+			case 'q':
+				if (i + 5 <= ss &&
+				    s[i + 2] == 'u' && s[i + 3] == 'o' &&
+				    s[i + 4] == 't' && s[i + 5] == ';') {
+					o[j] = '"';
+					i += 6;
+					continue;
+				}
+				break;
+			case 'a':
+				if (i + 4 <= ss &&
+				    s[i + 2] == 'm' && s[i + 3] == 'p' &&
+				    s[i + 4] == ';') {
+					o[j] = '&';
+					i += 5;
+					continue;
+				}
+				if (i + 5 <= ss &&
+				    s[i + 2] == 'p' && s[i + 3] == 'o' &&
+				    s[i + 4] == 's' && s[i + 5] == ';') {
+					o[j] = '\'';
+					i += 6;
+					continue;
+				}
+				break;
+			case 'l':
+				if (i + 3 <= ss &&
+				    s[i + 2] == 't' && s[i + 3] == ';') {
+					o[j] = '<';
+					i += 4;
+					continue;
+				}
+				break;
+			case 'g':
+				if (i + 3 <= ss &&
+				    s[i + 2] == 't' && s[i + 3] == ';') {
+					o[j] = '>';
+					i += 4;
+					continue;
+				}
+				break;
+#if 0	/* BEHAVIOR: not implemented (on purpose) */
+			case '#':
+				break;
+#endif
+			default:
+				break;
+			}
+		}
+		o[j] = s[i++];
+	}
+	return j;
 }
 
+/* BEHAVIOR: slash ('/') is not escaped (intentional) */
 size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 		     const size_t known_sso)
 {
@@ -445,20 +493,17 @@ size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 	size_t sso = known_sso ? known_sso : senc_esc_json_req_size(s, ss);
 	ssize_t i = ss - 1, j = sso;
 	for (; i >= 0; i--) {
-		#define CESCJSON(a, c)	\
-			case a: j -= 2; o[j] = '\\'; o[j + 1] = c; break;
 		switch (s[i]) {
-		CESCJSON(S_BS, 'b');
-		CESCJSON(S_TAB, 't');
-		CESCJSON(S_NL, 'n');
-		CESCJSON(S_FEED, 'f');
-		CESCJSON(S_CR, 'r');
-		CESCJSON(S_QUOT, '"');
-		CESCJSON(S_BSL, '\\');
+		case S_BS: j -= 2; s_memcpy2(o + j, "\\b"); break;
+		case S_TAB: j -= 2; s_memcpy2(o + j, "\\t"); break;
+		case S_NL: j -= 2; s_memcpy2(o + j, "\\n"); break;
+		case S_FEED: j -= 2; s_memcpy2(o + j, "\\f"); break;
+		case S_CR: j -= 2; s_memcpy2(o + j, "\\r"); break;
+		case S_QUOT: j -= 2; s_memcpy2(o + j, "\\\""); break;
+		case S_BSL: j -= 2; s_memcpy2(o + j, "\\\\"); break;
 		default:
 			o[--j] = s[i];
 		}
-		#undef CESCJSON
 	}
 	return sso;
 }
@@ -466,10 +511,47 @@ size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !ss || !o, 0);
-	/*
-	 * TODO
-	 */
-	return 0;
+	size_t i = 0, j = 0;
+	for (; i < ss; j++) {
+		if (s[i] == '\\' && i + 1 <= ss) {
+			switch (s[i + 1]) {
+			case 'b':
+				o[j] = 8;
+				i += 2;
+				continue;
+			case 't':
+				o[j] = 9;
+				i += 2;
+				continue;
+			case 'n':
+				o[j] = 10;
+				i += 2;
+				continue;
+			case 'f':
+				o[j] = 12;
+				i += 2;
+				continue;
+			case 'r':
+				o[j] = 13;
+				i += 2;
+				continue;
+			case '"':
+			case '\\':
+			case '/':
+				o[j] = s[i + 1];
+				i += 2;
+				continue;
+#if 0	/* BEHAVIOR: not implemented (on purpose) */
+			case 'u':
+				break;
+#endif
+			default:
+				break;
+			}
+		}
+		o[j] = s[i++];
+	}
+	return j;
 }
 
 /*
