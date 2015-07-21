@@ -408,7 +408,7 @@ size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 		    const size_t known_sso)
 {
 	RETURN_IF(!s || !ss || !o, 0);
-	size_t csz, sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss);
+	size_t sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss);
 	ssize_t i = ss - 1, j = sso;
 	for (; i >= 0; i--) {
 		switch (s[i]) {
