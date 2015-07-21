@@ -515,38 +515,18 @@ size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 	for (; i < ss; j++) {
 		if (s[i] == '\\' && i + 1 <= ss) {
 			switch (s[i + 1]) {
-			case 'b':
-				o[j] = 8;
-				i += 2;
-				continue;
-			case 't':
-				o[j] = 9;
-				i += 2;
-				continue;
-			case 'n':
-				o[j] = 10;
-				i += 2;
-				continue;
-			case 'f':
-				o[j] = 12;
-				i += 2;
-				continue;
-			case 'r':
-				o[j] = 13;
-				i += 2;
-				continue;
+			case 'b': o[j] = 8; i += 2; continue;
+			case 't': o[j] = 9; i += 2; continue;
+			case 'n': o[j] = 10; i += 2; continue;
+			case 'f': o[j] = 12; i += 2; continue;
+			case 'r': o[j] = 13; i += 2; continue;
 			case '"':
 			case '\\':
-			case '/':
-				o[j] = s[i + 1];
-				i += 2;
-				continue;
+			case '/': o[j] = s[i + 1]; i += 2; continue;
 #if 0	/* BEHAVIOR: not implemented (on purpose) */
-			case 'u':
-				break;
+			case 'u': break;
 #endif
-			default:
-				break;
+			default: break;
 			}
 		}
 		o[j] = s[i++];
