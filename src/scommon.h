@@ -542,31 +542,31 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 		memcpy(o + k, data, 3);
 }
 
-S_INLINE void s_memcpy2(unsigned char *o, const unsigned char *i)
+S_INLINE void s_memcpy2(void *o, const void *i)
 {
 #ifdef S_UNALIGNED_MEMORY_ACCESS
 	S_ST_X(o, unsigned short, S_LD_X(i, unsigned short));
 #else
-	o[0] = i[0];
-	o[1] = i[1];
+	((char *)o)[0] = ((const char *)i)[0];
+	((char *)o)[1] = ((const char *)i)[1];
 #endif
 }
 
-S_INLINE void s_memcpy4(unsigned char *o, const unsigned char *i)
+S_INLINE void s_memcpy4(void *o, const void *i)
 {
 	S_ST_U32(o, S_LD_U32(i));
 }
 
-S_INLINE void s_memcpy5(unsigned char *o, const unsigned char *i)
+S_INLINE void s_memcpy5(void *o, const void *i)
 {
 	s_memcpy4(o, i);
-	o[4] = i[4];
+	((char *)o)[4] = ((const char *)i)[4];
 }
 
-S_INLINE void s_memcpy6(unsigned char *o, const unsigned char *i)
+S_INLINE void s_memcpy6(void *o, const void *i)
 {
 	s_memcpy4(o, i);
-	s_memcpy2(o + 4, i + 4);
+	s_memcpy2((char *)o + 4, (const char *)i + 4);
 }
 
 #ifdef __cplusplus
