@@ -108,7 +108,7 @@ static int bench_search(const int alg, const int param1, const int count)
 			int f = open("100.txt", O_RDONLY, 0777);
 			if (f < 0)
 				exit(1);
-			int l = read(f, ba1, max_size);
+			ssize_t l = read(f, ba1, max_size);
 			close(f);
 			ba1[l - 1] = 0;
 			bb = "the profoundest";
@@ -146,8 +146,10 @@ static int bench_search(const int alg, const int param1, const int count)
 
 static void tox_check(int c_in, int c_out)
 {
-	if (c_out < 0 && c_in >= 0)
+	if (c_out != c_in && c_out == -1)
+	{
 		fprintf(stderr, "conversion error: %i -> %i\n", c_in, c_out);
+	}
 }
 
 static int bench_case(const int alg, const int param1, const int count)
@@ -179,7 +181,7 @@ static int bench_case(const int alg, const int param1, const int count)
 	case 2:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				tox_check(x, towlower(x));
+				tox_check(x, (int)towlower((wint_t)x));
 		break;
 	case 3:
 		for (; y < count; y++)
@@ -189,7 +191,7 @@ static int bench_case(const int alg, const int param1, const int count)
 	case 4:
 		for (; y < count; y++)
 			for (x = 0; x < 0x1ffff; x++)
-				tox_check(x, towupper(x));
+				tox_check(x, (int)towupper((wint_t)x));
 		break;
 	case 5:
 		for (; y < count; y++)

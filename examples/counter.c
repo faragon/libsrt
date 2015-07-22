@@ -45,7 +45,8 @@ int main(int argc, const char **argv)
 	size_t climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
 	sb_eval(&bs, cmax);
 	unsigned char buf[3 * 4 * 128];
-	int i, l;
+	int i;
+	ssize_t l;
 	for (;;) {
 		l = read(0, buf, sizeof(buf));
 		l = (l / csize) * csize;
@@ -61,9 +62,9 @@ int main(int argc, const char **argv)
 		switch (csize) {
 		case 1:	CNTLOOP(1, buf[i]);
 			break;
-		case 2:	CNTLOOP(2, buf[i] << 8 | buf[i + 1]);
+		case 2:	CNTLOOP(2, (size_t)(buf[i] << 8 | buf[i + 1]));
 			break;
-		case 3:	CNTLOOP(3, buf[i] << 16 | buf[i + 1] << 8 | buf[i + 2]);
+		case 3:	CNTLOOP(3, (size_t)(buf[i] << 16 | buf[i + 1] << 8 | buf[i + 2]));
 			break;
 		case 4:	CNTLOOP(4, (size_t)buf[i] << 24 |
 				   (size_t)buf[i + 1] << 16 |

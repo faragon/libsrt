@@ -38,7 +38,7 @@
  */
 
 struct AA { int a, b; };
-const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
+static const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
 
 /*
  * Tests
@@ -1016,8 +1016,10 @@ static int test_ss_to_w(const char *in)
 	res |= ((ssa > 0 && out_size > 0) ? 0 : 4);
 	if (!res) {
 		char b1[16384], b2[16384];
-		int sb1 = sprintf(b1, "%s", ss_to_c(a));
-		int sb2 = sprintf(b2, "%ls", out);
+		int sb1i = sprintf(b1, "%s", ss_to_c(a));
+		int sb2i = sprintf(b2, "%ls", out);
+		size_t sb1 = sb1i >= 0 ? (size_t)sb1i : 0,
+		       sb2 = sb2i >= 0 ? (size_t)sb2i : 0;
 		res |= (sb1 == sb2 ? 0 : 8) | (!memcmp(b1, b2, sb1) ? 0 : 16);
 	}
 	free(out);
@@ -1047,7 +1049,7 @@ static int test_ss_split()
 	return res;
 }
 
-int validate_cmp(int res1, int res2)
+static int validate_cmp(int res1, int res2)
 {
 	return (res1 == 0 && res2 == 0) || (res1 < 0 && res2 < 0) ||
 		(res1 > 0 && res2 > 0) ? 1 : 0;
@@ -1361,8 +1363,9 @@ static int test_sv_dup()
 	int res = 0;
 	const int val = 123;
 	TEST_SV_DUP(a, 0, sv_alloc, sv_push,
-		    ((struct AA *)sv_at(a, 0))->a == aa1.a,
-		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
+		    ((const struct AA *)sv_at(a, 0))->a == aa1.a,
+		    ((const struct AA *)sv_pop(a))->a ==
+					((const struct AA *)sv_pop(a2))->a,
 		    sizeof(struct AA), &aa1);
 	#define SVIAT(v) sv_i_at(v, 0) == val
 	#define SVUAT(v) sv_u_at(v, 0) == (unsigned)val
@@ -1396,7 +1399,8 @@ static int test_sv_dup_erase()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_DUP_ERASE(a, 0, sv_alloc, sv_push,
-	    ((struct AA *)sv_at(a2, 0))->a == ((struct AA *)sv_at(a2, 1))->a,
+	    ((const struct AA *)sv_at(a2, 0))->a ==
+				((const struct AA *)sv_at(a2, 1))->a,
 	    sizeof(struct AA), &aa1, &aa2);
 	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
 	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
@@ -1447,8 +1451,9 @@ static int test_sv_cat()
 	int res = 0;
 	const int val = 123;
 	TEST_SV_CAT(a, 0, sv_alloc, sv_push,
-		    ((struct AA *)sv_at(a, 3))->a == aa1.a,
-		    ((struct AA *)sv_pop(a))->a == ((struct AA *)sv_pop(a2))->a,
+		    ((const struct AA *)sv_at(a, 3))->a == aa1.a,
+		    ((const struct AA *)sv_pop(a))->a ==
+					((const struct AA *)sv_pop(a2))->a,
 		    sizeof(struct AA), &aa1);
 	#define SVIAT(v) sv_i_at(v, 3) == val
 	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)val
@@ -1588,7 +1593,7 @@ static int test_sv_push_pop_u()
 		sint_t r;
 		if (!(a && b && sv_push_u(&a, (suint_t)-1) &&
 		      sv_push_u(&b, init[i]) &&
-		      (r = sv_pop_u(a)) && r == sv_pop_i(b) &&
+		      (r = (sint_t)sv_pop_u(a)) && r == sv_pop_i(b) &&
 		      r == (sint_t)expected[i] &&
 		      sv_len(a) == 0 && sv_len(b) == 0))
 			res |= 1 << i;
@@ -1750,7 +1755,7 @@ static int test_st_insert_del()
 static int test_traverse(struct STraverseParams *tp)
 {
 	ss_t **log = (ss_t **)tp->context;
-	struct MyNode1 *node = (struct MyNode1 *)tp->cn;
+	const struct MyNode1 *node = (const struct MyNode1 *)tp->cn;
 	if (node)
 		ss_cat_printf(log, 512, "%c", node->v);
 	return 0;
@@ -1805,7 +1810,7 @@ static int test_st_traverse()
 
 #define TEST_SM_ALLOC_DONOTHING(a)
 #define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
-	int fn()							       \
+	static int fn()							       \
 	{								       \
 		sm_t *m = sm_alloc_X(SM_IntInt, 1000);			       \
 		int res = 0;						       \
@@ -1882,28 +1887,28 @@ static int test_sm_sp_at()
 	return 0; /* TODO */
 }
 
-#define TEST_SM_X_COUNT(T, k, v)		\
-	int res = 0;				\
-	size_t i, tcount = 100;			\
-	sm_t *m = sm_alloc(T, tcount);		\
-	for (i = 0; i < tcount; i++)		\
-		sm_uu32_insert(&m, k, v);	\
-	for (i = 0; i < tcount; i++)		\
-		if (!sm_u_count(m, k)) {	\
-		res = 1 + (int)i;		\
-		break;				\
-	}					\
-	sm_free(&m);				\
+#define TEST_SM_X_COUNT(T, v)				\
+	int res = 0;					\
+	suint32_t i, tcount = 100;			\
+	sm_t *m = sm_alloc(T, tcount);			\
+	for (i = 0; i < tcount; i++)			\
+		sm_uu32_insert(&m, (unsigned)i, v);	\
+	for (i = 0; i < tcount; i++)			\
+		if (!sm_u_count(m, i)) {		\
+			res = 1 + (int)i;		\
+			break;				\
+		}					\
+	sm_free(&m);					\
 	return res;
 
 static int test_sm_u_count()
 {
-	TEST_SM_X_COUNT(SM_U32U32, (unsigned)i, 1);
+	TEST_SM_X_COUNT(SM_U32U32, 1);
 }
 
 static int test_sm_i_count()
 {
-	TEST_SM_X_COUNT(SM_I32I32, (int)i, 1);
+	TEST_SM_X_COUNT(SM_I32I32, 1);
 }
 
 static int test_sm_s_count()
@@ -1990,8 +1995,8 @@ static int test_sm_sort_to_vectors()
 		for (j = test_elems; j > 0 && !res; j--) {
 			sm_sort_to_vectors(m, &kv2, &vv2);
 			for (i = 0; i < j/*test_elems*/; i++) {
-				int k = (int)sv_i_at(kv2, i);
-				int v = (int)sv_i_at(vv2, i);
+				int k = (int)sv_i_at(kv2, (size_t)i);
+				int v = (int)sv_i_at(vv2, (size_t)i);
 				if (k != (i + 1) || v != -(i + 1)) {
 					res |= 4;
 					break;
@@ -2096,14 +2101,15 @@ static int test_sdm_alloc()
 	sdm_t *dm = sdm_alloc(SM_IntInt, 4, 1);
 	RETURN_IF(!dm, 1);
 	sm_t **submaps = sdm_submaps(dm);
-	size_t c = 0, nelems = 1000000;
-	for (; c < nelems; c++) {
+	sint_t c = 0;
+	size_t nelems = 1000000;
+	for (; c < (sint_t)nelems; c++) {
 		const size_t route = sdm_i_route(dm, c);
 		sm_ii_insert(&submaps[route], c, c);
 	}
 	size_t sdmsz = sdm_size(dm);
 	size_t nelems_check = 0;
-	for (c = 0; c < sdmsz; c++)
+	for (c = 0; c < (sint_t)sdmsz; c++)
 		nelems_check += sm_size(submaps[c]);
 	sdm_free(&dm);
 	return nelems == nelems_check ? 0 : 2;
@@ -2167,10 +2173,10 @@ int main()
 	setlocale(LC_ALL, "");
 #endif
 	sbool_t unicode_support = S_TRUE;
-	int check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
+	wint_t check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
 	size_t chkl = 0;
 	for (; chkl < sizeof(check)/sizeof(check[0]); chkl++)
-		if ((int)towlower(check[chkl]) == check[chkl]) {
+		if (towlower(check[chkl]) == check[chkl]) {
 			unicode_support = S_FALSE;
 			break;
 		}

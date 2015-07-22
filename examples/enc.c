@@ -138,7 +138,7 @@ int main(int argc, const char **argv)
 					sdec_esc_xml(buf, (size_t)l, bufo) :
 					sdec_esc_json(buf, (size_t)l, bufo);
 				if (off > 0)
-					memcpy(buf, buf + l, off);
+					memcpy(buf, buf + (size_t)l, (size_t)off);
 				break;
 			default:
 				exit_code = 1;
