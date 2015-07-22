@@ -545,7 +545,7 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 S_INLINE void s_memcpy2(void *o, const void *i)
 {
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	S_ST_X(o, unsigned short, S_LD_X(i, unsigned short));
+	S_ST_X(o, unsigned short, S_LD_X(i, const unsigned short));
 #else
 	((char *)o)[0] = ((const char *)i)[0];
 	((char *)o)[1] = ((const char *)i)[1];

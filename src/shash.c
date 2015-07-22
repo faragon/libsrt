@@ -21,9 +21,9 @@ unsigned sh_csum32(const void *buf, const size_t buf_size)
 	const char *pm4_top = p + buf_size_m4;
 	unsigned acc = 0;
 	for (; p < pm4_top; p += 4)
-		acc += *(unsigned *)p;
+		acc += *(const unsigned *)p;
 	for (; p < p_top; p++)
-		acc += (unsigned char)*p;
+		acc += (const unsigned char)*p;
 	return acc;
 }
 

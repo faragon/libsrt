@@ -80,7 +80,7 @@ sm_t *sm_dup(const sm_t *src);
 sbool_t sm_reset(sm_t *m);
 
 /* #API: |Set map integer and string defaults|map; integer default; string default||O(1)| */
-void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v);
+void sm_set_defaults(sm_t *m, const sint_t i_def_v, const ss_t *s_def_v);
 
 /*
 #API: |Free one or more maps (heap)|map; more maps (optional)||O(1) for simple maps, O(n) for maps having nodes with strings|

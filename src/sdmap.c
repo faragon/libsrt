@@ -35,7 +35,7 @@
 static size_t sdm_default_i_hash(const sdm_t *dm, const sint_t k)
 {
 	S_ASSERT(dm && dm->nmaps);
-	return dm ? (k % dm->nmaps) : 0;
+	return dm ? (size_t)(k % dm->nmaps) : (size_t)0;
 }
 
 static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
@@ -189,7 +189,8 @@ size_t sdm_size(const sdm_t *dm)
 
 sm_t **sdm_submaps(sdm_t *dm)
 {
-	return (sm_t **)sdm_submaps_r(dm);
+	S_ASSERT(dm);
+	return dm ? (sm_t **)dm->maps : NULL;;
 }
 
 const sm_t **sdm_submaps_r(const sdm_t *dm)

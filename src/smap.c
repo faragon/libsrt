@@ -231,7 +231,7 @@ sbool_t sm_reset(sm_t *m)
 	return S_TRUE;
 }
 
-void sm_set_defaults(sm_t *m, const size_t i_def_v, const ss_t *s_def_v)
+void sm_set_defaults(sm_t *m, const sint_t i_def_v, const ss_t *s_def_v)
 {
 	if (m) {
 		m->f.iaux1 = i_def_v;
@@ -257,7 +257,8 @@ sint32_t sm_ii32_at(const sm_t *m, const sint32_t k)
 	ASSERT_RETURN_IF(!m, SINT32_MIN);
 	struct SMapii n;
 	n.k = k;
-	const struct SMapii *nr = (const struct SMapii *)st_locate(m, (const stn_t *)&n);
+	const struct SMapii *nr =
+			(const struct SMapii *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : (sint32_t)m->f.iaux1;
 }
 
@@ -266,7 +267,8 @@ suint32_t sm_uu32_at(const sm_t *m, const suint32_t k)
 	ASSERT_RETURN_IF(!m, 0);
 	struct SMapuu n;
 	n.k = k;
-	struct SMapuu *nr = (struct SMapuu *)st_locate(m, (const stn_t *)&n);
+	const struct SMapuu *nr =
+			(const struct SMapuu *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : (suint32_t)m->f.iaux1;
 }
 
@@ -275,7 +277,8 @@ sint_t sm_ii_at(const sm_t *m, const sint_t k)
 	ASSERT_RETURN_IF(!m, SINT_MIN);
 	struct SMapII n;
 	n.x.k = k;
-	struct SMapII *nr = (struct SMapII *)st_locate(m, (const stn_t *)&n);
+	const struct SMapII *nr =
+			(const struct SMapII *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : m->f.iaux1;
 }
 
@@ -284,8 +287,9 @@ const ss_t *sm_is_at(const sm_t *m, const sint_t k)
 	ASSERT_RETURN_IF(!m, ss_empty());
 	struct SMapIS n;
 	n.x.k = k;
-	struct SMapIS *nr = (struct SMapIS *)st_locate(m, (const stn_t *)&n);
-	return nr ? nr->v : (ss_t *)m->f.paux1;
+	const struct SMapIS *nr =
+			(const struct SMapIS *)st_locate(m, (const stn_t *)&n);
+	return nr ? nr->v : (const ss_t *)m->f.paux1;
 }
 
 const void *sm_ip_at(const sm_t *m, const sint_t k)
@@ -293,7 +297,8 @@ const void *sm_ip_at(const sm_t *m, const sint_t k)
 	ASSERT_RETURN_IF(!m, NULL);
 	struct SMapIP n;
 	n.x.k = k;
-	struct SMapIP *nr = (struct SMapIP *)st_locate(m, (const stn_t *)&n);
+	const struct SMapIP *nr =
+			(const struct SMapIP *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : NULL;
 }
 
@@ -302,7 +307,8 @@ sint_t sm_si_at(const sm_t *m, const ss_t *k)
 	ASSERT_RETURN_IF(!m, SINT_MIN);
 	struct SMapSI n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
-	struct SMapSI *nr = (struct SMapSI *)st_locate(m, (const stn_t *)&n);
+	const struct SMapSI *nr =
+			(const struct SMapSI *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : m->f.iaux1;
 }
 
@@ -311,7 +317,8 @@ const ss_t *sm_ss_at(const sm_t *m, const ss_t *k)
 	ASSERT_RETURN_IF(!m, ss_empty());
 	struct SMapSS n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
-	struct SMapSS *nr = (struct SMapSS *)st_locate(m, (const stn_t *)&n);
+	const struct SMapSS *nr =
+			(const struct SMapSS *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : (ss_t *)m->f.paux1;
 }
 
@@ -320,7 +327,8 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k)
 	ASSERT_RETURN_IF(!m, NULL);
 	struct SMapSP n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
-	struct SMapSP *nr = (struct SMapSP *)st_locate(m, (const stn_t *)&n);
+	const struct SMapSP *nr =
+			(const struct SMapSP *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : NULL;
 }
 
