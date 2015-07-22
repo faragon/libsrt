@@ -47,23 +47,6 @@ static const unsigned char h2n[64] = {
 	0, 10, 11, 12, 13, 14, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0
 	};
 
-#define S_BS	0x08
-#define S_TAB	0x09
-#define S_NL	0x0a
-#define S_FEED	0x0c
-#define S_CR	0x0d
-#define S_QUOT	0x22
-#define S_AMP	0x26
-#define S_APOS	0x27
-#define S_LT	0x3c
-#define S_GT	0x3e
-#define S_BSL	0x5c
-#define S_QUOT_SZ	6
-#define S_AMP_SZ	5
-#define S_APOS_SZ	6
-#define S_LT_SZ		4
-#define S_GT_SZ		4
-
 #define SLZW_MAX_TREE_BITS	12
 #define SLZW_CODE_LIMIT		(1 << SLZW_MAX_TREE_BITS)
 #define SLZW_MAX_CODE		(SLZW_CODE_LIMIT - 1)
@@ -104,9 +87,9 @@ static const unsigned char h2n[64] = {
 #define EB64C2(a, b)	((a & 3) << 4 | b >> 4)
 #define EB64C3(b, c)	((b & 0xf) << 2 | c >> 6)
 #define EB64C4(c)	(c & 0x3f)
-#define DB64C1(a, b)	(a << 2 | b >> 4)
-#define DB64C2(b, c)	(b << 4 | c >> 2)
-#define DB64C3(c, d)	(c << 6 | d)
+#define DB64C1(a, b)	((unsigned char)(a << 2 | b >> 4))
+#define DB64C2(b, c)	((unsigned char)(b << 4 | c >> 2))
+#define DB64C3(c, d)	((unsigned char)(c << 6 | d))
 
 #define SLZW_ENC_RESET(node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
@@ -245,7 +228,7 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 				   v0 = S_LD_UW(s + i + 1);
 			j = i + sizeof(suint32_t) * 2;
 			if (u0 == v0) {
-				j &= S_ALIGNMASK;
+				j &= (size_t)S_ALIGNMASK;
 				*run_elem_size = 1;
 			} else {
 				*run_elem_size = 4;
@@ -361,8 +344,8 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	ASSERT_RETURN_IF(!ssd2, 0);
 	size_t i = 0, j = 0;
 	#define SDEC_HEX_L(n, m)	\
-		o[j + n] = (hex2nibble(s[i + m]) << 4) | \
-			    hex2nibble(s[i + m + 1]);
+		o[j + n] = (unsigned char)((hex2nibble(s[i + m]) << 4) | \
+					    hex2nibble(s[i + m + 1]));
 	for (; i < ssd4; i += 4, j += 2) {
 		SDEC_HEX_L(0, 0);
 		SDEC_HEX_L(1, 2);
@@ -378,13 +361,10 @@ size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
 		switch (s[i]) {
-		case S_QUOT: sso += S_QUOT_SZ - 1; break;
-		case S_AMP: sso += S_AMP_SZ - 1; break;
-		case S_APOS: sso += S_APOS_SZ - 1; break;
-		case S_LT: sso += S_LT_SZ - 1; break;
-		case S_GT: sso += S_GT_SZ - 1; break;
-		default:
-			break;
+		case '"': case '\'': sso += 5; continue;
+		case '&': sso += 4; continue;
+		case '<': case '>': sso += 3; continue;
+		default: continue;
 		}
 	return sso;
 }
@@ -394,12 +374,9 @@ size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
 		switch (s[i]) {
-		case S_BS: case S_TAB: case S_NL: case S_FEED: case S_CR:
-		case S_QUOT: case S_BSL:
-			sso++;
-			break;
-		default:
-			break;
+		case '\b': case '\t': case '\n': case '\f': case '\r':
+		case '"': case '\\': sso++; continue;
+		default: continue;
 		}
 	return sso;
 }
@@ -408,17 +385,16 @@ size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 		    const size_t known_sso)
 {
 	RETURN_IF(!s || !ss || !o, 0);
-	size_t sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss);
-	ssize_t i = ss - 1, j = sso;
-	for (; i >= 0; i--) {
+	size_t sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss),
+	       i = ss - 1, j = sso;
+	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
-		case S_QUOT: j -= 6; s_memcpy6(o + j, "&quot;"); break;
-		case S_AMP: j -= 5; s_memcpy5(o + j, "&amp;"); break;
-		case S_APOS: j -= 6; s_memcpy6(o + j, "&apos;"); break;
-		case S_LT: j -= 4; s_memcpy4(o + j, "&lt;"); break;
-		case S_GT: j -= 4; s_memcpy4(o + j, "&gt;"); break;
-		default:
-			o[--j] = s[i];
+		case '"': j -= 6; s_memcpy6(o + j, "&quot;"); continue;
+		case '&': j -= 5; s_memcpy5(o + j, "&amp;"); continue;
+		case '\'': j -= 6; s_memcpy6(o + j, "&apos;"); continue;
+		case '<': j -= 4; s_memcpy4(o + j, "&lt;"); continue;
+		case '>': j -= 4; s_memcpy4(o + j, "&gt;"); continue;
+		default: o[--j] = s[i]; continue;
 		}
 	}
 	return sso;
@@ -490,19 +466,18 @@ size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 		     const size_t known_sso)
 {
 	RETURN_IF(!s || !ss || !o, 0);
-	size_t sso = known_sso ? known_sso : senc_esc_json_req_size(s, ss);
-	ssize_t i = ss - 1, j = sso;
-	for (; i >= 0; i--) {
+	size_t sso = known_sso ? known_sso : senc_esc_json_req_size(s, ss),
+	       i = ss - 1, j = sso;
+	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
-		case S_BS: j -= 2; s_memcpy2(o + j, "\\b"); break;
-		case S_TAB: j -= 2; s_memcpy2(o + j, "\\t"); break;
-		case S_NL: j -= 2; s_memcpy2(o + j, "\\n"); break;
-		case S_FEED: j -= 2; s_memcpy2(o + j, "\\f"); break;
-		case S_CR: j -= 2; s_memcpy2(o + j, "\\r"); break;
-		case S_QUOT: j -= 2; s_memcpy2(o + j, "\\\""); break;
-		case S_BSL: j -= 2; s_memcpy2(o + j, "\\\\"); break;
-		default:
-			o[--j] = s[i];
+		case '\b': j -= 2; s_memcpy2(o + j, "\\b"); continue;
+		case '\t': j -= 2; s_memcpy2(o + j, "\\t"); continue;
+		case '\n': j -= 2; s_memcpy2(o + j, "\\n"); continue;
+		case '\f': j -= 2; s_memcpy2(o + j, "\\f"); continue;
+		case '\r': j -= 2; s_memcpy2(o + j, "\\r"); continue;
+		case '"': j -= 2; s_memcpy2(o + j, "\\\""); continue;
+		case '\\': j -= 2; s_memcpy2(o + j, "\\\\"); continue;
+		default: o[--j] = s[i]; continue;
 		}
 	}
 	return sso;
@@ -567,7 +542,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Initialize data structures
 	 */
-	size_t j;
+	slzw_ndx_t j;
 	for (j = 0; j < 256; j += 4) {
 		node_codes[j] = j;
 		node_codes[j + 1] = j + 1;
@@ -615,7 +590,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		/*
 		 * Locate pattern
 		 */
-		unsigned in_byte = s[i++];
+		unsigned char in_byte = s[i++];
 		curr_node = in_byte;
 		slzw_ndx_t r;
 		for (; i < ss; i++) {
@@ -657,9 +632,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		/*
 		 * Write pattern code to the output stream
 		 */
-		node_codes[new_node] = next_code;
+		node_codes[new_node] = (slzw_ndx_t)next_code;
 		node_lutref[new_node] = 0;
-		slzw_bitio_write(o, &oi, &acc, node_codes[curr_node],
+		slzw_bitio_write(o, &oi, &acc, (size_t)node_codes[curr_node],
 			         curr_code_len, &normal_count, &esc_count);
 		if (next_code == (size_t)(1 << curr_code_len))
 
@@ -681,8 +656,8 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
-	slzw_bitio_write(o, &oi, &acc, node_codes[curr_node], curr_code_len,
-			 &normal_count, &esc_count);
+	slzw_bitio_write(o, &oi, &acc, (size_t)node_codes[curr_node],
+			 curr_code_len, &normal_count, &esc_count);
 #if SLZW_USE_STOP_CODE
 	slzw_bitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len, &normal_count,
 			 &esc_count);
@@ -732,11 +707,11 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			}
 			for (; code >= SLZW_FIRST;) {
 				pattern[pattern_off--] = xbyte[code];
-				code = parents[code];
+				code = (size_t)parents[code];
 			}
 			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] =
 								xbyte[code];
-			parents[next_inc_code] = last_code;
+			parents[next_inc_code] = (slzw_ndx_t)last_code;
 			if (next_inc_code < SLZW_CODE_LIMIT)
 				next_inc_code++;
 			if (next_inc_code == (size_t)(1 << curr_code_len) &&
@@ -762,16 +737,19 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			cl = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
 			ch = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
 			count = ch << SLZW_RLE_BITSD2 | cl;
-			rle.b[0] = sbitio_read(s, &i, &acc, &accbuf, 8);
+			rle.b[0] = (unsigned char)sbitio_read(s, &i, &acc,
+							      &accbuf, 8);
 			if (new_code == SLZW_RLE1) {
 				memset(o + oi, rle.b[0], count);
 			} else {
-				rle.b[1] = sbitio_read(s, &i, &acc, &accbuf, 8);
-				rle.b[2] = sbitio_read(s, &i, &acc, &accbuf, 8);
+				rle.b[1] = (unsigned char)sbitio_read(
+						s, &i, &acc, &accbuf, 8);
+				rle.b[2] = (unsigned char)sbitio_read(
+						s, &i, &acc, &accbuf, 8);
 				if (new_code == SLZW_RLE4) {
 					count *= 4;
-					rle.b[3] = sbitio_read(s, &i, &acc,
-							       &accbuf, 8);
+					rle.b[3] = (unsigned char)sbitio_read(
+						      s, &i, &acc, &accbuf, 8);
 					s_memset32(o + oi, rle.a32, count);
 				} else {
 					count *= 3;
@@ -805,7 +783,7 @@ static size_t senc_rle_flush(const unsigned char *s, const size_t i,
 			(d <= SRLE_RUN_MASK_SHORT ? "St" : "ST"), (unsigned)d);
 #endif
 		if (d <= SRLE_RUN_MASK_SHORT) {
-			o[oi++] = SRLE_OP_ST_SHORT | d;
+			o[oi++] = (unsigned char)(SRLE_OP_ST_SHORT | d);
 		} else {
 			o[oi++] = SRLE_OP_ST;
 			S_ST_U32(o + oi, S_HTON_U32((suint32_t)d));
@@ -840,9 +818,11 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 				run_elem_size = 4;
 			}
 			if (run_elem_size == 4)
-				o[oi++] = SRLE_OP_RLE4_SHORT | run_length;
+				o[oi++] = (unsigned char)(SRLE_OP_RLE4_SHORT |
+							  run_length);
 			else
-				o[oi++] = SRLE_OP_RLE3_SHORT | run_length;
+				o[oi++] = (unsigned char)(SRLE_OP_RLE3_SHORT |
+							  run_length);
 		} else {
 #if SLZW_DEBUG
 			fprintf(stderr, "[%u] %s(%u)\n", (unsigned)oi,
@@ -923,7 +903,7 @@ size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 			} else  {
 				if (op_sz == 4) {
 					cnt *= 4;
-					size_t v = S_LD_U32(s + i);
+					suint32_t v = S_LD_U32(s + i);
 					s_memset32(o + oi, v, cnt);
 					i += 4;
 				} else {
