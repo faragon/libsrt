@@ -105,20 +105,25 @@ size_t sc_wc_to_utf8(const int c, char *s, const size_t off,
 	const size_t len = sc_wc_to_utf8_size(c);
 	if (s && off < max_off) {
 		switch (len) {
-		case 1:	s[off] = SSU8_S1 | (c & 0x7f);  break;
-		case 2:	s[off] = SSU8_S2 | (c >> 6);  break;
-		case 3:	s[off] = SSU8_S3 | (c >> 12); break;
-		case 4:	s[off] = SSU8_S4 | (c >> 18); break;
-		case 5:	s[off] = SSU8_S5 | (c >> 24); break;
-		case 6:	s[off] = SSU8_S6 | (c >> 30); break;
+		case 1:	s[off] = (char)(SSU8_S1 | (c & 0x7f)); break;
+		case 2:	s[off] = (char)(SSU8_S2 | (c >> 6));  break;
+		case 3:	s[off] = (char)(SSU8_S3 | (c >> 12)); break;
+		case 4:	s[off] = (char)(SSU8_S4 | (c >> 18)); break;
+		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24)); break;
+		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30)); break;
 		}
 		switch (len)
 		{
-		case 6: s[off+5] = SSU8_SX | ((c >> (6 * (len-6))) & SSUB_MX);
-		case 5: s[off+4] = SSU8_SX | ((c >> (6 * (len-5))) & SSUB_MX);
-		case 4: s[off+3] = SSU8_SX | ((c >> (6 * (len-4))) & SSUB_MX);
-		case 3: s[off+2] = SSU8_SX | ((c >> (6 * (len-3))) & SSUB_MX);
-		case 2: s[off+1] = SSU8_SX | ((c >> (6 * (len-2))) & SSUB_MX);
+		case 6: s[off+5] = (char)(SSU8_SX |
+					  ((c >> (6 * (len-6))) & SSUB_MX));
+		case 5: s[off+4] = (char)(SSU8_SX |
+					  ((c >> (6 * (len-5))) & SSUB_MX));
+		case 4: s[off+3] = (char)(SSU8_SX |
+					  ((c >> (6 * (len-4))) & SSUB_MX));
+		case 3: s[off+2] = (char)(SSU8_SX |
+					  ((c >> (6 * (len-3))) & SSUB_MX));
+		case 2: s[off+1] = (char)(SSU8_SX |
+					  ((c >> (6 * (len-2))) & SSUB_MX));
 		}
 	}
 	return len;
@@ -193,11 +198,13 @@ ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
 				     sint32_t (*ssc_toX)(const sint32_t))
 {
 	int uchr = 0;
-	size_t i = off, caseXsize = 0;
+	size_t i = off;
+	ssize_t caseXsize = 0;
 	for (; i < s_size;) {
 		const size_t char_size = sc_utf8_to_wc(s, i, s_size, &uchr, NULL);
 		i += char_size;
-		caseXsize += (sc_wc_to_utf8_size(ssc_toX(uchr)) - char_size); 
+		caseXsize += ((ssize_t)sc_wc_to_utf8_size(ssc_toX(uchr)) -
+			      (ssize_t)char_size);
 	}
 	return caseXsize;
 }
@@ -629,7 +636,7 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 	const suint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
 	const suint32_t msk4 = op_mod > 0? 0x25252525 : 0x05050505;
 	if ((off & 3) == 0) {	/* aligned input */
-		const size_t szm4 = max & (~3);
+		const size_t szm4 = max & (size_t)(~3);
 		for (; off < szm4; off += 4) {
 			const suint32_t *c32 = (const suint32_t *)(s + off);
 			const suint32_t a = *c32;

@@ -111,8 +111,8 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
  * Constants
  */
 
-struct SSTR_Small ss_void0 = EMPTY_SS;
-ss_t *ss_void = (ss_t *)&ss_void0; /* empty string with alloc error set */
+static struct SSTR_Small ss_void0 = EMPTY_SS;
+static ss_t *ss_void = (ss_t *)&ss_void0; /* empty string with alloc error set */
 
 /*
  * Forward definitions for some static functions
@@ -210,7 +210,8 @@ static const char *get_str_r(const ss_t *s)
 
 static size_t get_str_off(const ss_t *s)
 {
-	return get_str_r(s) - (const char *)s;
+	S_ASSERT(get_str_r(s) >= (const char *)s);
+	return (size_t)(get_str_r(s) - (const char *)s);
 }
 
 static void set_size(ss_t *s, const size_t size)
@@ -353,7 +354,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const sint_t num)
 	} while (n);
 	if (num < 0)
 		*p-- = '-';
-	const size_t off = (p - btmp) + 1,
+	const size_t off = (size_t)((p - (char *)btmp) + 1),
 		     digits = sizeof(btmp) - off,
 		     at = (cat && *s) ? sd_get_size(*s) : 0;
 	SS_OVERFLOW_CHECK(s, at, digits);
@@ -397,7 +398,8 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 		at = 0;
 	}
 	/* Check if it is necessary to allocate more memory: */
-	size_t sso_req = at + ss + extra;
+	size_t sso_req = extra < 0 ? (at + ss - (size_t)(-extra)) :
+				     (at + ss + (size_t)extra);
 	char *po0;
 	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) {
 		if (*s && (*s)->ext_buffer) { /* BEHAVIOR */
@@ -597,7 +599,8 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 	const size_t l1 = sd_get_size(s1), l2 = sd_get_size(s2);
 	size_t i = off, l = sd_get_size(src);
 	ss_t *out = NULL;
-	ssize_t size_delta = l2 - l1;
+	ssize_t size_delta = l2 > l1 ? (ssize_t)(l2 - l1) :
+				       -(ssize_t)(l1 - l2);
 	sbool_t aliasing = S_FALSE;
 	size_t out_size = at + l;
 	char *o, *o0;
@@ -609,7 +612,10 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 				break;
 		if (nfound == 0)	/* 0 occurrences: return */
 			return ss_check(s);
-		out_size += (size_delta * nfound);
+		if (size_delta >= 0)
+			out_size += (size_t)size_delta * nfound;
+		else
+			out_size -= (size_t)(-size_delta) * nfound;
 		/* allocate output string */
 		out = ss_alloc(out_size);
 		if (!out) {
@@ -950,7 +956,7 @@ ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
 	return ss_cpy_substr(&s, src, off, n);
 }
 
-ss_t *ss_dup_u(const ss_t *src, const size_t char_off, const size_t n)
+ss_t *ss_dup_substr_u(const ss_t *src, const size_t char_off, const size_t n)
 {
 	ss_t *s = NULL;
 	return ss_cpy_substr_u(&s, src, char_off, n);
@@ -1526,7 +1532,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 			char *p = get_str(*s) + off;
 			const int sz = vsnprintf(p, size, fmt, ap);
 			if (sz >= 0)
-				inc_size(*s, sz);
+				inc_size(*s, (size_t)sz);
 			else
 				set_encoding_errors(*s, S_TRUE);
 			set_unicode_size_cached(*s, S_FALSE);
@@ -1818,7 +1824,8 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 				/* BEHAVIOR: ignore last cutted chars */
 				break;
 			}
-			if ((res = towlower(u1) - towlower(u2)) != 0) {
+			if ((res = (int)(towlower((wint_t)u1) -
+					 towlower((wint_t)u2))) != 0) {
 				break;	/* difference found */
 			}
 			i += chs1;
@@ -1888,7 +1895,7 @@ unsigned ss_csum32(const ss_t *s, const size_t n)
  * Aux
  */
 
-const ss_t *ss_empty()
+const ss_t *ss_empty(void)
 {
 	return ss_void;
 }

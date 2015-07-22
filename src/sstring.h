@@ -537,7 +537,7 @@ unsigned ss_csum32(const ss_t *s, const size_t n);
  */
 
 /* #API: |Empty string reference||output string reference|O(1)| */
-const ss_t *ss_empty();
+const ss_t *ss_empty(void);
 
 #ifdef S_DEBUG
 extern size_t dbg_cnt_alloc_calls;	/* alloc or realloc calls */

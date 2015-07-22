@@ -361,8 +361,8 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 		/* Leave found? update tree, copy data, update size */
 		if (w[c].x == ST_NIL) {
 			/* New node: */
-			w[c].x = ts;
-			w[c].n = get_node(t, ts);
+			w[c].x = (stndx_t)ts;
+			w[c].n = get_node(t, (stndx_t)ts);
 			new_node(t, w[c].n, n, S_TRUE);
 			/* Update parent node: */
 			set_lr(w[cp].n, d, w[c].x);
@@ -614,7 +614,7 @@ enum eTMode
 {
 	TR_Preorder	= 1,
 	TR_Inorder	= 4,
-	TR_Postorder	= 8,
+	TR_Postorder	= 8
 };
 
 /*
