@@ -630,11 +630,11 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 	if (((size_t)(o) & 3) != 0 || ((size_t)(s) & 3) != 0 ||
 	    (ssc_toX != sc_tolower && ssc_toX != sc_toupper))
 		return off;
-	const int op_mod = ssc_toX == sc_tolower? 1 : -1;
+	const int op_mod = ssc_toX == sc_tolower? 1 : 0;
 	union s_u32 m1;
 	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
 	const suint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
-	const suint32_t msk4 = op_mod > 0? 0x25252525 : 0x05050505;
+	const suint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
 	if ((off & 3) == 0) {	/* aligned input */
 		const size_t szm4 = max & (size_t)(~3);
 		for (; off < szm4; off += 4) {
@@ -644,7 +644,10 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 				suint32_t b = (msk1 & a) + msk4;
 				b = (msk1 & b) + msk2;
 				b = ((b & ~a) >> 2) & msk3;
-				*o++ = a + (b * op_mod);
+				if (op_mod)
+					*o++ = a + b;
+				else
+					*o++ = a - b;
 			} else { /* Not 7-bit ASCII */
 				break;
 			}
