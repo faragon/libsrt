@@ -4,7 +4,7 @@
 #
 # Automatic documentation generator.
 #
-# Example: ./c2doc.py <../sstring.c
+# Example: doc/c2doc.py < src/sstring.h > output.html
 #
 # Tag syntax example from src/smap.h:
 #	/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
