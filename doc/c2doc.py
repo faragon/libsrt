@@ -2,9 +2,31 @@
 #
 # doc.py
 #
-# Automatic documentation generator. *work in progress*
+# Automatic documentation generator.
 #
 # Example: ./c2doc.py <../sstring.c
+#
+# Tag syntax example from src/smap.h:
+#	/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+#	sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
+#
+#	/* #API: |a|b|c|d|e| */
+#	return_type function_name(param1, ..., paramN);
+#
+#	a: function description
+#	b: function parameters, separated by ";"
+#	c: return value (optional, if none, put "-")
+#	d: time and space complexity (space complexity being optional if no
+#	   extra space), separated by ";"
+#	e: implementation status, separated by ";"
+#		#1, code coverage:
+#			0 basic coverage (Coverity, clang analyzer)
+#			1 covered by test (test + Valgrind)
+#			2 covered by proof
+#		#2, code quality:
+#			0 not reviewed
+#			1 reviewed, with pending problems
+#			2 reviewed and clean (-Wall, style, speed)
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
@@ -18,7 +40,8 @@ def mkdoc( apidoc, proto ) :
 	fun_desc = api_tokens[1]
 	fun_params_desc = api_tokens[2].split(';')
 	fun_ret_desc = api_tokens[3]
-	fun_o = api_tokens[4]
+	fun_o = api_tokens[4].split(';') if len(api_tokens) > 4 else []
+	fun_status = api_tokens[5].split(';') if len(api_tokens) > 5 else []
 	tmp = proto.split('(');
 	split_char = '*' if tmp[0].find('*') >= 0 else ' '
 	tmp2 = tmp[0].split(split_char)
@@ -34,8 +57,28 @@ def mkdoc( apidoc, proto ) :
 	doc.append([fun_name, fun_desc])
 	doc.append([fun_params, fun_params_desc])
 	doc.append([fun_ret, fun_ret_desc])
-	doc.append([fun_o])
+	doc.append(fun_o)
+	doc.append(fun_status)
 	return doc
+
+def atoi(a) :
+    try :
+        return int(a)
+    except ValueError:
+        return 0
+
+def fmt_coverage(c) :
+	return	"[" + str(c) + "] " + \
+		"basic (Coverity, clang analyzer)" if c == 0 else \
+		"test covered (test + Valgrind)" if c == 1 else \
+		"proof covered" if c == 2 else "?"
+
+def fmt_quality(q) :
+	return	"[" + str(q) + "] " + \
+		"not reviewed" if q == 0 else \
+		"reviewed, with quality issues" if q == 1 else \
+		"reviewedi, clean (-Wall, style, speed)" if q == 2 else "?"
+
 
 def fundoc2html( doc ) :
 	fun_name = doc[0][0]
@@ -44,7 +87,10 @@ def fundoc2html( doc ) :
 	fun_params_desc = doc[1][1]
 	fun_ret = doc[2][0].replace("static ", "")
 	fun_ret_desc = doc[2][1]
-	fun_o = doc[3][0]
+	fun_o = doc[3][0] if len(doc) > 3 and len(doc[3]) >= 1 else ''
+	fun_os = doc[3][1] if len(doc) > 3 and len(doc[3]) >= 2 else ''
+	fun_coverage = atoi(doc[4][0]) if len(doc) > 4 and len(doc[4]) > 0 else 0
+	fun_quality = atoi(doc[4][1]) if len(doc) > 4 and len(doc[4]) > 1 else 0
 	proto = '<i>' + fun_ret + '</i><b>' + fun_name + '</b>('
 	i = 0
 	while i < len(fun_params) :
@@ -64,8 +110,10 @@ def fundoc2html( doc ) :
 		i += 1
 	if len(fun_ret_desc) :
 		params += '<li><b>Return</b> (<i>' + fun_ret.strip() + '</i>): ' + fun_ret_desc + '</li>'
-	if len(fun_o) :
-		params += '<li><b>Complexity:</b> ' + fun_o.strip() + '</li>'
+	params += '<li><b>Time complexity:</b> ' + (fun_o.strip() if len(fun_o) > 0 else '(pending)') + '</li>'
+	params += '<li><b>Space complexity:</b> ' + (fun_os.strip() if len(fun_os) > 0 else 'no extra space') + '</li>'
+	params += '<li><b>Coverage:</b> ' + fmt_coverage(fun_coverage) + '</li>'
+	params += '<li><b>Quality:</b> ' + fmt_quality(fun_quality) + '</li>'
 	params += '</ul><br>'
 	return  proto + params + '<br>'
 
