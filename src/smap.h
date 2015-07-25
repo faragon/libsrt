@@ -53,7 +53,7 @@ typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
  */
 
 /*
-#API: |Allocate map (stack)|map type; initial reserve|map|O(1)|1;1|
+#API: |Allocate map (stack)|map type; initial reserve|map|O(1)|1;2|
 sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
 */
 #define sm_alloca(type, num_elems)					\
@@ -63,7 +63,7 @@ sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
 	ST_SIZE_TO_ALLOC_SIZE(num_elems, sm_elem_size(type)))
 sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, const size_t buffer_size);
 
-/* #API: |Allocate map (heap)|map type; initial reserve|map|O(1)|1;1| */
+/* #API: |Allocate map (heap)|map type; initial reserve|map|O(1)|1;2| */
 sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_reserve);
 
 
@@ -128,13 +128,13 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k);
  * Existence check
  */
 
-/* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;1| */
+/* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
 sbool_t sm_u_count(const sm_t *m, const suint32_t k);
 
-/* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;1| */
+/* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
 sbool_t sm_i_count(const sm_t *m, const sint_t k);
 
-/* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;1| */
+/* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
 sbool_t sm_s_count(const sm_t *m, const ss_t *k);
 
 /*
@@ -189,7 +189,7 @@ const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
 /* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n)|0;1| */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 
-/* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;1| */
+/* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
 #ifdef __cplusplus

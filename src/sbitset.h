@@ -48,10 +48,10 @@ typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|0;1|
 sb_t *sb_alloca(const size_t initial_num_elems_reserve)
 
-#API: |Allocate bitset (heap)|space preallocated to store n elements|bitset|O(1)|1;1|
+#API: |Allocate bitset (heap)|space preallocated to store n elements|bitset|O(1)|1;2|
 sb_t *sb_alloc(const size_t initial_num_elems_reserve)
 
-#API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;1|
+#API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;2|
 sb_t *sb_free(sb_t **b, ...)
 
 #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|0;1|
@@ -75,7 +75,7 @@ S_INLINE size_t sb_maxbitset(const sb_t *b)
 	return b ? b->aux : 0;
 }
 
-/* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)|1;1| */
+/* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)|1;2| */
 
 S_INLINE size_t sb_popcount(const sb_t *b)
 {
@@ -98,7 +98,7 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
-/* #API: |Set nth bit to 1|bitset; bit offset|O(1) with the exception of O(n) for first case of not covering unitializated areas -for real-time requirement, force set + clear at last expected writabple position-|1;1| */
+/* #API: |Set nth bit to 1|bitset; bit offset|O(1) with the exception of O(n) for first case of not covering unitializated areas -for real-time requirement, force set + clear at last expected writabple position-|1;2| */
 
 S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
@@ -152,7 +152,7 @@ S_INLINE void sb_clear(sb_t **b, const size_t nth)
 	/* else: NULL bitset is implicitly considered as set to 0 */
 }
 
-/* #API: |Force evaluation of first N bits (equivalent to set to 0 all not previously referenced bits)|bitset; bit offset|-|O(n)|1;1| */
+/* #API: |Force evaluation of first N bits (equivalent to set to 0 all not previously referenced bits)|bitset; bit offset|-|O(n)|1;2| */
 
 S_INLINE void sb_eval(sb_t **b, const size_t nth)
 {

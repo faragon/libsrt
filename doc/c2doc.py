@@ -25,8 +25,10 @@
 #			2 covered by proof
 #		#2, code quality:
 #			0 not reviewed
-#			1 reviewed, with pending problems
-#			2 reviewed and clean (-Wall, style, speed)
+#			1 reviewed: with pending problems
+#			2 reviewed: clean (-Wall, style)
+#			3 reviewed: clean, secure (security risk checked)
+#			4 reviewed: clean, secure, state of the art (speed and space)
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #

@@ -1,4 +1,12 @@
 #!/bin/bash
+#
+# make_test.sh
+#
+# libsrt build, test, and documentation generation.
+#
+# Copyright (c) 2015 F. Aragon. All rights reserved.
+#
+
 if [ "$SKIP_FORCE32" == "1" ] ; then FORCE32T="" ; else FORCE32T="FORCE32=1" ; fi
 TEST_CC[0]="gcc"
 TEST_CC[1]="gcc"
@@ -93,17 +101,11 @@ fi
 
 if type python3 >/dev/null 2>/dev/null
 then
-	echo "Documentation test..." | tee -a $LOG
-	DOC_OUT=doc_out/
-	mkdir $DOC_OUT 2>/dev/null
-	cd src
-	for i in *\.h ; do
-		echo -n "$i: " >&2
-		if ../doc/c2doc.py "Documentation for $i" < "$i" >"../$DOC_OUT/$i.html" ; then
-			echo "OK" >&2 | tee -a $LOG
-		else	ERRORS=$((ERRORS + 1))
-		fi
-	done
+	echo "Documentation generation test..." | tee -a $LOG
+	DOC_OUT=$PWD/doc_out
+	mkdir "$DOC_OUT" 2>/dev/null
+	cd doc
+	./mk_doc.sh "$DOC_OUT"
 	cd ..
 fi
 
