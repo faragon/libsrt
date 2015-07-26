@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get install -qq gcc-multilib
   - sudo apt-get install -qq valgrind
   - sudo apt-get install -qq python3
+  - sudo apt-get install -qq realpath
 
 env:
   - SLIBSRT_ENV=not_used
