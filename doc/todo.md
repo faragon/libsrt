@@ -3,8 +3,6 @@
 
 Short-term
 ---
-* tree: export to json
-* escape/unscape xml, json, url
 
 Mid-term
 ---

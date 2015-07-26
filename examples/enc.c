@@ -20,6 +20,8 @@ enum EncMode
 	SDEC_xml,
 	SENC_json,
 	SDEC_json,
+	SENC_url,
+	SDEC_url,
 	SENC_lzw,
 	SDEC_lzw,
 	SENC_rle,
@@ -36,7 +38,7 @@ static int syntax_error(const char **argv, const int exit_code)
 	const char *v0 = argv[0];
 	fprintf(stderr,
 		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
-		"-ez|-dz]\nExamples:\n"
+		"-eu|-du|-ez|-dz]\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
@@ -70,6 +72,10 @@ int main(int argc, const char **argv)
 		mode = SENC_json;
 	else if (!strncmp(argv[1], "-dj", 3))
 		mode = SDEC_json;
+	else if (!strncmp(argv[1], "-eu", 3))
+		mode = SENC_url;
+	else if (!strncmp(argv[1], "-du", 3))
+		mode = SDEC_url;
 	else if (!strncmp(argv[1], "-ez", 3))
 		mode = SENC_lzw;
 	else if (!strncmp(argv[1], "-dz", 3))
@@ -89,9 +95,15 @@ int main(int argc, const char **argv)
 	switch (mode) {
 	case SENC_b64: is = 3; break;
 	case SDEC_b64: is = 4; break;
-	case SENC_hex: case SENC_HEX: is = 1; break;
+	case SENC_hex:
+	case SENC_HEX: is = 1; break;
 	case SDEC_hex: is = 2; break;
-	case SENC_xml: case SDEC_xml: case SENC_json: case SDEC_json: is = 1; break;
+	case SENC_xml:
+	case SDEC_xml:
+	case SENC_json:
+	case SDEC_json:
+	case SENC_url:
+	case SDEC_url: is = 1; break;
 	default: is = 0;
 	}
 	for (;;) {
@@ -123,10 +135,15 @@ int main(int argc, const char **argv)
 			case SENC_json:
 				lo2 = senc_esc_json(buf, (size_t)l, bufo, 0);
 				break;
+			case SENC_url:
+				lo2 = senc_esc_url(buf, (size_t)l, bufo, 0);
+				break;
 			case SDEC_xml:
 			case SDEC_json:
+			case SDEC_url:
 				off = 0;
-				esc = mode == SDEC_xml ? '&' : '\\';
+				esc = mode == SDEC_xml ? '&' :
+				      mode == SDEC_json ? '\\' : '%';
 				if (l > ESC_MAX_SIZE)
 					for (j = l - ESC_MAX_SIZE + 1; j < l; j++)
 						if (buf[j] == esc && buf[j - 1] != esc) {
@@ -136,7 +153,9 @@ int main(int argc, const char **argv)
 				l -= off;
 				lo2 = mode == SDEC_xml ?
 					sdec_esc_xml(buf, (size_t)l, bufo) :
-					sdec_esc_json(buf, (size_t)l, bufo);
+				      mode == SDEC_json ?
+					sdec_esc_json(buf, (size_t)l, bufo) :
+					sdec_esc_url(buf, (size_t)l, bufo);
 				if (off > 0)
 					memcpy(buf, buf + (size_t)l, (size_t)off);
 				break;

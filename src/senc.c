@@ -114,7 +114,7 @@ static const unsigned char h2n[64] = {
  * Internal functions
  */
 
-static int hex2nibble(const int h)
+static unsigned char hex2nibble(const int h)
 {
 	return h2n[(h - 48) & 0x3f];
 }
@@ -344,8 +344,8 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	ASSERT_RETURN_IF(!ssd2, 0);
 	size_t i = 0, j = 0;
 	#define SDEC_HEX_L(n, m)	\
-		o[j + n] = (unsigned char)((hex2nibble(s[i + m]) << 4) | \
-					    hex2nibble(s[i + m + 1]));
+		o[j + n] = ((hex2nibble(s[i + m]) << 4) | \
+			    hex2nibble(s[i + m + 1]));
 	for (; i < ssd4; i += 4, j += 2) {
 		SDEC_HEX_L(0, 0);
 		SDEC_HEX_L(1, 2);
@@ -364,18 +364,6 @@ size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 		case '"': case '\'': sso += 5; continue;
 		case '&': sso += 4; continue;
 		case '<': case '>': sso += 3; continue;
-		default: continue;
-		}
-	return sso;
-}
-
-size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
-{
-	size_t i = 0, sso = ss;
-	for (; i < ss; i++)
-		switch (s[i]) {
-		case '\b': case '\t': case '\n': case '\f': case '\r':
-		case '"': case '\\': sso++; continue;
 		default: continue;
 		}
 	return sso;
@@ -461,6 +449,18 @@ size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
+size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
+{
+	size_t i = 0, sso = ss;
+	for (; i < ss; i++)
+		switch (s[i]) {
+		case '\b': case '\t': case '\n': case '\f': case '\r':
+		case '"': case '\\': sso++; continue;
+		default: continue;
+		}
+	return sso;
+}
+
 /* BEHAVIOR: slash ('/') is not escaped (intentional) */
 size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 		     const size_t known_sso)
@@ -503,6 +503,69 @@ size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 #endif
 			default: break;
 			}
+		}
+		o[j] = s[i++];
+	}
+	return j;
+}
+
+size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
+{
+	size_t i = 0, sso = ss;
+	for (; i < ss; i++) {
+		if ((s[i] >= 'A' && s[i] <= 'Z') ||
+		    (s[i] >= 'a' && s[i] <= 'z') ||
+		    (s[i] >= '0' && s[i] <= '9'))
+			continue;
+		switch (s[i]) {
+		case '-': case '_': case '.': case '~':
+			continue;
+		default:
+			sso += 2;
+			continue;
+		}
+	}
+	return sso;
+}
+
+size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
+		     const size_t known_sso)
+{
+	RETURN_IF(!s || !ss || !o, 0);
+	size_t sso = known_sso ? known_sso : senc_esc_url_req_size(s, ss),
+	       i = ss - 1, j = sso;
+	for (; i != (size_t)-1; i--) {
+
+		if ((s[i] >= 'A' && s[i] <= 'Z') ||
+		    (s[i] >= 'a' && s[i] <= 'z') ||
+		    (s[i] >= '0' && s[i] <= '9')) {
+			o[--j] = s[i];
+			continue;
+		}
+		switch (s[i]) {
+		case '-': case '_': case '.': case '~':
+			o[--j] = s[i];
+			continue;
+		default:
+			j -= 3;
+			o[j] = '%';
+			senc_HEX(s + i, 1, o + j + 1);
+			continue;
+		}
+	}
+	return sso;
+}
+
+size_t sdec_esc_url(const unsigned char *s, const size_t ss, unsigned char *o)
+{
+	RETURN_IF(!s || !ss || !o, 0);
+	size_t i = 0, j = 0;
+	for (; i < ss; j++) {
+		if (s[i] == '%' && i + 3 <= ss) {
+			o[j] = (hex2nibble(s[i + 1]) << 4) |
+				hex2nibble(s[i + 2]);
+			i += 3;
+			continue;
 		}
 		o[j] = s[i++];
 	}
