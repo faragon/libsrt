@@ -28,8 +28,8 @@ enum EncMode
 	SDEC_rle
 };
 
-#define IBUF_SIZE	(3 * 4 * 4096) /* 3 * 4: LCM */
-#define OBUF_SIZE	(IBUF_SIZE * 2) /* Max req: bin to hex */
+#define IBUF_SIZE	(3 * 4 * 1024) /* 3 * 4: LCM */
+#define OBUF_SIZE	(IBUF_SIZE * 6) /* Max req: xml escape */
 #define ESC_MAX_SIZE	16
 #define XBUF_SIZE	(S_MAX(IBUF_SIZE, OBUF_SIZE) + ESC_MAX_SIZE)
 

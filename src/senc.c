@@ -535,7 +535,6 @@ size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
 	size_t sso = known_sso ? known_sso : senc_esc_url_req_size(s, ss),
 	       i = ss - 1, j = sso;
 	for (; i != (size_t)-1; i--) {
-
 		if ((s[i] >= 'A' && s[i] <= 'Z') ||
 		    (s[i] >= 'a' && s[i] <= 'z') ||
 		    (s[i] >= '0' && s[i] <= '9')) {
@@ -549,7 +548,8 @@ size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
 		default:
 			j -= 3;
 			o[j] = '%';
-			senc_HEX(s + i, 1, o + j + 1);
+			o[j + 1] = n2h_u[s[i] >> 4];
+			o[j + 2] = n2h_u[s[i] & 0x0f];
 			continue;
 		}
 	}
