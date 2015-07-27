@@ -122,8 +122,8 @@ static unsigned char hex2nibble(const int h)
 static size_t senc_hex_aux(const unsigned char *s, const size_t ss,
 			   unsigned char *o, const unsigned char *t)
 {
-	RETURN_IF(!s, ss * 2);
-	ASSERT_RETURN_IF(!o, 0);
+	RETURN_IF(!o, ss * 2);
+	RETURN_IF(!s, 0);
 	const size_t out_size = ss * 2;
 	size_t i = ss, j = out_size;
 	size_t tail = ss - (ss % 2);
@@ -263,8 +263,8 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 
 size_t senc_b64(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s, (ss / 3 + (ss % 3 ? 1 : 0)) * 4);
-	ASSERT_RETURN_IF(!o, 0);
+	RETURN_IF(!o, (ss / 3 + (ss % 3 ? 1 : 0)) * 4);
+	RETURN_IF(!s, 0);
 	const size_t ssod4 = (ss / 3) * 4;
 	const size_t ssd3 = ss - (ss % 3);
 	const size_t tail = ss - ssd3;
@@ -356,7 +356,7 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
+static size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -372,9 +372,11 @@ size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 		    const size_t known_sso)
 {
-	RETURN_IF(!s || !ss || !o, 0);
-	size_t sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss),
-	       i = ss - 1, j = sso;
+	RETURN_IF(!s, 0);
+	size_t sso = known_sso ? known_sso : senc_esc_xml_req_size(s, ss);
+	RETURN_IF(!o, sso);
+	RETURN_IF(!ss, 0);
+	size_t i = ss - 1, j = sso;
 	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
 		case '"': j -= 6; s_memcpy6(o + j, "&quot;"); continue;
@@ -449,7 +451,7 @@ size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
+static size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -465,9 +467,11 @@ size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
 size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 		     const size_t known_sso)
 {
-	RETURN_IF(!s || !ss || !o, 0);
-	size_t sso = known_sso ? known_sso : senc_esc_json_req_size(s, ss),
-	       i = ss - 1, j = sso;
+	RETURN_IF(!s, 0);
+	size_t sso = known_sso ? known_sso : senc_esc_json_req_size(s, ss);
+	RETURN_IF(!o, sso);
+	RETURN_IF(!ss, 0);
+	size_t i = ss - 1, j = sso;
 	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
 		case '\b': j -= 2; s_memcpy2(o + j, "\\b"); continue;
@@ -509,7 +513,7 @@ size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
+static size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++) {
@@ -529,11 +533,13 @@ size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
 }
 
 size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
-		     const size_t known_sso)
+		    const size_t known_sso)
 {
-	RETURN_IF(!s || !ss || !o, 0);
-	size_t sso = known_sso ? known_sso : senc_esc_url_req_size(s, ss),
-	       i = ss - 1, j = sso;
+	RETURN_IF(!s, 0);
+	size_t sso = known_sso ? known_sso : senc_esc_url_req_size(s, ss);
+	RETURN_IF(!o, sso);
+	RETURN_IF(!ss, 0);
+	size_t i = ss - 1, j = sso;
 	for (; i != (size_t)-1; i--) {
 		if ((s[i] >= 'A' && s[i] <= 'Z') ||
 		    (s[i] >= 'a' && s[i] <= 'z') ||
@@ -547,9 +553,9 @@ size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
 			continue;
 		default:
 			j -= 3;
-			o[j] = '%';
-			o[j + 1] = n2h_u[s[i] >> 4];
 			o[j + 2] = n2h_u[s[i] & 0x0f];
+			o[j + 1] = n2h_u[s[i] >> 4];
+			o[j] = '%';
 			continue;
 		}
 	}

@@ -63,19 +63,17 @@ extern "C" {
 #include "scommon.h"
 
 typedef size_t (*senc_f_t)(const unsigned char *s, const size_t ss, unsigned char *o);
+typedef size_t (*senc_f2_t)(const unsigned char *s, const size_t ss, unsigned char *o, const size_t sso);
 
 size_t senc_b64(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t sdec_b64(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t senc_hex(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t senc_HEX(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o);
-size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss);
 size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso);
 size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o);
-size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss);
 size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso);
 size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o);
-size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss);
 size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso);
 size_t sdec_esc_url(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o);
