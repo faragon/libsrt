@@ -49,10 +49,6 @@ QA
 Short-term
 ---
 
-* more synthetic description, simplify it (avoid unnecesary detail)
-* review function per functtion.
-* write readme.md and documentation (manual pages, Doxygen)
-* Ensure: if can not no realloc memory, string is kept untouched.
 * List C library dependencies
 
 Mid-term
