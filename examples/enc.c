@@ -109,7 +109,7 @@ int main(int argc, const char **argv)
 	for (;;) {
 		if (is) {
 			l = read(0, buf + off, IBUF_SIZE);
-			if (l <= 0)
+			if (l <= 0 && off == 0)
 				goto done;
 			l += off;
 			li += (size_t)l;
