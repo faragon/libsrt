@@ -35,7 +35,7 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 	const char *buf = (const char *)sv_get_buffer_r(v);
 	for (; i < elems; i++) {
 		ss_cpy_cn(&aux, buf + i * elem_size , elem_size);
-		ss_cat_tohex(log, aux);
+		ss_cat_enc_hex(log, aux);
 		if (i + 1 < elems)
 			ss_cat_cn(log, ", ", 2);
 	}
@@ -176,7 +176,7 @@ void s_hex_dump(ss_t **log, const char *label, const char *buf,
 	ss_t *aux = ss_dup_cn(buf, buf_size);
 	if (label)
 		ss_cat_c(log, label);
-	ss_cat_tohex(log, aux);
+	ss_cat_enc_hex(log, aux);
 	ss_free(&aux);
 }
 
