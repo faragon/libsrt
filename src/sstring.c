@@ -854,6 +854,46 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
  * Generated from template
  */
 
+#define MK_SS_DUP_CODEC(f, f_cpy)	\
+	ss_t *f(const ss_t *src) {	\
+		ss_t *s = NULL;		\
+		return f_cpy(&s, src);	\
+	}
+
+#define MK_SS_CPY_CODEC(f, f_enc, f_enc2)				\
+	ss_t *f(ss_t **s, const ss_t *src) {				\
+		return aux_toenc(s, S_FALSE, src, f_enc, f_enc2);	\
+	}
+
+#define MK_SS_CAT_CODEC(f, f_enc, f_enc2)				\
+	ss_t *f(ss_t **s, const ss_t *src) {				\
+		return aux_toenc(s, S_TRUE, src, f_enc, f_enc2);	\
+	}
+
+#define MK_SS_CODEC(f, f_enc, f_enc2)					\
+	ss_t *f(ss_t **s, const ss_t *src) {				\
+		return aux_toenc(s, S_FALSE, src, f_enc, f_enc2);	\
+	}
+
+#define MK_SS_DUP_CPY_CAT(suffix, f1, f2)			\
+	MK_SS_DUP_CODEC(ss_dup_##suffix, ss_cpy_##suffix)	\
+	MK_SS_CPY_CODEC(ss_cpy_##suffix, f1, f2)		\
+	MK_SS_CAT_CODEC(ss_cat_##suffix, f1, f2)		\
+	MK_SS_CODEC(ss_##suffix, f1, f2)
+
+MK_SS_DUP_CPY_CAT(enc_b64, senc_b64, NULL)
+MK_SS_DUP_CPY_CAT(enc_hex, senc_hex, NULL)
+MK_SS_DUP_CPY_CAT(enc_HEX, senc_HEX, NULL)
+MK_SS_DUP_CPY_CAT(enc_esc_xml, NULL, senc_esc_xml)
+MK_SS_DUP_CPY_CAT(enc_esc_json, NULL, senc_esc_json)
+MK_SS_DUP_CPY_CAT(enc_esc_url, NULL, senc_esc_url)
+
+MK_SS_DUP_CPY_CAT(dec_b64, sdec_b64, NULL)
+MK_SS_DUP_CPY_CAT(dec_hex, sdec_hex, NULL)
+MK_SS_DUP_CPY_CAT(dec_esc_xml, sdec_esc_xml, NULL)
+MK_SS_DUP_CPY_CAT(dec_esc_json, sdec_esc_json, NULL)
+MK_SS_DUP_CPY_CAT(dec_esc_url, sdec_esc_url, NULL)
+
 SD_BUILDFUNCS(ss)
 
 /*
@@ -1006,19 +1046,6 @@ ss_t *ss_dup_toupper(const ss_t *src)
 	ss_t *s = NULL;
 	return ss_cpy_toupper(&s, src);
 }
-
-#define MK_SS_DUP_TO_ENC(f, f_cpy)	\
-	ss_t *f(const ss_t *src) {	\
-		ss_t *s = NULL;		\
-		return f_cpy(&s, src);	\
-	}
-
-MK_SS_DUP_TO_ENC(ss_dup_tob64, ss_cpy_tob64)
-MK_SS_DUP_TO_ENC(ss_dup_tohex, ss_cpy_tohex)
-MK_SS_DUP_TO_ENC(ss_dup_toHEX, ss_cpy_toHEX)
-MK_SS_DUP_TO_ENC(ss_dup_to_esc_xml, ss_cpy_to_esc_xml)
-MK_SS_DUP_TO_ENC(ss_dup_to_esc_json, ss_cpy_to_esc_json)
-MK_SS_DUP_TO_ENC(ss_dup_to_esc_url, ss_cpy_to_esc_url)
 
 ss_t *ss_dup_erase(const ss_t *src, const size_t off, const size_t n)
 {
@@ -1219,18 +1246,6 @@ ss_t *ss_cpy_toupper(ss_t **s, const ss_t *src)
 {
 	return aux_toXcase(s, S_FALSE, src, fsc_toupper);
 }
-
-#define MK_SS_CPY_TO_ENC(f, f_enc, f_enc2)				\
-	ss_t *f(ss_t **s, const ss_t *src) {				\
-		return aux_toenc(s, S_FALSE, src, f_enc, f_enc2);	\
-	}
-
-MK_SS_CPY_TO_ENC(ss_cpy_tob64, senc_b64, NULL)
-MK_SS_CPY_TO_ENC(ss_cpy_tohex, senc_hex, NULL)
-MK_SS_CPY_TO_ENC(ss_cpy_toHEX, senc_HEX, NULL)
-MK_SS_CPY_TO_ENC(ss_cpy_to_esc_xml, NULL, senc_esc_xml)
-MK_SS_CPY_TO_ENC(ss_cpy_to_esc_json, NULL, senc_esc_json)
-MK_SS_CPY_TO_ENC(ss_cpy_to_esc_url, NULL, senc_esc_url)
 
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
@@ -1474,18 +1489,6 @@ ss_t *ss_cat_toupper(ss_t **s, const ss_t *src)
 	return aux_toXcase(s, S_TRUE, src, fsc_toupper);
 }
 
-#define MK_SS_CAT_TO_ENC(f, f_enc, f_enc2)				\
-	ss_t *f(ss_t **s, const ss_t *src) {				\
-		return aux_toenc(s, S_TRUE, src, f_enc, f_enc2);	\
-	}
-
-MK_SS_CAT_TO_ENC(ss_cat_tob64, senc_b64, NULL)
-MK_SS_CAT_TO_ENC(ss_cat_tohex, senc_hex, NULL)
-MK_SS_CAT_TO_ENC(ss_cat_toHEX, senc_HEX, NULL)
-MK_SS_CAT_TO_ENC(ss_cat_to_esc_xml, NULL, senc_esc_xml)
-MK_SS_CAT_TO_ENC(ss_cat_to_esc_json, NULL, senc_esc_json)
-MK_SS_CAT_TO_ENC(ss_cat_to_esc_url, NULL, senc_esc_url)
-
 ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
 	return aux_erase(s, S_TRUE, src, off, n);
@@ -1581,18 +1584,6 @@ ss_t *ss_toupper(ss_t **s)
 {
         return aux_toXcase(s, S_FALSE, *s, fsc_toupper);
 }
-
-#define MK_SS_TO_ENC(f, f_enc, f_enc2)					\
-	ss_t *f(ss_t **s, const ss_t *src) {				\
-		return aux_toenc(s, S_FALSE, src, f_enc, f_enc2);	\
-	}
-
-MK_SS_TO_ENC(ss_tob64, senc_b64, NULL)
-MK_SS_TO_ENC(ss_tohex, senc_hex, NULL)
-MK_SS_TO_ENC(ss_toHEX, senc_HEX, NULL)
-MK_SS_TO_ENC(ss_to_esc_json, NULL, senc_esc_json)
-MK_SS_TO_ENC(ss_to_esc_xml, NULL, senc_esc_xml)
-MK_SS_TO_ENC(ss_to_esc_url, NULL, senc_esc_url)
 
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode)
 {

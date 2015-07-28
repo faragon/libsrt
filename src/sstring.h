@@ -197,23 +197,38 @@ ss_t *ss_dup_tolower(const ss_t *src);
 /* #API: |Duplicate string with uppercase conversion|string|output result|O(n)|1;2| */
 ss_t *ss_dup_toupper(const ss_t *src);
 
-/* #API: |Duplicate string with base64 conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_tob64(const ss_t *src);
+/* #API: |Duplicate string with base64 encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_b64(const ss_t *src);
 
-/* #API: |Duplicate string with hex conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_tohex(const ss_t *src);
+/* #API: |Duplicate string with hex encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_hex(const ss_t *src);
 
-/* #API: |Duplicate string with hex conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_toHEX(const ss_t *src);
+/* #API: |Duplicate string with hex encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_HEX(const ss_t *src);
 
-/* #API: |Duplicate string with JSON escape conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_to_esc_json(const ss_t *src);
+/* #API: |Duplicate string with JSON escape encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_esc_json(const ss_t *src);
 
-/* #API: |Duplicate string with XML escape conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_to_esc_xml(const ss_t *src);
+/* #API: |Duplicate string with XML escape encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_esc_xml(const ss_t *src);
 
-/* #API: |Duplicate string with URL escape conversion|string|output result|O(n)|1;2| */
-ss_t *ss_dup_to_esc_url(const ss_t *src);
+/* #API: |Duplicate string with URL escape encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_esc_url(const ss_t *src);
+
+/* #API: |Duplicate string with base64 decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_b64(const ss_t *src);
+
+/* #API: |Duplicate string with hex decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_hex(const ss_t *src);
+
+/* #API: |Duplicate string with JSON escape decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_esc_json(const ss_t *src);
+
+/* #API: |Duplicate string with XML escape decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_esc_xml(const ss_t *src);
+
+/* #API: |Duplicate string with URL escape decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_esc_url(const ss_t *src);
 
 /* #API: |Duplicate from string erasing portion from input|string;byte offset;number of bytes|output result|O(n)|1;2| */
 ss_t *ss_dup_erase(const ss_t *src, const size_t off, const size_t n);
@@ -285,23 +300,38 @@ ss_t *ss_cpy_tolower(ss_t **s, const ss_t *src);
 /* #API: |Overwrite string with input string uppercase conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_toupper(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_tob64(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string base64 encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string hexadecimal (lowercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_tohex(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string hexadecimal (lowercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string hexadecimal (uppercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_toHEX(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string JSON escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_to_esc_json(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string XML escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_to_esc_xml(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string XML escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string URL escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_to_esc_url(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string URL escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string base64 decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_b64(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_esc_json(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string XML escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_esc_xml(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string URL escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_esc_url(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string copy applying a erase operation (byte/UTF-8 mode)|output string; input string; input string erase start byte offset; number of bytes to erase|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -388,23 +418,38 @@ ss_t *ss_cat_tolower(ss_t **s, const ss_t *src);
 /* #API: |Concatenate "uppercased" string|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_toupper(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string base64 conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_tob64(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string base64 encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string hexadecimal (lowercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_tohex(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string hexadecimal (lowercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string hexadecimal (uppercase) conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_toHEX(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string JSON escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_to_esc_json(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string XML escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_to_esc_xml(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string XML escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string URL escape conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_to_esc_url(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string URL escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string base64 decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_b64(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_esc_json(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string XML escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_esc_xml(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string URL escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_esc_url(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with erase operation (byte/UTF-8 mode)|output string; input string; input string byte offset for erase start; erase count (bytes)|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -450,22 +495,37 @@ ss_t *ss_tolower(ss_t **s);
 ss_t *ss_toupper(ss_t **s);
 
 /* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_tob64(ss_t **s, const ss_t *src);
+ss_t *ss_enc_b64(ss_t **s, const ss_t *src);
 
 /* #API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_tohex(ss_t **s, const ss_t *src);
+ss_t *ss_enc_hex(ss_t **s, const ss_t *src);
 
 /* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_toHEX(ss_t **s, const ss_t *src);
+ss_t *ss_enc_HEX(ss_t **s, const ss_t *src);
 
 /* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_to_esc_json(ss_t **s, const ss_t *src);
+ss_t *ss_enc_esc_json(ss_t **s, const ss_t *src);
 
 /* #API: |Convert/escape for XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_to_esc_xml(ss_t **s, const ss_t *src);
+ss_t *ss_enc_esc_xml(ss_t **s, const ss_t *src);
 
 /* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
-ss_t *ss_to_esc_url(ss_t **s, const ss_t *src);
+ss_t *ss_enc_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
+
+/* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_esc_json(ss_t **s, const ss_t *src);
+
+/* #API: |Unescape from XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_esc_xml(ss_t **s, const ss_t *src);
+
+/* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_esc_url(ss_t **s, const ss_t *src);
 
 /* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|0;1| */
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode);

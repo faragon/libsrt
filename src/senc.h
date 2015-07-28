@@ -63,7 +63,7 @@ extern "C" {
 #include "scommon.h"
 
 typedef size_t (*senc_f_t)(const unsigned char *s, const size_t ss, unsigned char *o);
-typedef size_t (*senc_f2_t)(const unsigned char *s, const size_t ss, unsigned char *o, const size_t sso);
+typedef size_t (*senc_f2_t)(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso);
 
 size_t senc_b64(const unsigned char *s, const size_t ss, unsigned char *o);
 size_t sdec_b64(const unsigned char *s, const size_t ss, unsigned char *o);
