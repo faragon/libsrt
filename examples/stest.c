@@ -41,6 +41,63 @@ struct AA { int a, b; };
 static const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
 
 /*
+ * Tests generated from templates
+ */
+
+/*
+ * Following test template covers two cases: non-aliased (sa to sb) and
+ * aliased (sa to sa)
+ */
+#define MK_TEST_SS_DUP_CODEC(suffix)						\
+	static int test_ss_dup_##suffix(const char *a, const char *b) {	\
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);		\
+		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
+		ss_free(&sa, &sb);						\
+		return res;							\
+	}
+
+#define MK_TEST_SS_CPY_CODEC(suffix)						\
+	static int test_ss_cpy_##suffix(const char *a, const char *b) {	\
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");	\
+		ss_cpy_##suffix(&sb, sa);					\
+		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
+		ss_free(&sa, &sb);						\
+		return res;							\
+	}
+
+#define MK_TEST_SS_CAT_CODEC(suffix)					  \
+	static int test_ss_cat_##suffix(const char *a, const char *b,	  \
+					const char *expected) {		  \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);		  \
+		ss_cat_##suffix(&sa, sb);				  \
+		int res = (!sa || !sb) ? 1 :				  \
+				(!strcmp(ss_to_c(sa), expected) ? 0 : 2); \
+		ss_free(&sa, &sb);					  \
+		return res;						  \
+	}
+
+#define MK_TEST_SS_DUP_CPY_CAT_CODEC(codec)	\
+	MK_TEST_SS_DUP_CODEC(codec)		\
+	MK_TEST_SS_CPY_CODEC(codec)		\
+	MK_TEST_SS_CAT_CODEC(codec)
+
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_b64)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_hex)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_HEX)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_xml)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_json)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_url)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_b64)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_hex)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_xml)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_json)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_url)
+
+/*
  * Tests
  */
 
@@ -325,27 +382,6 @@ static int test_ss_dup_toupper(const char *a, const char *b)
 	return res;
 }
 
-/*
- * Following test template covers two cases: non-aliased (sa to sb) and
- * aliased (sa to sa)
- */
-#define MK_TEST_SS_DUP_TO_ENC(suffix)						\
-	static int test_ss_dup_to##suffix(const char *a, const char *b) {	\
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_to##suffix(sa);		\
-		int res = (!sa || !sb) ? 1 : (ss_to##suffix(&sa, sa) ? 0 : 2) |	\
-			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
-		ss_free(&sa, &sb);						\
-		return res;							\
-	}
-
-MK_TEST_SS_DUP_TO_ENC(b64)
-MK_TEST_SS_DUP_TO_ENC(hex)
-MK_TEST_SS_DUP_TO_ENC(HEX)
-MK_TEST_SS_DUP_TO_ENC(_esc_xml)
-MK_TEST_SS_DUP_TO_ENC(_esc_json)
-MK_TEST_SS_DUP_TO_ENC(_esc_url)
-
 static int test_ss_dup_erase(const char *in, const size_t off,
 			     const size_t size, const char *expected)
 {
@@ -567,24 +603,6 @@ static int test_ss_cpy_toupper(const char *a, const char *b)
 	ss_free(&sa, &sb);
 	return res;
 }
-
-#define MK_TEST_SS_CPY_TO_ENC(suffix)						\
-	static int test_ss_cpy_to##suffix(const char *a, const char *b) {	\
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");	\
-		ss_cpy_to##suffix(&sb, sa);					\
-		int res = (!sa || !sb) ? 1 : (ss_to##suffix(&sa, sa) ? 0 : 2) |	\
-			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
-		ss_free(&sa, &sb);						\
-		return res;							\
-	}
-
-MK_TEST_SS_CPY_TO_ENC(b64)
-MK_TEST_SS_CPY_TO_ENC(hex)
-MK_TEST_SS_CPY_TO_ENC(HEX)
-MK_TEST_SS_CPY_TO_ENC(_esc_xml)
-MK_TEST_SS_CPY_TO_ENC(_esc_json)
-MK_TEST_SS_CPY_TO_ENC(_esc_url)
 
 static int test_ss_cpy_erase(const char *in, const size_t off,
 			     const size_t size, const char *expected)
@@ -848,24 +866,6 @@ static int test_ss_cat_toupper(const char *a, const char *b,
 	ss_free(&sa, &sb);
 	return res;
 }
-
-#define MK_TEST_SS_CAT_TO_ENC(suffix)					  \
-	static int test_ss_cat_to##suffix(const char *a, const char *b,	  \
-					  const char *expected) {	  \
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);		  \
-		ss_cat_to##suffix(&sa, sb);				  \
-		int res = (!sa || !sb) ? 1 :				  \
-				(!strcmp(ss_to_c(sa), expected) ? 0 : 2); \
-		ss_free(&sa, &sb);					  \
-		return res;						  \
-	}
-
-MK_TEST_SS_CAT_TO_ENC(b64)
-MK_TEST_SS_CAT_TO_ENC(hex)
-MK_TEST_SS_CAT_TO_ENC(HEX)
-MK_TEST_SS_CAT_TO_ENC(_esc_xml)
-MK_TEST_SS_CAT_TO_ENC(_esc_json)
-MK_TEST_SS_CAT_TO_ENC(_esc_url)
 
 static int test_ss_cat_erase(const char *prefix, const char *in,
 			     const size_t off, const size_t size,
@@ -1371,7 +1371,7 @@ static int test_sv_set_len()
 	return res;
 }
 
-static int test_vs_get_buffer()
+static int test_sv_get_buffer()
 {
 	return 0; /* TODO */
 }
@@ -2285,16 +2285,30 @@ int main()
 				     "9223372036854775807"));
 	STEST_ASSERT(test_ss_dup_int(-9223372036854775807LL,
 				     "-9223372036854775807"));
-	STEST_ASSERT(test_ss_dup_tolower("HELLO", "hello"));
-	STEST_ASSERT(test_ss_dup_toupper("hello", "HELLO"));
-	STEST_ASSERT(test_ss_dup_tob64("0123456789ABCDEF", "MDEyMzQ1Njc4OUFCQ0RFRg=="));
-	STEST_ASSERT(test_ss_dup_toHEX("0123456789ABCDEF", "30313233343536373839414243444546"));
-	STEST_ASSERT(test_ss_dup_tohex("\xff\xff", "ffff"));
-	STEST_ASSERT(test_ss_dup_toHEX("\xff\xff", "FFFF"));
-	STEST_ASSERT(test_ss_dup_to_esc_xml("hi\"&'<>there", "hi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_dup_to_esc_json("\b\t\f\n\r\"\x5c", "\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
-	STEST_ASSERT(test_ss_dup_to_esc_url("0189ABCXYZ-_.~abcxyz \\/&!?<>",
-					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
+
+#define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b)		\
+	STEST_ASSERT(test_ss_dup_##encc(a, b));			\
+	STEST_ASSERT(test_ss_cpy_##encc(a, b)); 		\
+	STEST_ASSERT(test_ss_cat_##encc("abc", a, "abc" b));	\
+	STEST_ASSERT(test_ss_cat_##encc("ABC", a, "ABC" b));	\
+	STEST_ASSERT(test_ss_dup_##decc(b, a));			\
+	STEST_ASSERT(test_ss_cpy_##decc(b, a)); 		\
+	STEST_ASSERT(test_ss_cat_##decc("abc", b, "abc" a));	\
+	STEST_ASSERT(test_ss_cat_##decc("ABC", b, "ABC" a));
+
+	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, "HELLO", "hello");
+	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "0123456789ABCDEF", "MDEyMzQ1Njc4OUFCQ0RFRg==");
+	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "01", "MDE=");
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "\xff\xff", "ffff");
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "01z", "30317a");
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "0123456789ABCDEF", "30313233343536373839414243444546");
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "\xff\xff", "FFFF");
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "01z", "30317A");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml, "hi\"&'<>there", "hi&quot;&amp;&apos;&lt;&gt;there");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json, "\b\t\f\n\r\"\x5c", "\\b\\t\\f\\n\\r\\\"\x5c\x5c");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url, "0189ABCXYZ-_.~abcxyz \\/&!?<>",
+					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E");
+
 	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_dup_erase_u());
         STEST_ASSERT(test_ss_dup_replace("hello", "ll", "*LL*", "he*LL*o"));
@@ -2326,17 +2340,6 @@ int main()
 	STEST_ASSERT(test_ss_cpy_int(-2147483647, "-2147483647"));
 	STEST_ASSERT(test_ss_cpy_int(9223372036854775807LL, "9223372036854775807"));
 	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807LL, "-9223372036854775807"));
-	STEST_ASSERT(test_ss_cpy_tolower("HELLO", "hello"));
-	STEST_ASSERT(test_ss_cpy_toupper("hello", "HELLO"));
-	STEST_ASSERT(test_ss_cpy_tob64("01", "MDE="));
-	STEST_ASSERT(test_ss_cpy_tohex("01z", "30317a"));
-	STEST_ASSERT(test_ss_cpy_toHEX("01z", "30317A"));
-	STEST_ASSERT(test_ss_cpy_to_esc_xml("hi\"&'<>there",
-					    "hi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_cpy_to_esc_json("\b\t\f\n\r\"\x5c",
-					     "\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
-	STEST_ASSERT(test_ss_cpy_to_esc_url("0189ABCXYZ-_.~abcxyz \\/&!?<>",
-					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
 	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_cpy_erase_u());
 	STEST_ASSERT(test_ss_cpy_replace("hello", "ll", "*LL*", "he*LL*o"));
@@ -2366,18 +2369,6 @@ int main()
 	STEST_ASSERT(test_ss_cat_wn());
 	STEST_ASSERT(test_ss_cat_w(L"hello", L"all"));
 	STEST_ASSERT(test_ss_cat_int("prefix", 1, "prefix1"));
-	STEST_ASSERT(test_ss_cat_tolower("ABC", "DEF", "ABCdef"));
-	STEST_ASSERT(test_ss_cat_toupper("abc", "def", "abcDEF"));
-	STEST_ASSERT(test_ss_cat_tob64("abc", "01", "abcMDE="));
-	STEST_ASSERT(test_ss_cat_tohex("abc", "01z", "abc30317a"));
-	STEST_ASSERT(test_ss_cat_toHEX("abc", "01z", "abc30317A"));
-	STEST_ASSERT(test_ss_cat_to_esc_xml("abc", "hi\"&'<>there",
-					    "abchi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_cat_to_esc_json("abc", "\b\t\f\n\r\"\x5c",
-					     "abc\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
-	STEST_ASSERT(test_ss_cat_to_esc_url("abc",
-					    "0189ABCXYZ-_.~abcxyz \\/&!?<>",
-					    "abc0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
 	STEST_ASSERT(test_ss_cat_erase("x", "hello", 2, 2, "xheo"));
 	STEST_ASSERT(test_ss_cat_erase_u());
 	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*", "xhe*LL*o"));
@@ -2499,7 +2490,7 @@ int main()
 	STEST_ASSERT(test_sv_capacity());
 	STEST_ASSERT(test_sv_len_left());
 	STEST_ASSERT(test_sv_set_len());
-	STEST_ASSERT(test_vs_get_buffer());
+	STEST_ASSERT(test_sv_get_buffer());
 	STEST_ASSERT(test_sv_get_buffer_size());
 	STEST_ASSERT(test_sv_elem_size());
 	STEST_ASSERT(test_sv_dup());
