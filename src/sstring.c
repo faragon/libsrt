@@ -469,7 +469,7 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 
 /*
  * The conversion runs backwards in order to cover the
- * aliasing case without extra memory allocation or shift.
+ * aliasing case without extra memory allocation nor shift.
  */
 
 static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
@@ -478,22 +478,20 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const int aliasing = *s == src;
-	const size_t in_size = sd_get_size(src),
-		     at = (cat && *s) ? sd_get_size(*s) : 0,
-		     enc_size = f ? f(NULL, in_size, NULL) :
-				    f2((const unsigned char *)get_str_r(src),
-				       in_size, NULL, 0),
-		     out_size = at + enc_size;
+	sbool_t aliasing = *s == src ? S_TRUE : S_FALSE;
+	size_t in_size = sd_get_size(src),
+	       at = (cat && *s) ? sd_get_size(*s) : 0,
+	       enc_size = f ? f(NULL, in_size, NULL) :
+			       f2((const unsigned char *)get_str_r(src),
+				  in_size, NULL, 0),
+	       out_size = at + enc_size;
 	if (ss_reserve(s, out_size) >= out_size) {
 		const ss_t *src1 = aliasing ? *s : src;
 		const unsigned char *s_in =
 				(const unsigned char *)get_str_r(src1);
 		unsigned char *s_out = (unsigned char *)get_str(*s) + at;
-		if (f)
-			f(s_in, in_size, s_out);
-		else
-			f2(s_in, in_size, s_out, enc_size);
+		enc_size = f ? f(s_in, in_size, s_out) :
+			       f2(s_in, in_size, s_out, enc_size);
 		if (at == 0) {
 			set_unicode_size_cached(*s, S_TRUE);
 			set_unicode_size(*s, in_size * 2);
@@ -505,6 +503,7 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 			else
 				set_unicode_size_cached(*s, S_FALSE);
 		}
+		out_size = at + enc_size;
 		set_size(*s, out_size);
 	}
 	return ss_check(s);

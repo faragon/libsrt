@@ -356,7 +356,7 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-static size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
+S_INLINE size_t senc_esc_xml_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -392,7 +392,8 @@ size_t senc_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o,
 
 size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s || !ss || !o, 0);
+	RETURN_IF(!o, ss);
+	RETURN_IF(!s || !ss, 0);
 	size_t i = 0, j = 0;
 	for (; i < ss; j++) {
 		if (s[i] == '&') {
@@ -451,7 +452,7 @@ size_t sdec_esc_xml(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-static size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
+S_INLINE size_t senc_esc_json_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -489,7 +490,8 @@ size_t senc_esc_json(const unsigned char *s, const size_t ss, unsigned char *o,
 
 size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s || !ss || !o, 0);
+	RETURN_IF(!o, ss);
+	RETURN_IF(!s || !ss, 0);
 	size_t i = 0, j = 0;
 	for (; i < ss; j++) {
 		if (s[i] == '\\' && i + 1 <= ss) {
@@ -513,7 +515,7 @@ size_t sdec_esc_json(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
-static size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
+S_INLINE size_t senc_esc_url_req_size(const unsigned char *s, const size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++) {
@@ -564,7 +566,8 @@ size_t senc_esc_url(const unsigned char *s, const size_t ss, unsigned char *o,
 
 size_t sdec_esc_url(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s || !ss || !o, 0);
+	RETURN_IF(!o, ss);
+	RETURN_IF(!s || !ss, 0);
 	size_t i = 0, j = 0;
 	for (; i < ss; j++) {
 		if (s[i] == '%' && i + 3 <= ss) {
