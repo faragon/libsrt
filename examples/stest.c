@@ -2292,7 +2292,7 @@ int main()
 	STEST_ASSERT(test_ss_dup_tohex("\xff\xff", "ffff"));
 	STEST_ASSERT(test_ss_dup_toHEX("\xff\xff", "FFFF"));
 	STEST_ASSERT(test_ss_dup_to_esc_xml("hi\"&'<>there", "hi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_dup_to_esc_json("\b\t\f\n\r\"\\", "\\b\\t\\f\\n\\r\\\"\\\\"));
+	STEST_ASSERT(test_ss_dup_to_esc_json("\b\t\f\n\r\"\x5c", "\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
 	STEST_ASSERT(test_ss_dup_to_esc_url("0189ABCXYZ-_.~abcxyz \\/&!?<>",
 					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
 	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
@@ -2333,8 +2333,8 @@ int main()
 	STEST_ASSERT(test_ss_cpy_toHEX("01z", "30317A"));
 	STEST_ASSERT(test_ss_cpy_to_esc_xml("hi\"&'<>there",
 					    "hi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_cpy_to_esc_json("\b\t\f\n\r\"\\",
-					     "\\b\\t\\f\\n\\r\\\"\\\\"));
+	STEST_ASSERT(test_ss_cpy_to_esc_json("\b\t\f\n\r\"\x5c",
+					     "\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
 	STEST_ASSERT(test_ss_cpy_to_esc_url("0189ABCXYZ-_.~abcxyz \\/&!?<>",
 					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
 	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
@@ -2373,8 +2373,8 @@ int main()
 	STEST_ASSERT(test_ss_cat_toHEX("abc", "01z", "abc30317A"));
 	STEST_ASSERT(test_ss_cat_to_esc_xml("abc", "hi\"&'<>there",
 					    "abchi&quot;&amp;&apos;&lt;&gt;there"));
-	STEST_ASSERT(test_ss_cat_to_esc_json("abc", "\b\t\f\n\r\"\\",
-					     "abc\\b\\t\\f\\n\\r\\\"\\\\"));
+	STEST_ASSERT(test_ss_cat_to_esc_json("abc", "\b\t\f\n\r\"\x5c",
+					     "abc\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
 	STEST_ASSERT(test_ss_cat_to_esc_url("abc",
 					    "0189ABCXYZ-_.~abcxyz \\/&!?<>",
 					    "abc0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E"));
