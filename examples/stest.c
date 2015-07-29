@@ -1373,17 +1373,55 @@ static int test_sv_set_len()
 
 static int test_sv_get_buffer()
 {
-	return 0; /* TODO */
-}
-
-static int test_sv_get_buffer_size()
-{
-	return 0; /* TODO */
+	sv_t *a = sv_alloc_t(SV_I8, 0),
+	     *b = sv_alloca_t(SV_I8, 4),
+	     *c = sv_alloc_t(SV_U32, 0),
+	     *d = sv_alloca_t(SV_U32, 1);
+	int res = !a || !b || !c || !d ? 1 :
+			(sv_push_i(&a, 1) ? 0 : 2) |
+			(sv_push_i(&a, 2) ? 0 : 4) |
+			(sv_push_i(&a, 2) ? 0 : 8) |
+			(sv_push_i(&a, 1) ? 0 : 0x10) |
+			(sv_push_i(&b, 1) ? 0 : 0x20) |
+			(sv_push_i(&b, 2) ? 0 : 0x40) |
+			(sv_push_i(&b, 2) ? 0 : 0x80) |
+			(sv_push_i(&b, 1) ? 0 : 0x100) |
+			(sv_push_u(&c, 0x01020201) ? 0 : 0x200) |
+			(sv_push_u(&d, 0x01020201) ? 0 : 0x400);
+	if (!res) {
+		unsigned ai = *(unsigned *)sv_get_buffer(a),
+			 bi = *(unsigned *)sv_get_buffer(b),
+			 air = *(const unsigned *)sv_get_buffer_r(a),
+			 bir = *(const unsigned *)sv_get_buffer_r(b),
+			 cir = *(unsigned *)sv_get_buffer(c),
+			 dir = *(unsigned *)sv_get_buffer(d);
+		if (ai != bi || air != bir || ai != air || ai != cir ||
+		    ai != dir)
+			res |= 0x800;
+		if (ai != 0x01020201)
+			res |= 0x1000;
+		size_t sa = sv_get_buffer_size(a),
+		       sb = sv_get_buffer_size(b),
+		       sc = sv_get_buffer_size(c),
+		       sd = sv_get_buffer_size(d);
+		if (sa != sb || sa != sc || sa != sd)
+			res |= 0x2000;
+	}
+	sv_free(&a, &c);
+	return res;
 }
 
 static int test_sv_elem_size()
 {
-	return 0; /* TODO */
+	int res =  (sv_elem_size(SV_I8) == 1  ? 0 : 2) |
+		   (sv_elem_size(SV_U8) == 1  ? 0 : 4) |
+		   (sv_elem_size(SV_I16) == 2  ? 0 : 8) |
+		   (sv_elem_size(SV_U16) == 2  ? 0 : 16) |
+		   (sv_elem_size(SV_I32) == 4  ? 0 : 32) |
+		   (sv_elem_size(SV_U32) == 4  ? 0 : 64) |
+		   (sv_elem_size(SV_I64) == 8  ? 0 : 128) |
+		   (sv_elem_size(SV_U64) == 8  ? 0 : 256);
+	return res;
 }
 
 #define TEST_SV_DUP(v, ntest, alloc, push, check, check2, type, pushval)\
@@ -2491,7 +2529,6 @@ int main()
 	STEST_ASSERT(test_sv_len_left());
 	STEST_ASSERT(test_sv_set_len());
 	STEST_ASSERT(test_sv_get_buffer());
-	STEST_ASSERT(test_sv_get_buffer_size());
 	STEST_ASSERT(test_sv_elem_size());
 	STEST_ASSERT(test_sv_dup());
 	STEST_ASSERT(test_sv_dup_erase());

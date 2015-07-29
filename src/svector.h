@@ -140,7 +140,7 @@ sbool_t sv_set_len(sv_t *v, const size_t elems);
 /* #API: |Get string buffer read-only access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|1;2| */
 void *sv_get_buffer(sv_t *v);
 
-/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
+/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|1;2| */
 const void *sv_get_buffer_r(const sv_t *v);
 
 /* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)|1;2| */
