@@ -361,7 +361,7 @@ void *sv_get_buffer(sv_t *v)
 
 size_t sv_get_buffer_size(const sv_t *v)
 {
-	return sv_len(v) * SDV_HEADER_SIZE;
+	return v ? sv_len(v) * v->elem_size : 0;
 }
 
 size_t sv_elem_size(const enum eSV_Type t)
