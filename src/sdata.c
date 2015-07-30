@@ -183,9 +183,7 @@ static size_t sd_resize_aux(sd_t **d, size_t max_size, const struct sd_conf *f)
 #ifdef SD_ENABLE_HEURISTIC_GROW
 			size_t grow_pct = max_size < SD_GROW_CACHE_MIN_ELEMS ?
 				SD_GROW_PCT_CACHED : SD_GROW_PCT_NONCACHED;
-			size_t inc = max_size > 10000 ?
-					(max_size / 100) * grow_pct :
-					(max_size * grow_pct) / 100;
+			size_t inc = s_size_t_pct(max_size, grow_pct);
 			/*
 			 * On 32-bit systems, over 2GB allocations the
 			 * heuristic increment will be in 16MB steps

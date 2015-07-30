@@ -459,6 +459,30 @@ S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
 	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }
 
+S_INLINE size_t s_size_t_pct(const size_t q, const size_t pct)
+{
+	return q > 10000 ? (q / 100) * pct :
+			   (q * pct) / 100;
+}
+
+S_INLINE size_t s_size_t_inc_pct(size_t q, size_t pct, size_t val_if_saturated)
+{
+	size_t inc = s_size_t_pct(q, pct);
+	return s_size_t_overflow(q, inc) ? val_if_saturated :
+					   q + inc;
+}
+
+S_INLINE size_t s_size_t_add(size_t a, size_t b, size_t val_if_saturated)
+{
+	return s_size_t_overflow(a, b) ? val_if_saturated : a + b;
+}
+
+S_INLINE size_t s_size_t_mul(size_t a, size_t b, size_t val_if_saturated)
+{
+	RETURN_IF(b == 0, 0);
+	return a > SIZE_MAX / b ? a * b : val_if_saturated;
+}
+
 /*
  * Integer log2(N) approximation
  */
