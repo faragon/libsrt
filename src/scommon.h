@@ -480,7 +480,7 @@ S_INLINE size_t s_size_t_add(size_t a, size_t b, size_t val_if_saturated)
 S_INLINE size_t s_size_t_mul(size_t a, size_t b, size_t val_if_saturated)
 {
 	RETURN_IF(b == 0, 0);
-	return a > SIZE_MAX / b ? a * b : val_if_saturated;
+	return a > SIZE_MAX / b ? val_if_saturated : a * b;
 }
 
 /*
