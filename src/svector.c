@@ -351,12 +351,12 @@ sbool_t sv_set_len(sv_t *v, const size_t elems)
 
 const void *sv_get_buffer_r(const sv_t *v)
 {
-	return !v ? (const void *)0 : __sv_get_buffer_r(v);
+	return !v ? NULL : __sv_get_buffer_r(v);
 }
 
 void *sv_get_buffer(sv_t *v)
 {
-	return !v ? (void *)0 : __sv_get_buffer(v);
+	return !v ? NULL : __sv_get_buffer(v);
 }
 
 size_t sv_get_buffer_size(const sv_t *v)
