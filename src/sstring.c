@@ -1852,16 +1852,40 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 }
 
 /*
- * I/O: Unicode
+ * I/O: byte-oriented
+ */
+
+int ss_getbyte(const ss_t *s, size_t *autoinc_off)
+{
+	RETURN_IF(!s || !autoinc_off || *autoinc_off >= sd_get_size(s), EOF);
+	return 0xff & (int)*(get_str_r(s) + *autoinc_off);
+}
+
+int ss_putbyte(ss_t **s, const unsigned char c)
+{
+	RETURN_IF(!s || !ss_grow(s, 1), EOF);
+	ss_cat_cn(s, &c, 1);
+	return c;
+}
+
+int ss_popbyte(ss_t **s)
+{
+	RETURN_IF(!s || !*s, EOF);
+	const size_t ss = sd_get_size(*s);
+	RETURN_IF(!ss, EOF);
+	set_unicode_size_cached(*s, S_FALSE);
+	return 0xff & (int)*(char *)(get_str_r(*s) + ss - 1);
+}
+
+/*
+ * I/O: Unicode-oriented
  */
 
 int ss_getchar(const ss_t *s, size_t *autoinc_off)
 {
-	if (!s || !autoinc_off)
-		return EOF;
+	RETURN_IF(!s || !autoinc_off, EOF);
 	const size_t ss = sd_get_size(s);
-	if (*autoinc_off >= ss)
-		return EOF;
+	RETURN_IF(*autoinc_off >= ss, EOF);
 	int c = EOF;
 	const char *p = get_str_r(s);
 	*autoinc_off += ss_utf8_to_wc(p, *autoinc_off, ss, &c, NULL);
@@ -1875,8 +1899,7 @@ int ss_putchar(ss_t **s, const int c)
 
 int ss_popchar(ss_t **s)
 {
-	if (!s || !*s || sd_get_size(*s) == 0)
-		return EOF;
+	RETURN_IF(!s || !*s || sd_get_size(*s) == 0, EOF);
 	size_t off = sd_get_size(*s) - 1;
 	char *s_str = get_str(*s);
 	for (; off != S_SIZET_MAX; off--) {
