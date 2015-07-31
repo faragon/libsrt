@@ -4,6 +4,8 @@
 Short-term
 ---
 
+- Replace custom 32 and 64 bit types with C99 standard types
+
 Mid-term
 ---
 
