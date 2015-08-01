@@ -610,17 +610,8 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 int ss_printf(ss_t **s, size_t size, const char *fmt, ...);
 
 /*
- * Character I/O
+ * Unicode character I/O
  */
-
-/* #API: |Get next byte|input string; iterator|Output character, or EOF if no more characters left|O(1)|0;1| */
-int ss_getbyte(const ss_t *s, size_t *autoinc_off);
-
-/* #API: |Append bytes to string|output string; Unicode character|Echo of the output character or EOF if overflow error|O(1)|0;1| */
-int ss_putbyte(ss_t **s, const unsigned char c);
-
-/* #API: |Extract last byte from string|input/output string|Extracted character if OK, EOF if empty|O(1)|0;1| */
-int ss_popbyte(ss_t **s);
 
 /* #API: |Get next Unicode character|input string; iterator|Output character, or EOF if no more characters left|O(1)|1;2| */
 int ss_getchar(const ss_t *s, size_t *autoinc_off);
