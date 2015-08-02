@@ -4,7 +4,17 @@
 Short-term
 ---
 
-- Replace custom 32 and 64 bit types with C99 standard types
+* Replace custom 32 and 64 bit types with C99 standard types
+* List C library dependencies
+* Tests using stack space
+* Add tests covering expansion between small/medium/full strings
+* Tests
+ * add tests for every operation related to unicode caching.
+ * check case unicode size (add tests: e.g. erasing with overflow, etc.)
+ * aliasing: stack, lower/middle/upper case checks, etc.
+ * sstring accessors (ss_get_buffer, ...)
+ * add checks for all corner cases (!)
+ * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
 
 Mid-term
 ---
@@ -44,25 +54,4 @@ Long-term (never)
 * Add UTF8 regexp support
 * Win32-specific optimizations
  * Study if using VirtualAlloc could be used as faster realloc.
-
-QA
-===
-
-Short-term
----
-
-* List C library dependencies
-
-Mid-term
----
-
-* Tests
- * ADD tests for every operation related to unicode caching.
- *  Check case unicode size (add tests: e.g. erasing with overflow, etc.)
- * aliasing: stack, lower/middle/upper case checks, etc.
- * sstring accessors (ss_get_buffer, ...)
- * tests using stack space
- * add tests covering expansion between small/medium/full strings
- * add checks for all corner cases (!)
- * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
 
