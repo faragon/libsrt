@@ -38,7 +38,7 @@
  */
 
 struct AA { int a, b; };
-static const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
+static const struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
 
 /*
  * Tests generated from templates
@@ -49,7 +49,7 @@ static const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
  * aliased (sa to sa)
  */
 #define MK_TEST_SS_DUP_CODEC(suffix)						\
-	static int test_ss_dup_##suffix(const char *a, const char *b) {	\
+	static int test_ss_dup_##suffix(const char *a, const char *b) {		\
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);		\
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
 			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
@@ -59,7 +59,7 @@ static const struct AA aa1 = { 1, 2 }, aa2 = { 3, 4 };
 	}
 
 #define MK_TEST_SS_CPY_CODEC(suffix)						\
-	static int test_ss_cpy_##suffix(const char *a, const char *b) {	\
+	static int test_ss_cpy_##suffix(const char *a, const char *b) {		\
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");	\
 		ss_cpy_##suffix(&sb, sa);					\
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
@@ -1205,7 +1205,7 @@ static int test_ss_null()
 	sv_t *a = sv_alloc_x(sizeof(struct AA), 10);			\
 	sv_t *b = sv_alloc_x_t(SV_I8, 10);				\
 	int res = (!a || !b) ? 1 : (sv_len(a) == 0 ? 0 : 2) |		\
-				   (sv_push(&a, &aa1) ? 0 : 4) |	\
+				   (sv_push(&a, &a1) ? 0 : 4) |	\
 				   (sv_len(a) == 1 ? 0 : 8) |		\
 				   (!sv_push(&a, NULL) ? 0 : 16) |	\
 				   (sv_len(a) == 1 ? 0 : 32);		\
@@ -1236,7 +1236,7 @@ static int test_sv_alloca()
 static int test_sv_grow()
 {
 	int res = 0;
-	TEST_SV_GROW(a, &aa1, 0, sv_alloc, sizeof(struct AA), 1, sv_push);
+	TEST_SV_GROW(a, &a1, 0, sv_alloc, sizeof(struct AA), 1, sv_push);
 	TEST_SV_GROW(b, 123, 1, sv_alloc_t, SV_U8, 1, sv_push_u);
 	TEST_SV_GROW(c, 123, 2, sv_alloc_t, SV_I8, 1, sv_push_i);
 	TEST_SV_GROW(d, 123, 3, sv_alloc_t, SV_U16, 1, sv_push_u);
@@ -1283,7 +1283,7 @@ static int test_sv_shrink()
 {
 	int res = 0;
 	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push,
-			      sizeof(struct AA), &aa1, 100);
+			      sizeof(struct AA), &a1, 100);
 	TEST_SV_SHRINK_TO_FIT(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123, 100);
 	TEST_SV_SHRINK_TO_FIT(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123, 100);
 	TEST_SV_SHRINK_TO_FIT(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123, 100);
@@ -1306,7 +1306,7 @@ static int test_sv_shrink()
 static int test_sv_len()
 {
 	int res = 0;
-	TEST_SV_LEN(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
+	TEST_SV_LEN(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1);
 	TEST_SV_LEN(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
 	TEST_SV_LEN(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
 	TEST_SV_LEN(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123);
@@ -1335,7 +1335,7 @@ static int test_sv_len()
 static int test_sv_capacity()
 {
 	int res = 0;
-	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &aa1);
+	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1);
 	TEST_SV_CAPACITY(b, 1, sv_alloc_t, sv_push_i, SV_I8, 123);
 	TEST_SV_CAPACITY(c, 2, sv_alloc_t, sv_push_u, SV_U8, 123);
 	TEST_SV_CAPACITY(d, 3, sv_alloc_t, sv_push_i, SV_I16, 123);
@@ -1437,10 +1437,10 @@ static int test_sv_dup()
 	int res = 0;
 	const int val = 123;
 	TEST_SV_DUP(a, 0, sv_alloc, sv_push,
-		    ((const struct AA *)sv_at(a, 0))->a == aa1.a,
+		    ((const struct AA *)sv_at(a, 0))->a == a1.a,
 		    ((const struct AA *)sv_pop(a))->a ==
 					((const struct AA *)sv_pop(a2))->a,
-		    sizeof(struct AA), &aa1);
+		    sizeof(struct AA), &a1);
 	#define SVIAT(v) sv_i_at(v, 0) == val
 	#define SVUAT(v) sv_u_at(v, 0) == (unsigned)val
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
@@ -1475,7 +1475,7 @@ static int test_sv_dup_erase()
 	TEST_SV_DUP_ERASE(a, 0, sv_alloc, sv_push,
 	    ((const struct AA *)sv_at(a2, 0))->a ==
 				((const struct AA *)sv_at(a2, 1))->a,
-	    sizeof(struct AA), &aa1, &aa2);
+	    sizeof(struct AA), &a1, &a2);
 	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
 	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
 	TEST_SV_DUP_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
@@ -1491,9 +1491,32 @@ static int test_sv_dup_erase()
 	return res;
 }
 
+#define TEST_SV_DUP_RESIZE(v, ntest, alloc, push, type, a, b)		       \
+	sv_t *v = alloc(type, 0);					       \
+	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);       \
+	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);       \
+	sv_t *v##2 = sv_dup_resize(v, 2);				       \
+	res |= !v ? 1<<(ntest*3) :					       \
+		(sv_size(v##2) == 2 ? 0 : 2<<(ntest*3)) |		       \
+		(!sv_ncmp(v, 0, v##2, 0, sv_size(v##2)) ? 0 : 4 << (ntest*3)) |\
+		(sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0 ? 0 : 8 << (ntest*3)) |\
+		(sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0 ? 0 : 16 << (ntest*3));\
+	sv_free(&v, &v##2);
+
 static int test_sv_dup_resize()
 {
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_DUP_RESIZE(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
+	TEST_SV_DUP_RESIZE(b, 1, sv_alloc_t, sv_push_i, SV_I8, r, s);
+	TEST_SV_DUP_RESIZE(c, 2, sv_alloc_t, sv_push_u, SV_U8, r, s);
+	TEST_SV_DUP_RESIZE(d, 3, sv_alloc_t, sv_push_i, SV_I16, r, s);
+	TEST_SV_DUP_RESIZE(e, 4, sv_alloc_t, sv_push_u, SV_U16, r, s);
+	TEST_SV_DUP_RESIZE(f, 5, sv_alloc_t, sv_push_i, SV_I32, r, s);
+	TEST_SV_DUP_RESIZE(g, 6, sv_alloc_t, sv_push_u, SV_U32, r, s);
+	TEST_SV_DUP_RESIZE(h, 7, sv_alloc_t, sv_push_i, SV_I64, r, s);
+	TEST_SV_DUP_RESIZE(i, 8, sv_alloc_t, sv_push_u, SV_U64, r, s);
+	return res;
 }
 
 static int test_sv_cpy()
@@ -1525,10 +1548,10 @@ static int test_sv_cat()
 	int res = 0;
 	const int val = 123;
 	TEST_SV_CAT(a, 0, sv_alloc, sv_push,
-		    ((const struct AA *)sv_at(a, 3))->a == aa1.a,
+		    ((const struct AA *)sv_at(a, 3))->a == a1.a,
 		    ((const struct AA *)sv_pop(a))->a ==
 					((const struct AA *)sv_pop(a2))->a,
-		    sizeof(struct AA), &aa1);
+		    sizeof(struct AA), &a1);
 	#define SVIAT(v) sv_i_at(v, 3) == val
 	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)val
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
@@ -1610,15 +1633,15 @@ static int test_sv_push_pop()
 	sv_t *b = sv_alloca(sizeof(struct AA), 10);
 	int res = (!a || !b) ? 1 : 0;
 	if (!res) {
-		res |= (sv_push(&a, &aa2, &aa2, &aa1) ? 0 : 4);
+		res |= (sv_push(&a, &a2, &a2, &a1) ? 0 : 4);
 		res |= (sv_len(a) == 3? 0 : 8);
 		res |= (((t = (struct AA *)sv_pop(a)) &&
-			t->a == aa1.a && t->b == aa1.b)? 0 : 16);
+			t->a == a1.a && t->b == a1.b)? 0 : 16);
 		res |= (sv_len(a) == 2? 0 : 32);
-		res |= (sv_push(&b, &aa2) ? 0 : 64);
+		res |= (sv_push(&b, &a2) ? 0 : 64);
 		res |= (sv_len(b) == 1? 0 : 128);
 		res |= (((t = (struct AA *)sv_pop(b)) &&
-			 t->a == aa2.a && t->b == aa2.b)? 0 : 256);
+			 t->a == a2.a && t->b == a2.b)? 0 : 256);
 		res |= (sv_len(b) == 0? 0 : 512);
 	}
 	sv_free(&a);
@@ -1678,6 +1701,7 @@ static int test_sv_push_pop_u()
 
 static int test_sv_push_raw()
 {
+	/* TODO */
 	return 0;
 }
 
