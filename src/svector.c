@@ -184,6 +184,20 @@ static sd_t *aux_dup_sd(const sd_t *d)
 	return (sd_t *)aux_dup((const sv_t *)d, sd_get_size(d));
 }
 
+static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_elems)
+{
+	ASSERT_RETURN_IF(!v, 0);
+	const sv_t *s = *v && *v != sv_void ? *v : NULL;
+	if (s == NULL) { /* reserve from NULL/sv_void */
+		ASSERT_RETURN_IF(!src, 0);
+		*v = src->sv_type == SV_GEN ?
+			sv_alloc(src->elem_size, max_elems) :
+			sv_alloc_t((enum eSV_Type)src->sv_type, max_elems);
+		return __sv_get_max_size(*v);
+	}
+	return sd_reserve((sd_t **)v, max_elems, &svf);
+}
+
 static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		     const size_t ss)
 {
@@ -198,7 +212,7 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 			return *v;
 		}
 		const size_t out_size = at + ss;
-		if (sv_reserve(v, out_size) >= out_size) {
+		if (aux_reserve(v, src, out_size) >= out_size) {
 			if (!aliasing)
 				sv_copy_elems(*v, at, src, 0, ss);
 			else
@@ -210,20 +224,6 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		return cat ? sv_check(v) : sv_clear(v);
 	}
 	return *v;
-}
-
-static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_elems)
-{
-	ASSERT_RETURN_IF(!v, 0);
-	const sv_t *s = *v && *v != sv_void ? *v : src;
-	ASSERT_RETURN_IF(!s, 0);
-	if (s == src) { /* reserve from NULL/sv_void */
-		*v = src->sv_type == SV_GEN ?
-			sv_alloc(src->elem_size, max_elems) :
-			sv_alloc_t((enum eSV_Type)src->sv_type, max_elems);
-		return __sv_get_max_size(*v);
-	}
-	return sd_reserve((sd_t **)v, max_elems, &svf);
 }
 
 static size_t aux_grow(sv_t **v, const sv_t *src, const size_t extra_elems)
@@ -274,7 +274,7 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 	if (!s_size_t_overflow(at, n)) { /* overflow check */
 		const size_t out_size = at + n;
 		const sbool_t aliasing = *v == src;
-		if (sv_reserve(v, out_size) >= out_size) {
+		if (aux_reserve(v, src, out_size) >= out_size) {
 			if (!aliasing) {
 				void *po = __sv_get_buffer(*v);
 				const void *psrc = __sv_get_buffer_r(src);
@@ -527,10 +527,12 @@ int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2,
 	const size_t sv1 = get_size(v1), sv2 = get_size(v2),
 		     sv1_left = v1off < sv1 ? sv1 - v1off : 0,
 		     sv2_left = v2off < sv2 ? sv2 - v2off : 0,
-		     cmp_bytes = v1->elem_size * S_MIN3(n, sv1_left, sv2_left);
+		     cmp_len = S_MIN3(n, sv1_left, sv2_left),
+		     cmp_bytes = v1->elem_size * cmp_len;
 	const char *v1p = ptr_to_elem_r(v1, v1off),
 		   *v2p = ptr_to_elem_r(v2, v2off);
-	return memcmp(v1p, v2p, cmp_bytes);
+	int r = memcmp(v1p, v2p, cmp_bytes);
+	return r || cmp_len == n ? r : sv1 > sv2 ? 1 : -1;
 }
 
 /*
