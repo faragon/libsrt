@@ -166,13 +166,13 @@ sv_t *sv_dup_resize(const sv_t *src, const size_t n);
  * Assignment
  */
 
-/* #API: |Overwrite vector with a vector copy|output vector; input vector|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Overwrite vector with a vector copy|output vector; input vector|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cpy(sv_t **v, const sv_t *src);
 
-/* #API: |Overwrite vector with input vector copy applying a erase operation|output vector; input vector; input vector erase start offset; number of elements to erase|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Overwrite vector with input vector copy applying a erase operation|output vector; input vector; input vector erase start offset; number of elements to erase|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cpy_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
 
-/* #API: |Overwrite vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Overwrite vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n);
 
 /*
@@ -185,60 +185,60 @@ sv_t *sv_cat(sv_t **v, const sv_t *v1, ...)
 */
 sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...);
 
-/* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cat_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
 
-/* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cat_resize(sv_t **v, const sv_t *src, const size_t n);
 
 /*
  * Transformation
  */
 
-/* #API: |Erase portion of a vector|input/output vector; element offset where to start the cut; number of elements to be cut|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Erase portion of a vector|input/output vector; element offset where to start the cut; number of elements to be cut|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 
-/* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|1;2| */
+/* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_resize(sv_t **v, const size_t n);
 
 /*
  * Search
  */
 
-/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
 size_t sv_find(const sv_t *v, const size_t off, const void *target);
 
-/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
 size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target);
 
-/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
 size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target);
 
 /*
  * Compare
  */
 
-/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|1;2| */
+/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|0;1| */
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2off, const size_t n);
 
 /*
  * Vector "at": element access to given position
  */
 
-/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)|1;2| */
+/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)|0;1| */
 const void *sv_at(const sv_t *v, const size_t index);
 
-/* #API: |Vector random access (integer)|vector; location|Element value|O(1)|1;2| */
+/* #API: |Vector random access (integer)|vector; location|Element value|O(1)|0;1| */
 sint_t sv_i_at(const sv_t *v, const size_t index);
 
-/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|1;2| */
+/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|0;1| */
 suint_t sv_u_at(const sv_t *v, const size_t index);
 
 /*
  * Vector "push": add element in the last position
  */
 
-/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|0;1| */
 sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n);
 
 /*
