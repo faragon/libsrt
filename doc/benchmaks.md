@@ -33,9 +33,9 @@ Map benchmarks (sm\_t)
 Introduction
 ---
 
-libsrt map implementation use red-black trees. It is about 10 times slower than hash tables (e.g. std::unsorted\_map) for maps with up to 10^8 elements doing search on simplest data types. E.g. just doing search, with same CPU used for the tests, you could query about 6 million of nodes per second (int-int type) while with the hash map, more than 60 million per second (in both cases with one CPU). For more complex data structures in the map, or including interface operations like serialization/deserialization, the total per-query time gets closer between the tree-based implementation and the hash-map implementation (e.g. serving 1 million key-value queries per second on one CPU is a huge achievement, so having 6 or 60 million QPS throughput is not going to make a world of difference).
+libsrt map implementation use red-black trees. It is about 10 times slower than hash tables (e.g. std::unsorted\_map) for maps with up to 10^8 elements doing search on simplest data types. E.g. just doing search, with same CPU used for the tests, you could query about 6 million of nodes per second (int-int type) while with the hash map, more than 60 million per second (in both cases with one CPU). For more complex data structures in the map, or including interface operations like serialization/deserialization, the total per-query time gets closer between the tree-based implementation and the hash-map implementation (e.g. serving 1 million key-value queries per second on one CPU is a huge achievement, so having 6 or 60 million QPS throughput is not going to make a world of difference). Regarding memory usage, libsrt map uses one third of libstdc++ map (RB tree) and unordered\_map (hash tables) for the case of int-int, i.e. with same memory, it can hold 3 times more data in that case.
 
-There is room for some optimization on the libsrt map (sm\_t), but bigger gain will come from using distributed maps (see sdm\_t type, libstrt map implementation that manages N maps with same interface as the simple map), so micro-optimization is not a priority (e.g. some unrolling and explicit prefetch could be added for helping non-OooE CPUs -both optimizations tried on OooE CPUs, with no visible gain, even inlining the compare function instead of using a function pointer; more tests will be done with a simpler CPU, e.g. board with ARM v6 ISA CPU-).
+There is room for some optimization on the libsrt map (sm\_t), but bigger gains come from using distributed maps (see sdm\_t type, libstrt map implementation that manages N maps with same interface as the simple map), so micro-optimization is not a priority (e.g. some unrolling and explicit prefetch could be added for helping non-OooE CPUs -both optimizations tried on OooE CPUs, with no visible gain, even inlining the compare function instead of using a function pointer; more tests will be done with a simpler CPU, e.g. board with ARM v6 ISA CPU-).
 
 Integer-key map insert
 ---
@@ -77,7 +77,6 @@ Integer-key map insert
 
 In this case, libsrt smap wins in the memory usage to both GNU`s std::map (RB tree) and std::unordered\_map (hash map). In speed terms, libsrt smap and std::map are similar (same algorithm), while std::unordered\_map wins because using both hash tables and being the hashing of 32-bit integer very simple.
 
-Note that "average" insertion time complexity for std::unordered\_map is O(1), while std::map and libsrt smap have O(log n). At 10^6 elements being 5x faster, and being just 6.6x faster at 10^8 elements, it shows that the allocator is hurting the hash table performance.
 
 Integer-key map insert and 10x read
 ---
