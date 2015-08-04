@@ -1519,9 +1519,31 @@ static int test_sv_dup_resize()
 	return res;
 }
 
+#define TEST_SV_CPY(v, nt, alloc, push, type, a, b)		       	   \
+	sv_t *v = alloc(type, 0);					   \
+	push(&v, a); push(&v, b); push(&v, a); push(&v, b); push(&v, a);   \
+	push(&v, b); push(&v, a); push(&v, b); push(&v, a); push(&v, b);   \
+	sv_t *v##2 = NULL;						   \
+	sv_cpy(&v##2, v);				       		   \
+	res |= !v ? 1<<(nt*3) :						   \
+		(sv_size(v) == sv_size(v##2) ? 0 : 2 << (nt * 3))	|  \
+		(!sv_ncmp(v, 0, v##2, 0, sv_size(v)) ? 0 : 4 << (nt * 3)); \
+		sv_free(&v, &v##2);
+
 static int test_sv_cpy()
 {
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_CPY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
+	TEST_SV_CPY(b, 1, sv_alloc_t, sv_push_i, SV_I8, r, s);
+	TEST_SV_CPY(c, 2, sv_alloc_t, sv_push_u, SV_U8, r, s);
+	TEST_SV_CPY(d, 3, sv_alloc_t, sv_push_i, SV_I16, r, s);
+	TEST_SV_CPY(e, 4, sv_alloc_t, sv_push_u, SV_U16, r, s);
+	TEST_SV_CPY(f, 5, sv_alloc_t, sv_push_i, SV_I32, r, s);
+	TEST_SV_CPY(g, 6, sv_alloc_t, sv_push_u, SV_U32, r, s);
+	TEST_SV_CPY(h, 7, sv_alloc_t, sv_push_i, SV_I64, r, s);
+	TEST_SV_CPY(i, 8, sv_alloc_t, sv_push_u, SV_U64, r, s);
+	return res;
 }
 
 static int test_sv_cpy_erase()
