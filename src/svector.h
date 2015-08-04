@@ -111,13 +111,13 @@ size_t sv_reserve(sv_t **c, const size_t max_elems)
 #API: |Free unused space|vector|same vector (optional usage)|O(1)|1;2|
 sv_t *sv_shrink(sv_t **c)
 
-#API: |Get vector size|vector|vector bytes used in UTF8 format|O(1)|0;1|
+#API: |Get vector size|vector|vector number of elements|O(1)|0;1|
 size_t sv_size(const sv_t *c)
 
-#API: |Set vector size (bytes used in UTF8 format)|vector;set vector number of elements|-|O(1)|1;2|
+#API: |Set vector size (number of vector elements)|vector;set vector number of elements|-|O(1)|1;2|
 void sv_set_size(sv_t *c, const size_t s)
 
-#API: |Equivalent to sv_size|vector|Number of bytes (UTF-8 vector length)|O(1)|1;2|
+#API: |Equivalent to sv_size|vector|Number of vector elements|O(1)|1;2|
 size_t sv_len(const sv_t *c)
 
 #API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|
@@ -137,10 +137,10 @@ size_t sv_len_left(const sv_t *v);
 /* #API: |Explicit set length (intended for external I/O raw acccess)|vector;new length|S_TRUE: OK, S_FALSE: out of range|O(1)|1;2| */
 sbool_t sv_set_len(sv_t *v, const size_t elems);
 
-/* #API: |Get string buffer read-only access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|1;2| */
+/* #API: |Get string buffer read-only access|string|pointer to the insternal buffer (raw data)|O(1)|1;2| */
 void *sv_get_buffer(sv_t *v);
 
-/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|1;2| */
+/* #API: |Get string buffer access|string|pointer to the insternal buffer (raw data)|O(1)|1;2| */
 const void *sv_get_buffer_r(const sv_t *v);
 
 /* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)|1;2| */
