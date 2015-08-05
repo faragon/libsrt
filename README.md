@@ -2,6 +2,8 @@ master branch: [![Build Status (gcc/clang/tcc)](https://travis-ci.org/faragon/li
 
 master branch analysis: [![Build Status](https://scan.coverity.com/projects/5366/badge.svg)](https://scan.coverity.com/projects/5366)
 
+libsrt has been included into Paul Hsieh's [String Library Comparisons](http://bstring.sourceforge.net/features.html) table. What a great honor! :-)
+
 libsrt: Simple Real-Time library for the C programming language
 ===
 
