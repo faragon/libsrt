@@ -1546,9 +1546,36 @@ static int test_sv_cpy()
 	return res;
 }
 
+#define TEST_SV_CPY_ERASE(v, ntest, alloc, push, check, type, a, b)	 \
+	sv_t *v = alloc(type, 0);					 \
+	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b); \
+	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b); \
+	sv_t *v##2 = NULL;						 \
+	sv_cpy_erase(&v##2, v, 1, 5);					 \
+	res |= !v ? 1<<(ntest*3) : (check) ? 0 : 2<<(ntest*3);		 \
+	sv_free(&v, &v##2);
+
 static int test_sv_cpy_erase()
 {
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_CPY_ERASE(a, 0, sv_alloc, sv_push,
+	    ((const struct AA *)sv_at(a2, 0))->a ==
+				((const struct AA *)sv_at(a2, 1))->a,
+	    sizeof(struct AA), &a1, &a2);
+	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
+	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
+	TEST_SV_CPY_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
+	TEST_SV_CPY_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, r, s);
+	TEST_SV_CPY_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, r, s);
+	TEST_SV_CPY_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, r, s);
+	TEST_SV_CPY_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, r, s);
+	TEST_SV_CPY_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, r, s);
+	TEST_SV_CPY_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, r, s);
+	TEST_SV_CPY_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, r, s);
+	#undef SVIAT
+	#undef SVUAT
+	return res;
 }
 
 static int test_sv_cpy_resize()

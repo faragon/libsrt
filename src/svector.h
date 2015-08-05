@@ -169,7 +169,7 @@ sv_t *sv_dup_resize(const sv_t *src, const size_t n);
 /* #API: |Overwrite vector with a vector copy|output vector; input vector|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_cpy(sv_t **v, const sv_t *src);
 
-/* #API: |Overwrite vector with input vector copy applying a erase operation|output vector; input vector; input vector erase start offset; number of elements to erase|output vector reference (optional usage)|O(n)|0;1| */
+/* #API: |Overwrite vector with input vector copy applying a erase operation|output vector; input vector; input vector erase start offset; number of elements to erase|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_cpy_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
 
 /* #API: |Overwrite vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|0;1| */
