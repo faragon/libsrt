@@ -91,11 +91,15 @@ MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_HEX)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_xml)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_json)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_url)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_dquote)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_esc_squote)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_b64)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_hex)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_xml)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_json)
 MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_url)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_dquote)
+MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_squote)
 
 /*
  * Tests
@@ -2419,6 +2423,8 @@ int main()
 	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json, "\b\t\f\n\r\"\x5c", "\\b\\t\\f\\n\\r\\\"\x5c\x5c");
 	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url, "0189ABCXYZ-_.~abcxyz \\/&!?<>",
 					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_dquote, dec_esc_dquote, "\"how\" are you?", "\"\"how\"\" are you?");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_squote, dec_esc_squote, "'how' are you?", "''how'' are you?");
 
 	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_dup_erase_u());

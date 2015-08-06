@@ -886,12 +886,16 @@ MK_SS_DUP_CPY_CAT(enc_HEX, senc_HEX, NULL)
 MK_SS_DUP_CPY_CAT(enc_esc_xml, NULL, senc_esc_xml)
 MK_SS_DUP_CPY_CAT(enc_esc_json, NULL, senc_esc_json)
 MK_SS_DUP_CPY_CAT(enc_esc_url, NULL, senc_esc_url)
+MK_SS_DUP_CPY_CAT(enc_esc_dquote, NULL, senc_esc_dquote)
+MK_SS_DUP_CPY_CAT(enc_esc_squote, NULL, senc_esc_squote)
 
 MK_SS_DUP_CPY_CAT(dec_b64, sdec_b64, NULL)
 MK_SS_DUP_CPY_CAT(dec_hex, sdec_hex, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_xml, sdec_esc_xml, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_json, sdec_esc_json, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_url, sdec_esc_url, NULL)
+MK_SS_DUP_CPY_CAT(dec_esc_dquote, sdec_esc_dquote, NULL)
+MK_SS_DUP_CPY_CAT(dec_esc_squote, sdec_esc_squote, NULL)
 
 SD_BUILDFUNCS(ss)
 

@@ -215,6 +215,12 @@ ss_t *ss_dup_enc_esc_xml(const ss_t *src);
 /* #API: |Duplicate string with URL escape encoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_enc_esc_url(const ss_t *src);
 
+/* #API: |Duplicate string escaping " as ""|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_esc_dquote(const ss_t *src);
+
+/* #API: |Duplicate string escaping ' as ''|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_esc_squote(const ss_t *src);
+
 /* #API: |Duplicate string with base64 decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_b64(const ss_t *src);
 
@@ -229,6 +235,12 @@ ss_t *ss_dup_dec_esc_xml(const ss_t *src);
 
 /* #API: |Duplicate string with URL escape decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_esc_url(const ss_t *src);
+
+/* #API: |Duplicate string unescaping "" as "|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_esc_dquote(const ss_t *src);
+
+/* #API: |Duplicate string unescaping '' as '|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_esc_squote(const ss_t *src);
 
 /* #API: |Duplicate from string erasing portion from input|string;byte offset;number of bytes|output result|O(n)|1;2| */
 ss_t *ss_dup_erase(const ss_t *src, const size_t off, const size_t n);
@@ -318,6 +330,12 @@ ss_t *ss_cpy_enc_esc_xml(ss_t **s, const ss_t *src);
 /* #API: |Overwrite string with input string URL escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_enc_esc_url(ss_t **s, const ss_t *src);
 
+/* #API: |Overwrite string with input string escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_esc_squote(ss_t **s, const ss_t *src);
+
 /* #API: |Overwrite string with input string base64 decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_b64(ss_t **s, const ss_t *src);
 
@@ -332,6 +350,12 @@ ss_t *ss_cpy_dec_esc_xml(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string URL escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string unescaping "" as "|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string unescaping '' as '|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_esc_squote(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string copy applying a erase operation (byte/UTF-8 mode)|output string; input string; input string erase start byte offset; number of bytes to erase|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -436,6 +460,12 @@ ss_t *ss_cat_enc_esc_xml(ss_t **s, const ss_t *src);
 /* #API: |Concatenate string with input string URL escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_enc_esc_url(ss_t **s, const ss_t *src);
 
+/* #API: |Concatenate string escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_esc_squote(ss_t **s, const ss_t *src);
+
 /* #API: |Concatenate string with input string base64 decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_b64(ss_t **s, const ss_t *src);
 
@@ -450,6 +480,12 @@ ss_t *ss_cat_dec_esc_xml(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with input string URL escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string unescaping "" as "|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string unescaping '' as '|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_esc_squote(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with erase operation (byte/UTF-8 mode)|output string; input string; input string byte offset for erase start; erase count (bytes)|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -512,6 +548,12 @@ ss_t *ss_enc_esc_xml(ss_t **s, const ss_t *src);
 /* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
 ss_t *ss_enc_esc_url(ss_t **s, const ss_t *src);
 
+/* #API: |Convert/escape escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_enc_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Convert/escape escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_enc_esc_squote(ss_t **s, const ss_t *src);
+
 /* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|0;1| */
 ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
 
@@ -526,6 +568,12 @@ ss_t *ss_dec_esc_xml(ss_t **s, const ss_t *src);
 
 /* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
 ss_t *ss_dec_esc_url(ss_t **s, const ss_t *src);
+
+/* #API: |Unescape "" as "|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_esc_dquote(ss_t **s, const ss_t *src);
+
+/* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+ss_t *ss_dec_esc_squote(ss_t **s, const ss_t *src);
 
 /* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|0;1| */
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode);

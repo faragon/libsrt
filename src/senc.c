@@ -581,6 +581,69 @@ size_t sdec_esc_url(const unsigned char *s, const size_t ss, unsigned char *o)
 	return j;
 }
 
+S_INLINE size_t senc_esc_byte_req_size(const unsigned char *s,
+				       unsigned char tgt, const size_t ss)
+{
+	size_t i = 0, sso = ss;
+	for (; i < ss; i++)
+		if (s[i] == tgt)
+			sso++;
+	return sso;
+}
+
+static size_t senc_esc_byte(const unsigned char *s, const size_t ss, unsigned char tgt,
+		     unsigned char *o, const size_t known_sso)
+{
+	RETURN_IF(!s, 0);
+	size_t sso = known_sso ? known_sso : senc_esc_byte_req_size(s, tgt, ss);
+	RETURN_IF(!o, sso);
+	RETURN_IF(!ss, 0);
+	size_t i = ss - 1, j = sso;
+	for (; i != (size_t)-1; i--) {
+		if (s[i] == tgt)
+			o[--j] = s[i];
+		o[--j] = s[i];
+	}
+	return sso;
+}
+
+static size_t sdec_esc_byte(const unsigned char *s, const size_t ss, unsigned char tgt,
+		     unsigned char *o)
+{
+	RETURN_IF(!o, ss);
+	RETURN_IF(!s || !ss, 0);
+	size_t i = 0, j = 0, ssm1 = ss - 1;
+	for (; i < ssm1; j++) {
+		if (s[i] == tgt && s[i + 1] == tgt)
+			i++;
+		o[j] = s[i++];
+	}
+	if (i < ss)
+		o[j++] = s[i];
+	return j;
+}
+
+size_t senc_esc_dquote(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso)
+{
+	return senc_esc_byte(s, ss, '\"', o, known_sso);
+}
+
+size_t sdec_esc_dquote(const unsigned char *s, const size_t ss, unsigned char *o)
+{
+	return sdec_esc_byte(s, ss, '\"', o);
+}
+
+size_t senc_esc_squote(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso)
+{
+	return senc_esc_byte(s, ss, '\'', o, known_sso);
+}
+
+size_t sdec_esc_squote(const unsigned char *s, const size_t ss, unsigned char *o)
+{
+	return sdec_esc_byte(s, ss, '\'', o);
+
+}
+
 /*
  * LZW encoding/decoding
  */
