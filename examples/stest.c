@@ -1209,7 +1209,7 @@ static int test_ss_null()
 	sv_t *a = sv_alloc_x(sizeof(struct AA), 10);			\
 	sv_t *b = sv_alloc_x_t(SV_I8, 10);				\
 	int res = (!a || !b) ? 1 : (sv_len(a) == 0 ? 0 : 2) |		\
-				   (sv_push(&a, &a1) ? 0 : 4) |	\
+				   (sv_push(&a, &a1) ? 0 : 4) |		\
 				   (sv_len(a) == 1 ? 0 : 8) |		\
 				   (!sv_push(&a, NULL) ? 0 : 16) |	\
 				   (sv_len(a) == 1 ? 0 : 32);		\
@@ -1440,10 +1440,10 @@ static int test_sv_dup()
 {
 	int res = 0;
 	const int val = 123;
-	TEST_SV_DUP(a, 0, sv_alloc, sv_push,
-		    ((const struct AA *)sv_at(a, 0))->a == a1.a,
-		    ((const struct AA *)sv_pop(a))->a ==
-					((const struct AA *)sv_pop(a2))->a,
+	TEST_SV_DUP(z, 0, sv_alloc, sv_push,
+		    ((const struct AA *)sv_at(z, 0))->a == a1.a,
+		    ((const struct AA *)sv_pop(z))->a ==
+					((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), &a1);
 	#define SVIAT(v) sv_i_at(v, 0) == val
 	#define SVUAT(v) sv_u_at(v, 0) == (unsigned)val
@@ -1476,9 +1476,9 @@ static int test_sv_dup_erase()
 {
 	int res = 0;
 	const int r = 12, s = 34;
-	TEST_SV_DUP_ERASE(a, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(a2, 0))->a ==
-				((const struct AA *)sv_at(a2, 1))->a,
+	TEST_SV_DUP_ERASE(z, 0, sv_alloc, sv_push,
+	    ((const struct AA *)sv_at(z2, 0))->a ==
+				((const struct AA *)sv_at(z2, 1))->a,
 	    sizeof(struct AA), &a1, &a2);
 	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
 	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
@@ -1511,7 +1511,7 @@ static int test_sv_dup_resize()
 {
 	int res = 0;
 	const int r = 12, s = 34;
-	TEST_SV_DUP_RESIZE(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
+	TEST_SV_DUP_RESIZE(z, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
 	TEST_SV_DUP_RESIZE(b, 1, sv_alloc_t, sv_push_i, SV_I8, r, s);
 	TEST_SV_DUP_RESIZE(c, 2, sv_alloc_t, sv_push_u, SV_U8, r, s);
 	TEST_SV_DUP_RESIZE(d, 3, sv_alloc_t, sv_push_i, SV_I16, r, s);
@@ -1529,8 +1529,8 @@ static int test_sv_dup_resize()
 	push(&v, b); push(&v, a); push(&v, b); push(&v, a); push(&v, b);   \
 	sv_t *v##2 = NULL;						   \
 	sv_cpy(&v##2, v);				       		   \
-	res |= !v ? 1<<(nt*3) :						   \
-		(sv_size(v) == sv_size(v##2) ? 0 : 2 << (nt * 3))	|  \
+	res |= !v ? 1 << (nt * 3) :					   \
+		(sv_size(v) == sv_size(v##2) ? 0 : 2 << (nt * 3)) |	   \
 		(!sv_ncmp(v, 0, v##2, 0, sv_size(v)) ? 0 : 4 << (nt * 3)); \
 		sv_free(&v, &v##2);
 
@@ -1538,7 +1538,7 @@ static int test_sv_cpy()
 {
 	int res = 0;
 	const int r = 12, s = 34;
-	TEST_SV_CPY(a, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
+	TEST_SV_CPY(z, 0, sv_alloc, sv_push, sizeof(struct AA), &a1, &a2);
 	TEST_SV_CPY(b, 1, sv_alloc_t, sv_push_i, SV_I8, r, s);
 	TEST_SV_CPY(c, 2, sv_alloc_t, sv_push_u, SV_U8, r, s);
 	TEST_SV_CPY(d, 3, sv_alloc_t, sv_push_i, SV_I16, r, s);
@@ -1563,9 +1563,9 @@ static int test_sv_cpy_erase()
 {
 	int res = 0;
 	const int r = 12, s = 34;
-	TEST_SV_CPY_ERASE(a, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(a2, 0))->a ==
-				((const struct AA *)sv_at(a2, 1))->a,
+	TEST_SV_CPY_ERASE(z, 0, sv_alloc, sv_push,
+	    ((const struct AA *)sv_at(z2, 0))->a ==
+				((const struct AA *)sv_at(z2, 1))->a,
 	    sizeof(struct AA), &a1, &a2);
 	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
 	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
@@ -1600,10 +1600,10 @@ static int test_sv_cat()
 {
 	int res = 0;
 	const int val = 123;
-	TEST_SV_CAT(a, 0, sv_alloc, sv_push,
-		    ((const struct AA *)sv_at(a, 3))->a == a1.a,
-		    ((const struct AA *)sv_pop(a))->a ==
-					((const struct AA *)sv_pop(a2))->a,
+	TEST_SV_CAT(z, 0, sv_alloc, sv_push,
+		    ((const struct AA *)sv_at(z, 3))->a == a1.a,
+		    ((const struct AA *)sv_pop(z))->a ==
+					((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), &a1);
 	#define SVIAT(v) sv_i_at(v, 3) == val
 	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)val
@@ -1624,9 +1624,38 @@ static int test_sv_cat()
 	return res;
 }
 
+#define TEST_SV_CAT_ERASE(v, ntest, alloc, push, check, type, a, b)	 \
+	sv_t *v = alloc(type, 0), *v##2 = alloc(type, 0);		 \
+	push(&v, a); push(&v, a); push(&v, a); push(&v, a); push(&v, a); \
+	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
+	push(&v##2, b);							 \
+	sv_cat_erase(&v##2, v, 1, 5);					 \
+	res |= !v ? 1<<(ntest*3) :					 \
+		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
+		    (sv_size(v##2) == 6 ? 0 : 4 << (ntest * 3));	 \
+	sv_free(&v, &v##2);
+
 static int test_sv_cat_erase()
 {
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_CAT_ERASE(z, 0, sv_alloc, sv_push,
+	    ((const struct AA *)sv_at(z2, 0))->a ==
+				((const struct AA *)sv_at(z2, 2))->a,
+	    sizeof(struct AA), &a1, &a2);
+	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 2)
+	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 2)
+	TEST_SV_CAT_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
+	TEST_SV_CAT_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, r, s);
+	TEST_SV_CAT_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, r, s);
+	TEST_SV_CAT_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, r, s);
+	TEST_SV_CAT_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, r, s);
+	TEST_SV_CAT_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, r, s);
+	TEST_SV_CAT_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, r, s);
+	TEST_SV_CAT_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, r, s);
+	#undef SVIAT
+	#undef SVUAT
+	return res;
 }
 
 static int test_sv_cat_resize()
