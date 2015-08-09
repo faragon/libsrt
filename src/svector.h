@@ -188,17 +188,17 @@ sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...);
 /* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|0;1| */
 sv_t *sv_cat_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
 
-/* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|0;1| */
+/* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_cat_resize(sv_t **v, const sv_t *src, const size_t n);
 
 /*
  * Transformation
  */
 
-/* #API: |Erase portion of a vector|input/output vector; element offset where to start the cut; number of elements to be cut|output vector reference (optional usage)|O(n)|0;1| */
+/* #API: |Erase portion of a vector|input/output vector; element offset where to start the cut; number of elements to be cut|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 
-/* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|0;1| */
+/* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_resize(sv_t **v, const size_t n);
 
 /*
