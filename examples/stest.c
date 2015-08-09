@@ -1744,9 +1744,37 @@ static int test_sv_erase()
 	return res;
 }
 
+#define TEST_SV_RESIZE(v, ntest, alloc, push, check, type, a, b)	 \
+	sv_t *v = alloc(type, 0);					 \
+	push(&v, b); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
+	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
+	sv_resize(&v, 5);						 \
+	res |= !v ? 1 << (ntest * 3) :					 \
+		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
+		    (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));		 \
+	sv_free(&v);
+
 static int test_sv_resize()
 {
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_RESIZE(z, 0, sv_alloc, sv_push,
+	    ((const struct AA *)sv_at(z, 0))->a ==
+		    ((const struct AA *)sv_at(z, 1))->a,
+	    sizeof(struct AA), &a1, &a2);
+	#define SVIAT(v) sv_i_at(v, 0) == sv_i_at(v, 1)
+	#define SVUAT(v) sv_u_at(v, 0) == sv_u_at(v, 1)
+	TEST_SV_RESIZE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
+	TEST_SV_RESIZE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, r, s);
+	TEST_SV_RESIZE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, r, s);
+	TEST_SV_RESIZE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, r, s);
+	TEST_SV_RESIZE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, r, s);
+	TEST_SV_RESIZE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, r, s);
+	TEST_SV_RESIZE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, r, s);
+	TEST_SV_RESIZE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, r, s);
+	#undef SVIAT
+	#undef SVUAT
+	return res;
 }
 
 static int test_sv_find()
