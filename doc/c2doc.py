@@ -70,16 +70,16 @@ def atoi(a) :
         return 0
 
 def fmt_coverage(c) :
-	return	"[" + str(c) + "] " + \
+	return	"[" + str(c) + "/2] " + \
 		("basic (Coverity, clang analyzer)" if c == 0 else \
 		"test covered (test + Valgrind)" if c == 1 else \
 		"proof covered" if c == 2 else "?")
 
 def fmt_quality(q) :
-	return	"[" + str(q) + "] " + \
+	return	"[" + str(q) + "/4] " + \
 		("not reviewed" if q == 0 else \
 		"reviewed, with quality issues" if q == 1 else \
-		"reviewedi, clean (-Wall, style, speed)" if q == 2 else "?")
+		"reviewed, clean (-Wall, style, speed)" if q == 2 else "?")
 
 
 def fundoc2html( doc ) :
