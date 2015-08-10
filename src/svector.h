@@ -111,7 +111,7 @@ size_t sv_reserve(sv_t **c, const size_t max_elems)
 #API: |Free unused space|vector|same vector (optional usage)|O(1)|1;2|
 sv_t *sv_shrink(sv_t **c)
 
-#API: |Get vector size|vector|vector number of elements|O(1)|0;1|
+#API: |Get vector size|vector|vector number of elements|O(1)|1;2|
 size_t sv_size(const sv_t *c)
 
 #API: |Set vector size (number of vector elements)|vector;set vector number of elements|-|O(1)|1;2|
@@ -185,7 +185,7 @@ sv_t *sv_cat(sv_t **v, const sv_t *v1, ...)
 */
 sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...);
 
-/* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|0;1| */
+/* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_cat_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
 
 /* #API: |Concatenate vector with input vector copy plus resize operation|output vector; input vector; number of elements of input vector|output vector reference (optional usage)|O(n)|1;2| */
@@ -205,13 +205,13 @@ sv_t *sv_resize(sv_t **v, const size_t n);
  * Search
  */
 
-/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
+/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
 size_t sv_find(const sv_t *v, const size_t off, const void *target);
 
-/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
+/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
 size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target);
 
-/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|0;1| */
+/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
 size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target);
 
 /*

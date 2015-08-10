@@ -1777,19 +1777,34 @@ static int test_sv_resize()
 	return res;
 }
 
+#define TEST_SV_FIND(v, ntest, alloc, push, check, type, a, b)	 \
+	sv_t *v = alloc(type, 0);					 \
+	push(&v, a); push(&v, a); push(&v, a); push(&v, a); push(&v, a); \
+	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
+	res |= !v ? 1 << (ntest * 3) :					 \
+		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
+		    (sv_size(v) == 10 ? 0 : 4 << (ntest * 3));		 \
+	sv_free(&v);
+
 static int test_sv_find()
 {
-	return 0; /* TODO */
-}
-
-static int test_sv_find_i()
-{
-	return 0; /* TODO */
-}
-
-static int test_sv_find_u()
-{
-	return 0; /* TODO */
+	int res = 0;
+	const int r = 12, s = 34;
+	TEST_SV_FIND(z, 0, sv_alloc, sv_push, sv_find(z, 0, &a2) == 6,
+		     sizeof(struct AA), &a1, &a2);
+	#define SVIAT(v) sv_find_i(v, 0, s) == 6
+	#define SVUAT(v) sv_find_u(v, 0, s) == 6
+	TEST_SV_FIND(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, r, s);
+	TEST_SV_FIND(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, r, s);
+	TEST_SV_FIND(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, r, s);
+	TEST_SV_FIND(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, r, s);
+	TEST_SV_FIND(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, r, s);
+	TEST_SV_FIND(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, r, s);
+	TEST_SV_FIND(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, r, s);
+	TEST_SV_FIND(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, r, s);
+	#undef SVIAT
+	#undef SVUAT
+	return res;
 }
 
 static int test_sv_ncmp()
@@ -2754,8 +2769,6 @@ int main()
 	STEST_ASSERT(test_sv_erase());
 	STEST_ASSERT(test_sv_resize());
 	STEST_ASSERT(test_sv_find());
-	STEST_ASSERT(test_sv_find_i());
-	STEST_ASSERT(test_sv_find_u());
 	STEST_ASSERT(test_sv_ncmp());
 	STEST_ASSERT(test_sv_at());
 	STEST_ASSERT(test_sv_i_at());
