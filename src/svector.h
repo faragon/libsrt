@@ -218,20 +218,20 @@ size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target);
  * Compare
  */
 
-/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|0;1| */
+/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|1;2| */
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2off, const size_t n);
 
 /*
  * Vector "at": element access to given position
  */
 
-/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)|0;1| */
+/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)|1;2| */
 const void *sv_at(const sv_t *v, const size_t index);
 
-/* #API: |Vector random access (integer)|vector; location|Element value|O(1)|0;1| */
+/* #API: |Vector random access (integer)|vector; location|Element value|O(1)|1;2| */
 sint_t sv_i_at(const sv_t *v, const size_t index);
 
-/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|0;1| */
+/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|1;2| */
 suint_t sv_u_at(const sv_t *v, const size_t index);
 
 /*

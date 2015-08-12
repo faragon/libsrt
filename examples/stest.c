@@ -1807,26 +1807,6 @@ static int test_sv_find()
 	return res;
 }
 
-static int test_sv_ncmp()
-{
-	return 0; /* TODO */
-}
-
-static int test_sv_at()
-{
-	return 0; /* TODO */
-}
-
-static int test_sv_i_at()
-{
-	return 0; /* TODO */
-}
-
-static int test_sv_u_at()
-{
-	return 0; /* TODO */
-}
-
 static int test_sv_push_pop()
 {
 	struct AA *t = NULL;
@@ -2769,10 +2749,6 @@ int main()
 	STEST_ASSERT(test_sv_erase());
 	STEST_ASSERT(test_sv_resize());
 	STEST_ASSERT(test_sv_find());
-	STEST_ASSERT(test_sv_ncmp());
-	STEST_ASSERT(test_sv_at());
-	STEST_ASSERT(test_sv_i_at());
-	STEST_ASSERT(test_sv_u_at());
 	STEST_ASSERT(test_sv_push_pop());
 	STEST_ASSERT(test_sv_push_pop_i());
 	STEST_ASSERT(test_sv_push_pop_u());
