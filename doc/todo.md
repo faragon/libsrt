@@ -9,6 +9,7 @@ Short-term
 * Tests using stack space
 * Add tests covering expansion between small/medium/full strings
 * Tests
+ * add grow from NULL tests
  * add tests for every operation related to unicode caching.
  * check case unicode size (add tests: e.g. erasing with overflow, etc.)
  * aliasing: stack, lower/middle/upper case checks, etc.

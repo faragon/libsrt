@@ -50,7 +50,9 @@ extern "C" {
 		va_end(ap);						\
 	}								\
 	size_t pfix##_grow(pfix##_t **c, const size_t extra_elems) {	\
-		ASSERT_RETURN_IF(!c || *c == pfix##_void, 0);		\
+		ASSERT_RETURN_IF(!c, 0);				\
+		if (*c == pfix##_void)					\
+			*c = NULL;					\
 		return sd_grow((sd_t **)c, extra_elems, &pfix##f);	\
 	}								\
 	size_t pfix##_reserve(pfix##_t **c, const size_t max_elems) {	\
