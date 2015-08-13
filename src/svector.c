@@ -332,13 +332,12 @@ SD_BUILDFUNCS(sv)
 
 size_t sv_capacity(const sv_t *v)
 {
-	return !v || !v->elem_size ?
-		0 : (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
+	return !v || !v->elem_size ? 0 : __sv_get_max_size(v);
 }
 
 size_t sv_len_left(const sv_t *v)
 {
-	return !v? 0 : sv_capacity(v) - sv_len(v);
+	return !v || !v->elem_size ? 0 : __sv_get_max_size(v) - sv_len(v);
 }
 
 sbool_t sv_set_len(sv_t *v, const size_t elems)

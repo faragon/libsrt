@@ -175,6 +175,16 @@ ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context);
 /* #API: |Bread-first tree traversal|tree; traverse callback; callback contest|Number of levels stepped down|O(n); Aux space: n/2 * sizeof(stndx_t)|1;2| */
 ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context);
 
+/*
+ * Other
+ */
+
+/* #API: |Allocated space|tree|current allocated space (tree elements)|O(1)|0;1| */
+S_INLINE size_t st_capacity(const st_t *t)
+{
+        return t ? (t->df.alloc_size - SDT_HEADER_SIZE) / t->f.node_size : 0;
+}
+
 /* #API: |Tree check (debug purposes)|tree|S_TREE: OK, S_FALSE: breaks RB tree rules|O(n)|1;2| */
 sbool_t st_assert(const st_t *t);
 

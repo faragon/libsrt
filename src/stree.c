@@ -117,7 +117,7 @@ static stndx_t get_lr(const stn_t *n, const enum STNDir d)
 
 static size_t get_max_size(const st_t *t)
 {
-	return t ? (t->df.alloc_size - SDT_HEADER_SIZE) / t->f.node_size : 0;
+	return st_capacity(t);
 }
 
 static st_t *st_check(st_t **t)

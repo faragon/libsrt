@@ -192,6 +192,16 @@ ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
+/*
+ * Other
+ */
+
+/* #API: |Allocated space|map|current allocated space (map elements)|O(1)|0;1| */
+S_INLINE size_t sm_capacity(const sm_t *m)
+{
+	return st_capacity((const st_t *)m);
+}
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
