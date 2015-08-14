@@ -2083,10 +2083,6 @@ static int test_st_traverse()
 	return res;
 }
 
-/*
-	TODO: add more test_sm_*
-*/
-
 #define TEST_SM_ALLOC_DONOTHING(a)
 #define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
 	static int fn()							       \
@@ -2111,9 +2107,26 @@ static int test_st_traverse()
 TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free)
 TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, TEST_SM_ALLOC_DONOTHING)
 
+#define TEST_SM_SHRINK_TO_FIT(m, ntest, atype, r)		\
+	sm_t *m = sm_alloc(atype, r);				\
+	res |= !m ? 1 << (ntest * 3) :				\
+		(sm_capacity(m) == r ? 0 : 2 << (ntest * 3)) |	\
+		(sm_shrink(&m) &&				\
+		 sm_capacity(m) == 1 ? 0 : 4 << (ntest * 3));	\
+	sm_free(&m)
+
 static int test_sm_shrink()
 {
-	return 0; /* TODO */
+	int res = 0;
+	TEST_SM_SHRINK_TO_FIT(a, 0, SM_I32I32, 100);
+	TEST_SM_SHRINK_TO_FIT(b, 1, SM_U32U32, 100);
+	TEST_SM_SHRINK_TO_FIT(c, 2, SM_IntInt, 100);
+	TEST_SM_SHRINK_TO_FIT(d, 3, SM_IntStr, 100);
+	TEST_SM_SHRINK_TO_FIT(e, 4, SM_IntPtr, 100);
+	TEST_SM_SHRINK_TO_FIT(f, 5, SM_StrInt, 100);
+	TEST_SM_SHRINK_TO_FIT(g, 6, SM_StrStr, 100);
+	TEST_SM_SHRINK_TO_FIT(h, 7, SM_StrPtr, 100);
+	return res;
 }
 
 static int test_sm_size()
