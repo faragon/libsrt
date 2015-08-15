@@ -2129,11 +2129,6 @@ static int test_sm_shrink()
 	return res;
 }
 
-static int test_sm_size()
-{
-	return 0; /* TODO */
-}
-
 static int test_sm_dup()
 {
 	return 0; /* TODO */
@@ -2775,7 +2770,6 @@ int main()
 	STEST_ASSERT(test_sm_alloc());
 	STEST_ASSERT(test_sm_alloca());
 	STEST_ASSERT(test_sm_shrink());
-	STEST_ASSERT(test_sm_size());
 	STEST_ASSERT(test_sm_dup());
 	STEST_ASSERT(test_sm_ii32_at());
 	STEST_ASSERT(test_sm_uu32_at());

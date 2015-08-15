@@ -93,7 +93,7 @@ void sm_free_aux(const size_t nargs, sm_t **s, ...);
  * Accessors
  */
 
-/* #API: |Get map size|map|Map number of elements|O(1)|0;1| */
+/* #API: |Get map size|map|Map number of elements|O(1)|1;2| */
 size_t sm_size(const sm_t *m);
 
 /*
