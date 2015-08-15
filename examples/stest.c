@@ -2084,28 +2084,38 @@ static int test_st_traverse()
 }
 
 #define TEST_SM_ALLOC_DONOTHING(a)
-#define TEST_SM_ALLOC_X(fn, sm_alloc_X, sm_free_X)			       \
-	static int fn()							       \
-	{								       \
-		sm_t *m = sm_alloc_X(SM_IntInt, 1000);			       \
-		int res = 0;						       \
-		for (;;) {						       \
-			if (!m) { res = 1; break; }			       \
-			sm_ii_insert(&m, 1, 1001);			       \
-			if (sm_size(m) != 1) { res = 2; break; }	       \
-			sm_ii_insert(&m, 2, 1002);			       \
-			sm_ii_insert(&m, 3, 1003);			       \
-			if (sm_ii_at(m, 1) != 1001) { res = 3; break; }	       \
-			if (sm_ii_at(m, 2) != 1002) { res = 4; break; }	       \
-			if (sm_ii_at(m, 3) != 1003) { res = 5; break; }	       \
-			break;						       \
-		}							       \
-		sm_free_X(&m);						       \
-		return res;						       \
+#define TEST_SM_ALLOC_X(fn, sm_alloc_X, type, insert, at, sm_free_X)	\
+	static int fn()							\
+	{								\
+		sm_t *m = sm_alloc_X(type, 1000);			\
+		int res = 0;						\
+		for (;;) {						\
+			if (!m) { res = 1; break; }			\
+			insert(&m, 1, 1001);				\
+			if (sm_size(m) != 1) { res = 2; break; }	\
+			insert(&m, 2, 1002);				\
+			insert(&m, 3, 1003);				\
+			if (at(m, 1) != 1001) { res = 3; break; }	\
+			if (at(m, 2) != 1002) { res = 4; break; }	\
+			if (at(m, 3) != 1003) { res = 5; break; }	\
+			break;						\
+		}							\
+		sm_free_X(&m);						\
+		return res;						\
 	}
 
-TEST_SM_ALLOC_X(test_sm_alloc, sm_alloc, sm_free)
-TEST_SM_ALLOC_X(test_sm_alloca, sm_alloca, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloc_ii32, sm_alloc, SM_I32I32, sm_ii32_insert,
+		sm_ii32_at, sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca_ii32, sm_alloca, SM_I32I32, sm_ii32_insert,
+		sm_ii32_at, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloc_uu32, sm_alloc, SM_U32U32, sm_uu32_insert,
+		sm_uu32_at, sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca_uu32, sm_alloca, SM_U32U32, sm_uu32_insert,
+		sm_uu32_at, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloc_ii, sm_alloc, SM_IntInt, sm_ii_insert, sm_ii_at,
+		sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca_ii, sm_alloca, SM_IntInt, sm_ii_insert,
+		sm_ii_at, TEST_SM_ALLOC_DONOTHING)
 
 #define TEST_SM_SHRINK_TO_FIT(m, ntest, atype, r)		\
 	sm_t *m = sm_alloc(atype, r);				\
@@ -2767,8 +2777,12 @@ int main()
 	/*
 	 * Map
 	 */
-	STEST_ASSERT(test_sm_alloc());
-	STEST_ASSERT(test_sm_alloca());
+	STEST_ASSERT(test_sm_alloc_ii32());
+	STEST_ASSERT(test_sm_alloca_ii32());
+	STEST_ASSERT(test_sm_alloc_uu32());
+	STEST_ASSERT(test_sm_alloca_uu32());
+	STEST_ASSERT(test_sm_alloc_ii());
+	STEST_ASSERT(test_sm_alloca_ii());
 	STEST_ASSERT(test_sm_shrink());
 	STEST_ASSERT(test_sm_dup());
 	STEST_ASSERT(test_sm_ii32_at());

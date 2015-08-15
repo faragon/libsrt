@@ -100,16 +100,16 @@ size_t sm_size(const sm_t *m);
  * Random access
  */
 
-/* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)|0;1| */
+/* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)|1;2| */
 sint32_t sm_ii32_at(const sm_t *m, const sint32_t k);
 
-/* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)|0;1| */
+/* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)|1;2| */
 suint32_t sm_uu32_at(const sm_t *m, const suint32_t k);
 
-/* #API: |Access to integer-interger map|map; integer key|integer|O(log n)|0;1| */
+/* #API: |Access to integer-interger map|map; integer key|integer|O(log n)|1;2| */
 sint_t sm_ii_at(const sm_t *m, const sint_t k);
 
-/* #API: |Access to integer-string map|map; integer key|string|O(log n)|0;1| */
+/* #API: |Access to integer-string map|map; integer key|string|O(log n)|1;2| */
 const ss_t *sm_is_at(const sm_t *m, const sint_t k);
 
 /* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|0;1| */
@@ -141,13 +141,13 @@ sbool_t sm_s_count(const sm_t *m, const ss_t *k);
  * Insert
  */
 
-/* #API: |Insert into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v);
 
-/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
 
-/* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v);
 
 /* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
