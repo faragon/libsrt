@@ -2144,21 +2144,6 @@ static int test_sm_dup()
 	return 0; /* TODO */
 }
 
-static int test_sm_ii32_at()
-{
-	return 0; /* TODO */
-}
-
-static int test_sm_uu32_at()
-{
-	return 0; /* TODO */
-}
-
-static int test_sm_ii_at()
-{
-	return 0; /* TODO */
-}
-
 static int test_sm_is_at()
 {
 	return 0; /* TODO */
@@ -2785,9 +2770,6 @@ int main()
 	STEST_ASSERT(test_sm_alloca_ii());
 	STEST_ASSERT(test_sm_shrink());
 	STEST_ASSERT(test_sm_dup());
-	STEST_ASSERT(test_sm_ii32_at());
-	STEST_ASSERT(test_sm_uu32_at());
-	STEST_ASSERT(test_sm_ii_at());
 	STEST_ASSERT(test_sm_is_at());
 	STEST_ASSERT(test_sm_ip_at());
 	STEST_ASSERT(test_sm_si_at());
