@@ -275,6 +275,9 @@ ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap);
 /* #API: |Duplicate string from character|Unicode character|output result|O(1)|1;2| */
 ss_t *ss_dup_char(const int c);
 
+/* #API: |Duplicate from reading from file handle|read max size (in bytes)|output result|O(n)|0;1| */
+ss_t *ss_dup_read(const int handle, const size_t max_bytes);
+
 /*
  * Assignment
  */
@@ -395,6 +398,9 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 
 /* #API: |Overwrite string with a string with just one character|output string; input character|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_char(ss_t **s, const int c);
+
+/* #API: |Read from file handle|read max size (in bytes)|output result|O(n)|0;1| */
+ss_t *ss_cpy_read(ss_t **s, const int handle, const size_t max_bytes);
 
 /*
  * Append
@@ -519,6 +525,9 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 
 /* #API: |Concatenate string with a string with just one character|output string; input character|output string reference (optional usage)|O(1)|1;2| */
 ss_t *ss_cat_char(ss_t **s, const int c);
+
+/* #API: |Cat data read from file handle|read max size (in bytes)|output result|O(n)|0;1| */
+ss_t *ss_cat_read(ss_t **s, const int handle, const size_t max_bytes);
 
 /*
  * Transformation
@@ -669,6 +678,13 @@ int ss_putchar(ss_t **s, const int c);
 
 /* #API: |Extract last character from string|input/output string|Extracted character if OK, EOF if empty|O(1)|1;2| */
 int ss_popchar(ss_t **s);
+
+/*
+ * I/O
+ */
+
+/* #API: |Read from file handle|read max size (in bytes)|output result|O(n)|0;1| */
+ss_t *ss_read(ss_t **s, const int handle, const size_t max_bytes);
 
 /*
  * Hashing
