@@ -492,6 +492,11 @@ static int test_ss_dup_char(const sint32_t in, const char *expected)
 	return res;
 }
 
+static int test_ss_dup_read()
+{
+	return 0; /* TODO */
+}
+
 static int test_ss_cpy(const char *in)
 {
 	ss_t *a = ss_dup_c(in);
@@ -722,6 +727,11 @@ static int test_ss_cpy_char(const sint32_t in, const char *expected)
 	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
 	ss_free(&a);
 	return res;
+}
+
+static int test_ss_cpy_read()
+{
+	return 0; /* TODO */
 }
 
 static int test_ss_cat(const char *a, const char *b)
@@ -984,6 +994,11 @@ static int test_ss_cat_char()
 	return res;
 }
 
+static int test_ss_cat_read()
+{
+	return 0; /* TODO */
+}
+
 static int test_ss_tolower(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a);
@@ -1172,6 +1187,16 @@ static int test_ss_popchar()
 			   (ss_popchar(&a) == EOF ? 0 : 32);
 	ss_free(&a);
 	return res;
+}
+
+static int test_ss_read()
+{
+	return 0; /* TODO */
+}
+
+static int test_ss_csum32()
+{
+	return 0; /* TODO */
 }
 
 static int test_sc_utf8_to_wc(const char *utf8_char,
@@ -2691,6 +2716,11 @@ int main()
 	STEST_ASSERT(test_ss_printf());
 	STEST_ASSERT(test_ss_getchar());
 	STEST_ASSERT(test_ss_putchar());
+	STEST_ASSERT(test_ss_dup_read());
+	STEST_ASSERT(test_ss_cpy_read());
+	STEST_ASSERT(test_ss_cat_read());
+	STEST_ASSERT(test_ss_read());
+	STEST_ASSERT(test_ss_csum32());
 	STEST_ASSERT(test_ss_null());
 	/*                          $       cent        euro            chinese             N~          n~         */
 	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac", "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };

@@ -684,7 +684,7 @@ int ss_popchar(ss_t **s);
  */
 
 /* #API: |Read from file handle|read max size (in bytes)|output result|O(n)|0;1| */
-ss_t *ss_read(ss_t **s, const int handle, const size_t max_bytes);
+ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes);
 
 /*
  * Hashing
