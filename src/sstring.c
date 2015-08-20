@@ -855,7 +855,7 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, const int handle,
 			    new_size = off + max_bytes;
 		if (ss_reserve(s, new_size) >= new_size) {
 			char *sc = get_str(*s);
-			l = posix_read(handle, sc + off, max_bytes);
+			l = read(handle, sc + off, max_bytes);
 			if (l > 0) {
 				set_size(*s, new_size);
 				set_unicode_size_cached(*s, S_FALSE);

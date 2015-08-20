@@ -34,7 +34,7 @@ int main(int argc, const char **argv)
 	size_t lo = 0;
 	char buf[128 * 1024];
 	int f_in = 0;
-	ssize_t l = posix_read(f_in, buf, sizeof(buf));
+	ssize_t l = read(f_in, buf, sizeof(buf));
 	unsigned hash = sh_csum32(buf, l);
 	printf("%u", hash);
 	return 0;

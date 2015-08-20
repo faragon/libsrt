@@ -14,6 +14,7 @@ extern "C" {
 
 #ifdef _MSC_VER
 	#define _CRT_SECURE_NO_WARNINGS
+	#define _CRT_NONSTDC_NO_DEPRECATE
 	#include <crtdefs.h>
 	#include <BaseTsd.h>
 	#include <malloc.h>
@@ -420,15 +421,7 @@ S_INLINE suint32_t *s_mar_u32(void *a)
 
 #ifdef _MSC_VER 
 #define snprintf sprintf_s
-#define posix_open _open
-#define posix_read _read
-#define posix_write _write
-#define posix_close _close
 #else
-#define posix_open open
-#define posix_read read
-#define posix_write write
-#define posix_close close
 #ifndef O_BINARY
 #define O_BINARY 0
 #endif
