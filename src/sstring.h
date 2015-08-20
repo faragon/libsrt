@@ -275,7 +275,7 @@ ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap);
 /* #API: |Duplicate string from character|Unicode character|output result|O(1)|1;2| */
 ss_t *ss_dup_char(const int c);
 
-/* #API: |Duplicate from reading from file handle|read max size (in bytes)|output result|O(n)|0;1| */
+/* #API: |Duplicate from reading from file handle|read max size (in bytes)|output result|O(n)|1;2| */
 ss_t *ss_dup_read(const int handle, const size_t max_bytes);
 
 /*

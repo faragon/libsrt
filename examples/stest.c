@@ -33,6 +33,8 @@
 	STEST_ASSERT_BASE(a, ;)
 #endif
 
+#define STEST_FILE	"test.dat"
+
 /*
  * Test common data structures
  */
@@ -492,9 +494,22 @@ static int test_ss_dup_char(const sint32_t in, const char *expected)
 	return res;
 }
 
-static int test_ss_dup_read()
+static int test_ss_dup_read(const char *pattern)
 {
-	return 0; /* TODO */
+	int res = 1;
+	const size_t pattern_size = strlen(pattern);
+	ss_t *s = NULL;
+	int f = open(STEST_FILE, O_RDWR | O_CREAT | O_TRUNC | O_BINARY, 0777);
+	if (f >= 0) {
+		res = write(f, pattern, pattern_size) != pattern_size ? 2 :
+		      lseek(f, 0, SEEK_SET) != 0 ? 4 :
+		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
+		      strcmp(ss_to_c(s), pattern) ? 16 : 0;
+		close(f);
+		unlink(STEST_FILE);
+	}
+	ss_free(&s);
+	return res;
 }
 
 static int test_ss_cpy(const char *in)
@@ -2597,6 +2612,8 @@ int main()
 	if (sizeof(wchar_t) > 2) {
 		STEST_ASSERT(test_ss_dup_char(0x24b62, "\xf0\xa4\xad\xa2"));
 	}
+	STEST_ASSERT(test_ss_dup_read("abc"));
+	STEST_ASSERT(test_ss_dup_read("a\nb\tc\rd\te\ff"));
 	STEST_ASSERT(test_ss_cpy(""));
 	STEST_ASSERT(test_ss_cpy("hello"));
 	STEST_ASSERT(test_ss_cpy_cn());
@@ -2716,7 +2733,6 @@ int main()
 	STEST_ASSERT(test_ss_printf());
 	STEST_ASSERT(test_ss_getchar());
 	STEST_ASSERT(test_ss_putchar());
-	STEST_ASSERT(test_ss_dup_read());
 	STEST_ASSERT(test_ss_cpy_read());
 	STEST_ASSERT(test_ss_cat_read());
 	STEST_ASSERT(test_ss_read());
