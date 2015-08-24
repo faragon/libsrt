@@ -117,6 +117,9 @@ else
 		endif
 		CFLAGS += -pedantic
 	endif
+	ifeq ($(GNUC), 1)
+		CFLAGS += -Wstrict-aliasing
+	endif
 endif
 ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -ggdb -DS_DEBUG
