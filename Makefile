@@ -174,7 +174,7 @@ HEADERS	= scommon.h $(SOURCES:.c=.h)
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a
 TEST	= stest
-EXAMPLES = bench counter enc
+EXAMPLES = bench counter enc table
 EXES	= $(TEST) $(EXAMPLES)
 
 # Rules for building: library, test, examples
