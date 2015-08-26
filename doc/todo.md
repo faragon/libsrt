@@ -8,6 +8,7 @@ Short-term
 * List C library dependencies
 * Tests using stack space
 * Add tests covering expansion between small/medium/full strings
+* Write some examples
 * Tests
  * add grow from NULL tests
  * add tests for every operation related to unicode caching.
@@ -21,9 +22,9 @@ Mid-term
 ---
 
 * Dynamic disk/RAM (mmap) allocators
- * ..._allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
-* Think about adding more types
- * stable: read-only "frozen" tree/map
+ * allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
+* Read-only types
+ * Optimized read-only tree, map, vector, and sorted vector
 * Vector enhancements
  * Sort, st_shl and st_shr (shifting elements on a vector, without real data shift)
 * Map enhancements
