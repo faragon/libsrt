@@ -204,9 +204,9 @@ Test-covered platforms
 
 * x86 and x86-64 (little endian) on Linux -Ubuntu 12.04/14.04-: full (build and unit tests for gcc/tcc/clang/g++/clang++, and Valgrind check with default compiler, Travis CI, Coverity). Frequency: every commit pushed to github.
 * x86 and x86-64 (little endian) on Windows: limited (build and unit tests, Visual Studio Express 2013 and the VS used by AppVeyor). Frequency: every commit pushed to github.
+* ARM v5 (little endian) on Linux -Debian "wheezy"- (Marvel Feroceon, Guruplug): limited (gcc and g++). Frequency: once in a while, including checking if any unaligned access exeption appear.
+* ARM v7 (little endian) on Linux -Raspbian- (ARM11, Raspberry Pi): full . Frequency: once in a while.
 * MIPS and MIPS64 (big endian) on Linux -Vyatta- (Cavium Octeon, EdgeRouter Lite): full. Frequency: once in a while.
-* ARM v5 (big endian) on Linux -Debian "wheezy"- (Marvel Feroceon, Guruplug): limited (gcc and g++). Frequency: once in a while, including checking if any unaligned access exeption appear.
-* ARM v7 (big endian) on Linux -Raspbian- (ARM11, Raspberry Pi): full . Frequency: once in a while.
 * PowerPC 32 (big endian) on OSX 10.5 and Linux -Ubuntu 12.04- (PPC G4, Mac Mini): limited (gcc and g++). Frequence ARM v7 (big endian): full. Frequency: once in a while.
 
 License
