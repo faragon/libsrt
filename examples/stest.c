@@ -2084,36 +2084,36 @@ static int test_st_traverse()
 {
 	ST_ENV_TEST_AUX;
 	int res = 0;
+	ssize_t levels = 0;
 	for (;;) {
 		ST_A_INS(6, 'g'); ST_A_INS(7, 'h'); ST_A_INS(8, 'i');
 		ST_A_INS(3, 'd'); ST_A_INS(4, 'e'); ST_A_INS(5, 'f');
 		ST_A_INS(0, 'a'); ST_A_INS(1, 'b'); ST_A_INS(2, 'c');
 		ss_cpy_c(&log, "");
-		st_traverse_preorder(t, test_traverse, (void *)&log);
-
+		levels = st_traverse_preorder(t, test_traverse, (void *)&log);
 		const char *out = ss_to_c(log);
-		if (strcmp(out, "ebadchgfi") != 0) {
+		if (levels < 1 || strcmp(out, "ebadchgfi") != 0) {
 			res |= 1;
 			break;
 		}
 		ss_cpy_c(&log, "");
-		st_traverse_levelorder(t, test_traverse, (void *)&log);
+		levels = st_traverse_levelorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
-		if (strcmp(out, "ebhadgicf") != 0) {
+		if (levels < 1 || strcmp(out, "ebhadgicf") != 0) {
 			res |= 2;
 			break;
 		}
 		ss_cpy_c(&log, "");
-		st_traverse_inorder(t, test_traverse, (void *)&log);
+		levels = st_traverse_inorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
-		if (strcmp(out, "abcdefghi") != 0) {
+		if (levels < 1 || strcmp(out, "abcdefghi") != 0) {
 			res |= 4;
 			break;
 		}
 		ss_cpy_c(&log, "");
-		st_traverse_postorder(t, test_traverse, (void *)&log);
+		levels = st_traverse_postorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
-		if (strcmp(out, "acdbfgihe") != 0) {
+		if (levels < 1 || strcmp(out, "acdbfgihe") != 0) {
 			res |= 8;
 			break;
 		}
