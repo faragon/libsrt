@@ -1,5 +1,5 @@
 #
-# Makefile for sstring.
+# Makefile for libsrt (POSIX systems: Linux, BSDs/Unix/Unix-like, etc.)
 #
 # Examples:
 # Build with defaults: make
@@ -10,6 +10,10 @@
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
 # Build with gcc cross compiler (PPC): make CC=powerpc-linux-gnu-gcc
 # Build with gcc cross compiler (ARM): make CC=arm-linux-gnueabi-gcc
+#
+# Observations:
+# - On FreeSD use gmake instead of make (as in that system "make" is "pmake", and
+#   not GNU make). If not installed, use: pkg install gmake
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
@@ -163,9 +167,15 @@ else
 	endif
 endif
 
-# ARM11 (Raspberri Pi I): the flag will enable HW unaligned access
+# ARM v6 little endian (e.g. ARM11 on Raspberr Pi I): the flag will enable HW unaligned access
 ifeq ($(UNAME_M), armv6l)
 	COMMON_FLAGS += -march=armv6
+endif
+
+# ARM v7-a little endian (e.g. ARM Cortex A5/7/8/9/15/17, QC Scorpion/Krait, etc.)
+# (ARM v7-m and v7-r will be built as ARM v5)
+ifeq ($(UNAME_M), armv7l)
+	COMMON_FLAGS += -march=armv7-a
 endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
