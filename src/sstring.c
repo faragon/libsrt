@@ -196,35 +196,35 @@ static size_t get_unicode_size(const ss_t *s)
 			     ((const struct SSTR_Small *)s)->unicode_size_l);
 }
 
-static char *get_str(ss_t *s)
+S_INLINE char *get_str(ss_t *s)
 {
-	return s->is_full ? ((struct SSTR_Full *)s)->str :
-				     ((struct SSTR_Small *)s)->str;
+	return !s ? NULL : s->is_full ? ((struct SSTR_Full *)s)->str :
+					((struct SSTR_Small *)s)->str;
 }
 
-static const char *get_str_r(const ss_t *s)
+S_INLINE const char *get_str_r(const ss_t *s)
 {
-	return s->is_full ? ((const struct SSTR_Full *)s)->str :
-			    ((const struct SSTR_Small *)s)->str;
+	return !s ? NULL : s->is_full ? ((const struct SSTR_Full *)s)->str :
+					((const struct SSTR_Small *)s)->str;
 }
 
-static size_t get_str_off(const ss_t *s)
+S_INLINE size_t get_str_off(const ss_t *s)
 {
 	S_ASSERT(get_str_r(s) >= (const char *)s);
 	return (size_t)(get_str_r(s) - (const char *)s);
 }
 
-static void set_size(ss_t *s, const size_t size)
+S_INLINE void set_size(ss_t *s, const size_t size)
 {
 	sd_set_size((sd_t *)s, size);
 }
 
-static void inc_size(ss_t *s, const size_t inc_size)
+S_INLINE void inc_size(ss_t *s, const size_t inc_size)
 {
 	set_size(s, sd_get_size(s) + inc_size);
 }
 
-static void set_alloc_size(ss_t *s, const size_t alloc_size)
+S_INLINE void set_alloc_size(ss_t *s, const size_t alloc_size)
 {
 	sd_set_alloc_size((sd_t *)s, alloc_size);
 }
