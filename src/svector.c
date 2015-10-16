@@ -61,7 +61,7 @@ static struct sd_conf svf = {	(size_t (*)(const sd_t *))__sv_get_max_size,
 #define SV_STx(f, TS, TL)		\
 	static void f(void *st, TL *c)	\
 	{				\
-		*(TS *)st = (TS)*c;	\
+		*(TS *)(st) = (TS)*(c);	\
 	}
 
 SV_STx(svsti8, char, const sint_t)
@@ -244,19 +244,19 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 	at = (cat && *v) ? get_size(*v) : 0;
 	const sbool_t overflow = off + n > ss0;
 	const size_t src_size = overflow ? ss0 - off : n,
-	copy_size = ss0 - off - src_size;
+	erase_size = ss0 - off - src_size;
 	if (*v == src) { /* BEHAVIOR: aliasing: copy-only */
 		if (off + n >= ss0) { /* tail clean cut */
 			set_size(*v, off);
 		} else {
-			sv_move_elems(*v, off, *v, off + n, n);
+			sv_move_elems(*v, off, *v, off + n, erase_size);
 			set_size(*v, ss0 - n);
 		}
 	} else { /* copy or cat */
-		const size_t out_size = at + off + copy_size;
+		const size_t out_size = at + off + erase_size;
 		if (aux_reserve(v, src, out_size) >= out_size) {
 			sv_copy_elems(*v, at, src, 0, off);
-			sv_copy_elems(*v, at + off, src, off + n, copy_size);
+			sv_copy_elems(*v, at + off, src, off + n, erase_size);
 			set_size(*v, out_size);
 		}
 	}
@@ -454,12 +454,12 @@ sv_t *sv_cat_resize(sv_t **v, const sv_t *src, const size_t n)
 
 sv_t *sv_erase(sv_t **v, const size_t off, const size_t n)
 {
-	return aux_erase(v, S_FALSE, *v, off, n);
+	return aux_erase(v, S_FALSE, (v ? *v : NULL), off, n);
 }
 
 sv_t *sv_resize(sv_t **v, const size_t n)
 {
-	return aux_resize(v, S_FALSE, *v, n);
+	return aux_resize(v, S_FALSE, (v ? *v : NULL), n);
 }
 
 /*
@@ -573,7 +573,7 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
  */
 
 #define SV_PUSH_GROW(v, n)	\
-	RETURN_IF(!v || !sv_grow(v, n) || !*v, S_FALSE);
+	RETURN_IF(!v || !sv_grow(v, n), S_FALSE);
 #define SV_INT_CHECK(v)	\
 	RETURN_IF((*v)->sv_type > SV_LAST_INT, S_FALSE);
 #define SV_PUSH_START(v)		\
