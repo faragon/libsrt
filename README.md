@@ -39,7 +39,7 @@ Generic advantages
 * Predictable (suitable for hard and soft real-time)
  * Predictable execution speed: all API calls have documented time complexity. Also space complexity, when extra space involving dynamic memory is required.
  * Hard real-time: allocating maximum size (strings, vector, trees, map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
- * Soft real-time: logarithmic memory allocation: for 10^n new elements just log(n) calls to the malloc() function. This is not a guarantee for hard real time, but for soft real time (being careful could provide almost same results, except in the case of very poor malloc() implementation in the C library being used -not a problem with modern compilers-).
+ * Soft real-time: logarithmic time memory allocation (when not doing preallocation): for 10^n new elements just log(n) calls to the malloc() function. This is not a guarantee for hard real time, but for soft real time (being careful could provide almost same results, except in the case of very poor malloc() implementation in the C library being used -not a problem with modern compilers-).
 
 * RAM, ROM, and disk operation
  * Data structures can be stored in ROM memory.
@@ -60,6 +60,7 @@ Generic advantages
 * Compatibility
  * C99 and C++ compatible
  * CPU-independent: endian-agnostic, aligned memory accesses.
+ * POSIX builds (Linux, BSD's) require GNU Make (e.g. on FreeBSD use 'gmake' instead of 'make')
  * E.g. GCC C and C++ (C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio 2013 "project" is provided just for running the test.
 
 
@@ -153,14 +154,14 @@ Tree-specific advantages (st_t)
 * Top-down implementation (insertion/deletion/traverse/search)
 * Zero node allocation cost (via pre-allocation or amortization)
 * O(1) allocation and deallocation
-* O(log(n)) node insert/delete/search
+* O(log(n)) node insert/delete/search (much faster than hash-map worst case, which is O(n) when rehashing is required)
 * O(n) sorted node enumeration (amortized O(n log(n))). Tree traversal provided cases: preorder, inorder, postorder.
 * O(n) unsorted node enumeration (faster than the sorted case)
 
 Tree-specific disadvantages/limitations
 ===
 
-* 
+* ss_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
 
 Map-specific advantages (sm_t)
 ===
@@ -178,7 +179,7 @@ Map-specific advantages (sm_t)
 Map-specific disadvantages/limitations
 ===
 
-*
+* Because of being implemented as a tree, it is slower than a hash-map, on average. However, in total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
 
 Distributed map (sdm_t)
 ===
@@ -202,12 +203,25 @@ Distributed map specific disadvantages/limitations
 Test-covered platforms
 ===
 
-* x86 and x86-64 (little endian) on Linux -Ubuntu 12.04/14.04-: full (build and unit tests for gcc/tcc/clang/g++/clang++, and Valgrind check with default compiler, Travis CI, Coverity). Frequency: every commit pushed to github.
-* x86 and x86-64 (little endian) on Windows: limited (build and unit tests, Visual Studio Express 2013 and the VS used by AppVeyor). Frequency: every commit pushed to github.
-* ARM v5 (little endian) on Linux -Debian "wheezy"- (Marvel Feroceon, Guruplug): limited (gcc and g++). Frequency: once in a while, including checking if any unaligned access exeption appear.
-* ARM v7 (little endian) on Linux -Raspbian- (ARM11, Raspberry Pi): full . Frequency: once in a while.
-* MIPS and MIPS64 (big endian) on Linux -Vyatta- (Cavium Octeon, EdgeRouter Lite): full. Frequency: once in a while.
-* PowerPC 32 (big endian) on OSX 10.5 and Linux -Ubuntu 12.04- (PPC G4, Mac Mini): limited (gcc and g++). Frequence ARM v7 (big endian): full. Frequency: once in a while.
+| ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage|
+| --- | ------------- | --------- | -- | --------- | ----------- | ------------- | -------------- |
+| x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
+| x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
+| x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
+| ARM v5 (Feroceon) | 32 | little | no | Linux Debian "wheezy"| gcc, g++| none | manual |
+| ARM v6 (ARM11) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++| Valgrind, clang | manual |
+| ARM v7 (Krait 400) | 32 | little | yes | Linux Android 5.1.1 | gcc, g++ | none | manual |
+| MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | Linux Vyatta | gcc, g++, clang, clang++ | Valgrind, clang | manual |
+| PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
+
+If you want automated continuous integration coverage for some specific platform, I can do it for you (for free) if you provide the following:
+
+- Access to the remote machine via ssh (or rsh) from the Internet
+- An user account called "libsrt"
+- Email client (for sending the errors)
+- Required packages: make (GNU make), compilers you want to support (e.g. gcc, clang, etc.), and Valgrind (if available)
+
+In the mid-term I could add the results to this README.md in the same way as e.g. Travis CI results, avoiding the need of sending emails.
 
 License
 ===
@@ -226,7 +240,7 @@ Other
 Changelog
 ---
 
-v0.0 (20150421) *pre-alpha*
+No release version, yet. Beta status: API may have changes (function renaming and parameter changes).
 
 "to do" list
 ---
