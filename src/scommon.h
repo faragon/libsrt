@@ -25,8 +25,10 @@ extern "C" {
 	#define S_NOT_UTF8_SPRINTF
 #else
 	#include <sys/types.h>
-	#include <alloca.h>
 	#include <unistd.h>
+#endif
+#ifndef __FreeBSD__
+	#include <alloca.h>
 #endif
 #include <stddef.h>
 #include <stdarg.h>
