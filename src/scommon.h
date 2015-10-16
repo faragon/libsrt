@@ -27,7 +27,7 @@ extern "C" {
 	#include <sys/types.h>
 	#include <unistd.h>
 #endif
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(_MSC_VER)
 	#include <alloca.h>
 #endif
 #include <stddef.h>
