@@ -58,14 +58,20 @@ LOG=out.txt
 ERRORS=0
 echo "make_test.sh start" > $LOG
 
+# Locate GNU Make
+if [ "$MAKE" == "" ]
+then
+	if type gmake >/dev/null 2>/dev/null ; then MAKE=gmake ; else MAKE=make ; fi
+fi
+
 for ((i = 0 ; i < ${#TEST_CC[@]}; i++))
 do
 	if type ${TEST_CC[$i]} >/dev/null 2>/dev/null
 	then
 		for ((j = 0 ; j < ${#INNER_LOOP_FLAGS[@]}; j++))
 		do
-			CMD="make CC=${TEST_CC[$i]} ${TEST_FLAGS[$i]} ${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
-			make clean >/dev/null 2>/dev/null
+			CMD="$MAKE CC=${TEST_CC[$i]} ${TEST_FLAGS[$i]} ${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
+			$MAKE clean >/dev/null 2>/dev/null
 			echo -n "Test #$i.$j: [$CMD] ..." | tee -a $LOG
 			if $CMD >>$LOG 2>&1 ; then
 				echo " OK" | tee -a $LOG
@@ -78,11 +84,20 @@ do
 	fi
 done
 
+VAL_ERR_TAG="ERROR SUMMARY:"
+VAL_ERR_FILE=valgrind.errors
+
 if type valgrind >/dev/null 2>/dev/null
 then
 	echo -n "Valgrind test..." | tee -a $LOG
-	if make clean >/dev/null 2>/dev/null ; make DEBUG=1 >>$LOG 2>&1 ; valgrind --track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./stest >>$LOG 2>&1 ; then
-		echo " OK" | tee -a $LOG
+	if $MAKE clean >/dev/null 2>/dev/null ; $MAKE DEBUG=1 >>$LOG 2>&1 ; valgrind --track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./stest >>$LOG 2>$VAL_ERR_FILE ; then
+		VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILE" | awk -F 'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
+		if (( $VAL_ERRS > 0 )) ; then
+			ERRORS=$((ERRORS + $VAL_ERRS))
+			echo " ERROR" | tee -a $LOG
+		else
+			echo " OK" | tee -a $LOG
+		fi
 	else 	echo " ERROR" | tee -a $LOG
 		ERRORS=$((ERRORS + 1))
 	fi
@@ -91,8 +106,8 @@ fi
 if type scan-build >/dev/null 2>/dev/null
 then
 	echo -n "Clang static analyzer..." | tee -a $LOG
-	make clean
-	if scan-build make CC=clang 2>&1 >clang_analysis.txt ; then
+	$MAKE clean
+	if scan-build $MAKE CC=clang 2>&1 >clang_analysis.txt ; then
 		echo " OK" | tee -a $LOG
 	else	echo " ERROR" | tee -a $LOG
 		ERRORS=$((ERRORS + 1))
