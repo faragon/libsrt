@@ -244,7 +244,7 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 	at = (cat && *v) ? get_size(*v) : 0;
 	const sbool_t overflow = off + n > ss0;
 	const size_t src_size = overflow ? ss0 - off : n,
-	erase_size = ss0 - off - src_size;
+		     erase_size = ss0 - off - src_size;
 	if (*v == src) { /* BEHAVIOR: aliasing: copy-only */
 		if (off + n >= ss0) { /* tail clean cut */
 			set_size(*v, off);
