@@ -2,6 +2,8 @@ master branch: [![Build Status (gcc/clang/tcc)](https://travis-ci.org/faragon/li
 
 master branch analysis: [![Build Status](https://scan.coverity.com/projects/5366/badge.svg)](https://scan.coverity.com/projects/5366)
 
+self-generated documentation: [libsrt documentation (HTML)](https://faragon.github.io/libsrt.html)
+
 libsrt has been included into Paul Hsieh's [String Library Comparisons](http://bstring.sourceforge.net/features.html) table. What a great honor! :-)
 
 libsrt: Simple Real-Time library for the C programming language
@@ -208,7 +210,7 @@ Test-covered platforms
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
-| ARM v5 (Feroceon) | 32 | little | no | Linux Debian "wheezy"| gcc, g++ | none | manual |
+| ARM v5 (Feroceon) | 32 | little | no | Linux Debian "wheezy" | gcc, g++ | none | manual |
 | ARM v6 (ARM11) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | ARM v7 (Krait 400) | 32 | little | yes | Linux Android 5.1.1 | gcc, g++ | none | manual |
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | Linux Vyatta | gcc, g++, clang, clang++ | Valgrind, clang | manual |
@@ -237,19 +239,19 @@ email: faragon.github (GMail account, add @gmail.com)
 Other
 ===
 
-Changelog
+Status
 ---
 
-No release version, yet. Beta status: API may have changes (function renaming and parameter changes).
+Beta. API still can change.
 
 "to do" list
 ---
 
-See doc/todo.md file.
+Check [doc/todo.md](https://github.com/faragon/libsrt/blob/master/doc/todo.md)
 
 
 Acknowledgements and references
 ---
 
-See doc/references.md file for acknowledgements and references.
+Check [doc/references.md](https://github.com/faragon/libsrt/blob/master/doc/references.md)
 

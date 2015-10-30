@@ -27,7 +27,7 @@ INDEX="$DOC_PATH_OUT/libsrt.html"
 
 cd ../src
 echo '<!DOCTYPE html><html><meta http-equiv="Content-Type" content="text/html; charset=latin1"><title>libsrt</title><body>'\
-     '<h1>libsrt documentation </h1><br><br>' > "$INDEX"
+     '<h3>libsrt documentation </h3><br><br>' > "$INDEX"
 for i in *\.h ; do
 	echo -n "$i: " >&2
 	if $XPWD/c2doc.py "Documentation for $i" < "$i" >"$DOC_PATH_OUT/$i.html" ; then

@@ -8,6 +8,7 @@ Short-term
 * List C library dependencies
 * Tests using stack space
 * Add tests covering expansion between small/medium/full strings
+* Add map counter (e.g. key-value, where value is a counter)
 * Write some examples
 * Tests
  * add grow from NULL tests

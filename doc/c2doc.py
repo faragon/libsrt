@@ -121,7 +121,7 @@ def fundoc2html( doc ) :
 
 def doc2html( doc, title ) :
 	i = 0
-	out = '<!doctype html><html><body><h1>' + title + '</h1><br>';
+	out = '<!doctype html><html><body><h3>' + title + '</h3><br>';
 	for i in range(0, len(doc) - 1) :
 		out += fundoc2html( doc[i] ) + '\n'
 	out += '</body></html>\n'
