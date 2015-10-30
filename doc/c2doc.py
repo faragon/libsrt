@@ -151,7 +151,7 @@ while i < num_lines :
 		if fun.find('(') >= 0 :
 			break
 	if (len(fun) > 0 ) :
-		doc.append(mkdoc(api, fun))
+		doc.append(mkdoc(api, fun.replace('S_INLINE ', '')))
 
 title = sys.argv[1] if len(sys.argv) > 1 else ''
 
