@@ -151,6 +151,9 @@ void ss_set_len(ss_t *s, const size_t bytes_in_use);
 /* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
 char *ss_get_buffer(ss_t *s);
 
+/* #API: |Get string buffer access (read-only)|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
+const char *ss_get_buffer_r(const ss_t *s);
+
 /* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| */
 sbool_t ss_alloc_errors(const ss_t *s);
 
@@ -685,6 +688,9 @@ int ss_popchar(ss_t **s);
 
 /* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
 ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes);
+
+/* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n)|0;1| */
+ssize_t ss_write(const int handle, const ss_t *s, const size_t offset, const size_t bytes);
 
 /*
  * Hashing

@@ -848,17 +848,30 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 static ssize_t aux_read(ss_t **s, const sbool_t cat, const int handle,
 			const size_t max_bytes)
 {
-	ssize_t l = -1;
+	ssize_t l = -1, l0;
 	if (handle >= 0 && max_bytes > 0) {
 		size_t ss = sd_get_size(*s),
 			    off = cat ? ss : 0,
-			    new_size = off + max_bytes;
-		if (ss_reserve(s, new_size) >= new_size) {
-			char *sc = get_str(*s);
-			l = read(handle, sc + off, max_bytes);
-			if (l > 0) {
-				set_size(*s, new_size);
-				set_unicode_size_cached(*s, S_FALSE);
+			    max_off = off + max_bytes,
+			    def_buf = 16384,
+			    buf_size;
+		for (; off < max_off;) {
+			buf_size = off + def_buf < max_off ? def_buf :
+							     max_off - off;
+			if (ss_reserve(s, off + buf_size) >= off + buf_size) {
+				char *sc = get_str(*s);
+				l0 = read(handle, sc + off, buf_size);
+				if (l0 > 0) {
+					off += l0;
+					set_size(*s, off);
+					set_unicode_size_cached(*s, S_FALSE);
+					l = l < 0 ? l0 : l + l0;
+				} else {
+					break;
+				}
+			} else { /* BEHAVIOR */
+				S_ERROR("not enough memory");
+				break;
 			}
 		}
 	}
@@ -991,6 +1004,11 @@ void ss_set_len(ss_t *s, const size_t new_len)
 char *ss_get_buffer(ss_t *s)
 {
 	return s ? get_str(s) : NULL;
+}
+
+const char *ss_get_buffer_r(const ss_t *s)
+{
+	return s ? get_str_r(s) : NULL;
 }
 
 sbool_t ss_alloc_errors(const ss_t *s)
@@ -1943,6 +1961,14 @@ int ss_popchar(ss_t **s)
 ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes)
 {
 	return aux_read(s, S_FALSE, handle, max_bytes);
+}
+
+ssize_t ss_write(const int handle, const ss_t *s, const size_t offset, const size_t bytes)
+{
+	ssize_t res = -1;
+	size_t ss = s ? ss_size(s) : 0,
+	       wr_size = handle >= 0 && offset > ss ? 0 : ss - offset;
+	return wr_size > 0 ? write(handle, get_str_r(s), wr_size) : -1;
 }
 
 /*
