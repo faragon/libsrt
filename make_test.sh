@@ -120,7 +120,9 @@ then
 	DOC_OUT=$PWD/doc_out
 	mkdir "$DOC_OUT" 2>/dev/null
 	cd doc
-	./mk_doc.sh "$DOC_OUT"
+	if ! ./mk_doc.sh "$DOC_OUT" ; then
+		ERRORS=$((ERRORS + 1))
+	fi
 	cd ..
 fi
 
