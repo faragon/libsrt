@@ -334,6 +334,22 @@ S_INLINE suint32_t *s_mar_u32(void *a)
 	return (suint32_t *)a;
 }
 
+S_INLINE unsigned short s_ld_le_u16(const void *a)
+{
+	const unsigned char *p = (const unsigned char *)a;
+	return p[1] << 8 | p[0];
+}
+
+S_INLINE unsigned short s_st_le_u16(void *a, unsigned short v)
+{
+	unsigned char *p = (unsigned char *)a;
+	p[0] = (unsigned char)v;
+	p[1] = (unsigned char)(v >> 8);
+}
+
+#define S_LD_LE_U16(a) s_ld_le_u16(a)
+#define S_ST_LE_U16(a, v) s_st_le_u16(a, v)
+
 #ifdef S_UNALIGNED_MEMORY_ACCESS
 	#define S_LD_U32(a) s_ld_u32((const void *)(a))
 	#define S_LD_U64(a) s_ld_u64((const void *)(a))

@@ -139,7 +139,7 @@ size_t ss_len_u(ss_t *s);
 /* #API: |Allocated space|string|current allocated space (bytes)|O(1)|1;2| */
 size_t ss_capacity(const ss_t *s);
 
-/* #API: |Preallocated space left|string|allocated space left|O(1)|1;2| */
+/* #API: |Preallocated space left|string;xx|allocated space left|O(1)|1;2| */
 size_t ss_len_left(const ss_t *s);
 
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
@@ -153,6 +153,9 @@ char *ss_get_buffer(ss_t *s);
 
 /* #API: |Get string buffer access (read-only)|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
 const char *ss_get_buffer_r(const ss_t *s);
+
+/* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;1| */
+size_t ss_real_off(const ss_t *s, const size_t off);
 
 /* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| */
 sbool_t ss_alloc_errors(const ss_t *s);
@@ -636,6 +639,33 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
 
 /* #API: |Find substring into string|input string; search offset start; target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt);
+
+/* #API: |Find blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findb(const ss_t *s, const size_t off);
+
+/* #API: |Find byte(s) via mask into string|input string; search offset start; target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const char excl_mask);
+
+/* #API: |Find character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findc(const ss_t *s, const size_t off, const int c);
+
+/* #API: |Find non-blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findnb(const ss_t *s, const size_t off);
+
+/* #API: |Find substring into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
+size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_t *tgt);
+
+/* #API: |Find blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off);
+
+/* #API: |Find byte(s) via mask into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const char excl_mask);
+
+/* #API: |Find character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c);
+
+/* #API: |Find non-blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off);
 
 /* #API: |Split/tokenize: break string by separators|output offset structure;input string; separator|Number of elements|O(n)|1;2| */
 size_t ss_split(sv_t **offsets, const ss_t *src, const ss_t *separator);

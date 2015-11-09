@@ -1011,6 +1011,11 @@ const char *ss_get_buffer_r(const ss_t *s)
 	return s ? get_str_r(s) : NULL;
 }
 
+size_t ss_real_off(const ss_t *s, const size_t off)
+{
+	return off == S_NPOS ? sd_get_size(s) : off;
+}
+
 sbool_t ss_alloc_errors(const ss_t *s)
 {
 	return (!s || s->alloc_errors) ? S_TRUE : S_FALSE;
@@ -1773,14 +1778,76 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt)
 {
-	if (!s || !tgt)
-		return S_NPOS;
-	const size_t ss = sd_get_size(s), ts = sd_get_size(tgt);
+	return ss_findr(s, off, S_NPOS, tgt);
+}
+
+size_t ss_findb(const ss_t *s, const size_t off)
+{
+	return ss_findrb(s, off, S_NPOS);
+}
+
+size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const char excl_mask)
+{
+	return ss_findrbm(s, off, S_NPOS, incl_mask, excl_mask);
+}
+
+size_t ss_findc(const ss_t *s, const size_t off, const int c)
+{
+	return ss_findrc(s, off, S_NPOS, c);
+}
+
+size_t ss_findnb(const ss_t *s, const size_t off)
+{
+	return ss_findrnb(s, off, S_NPOS);
+}
+
+size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_t *tgt)
+{
+	RETURN_IF(!s || !tgt, S_NPOS);
+	const size_t ss = ss_real_off(s, max_off), ts = sd_get_size(tgt);
 	if (ss == 0 || ts == 0 || (off + ts) > ss)
 		return S_NPOS;
 	const char *s0 = get_str_r(s), *t0 = get_str_r(tgt);
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
+
+#define SS_FINDRX_AUX(LOOP_STOP_COND) {					\
+	RETURN_IF(!s || off == S_NPOS || max_off < off, S_NPOS);	\
+	const char *p0 = get_str_r(s), *p = p0 + off,			\
+		   *pm = p0 + ss_real_off(s, max_off);			\
+	for (; p < pm ; p++)			       			\
+		if (LOOP_STOP_COND)					\
+			break;						\
+	return p < pm ? p - p0 : S_NPOS; }
+
+size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
+{
+	SS_FINDRX_AUX(*p == 9 || *p == 10 || *p == 13 || *p == 32);
+}
+
+size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const char excl_mask)
+{
+	SS_FINDRX_AUX((*p & incl_mask) == incl_mask && (*p & excl_mask & ~incl_mask) == 0);
+}
+
+size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c)
+{
+	/* ASCII search */
+	if (c < 128)
+		SS_FINDRX_AUX(*p == c);
+	/* Unicode search */
+	RETURN_IF(!s || off == S_NPOS, S_NPOS);
+	ss_t *tmps = ss_alloc(16);
+	ss_cat_char(&tmps, c);
+	return ss_findr(s, off, max_off, tmps);
+}
+
+size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off)
+{
+	SS_FINDRX_AUX(*p != 9 && *p != 10 && *p != 13 && *p != 32);
+}
+
+#undef SS_FINDRX_AUX
 
 size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
 {
