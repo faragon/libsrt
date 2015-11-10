@@ -139,7 +139,7 @@ size_t ss_len_u(ss_t *s);
 /* #API: |Allocated space|string|current allocated space (bytes)|O(1)|1;2| */
 size_t ss_capacity(const ss_t *s);
 
-/* #API: |Preallocated space left|string;xx|allocated space left|O(1)|1;2| */
+/* #API: |Preallocated space left|string|allocated space left|O(1)|1;2| */
 size_t ss_len_left(const ss_t *s);
 
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
