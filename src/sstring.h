@@ -133,6 +133,9 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size);
  * Accessors
  */
 
+/* #API: |Random access to byte|string; offset (bytes)|0..255: byte retrieved ok; < 0: out of range|O(1)|0;12| */
+int ss_at(const ss_t *s, size_t off);
+
 /* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed|1;2| */
 size_t ss_len_u(ss_t *s);
 

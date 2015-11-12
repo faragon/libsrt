@@ -112,7 +112,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
  */
 
 static struct SSTR_Small ss_void0 = EMPTY_SS;
-static ss_t *ss_void = (ss_t *)&ss_void0; /* empty string with alloc error set */
+static ss_t *ss_void = (ss_t *)&ss_void0; /* empty string w/ alloc error set */
 
 /*
  * Forward definitions for some static functions
@@ -120,7 +120,7 @@ static ss_t *ss_void = (ss_t *)&ss_void0; /* empty string with alloc error set *
 
 static size_t ss_get_max_size(const ss_t *s);
 static void ss_reset(ss_t *s, const size_t alloc_size, const sbool_t ext_buf);
-static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz);
+static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_t_sz);
 
 /*
  * Global variables (used only for Turkish mode)
@@ -274,15 +274,15 @@ static void ss_reset(ss_t *s, const size_t alloc_size, const sbool_t ext_buf)
 	}
 }
 
-static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_mt_sz)
+static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_t_sz)
 {
 	size_t size = sd_get_size(s), unicode_size = get_unicode_size(s);
 	char *s_str = get_str(s);
 	/* Compute offset on target location: */
 	struct SSTR_Small sm;
 	struct SSTR_Full sf;
-	const size_t s2_off = new_mt_sz == SS_METAINFO_SMALL?
-				sm.str -(char *)&sm : sf.str - (char *)&sf;
+	const size_t s2_off = new_t_sz == SS_METAINFO_SMALL ?
+			      sm.str -(char *)&sm : sf.str - (char *)&sf;
 	/* Convert string: */
 	memmove((char *)s + s2_off, s_str, size);
 	s->is_full = sd_alloc_size_to_is_big(new_alloc_size, &ssf);
@@ -956,6 +956,12 @@ ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size)
  * Accessors
  */
 
+int ss_at(const ss_t *s, size_t off)
+{
+	const size_t ss = ss_size(s);
+	return off < ss ? get_str_r(s)[off] : -1;
+}
+
 size_t ss_len_u(ss_t *s)
 {
 	S_ASSERT(s);
@@ -1459,13 +1465,17 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 }
 
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
-		    const size_t sub_size)
+		    const size_t sub_size0)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF(!src, ss_check(s)); /* same string */
 	const char *src_str = NULL, *src_aux;
 	size_t src_unicode_size = 0;
-	const size_t src_off = get_str_off(src) + sub_off; 
+	const size_t src_off = get_str_off(src) + sub_off,
+		     srcs = ss_size(src);
+	RETURN_IF(sub_off > srcs, ss_check(s)); /* out of range */
+	const size_t sub_size = S_MIN(srcs - sub_off, sub_size0);
+	RETURN_IF(sub_off > sub_size, ss_check(s)); /* concat empty string */
 	if (*s == src && !(*s)->ext_buffer) {
 		/* Aliasing case: make grow the buffer in order
 		   to keep the reference to the data valid. */
@@ -1481,7 +1491,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 }
 
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
-							const size_t n)
+		      const size_t n)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src) {
@@ -1786,7 +1796,8 @@ size_t ss_findb(const ss_t *s, const size_t off)
 	return ss_findrb(s, off, S_NPOS);
 }
 
-size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const char excl_mask)
+size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask,
+		 const char excl_mask)
 {
 	return ss_findrbm(s, off, S_NPOS, incl_mask, excl_mask);
 }
@@ -1801,7 +1812,8 @@ size_t ss_findnb(const ss_t *s, const size_t off)
 	return ss_findrnb(s, off, S_NPOS);
 }
 
-size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_t *tgt)
+size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off,
+		const ss_t *tgt)
 {
 	RETURN_IF(!s || !tgt, S_NPOS);
 	const size_t ss = ss_real_off(s, max_off), ts = sd_get_size(tgt);
@@ -1825,12 +1837,15 @@ size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
 	SS_FINDRX_AUX(*p == 9 || *p == 10 || *p == 13 || *p == 32);
 }
 
-size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const char excl_mask)
+size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off,
+		  const char incl_mask, const char excl_mask)
 {
-	SS_FINDRX_AUX((*p & incl_mask) == incl_mask && (*p & excl_mask & ~incl_mask) == 0);
+	SS_FINDRX_AUX((*p & incl_mask) == incl_mask &&
+		      (*p & excl_mask & ~incl_mask) == 0);
 }
 
-size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c)
+size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off,
+		 const int c)
 {
 	/* ASCII search */
 	if (c < 128)
@@ -2030,7 +2045,8 @@ ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes)
 	return aux_read(s, S_FALSE, handle, max_bytes);
 }
 
-ssize_t ss_write(const int handle, const ss_t *s, const size_t offset, const size_t bytes)
+ssize_t ss_write(const int handle, const ss_t *s, const size_t offset,
+		 const size_t bytes)
 {
 	ssize_t res = -1;
 	size_t ss = s ? ss_size(s) : 0,
