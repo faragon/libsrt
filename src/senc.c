@@ -591,8 +591,9 @@ S_INLINE size_t senc_esc_byte_req_size(const unsigned char *s,
 	return sso;
 }
 
-static size_t senc_esc_byte(const unsigned char *s, const size_t ss, unsigned char tgt,
-		     unsigned char *o, const size_t known_sso)
+static size_t senc_esc_byte(const unsigned char *s, const size_t ss,
+			    unsigned char tgt, unsigned char *o,
+			    const size_t known_sso)
 {
 	RETURN_IF(!s, 0);
 	size_t sso = known_sso ? known_sso : senc_esc_byte_req_size(s, tgt, ss);
@@ -607,8 +608,8 @@ static size_t senc_esc_byte(const unsigned char *s, const size_t ss, unsigned ch
 	return sso;
 }
 
-static size_t sdec_esc_byte(const unsigned char *s, const size_t ss, unsigned char tgt,
-		     unsigned char *o)
+static size_t sdec_esc_byte(const unsigned char *s, const size_t ss,
+			    unsigned char tgt, unsigned char *o)
 {
 	RETURN_IF(!o, ss);
 	RETURN_IF(!s || !ss, 0);
@@ -623,22 +624,26 @@ static size_t sdec_esc_byte(const unsigned char *s, const size_t ss, unsigned ch
 	return j;
 }
 
-size_t senc_esc_dquote(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso)
+size_t senc_esc_dquote(const unsigned char *s, const size_t ss,
+		       unsigned char *o, const size_t known_sso)
 {
 	return senc_esc_byte(s, ss, '\"', o, known_sso);
 }
 
-size_t sdec_esc_dquote(const unsigned char *s, const size_t ss, unsigned char *o)
+size_t sdec_esc_dquote(const unsigned char *s, const size_t ss,
+		       unsigned char *o)
 {
 	return sdec_esc_byte(s, ss, '\"', o);
 }
 
-size_t senc_esc_squote(const unsigned char *s, const size_t ss, unsigned char *o, const size_t known_sso)
+size_t senc_esc_squote(const unsigned char *s, const size_t ss,
+		       unsigned char *o, const size_t known_sso)
 {
 	return senc_esc_byte(s, ss, '\'', o, known_sso);
 }
 
-size_t sdec_esc_squote(const unsigned char *s, const size_t ss, unsigned char *o)
+size_t sdec_esc_squote(const unsigned char *s, const size_t ss,
+		       unsigned char *o)
 {
 	return sdec_esc_byte(s, ss, '\'', o);
 
