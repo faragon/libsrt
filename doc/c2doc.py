@@ -93,7 +93,7 @@ def fundoc2html( doc ) :
 	fun_os = doc[3][1] if len(doc) > 3 and len(doc[3]) >= 2 else ''
 	fun_coverage = atoi(doc[4][0]) if len(doc) > 4 and len(doc[4]) > 0 else 0
 	fun_quality = atoi(doc[4][1]) if len(doc) > 4 and len(doc[4]) > 1 else 0
-	proto = '<i>' + fun_ret + '</i><b>' + fun_name + '</b>('
+	proto = '<i>' + fun_ret + '</i><b><a name="' + fun_name + '">' + fun_name + '</a></b>('
 	i = 0
 	while i < len(fun_params) :
 		proto += '<i>' + fun_params[i].strip() + '</i>'
@@ -122,6 +122,11 @@ def fundoc2html( doc ) :
 def doc2html( doc, title ) :
 	i = 0
 	out = '<!doctype html><html><body><h3>' + title + '</h3><br>';
+	# Index:
+	for i in range(0, len(doc) - 1) :
+		out += '<a href="#' + doc[i][0][0] + '">' + doc[i][0][0] + '</a><br>';
+	out += '<br><br>'
+	# Functions:
 	for i in range(0, len(doc) - 1) :
 		out += fundoc2html( doc[i] ) + '\n'
 	out += '</body></html>\n'
