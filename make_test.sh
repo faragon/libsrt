@@ -126,5 +126,11 @@ then
 	cd ..
 fi
 
+# Check C style (look for lines larger than 80 characters):
+if (( $(grep  '.\{81,\}' src/*c examples/*c | wc -l) > 0 )) ; then
+	echo "Style error" | tee -a $LOG
+	ERRORS=$((ERRORS + 1))
+fi
+
 exit $ERRORS
 
