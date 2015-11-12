@@ -1096,7 +1096,8 @@ static int test_ss_to_w(const char *in)
 static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 : (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
+	int res = (!sa || !sb) ? 1 :
+		  (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1663,24 +1664,24 @@ static int test_sv_cpy_resize()
 static int test_sv_cat()
 {
 	int res = 0;
-	const int val = 123;
+	const int w = 123;
 	TEST_SV_CAT(z, 0, sv_alloc, sv_push,
 		    ((const struct AA *)sv_at(z, 3))->a == a1.a,
 		    ((const struct AA *)sv_pop(z))->a ==
 					((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), &a1);
-	#define SVIAT(v) sv_i_at(v, 3) == val
-	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)val
+	#define SVIAT(v) sv_i_at(v, 3) == w
+	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)w
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
 	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
-	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, val);
-	TEST_SV_CAT(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8, val);
-	TEST_SV_CAT(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), CHKPI(d), SV_I16, val);
-	TEST_SV_CAT(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), CHKPU(e), SV_U16, val);
-	TEST_SV_CAT(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), CHKPI(f), SV_I32, val);
-	TEST_SV_CAT(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), CHKPU(g), SV_U32, val);
-	TEST_SV_CAT(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), CHKPI(h), SV_I64, val);
-	TEST_SV_CAT(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64, val);
+	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8, w);
+	TEST_SV_CAT(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8, w);
+	TEST_SV_CAT(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), CHKPI(d), SV_I16, w);
+	TEST_SV_CAT(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), CHKPU(e), SV_U16, w);
+	TEST_SV_CAT(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), CHKPI(f), SV_I32, w);
+	TEST_SV_CAT(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), CHKPU(g), SV_U32, w);
+	TEST_SV_CAT(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), CHKPI(h), SV_I64, w);
+	TEST_SV_CAT(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64, w);
 	#undef SVIAT
 	#undef SVUAT
 	#undef CHKPI
@@ -2029,7 +2030,8 @@ static int test_st_insert_del()
 		ST_CHK_BRK(t, 1, 2);
 		n0.k = tree_elems - 1;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != (cbase + tree_elems - 1) || st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != (cbase + tree_elems - 1) ||
+		    st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 3;
 			break;
 		}
@@ -2044,22 +2046,24 @@ static int test_st_insert_del()
 		ST_CHK_BRK(t, 1, 5);
 		n0.k = tree_elems - 1;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != (cbase + tree_elems - 1) || st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != (cbase + tree_elems - 1) ||
+		    st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 6;
 			break;
 		}
 		ST_A_DEL(tree_elems - 1);
 		ST_CHK_BRK(t, 0, tree_elems);
 		/* Case 3: add in order, delete in reverse order */
-		for (i = 0; i < (int)tree_elems; i++)
-			ST_A_INS(i, cbase + i);	/* ST_A_INS(2, 'c');  <- double rotation */
+		for (i = 0; i < (int)tree_elems; i++) /* ST_A_INS(2, 'c'); */
+			ST_A_INS(i, cbase + i);	      /* double rotation   */
 		ST_CHK_BRK(t, tree_elems, 8);
 		for (i = (tree_elems - 1); i > 0; i--)
 			ST_A_DEL(i);
 		ST_CHK_BRK(t, 1, 9);
 		n0.k = 0;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != cbase || st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != cbase ||
+		    st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 10;
 			break;
 		}
@@ -2240,7 +2244,8 @@ static int test_sm_s_count()
 	sm_si_insert(&m, s, 1);
 	sm_si_insert(&m, t, 2);
 	sm_si_insert(&m, u, 3);
-	int res = sm_s_count(m, s) && sm_s_count(m, t) && sm_s_count(m, u) ? 0 : 1;
+	int res = sm_s_count(m, s) && sm_s_count(m, t) &&
+		  sm_s_count(m, u) ? 0 : 1;
 	ss_free(&s, &t, &u);
 	sm_free(&m);
 	return res;
@@ -2364,7 +2369,8 @@ static int test_sm_double_rotation()
 		if (res)
 			break;
 		/*
-		 * Delete pair elements (it triggers double-rotation cases in the tree code of map implementation)
+		 * Delete pair elements (it triggers double-rotation cases
+		 * in the tree code of map implementation)
 		 */
 		for (i = test_elems; i > 0; i--) {
 			if ((i % 2))
@@ -2540,13 +2546,20 @@ int main()
 	STEST_ASSERT(test_ss_erase_u("abcde", 2, 10000, "ab"));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 5, ""));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 10000, ""));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 1, 2, "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1, "\xc3\x91" "a"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1000, "\xc3\x91" "a"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 1, 2, "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1, "\xc3\x91" "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1000, "\xc3\x91" "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 0, 1, "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 1, 2,
+				     "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1,
+				     "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1000,
+				     "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 1, 2,
+				     "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1,
+				     "\xc3\x91" "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1000,
+				     "\xc3\x91" "\xc3\x91"));
+	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 0, 1,
+				     "\xc3\x91" "a"));
 	STEST_ASSERT(test_ss_free(0));
 	STEST_ASSERT(test_ss_free(16));
 	STEST_ASSERT(test_ss_len("hello", 5));
@@ -2572,7 +2585,7 @@ int main()
 	STEST_ASSERT(test_ss_dup_int(-9223372036854775807LL,
 				     "-9223372036854775807"));
 
-#define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b)		\
+#define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b) {		\
 	STEST_ASSERT(test_ss_dup_##encc(a, b));			\
 	STEST_ASSERT(test_ss_cpy_##encc(a, b)); 		\
 	STEST_ASSERT(test_ss_cat_##encc("abc", a, "abc" b));	\
@@ -2580,23 +2593,29 @@ int main()
 	STEST_ASSERT(test_ss_dup_##decc(b, a));			\
 	STEST_ASSERT(test_ss_cpy_##decc(b, a)); 		\
 	STEST_ASSERT(test_ss_cat_##decc("abc", b, "abc" a));	\
-	STEST_ASSERT(test_ss_cat_##decc("ABC", b, "ABC" a));
+	STEST_ASSERT(test_ss_cat_##decc("ABC", b, "ABC" a)); }
 
 	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, "HELLO", "hello");
-	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "0123456789ABCDEF", "MDEyMzQ1Njc4OUFCQ0RFRg==");
+	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "0123456789ABCDEF",
+			       "MDEyMzQ1Njc4OUFCQ0RFRg==");
 	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "01", "MDE=");
 	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "\xff\xff", "ffff");
 	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "01z", "30317a");
-	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "0123456789ABCDEF", "30313233343536373839414243444546");
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "0123456789ABCDEF",
+			       "30313233343536373839414243444546");
 	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "\xff\xff", "FFFF");
 	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "01z", "30317A");
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml, "hi\"&'<>there", "hi&quot;&amp;&apos;&lt;&gt;there");
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json, "\b\t\f\n\r\"\x5c", "\\b\\t\\f\\n\\r\\\"\x5c\x5c");
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url, "0189ABCXYZ-_.~abcxyz \\/&!?<>",
-					    "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E");
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_dquote, dec_esc_dquote, "\"how\" are you?", "\"\"how\"\" are you?");
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_squote, dec_esc_squote, "'how' are you?", "''how'' are you?");
-
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml, "hi\"&'<>there",
+			       "hi&quot;&amp;&apos;&lt;&gt;there");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json, "\b\t\f\n\r\"\x5c",
+			       "\\b\\t\\f\\n\\r\\\"\x5c\x5c");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url,
+			       "0189ABCXYZ-_.~abcxyz \\/&!?<>",
+			       "0189ABCXYZ-_.~abcxyz%20%5C%2F%26%21%3F%3C%3E");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_dquote, dec_esc_dquote,
+			       "\"how\" are you?", "\"\"how\"\" are you?");
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_squote, dec_esc_squote,
+			       "'how' are you?", "''how'' are you?");
 	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_dup_erase_u());
         STEST_ASSERT(test_ss_dup_replace("hello", "ll", "*LL*", "he*LL*o"));
@@ -2609,9 +2628,8 @@ int main()
 	STEST_ASSERT(test_ss_dup_printf_va("abc1helloFFFFFFFF", 512,
 					   "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_dup_char('a', "a"));
-	if (sizeof(wchar_t) > 2) {
+	if (sizeof(wchar_t) > 2)
 		STEST_ASSERT(test_ss_dup_char(0x24b62, "\xf0\xa4\xad\xa2"));
-	}
 	STEST_ASSERT(test_ss_dup_read("abc"));
 	STEST_ASSERT(test_ss_dup_read("a\nb\tc\rd\te\ff"));
 	STEST_ASSERT(test_ss_cpy(""));
@@ -2628,8 +2646,10 @@ int main()
 	STEST_ASSERT(test_ss_cpy_int(-1, "-1"));
 	STEST_ASSERT(test_ss_cpy_int(2147483647, "2147483647"));
 	STEST_ASSERT(test_ss_cpy_int(-2147483647, "-2147483647"));
-	STEST_ASSERT(test_ss_cpy_int(9223372036854775807LL, "9223372036854775807"));
-	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807LL, "-9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_int(9223372036854775807LL,
+				     "9223372036854775807"));
+	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807LL,
+				     "-9223372036854775807"));
 	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_cpy_erase_u());
 	STEST_ASSERT(test_ss_cpy_replace("hello", "ll", "*LL*", "he*LL*o"));
@@ -2642,9 +2662,8 @@ int main()
 	STEST_ASSERT(test_ss_cpy_printf_va("abc1helloFFFFFFFF", 512,
 	       			    "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_cpy_char('a', "a"));
-	if (sizeof(wchar_t) > 2) {
+	if (sizeof(wchar_t) > 2)
 		STEST_ASSERT(test_ss_cpy_char(0x24b62, "\xf0\xa4\xad\xa2"));
-	}
 	STEST_ASSERT(test_ss_cat("hello", "all"));
 	STEST_ASSERT(test_ss_cat_sub());
 	STEST_ASSERT(test_ss_cat_substr());
@@ -2661,7 +2680,8 @@ int main()
 	STEST_ASSERT(test_ss_cat_int("prefix", 1, "prefix1"));
 	STEST_ASSERT(test_ss_cat_erase("x", "hello", 2, 2, "xheo"));
 	STEST_ASSERT(test_ss_cat_erase_u());
-	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*", "xhe*LL*o"));
+	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*",
+					 "xhe*LL*o"));
 	STEST_ASSERT(test_ss_cat_resize());
 	STEST_ASSERT(test_ss_cat_resize_u());
 	STEST_ASSERT(test_ss_cat_trim("aaa", " hello ", "aaahello"));
@@ -2671,8 +2691,10 @@ int main()
 	STEST_ASSERT(test_ss_cat_printf_va());
 	STEST_ASSERT(test_ss_cat_char());
 	STEST_ASSERT(test_ss_popchar());
-	STEST_ASSERT(test_ss_tolower("aBcDeFgHiJkLmNoPqRsTuVwXyZ", "abcdefghijklmnopqrstuvwxyz"));
-	STEST_ASSERT(test_ss_toupper("aBcDeFgHiJkLmNoPqRsTuVwXyZ", "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
+	STEST_ASSERT(test_ss_tolower("aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+				     "abcdefghijklmnopqrstuvwxyz"));
+	STEST_ASSERT(test_ss_toupper("aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+				     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
 #if !defined(S_MINIMAL_BUILD)
 	STEST_ASSERT(test_ss_tolower("\xc3\x91", "\xc3\xb1"));
 	STEST_ASSERT(test_ss_toupper("\xc3\xb1", "\xc3\x91"));
@@ -2682,9 +2704,9 @@ int main()
 	STEST_ASSERT(test_ss_toupper("\xc4\xb1", "I"));
 	STEST_ASSERT(test_ss_tolower("\xc4\xb0", "i")); /* 0x130 -> 0x69 */
 	STEST_ASSERT(test_ss_toupper("i", "\xc4\xb0"));
-	STEST_ASSERT(test_ss_tolower("\xc4\x9e", "\xc4\x9f")); /* 0x11e -> 0x11f */
+	STEST_ASSERT(test_ss_tolower("\xc4\x9e", "\xc4\x9f")); /* 0x11e 0x11f */
 	STEST_ASSERT(test_ss_toupper("\xc4\x9f", "\xc4\x9e"));
-	STEST_ASSERT(test_ss_tolower("\xc5\x9e", "\xc5\x9f")); /* 0x15e -> 0x15f */
+	STEST_ASSERT(test_ss_tolower("\xc5\x9e", "\xc5\x9f")); /* 0x15e 0x15f */
 	STEST_ASSERT(test_ss_toupper("\xc5\x9f", "\xc5\x9e"));
 	STEST_ASSERT(!ss_set_turkish_mode(0));
 #endif
@@ -2738,8 +2760,10 @@ int main()
 	STEST_ASSERT(test_ss_read());
 	STEST_ASSERT(test_ss_csum32());
 	STEST_ASSERT(test_ss_null());
-	/*                          $       cent        euro            chinese             N~          n~         */
-	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac", "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };
+	/*                          $       cent        euro
+	 *		       chinese             N~          n~         */
+	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac",
+			       "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };
 	const sint32_t uc[] = { 'a', 0x24, 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
 	unsigned i = 0;
 	for (; i < sizeof(utf8) / sizeof(utf8[0]); i++) {
@@ -2751,12 +2775,14 @@ int main()
 	 */
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(S_MINIMAL_BUILD)
 	if (unicode_support) {
-		const size_t wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff : 0x3fffff;
+		const size_t wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff :
+								  0x3fffff;
 		size_t test_tolower = 0;
 		for (i = 0; i <= wchar_range; i++) {
 			unsigned l0 = towlower(i), l = sc_tolower(i);
 			if (l != l0) {
-				fprintf(stderr, "%x %x [%x system reported]\n", i, l, l0);
+				fprintf(stderr, "%x %x [%x system reported]\n",
+					i, l, l0);
 				test_tolower++;
 			}
 		}
@@ -2765,7 +2791,8 @@ int main()
 		for (i = 0; i <= wchar_range; i++) {
 			unsigned u0 = towupper(i), u = sc_toupper(i);
 			if (u != u0) {
-				fprintf(stderr, "%x %x [%x system reported]\n", i, u, u0);
+				fprintf(stderr, "%x %x [%x system reported]\n",
+					i, u, u0);
 				test_toupper++;
 			}
 		}

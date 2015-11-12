@@ -25,8 +25,10 @@ enum EncMode
 
 struct TableCodec;
 
-typedef size_t (*f_dec2x)(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2);
-typedef void (*f_enc)(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out);
+typedef size_t (*f_dec2x)(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+			  ss_t **tmp, ss_t **tmp2);
+typedef void (*f_enc)(enum EncMode em, size_t nfields, ss_t **field_l,
+		      ss_t **field_r, ss_t **out);
 
 struct TableCodec
 {
@@ -34,20 +36,30 @@ struct TableCodec
 	f_enc enc;
 };
 
-static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2);
-static size_t xml2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2);
-static size_t json2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2);
-static size_t url2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2);
-static void enc_csv(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out);
-static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out);
-static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out);
-static void enc_url(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out);
-static ssize_t process_row(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2, sbool_t force_flush);
+static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2);
+static size_t xml2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2);
+static size_t json2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		     ss_t **tmp, ss_t **tmp2);
+static size_t url2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2);
+static void enc_csv(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out);
+static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out);
+static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l,
+		     ss_t **field_r, ss_t **out);
+static void enc_url(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out);
+static ssize_t process_row(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+			   ss_t **tmp, ss_t **tmp2, sbool_t force_flush);
 
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
-        fprintf(stderr, "[INCOMPLETE, work in progress] Table import/export (libsrt example). Returns: number of "
+        fprintf(stderr, "[INCOMPLETE, work in progress] Table import/export "
+		"(libsrt example). Returns: number of "
                 "processed rows\nError [%i] Syntax: %s -c{c|x|j|u}{c|x|j|u}\n"
 		"(where: c = csv, x = xml, j = json, u = url)\n"
 		"Examples:\n"
@@ -65,17 +77,17 @@ int main(int argc, const char **argv)
 	size_t num_rows = 0;
 	struct TableCodec tcd = { NULL, NULL };
 	tcd.dec2x = argv[1][1] == 'c' ? csv2x : argv[1][1] == 'x' ? xml2x :
-		    argv[1][1] == 'j' ? json2x : argv[1][1] == 'u' ? url2x : NULL;
+		    argv[1][1] == 'j' ? json2x : argv[1][1] == 'u' ? url2x :
+		    NULL;
 	tcd.enc = argv[1][2] == 'c' ? enc_csv : argv[1][2] == 'x' ? enc_xml :
-		  argv[1][2] == 'j' ? enc_json : argv[1][2] == 'u' ? enc_url : NULL;
+		  argv[1][2] == 'j' ? enc_json : argv[1][2] == 'u' ? enc_url :
+		  NULL;
 	if (!tcd.dec2x || !tcd.enc)
 		return syntax_error(argv, 2);
-	int c = 0;
 	ssize_t l, off, off2;
 	char buf[TABLE_BUF_SIZE];
 	sbool_t new_line = S_FALSE;
 	ss_t *line = NULL, *out = NULL, *tmp = NULL, *tmp2 = NULL;
-	ssize_t j;
 	for (;;) {
 		l = read(0, buf, TABLE_BUF_SIZE);
 		if (l <= 0)
@@ -92,7 +104,8 @@ int main(int argc, const char **argv)
 			if (off2 == l)
 				break;
 			if (new_line) {
-				if (process_row(&tcd, line, &out, &tmp, &tmp2, S_FALSE) < 0) {
+				if (process_row(&tcd, line, &out, &tmp, &tmp2,
+						S_FALSE) < 0) {
 					exit_code = 3;
 					goto main_abort;
 				}
@@ -108,14 +121,16 @@ main_abort:
 	return exit_code;
 }
 
-static void enc_csv(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out)
+static void enc_csv(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out)
 {
 	switch (em) {
 	case SENC_start_row:
 		break;
 	case SENC_write_field:
 #ifdef DBG_TABLE
-		fprintf(stderr, "enc_csv write_field: '%s', '%s'\n", ss_to_c(*field_l), ss_to_c(*field_r));
+		fprintf(stderr, "enc_csv write_field: '%s', '%s'\n",
+			ss_to_c(*field_l), ss_to_c(*field_r));
 #endif
 		if (nfields > 2) /* Not the first two pairs */
 			ss_cat_cn(out, ",\"", 2);
@@ -138,7 +153,8 @@ static void enc_csv(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fiel
 	}
 }
 
-static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out)
+static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out)
 {
 	switch (em) {
 	case SENC_start_row:
@@ -146,7 +162,8 @@ static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fiel
 		break;
 	case SENC_write_field:
 #ifdef DBG_TABLE
-		fprintf(stderr, "enc_xml write_field: '%s', '%s'\n", ss_to_c(*field_l), ss_to_c(*field_r));
+		fprintf(stderr, "enc_xml write_field: '%s', '%s'\n",
+			ss_to_c(*field_l), ss_to_c(*field_r));
 #endif
 		ss_cat_cn(out, "<", 1);
 		ss_cat_enc_esc_xml(out, ss_trim(field_l));
@@ -165,7 +182,8 @@ static void enc_xml(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fiel
 	}
 }
 
-static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out)
+static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l,
+		     ss_t **field_r, ss_t **out)
 {
 	switch (em) {
 	case SENC_start_row:
@@ -173,7 +191,8 @@ static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fie
 		break;
 	case SENC_write_field:
 #ifdef DBG_TABLE
-		fprintf(stderr, "enc_json write_field: '%s', '%s'\n", ss_to_c(*field_l), ss_to_c(*field_r));
+		fprintf(stderr, "enc_json write_field: '%s', '%s'\n",
+			ss_to_c(*field_l), ss_to_c(*field_r));
 #endif
 		if (nfields > 2) /* Not the first two pairs */
 			ss_cat_cn(out, ",\"", 2);
@@ -194,14 +213,16 @@ static void enc_json(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fie
 	}
 }
 
-static void enc_url(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **field_r, ss_t **out)
+static void enc_url(enum EncMode em, size_t nfields, ss_t **field_l,
+		    ss_t **field_r, ss_t **out)
 {
 	switch (em) {
 	case SENC_start_row:
 		break;
 	case SENC_write_field:
 #ifdef DBG_TABLE
-		fprintf(stderr, "enc_url write_field: '%s', '%s'\n", ss_to_c(*field_l), ss_to_c(*field_r));
+		fprintf(stderr, "enc_url write_field: '%s', '%s'\n",
+			ss_to_c(*field_l), ss_to_c(*field_r));
 #endif
 		ss_cat_cn(out, nfields > 2 ? "&" : "?", 1);
 		ss_cat_enc_esc_url(out, ss_trim(field_l));
@@ -217,7 +238,8 @@ static void enc_url(enum EncMode em, size_t nfields, ss_t **field_l, ss_t **fiel
 	}
 }
 
-static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2)
+static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2)
 {
 	size_t off = 0, nfield = 0, qo, co, qo2;
 	ss_t *tq = ss_alloca(1), *tc = ss_alloca(1);
@@ -235,7 +257,8 @@ static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t *
 		if (co < qo) { /* No double quote */
 			ss_cat_cn(*field, l + off, co - off);
 			if ((nfield++ % 2) != 0) {
-				tcd->enc(SENC_write_field, nfield, tmp, tmp2, out);
+				tcd->enc(SENC_write_field, nfield, tmp, tmp2,
+					 out);
 				ss_set_size(*tmp, 0);
 				ss_set_size(*tmp2, 0);
 				field = &tmp;
@@ -252,7 +275,7 @@ static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t *
 					ss_cat_cn(*field, l + off, 1);
 					off = s_size_t_add(qo2, 1, S_NPOS);
 					break;
-				} else if (qo2 == S_NPOS) { /* BEHAVIOR: underflow */
+				} else if (qo2 == S_NPOS) { /* BEHAVIOR uflow */
 					ss_cat_cn(*field, l + off, ls - off);
 					off = ls;
 					break;
@@ -260,8 +283,10 @@ static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t *
 					/* 1) "...""..." vs 2) "..." */
 					size_t inc = qo2 + 2 < ls &&
 						     l[qo2 + 1] == '\"' ? 1 : 0;
-					ss_cat_cn(*field, l + off, qo2 + inc - off);
-					off = s_size_t_add(qo2, 1 + inc, S_NPOS);
+					ss_cat_cn(*field, l + off,
+						  qo2 + inc - off);
+					off = s_size_t_add(qo2, 1 + inc,
+							   S_NPOS);
 					if (inc == 0) /* case (2) */
 						break;
 				}
@@ -277,22 +302,26 @@ static size_t csv2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t *
 	return nfield;
 }
 
-static size_t xml2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2)
+static size_t xml2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2)
 {
 	return 0;
 }
 
-static size_t json2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2)
+static size_t json2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		     ss_t **tmp, ss_t **tmp2)
 {
 	return 0;
 }
 
-static size_t url2x(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2)
+static size_t url2x(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+		    ss_t **tmp, ss_t **tmp2)
 {
 	return 0;
 }
 
-static ssize_t process_row(const struct TableCodec *tcd, ss_t *line, ss_t **out, ss_t **tmp, ss_t **tmp2, sbool_t force_flush)
+static ssize_t process_row(const struct TableCodec *tcd, ss_t *line, ss_t **out,
+			   ss_t **tmp, ss_t **tmp2, sbool_t force_flush)
 {
 #ifdef DBG_TABLE
 	fprintf(stderr, "line: '%s'\n", ss_to_c(line));

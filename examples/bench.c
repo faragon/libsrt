@@ -65,7 +65,8 @@ static const char *xc[4] = {
 #define BENCH_GROUPS		3
 #define BENCH_ALGS_PER_GROUP	7
 
-static const char *groups[BENCH_GROUPS] = { "search", "case conversion", "misc" };
+static const char *groups[BENCH_GROUPS] = { "search", "case conversion",
+					    "misc" };
 static const char *algs[BENCH_GROUPS][BENCH_ALGS_PER_GROUP] = {
 		{ "ss_find", "ss_find_csum_fast", "ss_find_csum_slow",
 #ifndef S_MINIMAL_BUILD
