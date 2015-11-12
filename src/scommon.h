@@ -340,7 +340,7 @@ S_INLINE unsigned short s_ld_le_u16(const void *a)
 	return p[1] << 8 | p[0];
 }
 
-S_INLINE unsigned short s_st_le_u16(void *a, unsigned short v)
+S_INLINE void s_st_le_u16(void *a, unsigned short v)
 {
 	unsigned char *p = (unsigned char *)a;
 	p[0] = (unsigned char)v;
@@ -398,6 +398,12 @@ S_INLINE unsigned short s_st_le_u16(void *a, unsigned short v)
 			_mm_prefetch((char *)(address), _MM_HINT_T0)
 	#define S_PREFETCH_W(address) S_PREFETCH_R(address)
 #endif
+
+#if (defined(_M_X86) || defined(__x86_64__) || defined(__ARM_PCS_VFP) || \
+     defined(__PPC__) || defined(__sparc__)) && !defined(__SOFTFP__)
+	#define S_HW_FPU
+#endif
+
 #if defined(__GNUC__)
 	#define S_PREFETCH_GNU(address, rw)		\
 		if (address)				\
