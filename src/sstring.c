@@ -1479,7 +1479,7 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 		     src_off = get_str_off(src) + sub_off;
 	if (*s == src && !(*s)->ext_buffer) {
 		/* Aliasing case: make grow the buffer in order
-		to keep the reference to the data valid. */
+		 * to keep the reference to the data valid. */
 		if (!ss_grow(s, sub_size))
 			return *s; /* not enough memory */
 		src_str = (const char *)*s;
