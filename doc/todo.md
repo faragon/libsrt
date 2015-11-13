@@ -4,6 +4,7 @@
 Short-term
 ---
 
+* Security: check size_t overflow on every function (e.g. off + size -> overflow)
 * Replace custom 32 and 64 bit types with C99 standard types
 * List C library dependencies
 * Tests using stack space

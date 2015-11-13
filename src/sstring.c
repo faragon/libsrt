@@ -1468,17 +1468,18 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 		    const size_t sub_size0)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	RETURN_IF(!src, ss_check(s)); /* same string */
+	RETURN_IF(!src || !sub_size0, ss_check(s)); /* no changes */
 	const char *src_str = NULL, *src_aux;
 	size_t src_unicode_size = 0;
-	const size_t src_off = get_str_off(src) + sub_off,
-		     srcs = ss_size(src);
-	RETURN_IF(sub_off > srcs, ss_check(s)); /* out of range */
-	const size_t sub_size = S_MIN(srcs - sub_off, sub_size0);
-	RETURN_IF(sub_off > sub_size, ss_check(s)); /* concat empty string */
+	const size_t srcs = ss_size(src);
+	RETURN_IF(sub_off >= srcs, ss_check(s)); /* no changes */
+	const size_t sub_size = sub_size0 == S_NPOS ||
+			       (sub_off + sub_size0) > srcs ?
+				(srcs - sub_off) : sub_size0,
+		     src_off = get_str_off(src) + sub_off;
 	if (*s == src && !(*s)->ext_buffer) {
 		/* Aliasing case: make grow the buffer in order
-		   to keep the reference to the data valid. */
+		to keep the reference to the data valid. */
 		if (!ss_grow(s, sub_size))
 			return *s; /* not enough memory */
 		src_str = (const char *)*s;
