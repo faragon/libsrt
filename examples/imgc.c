@@ -120,8 +120,10 @@ int main(int argc, const char **argv)
 		break;
 	}
 	ss_free(&iobuf, &rgb_buf);
-	close(fin);
-	close(fout);
+	if (fin >= 0)
+		close(fin);
+	if (fout >= 0)
+		close(fout);
 	return exit_code ? exit_with_error(argv, exit_msg, exit_code) : 0;
 }
 
@@ -280,8 +282,10 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 		nl2 = nl2 == S_NPOS ? nl : nl2;
 		for (i = off; i < nl2;) { /* get fields */
 			i = ss_findrbm(ppm, i, nl2, 0x30, 0xc0); /* digits */
-			if (i == S_NPOS)
+			if (i == S_NPOS) {
+				off = ps;
 				break;
+			}
 			f[nf] = atoi(p + i);
 			if (++nf == PPM_NFIELDS)
 				break;
