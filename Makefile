@@ -47,6 +47,12 @@ endif
 ifndef FORCE32
 	FORCE32 = 0
 endif
+ifndef HAS_PNG
+	HAS_PNG = 0
+endif
+ifndef HAS_JPG
+	HAS_JPG = 0
+endif
 
 COMMON_FLAGS = -pipe
 
@@ -178,16 +184,26 @@ ifeq ($(UNAME_M), armv7l)
 	COMMON_FLAGS += -march=armv7-a
 endif
 
+ifeq ($(HAS_PNG), 1)
+	COMMON_FLAGS += -DHAS_PNG
+	LDFLAGS += -lz -lpng
+endif
+
+ifeq ($(HAS_JPG), 1)
+	COMMON_FLAGS += -DHAS_JPG
+	LDFLAGS += -ljpeg
+endif
+
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
 VPATH   = src:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
-HEADERS	= scommon.h $(SOURCES:.c=.h)
+HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a
 TEST	= stest
-EXAMPLES = bench counter enc table
+EXAMPLES = bench counter enc table imgc
 EXES	= $(TEST) $(EXAMPLES)
 
 # Rules for building: library, test, examples
