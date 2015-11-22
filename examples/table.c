@@ -105,7 +105,7 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 		ss_cat_cn(out, "</td>", 5);
 		break;
 	case SENC_end:
-		if (nrow > 0 || field > 0) /* close previous row */
+		if (nrow > 0 || nfield > 0) /* close previous row */
 			ss_cat_cn(out, "</tr>", 5);
 		ss_cat_cn(out, "</table>", 8);
 		break;
@@ -134,7 +134,7 @@ static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
 		ss_cat_cn(out, "\"", 1);
 		break;
 	case SENC_end:
-		if (nrow > 0 || field > 0) /* close previous row */
+		if (nrow > 0 || nfield > 0) /* close previous row */
 			ss_cat_cn(out, "]", 1);
 		ss_cat_cn(out, "}", 1);
 		break;
@@ -177,7 +177,7 @@ static ssize_t csv2x(int in_fd, int out_fd, f_enc out_enc_f)
 			nl = ss_findc(rb, off, '\n');
 			sbool_t coqo = co < qo, nlqo = nl < qo, nlco = nl < co,
 				conl = co < nl;
-			if (nlco && nlqo || conl && coqo) {
+			if ((nlco && nlqo) || (conl && coqo)) {
 				size_t o2 = nlco && nlqo ? nl : co;
 				ss_cat_substr(&field, rb, off, o2 - off);
 				out_enc_f(SENC_field, nrow, nfield, field, &wb);
@@ -222,11 +222,13 @@ csv2x_fatal_error:
 
 static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
 {
+	in_fd = in_fd; out_fd = out_fd; out_enc_f = out_enc_f; /* pedantic */
 	return -1;
 }
 
 static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 {
+	in_fd = in_fd; out_fd = out_fd; out_enc_f = out_enc_f; /* pedantic */
 	return -1;
 }
 
