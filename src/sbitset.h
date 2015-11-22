@@ -31,6 +31,7 @@ extern "C" {
 
 typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 			/* (bitset is implemented using a vector)  */
+			/* sv_t aux: bytes in use, aux2: pop count */
 
 /*
  * Allocation
@@ -68,11 +69,14 @@ sb_t *sb_reset(const sb_t *src)
  * Accessors
  */
 
-/* #API: |Get position of last bit set to 1 plus 1|bitset|Offset of last bit set to 1, plus 1|O(1)|0;1| */
-
-S_INLINE size_t sb_maxbitset(const sb_t *b)
+/* #API: |Reset bitset|bitset|output bitset|O(n)|0;1| */
+sb_t *sb_reset(sb_t *b)
 {
-	return b ? b->aux : 0;
+	RETURN_IF(!b, 0);
+	if (b->aux && b->aux2)
+		memset(__sv_get_buffer(b), 0, b->aux);
+	b->aux2 = 0;
+	return b;
 }
 
 /* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)|1;2| */
