@@ -1813,13 +1813,18 @@ size_t ss_findnb(const ss_t *s, const size_t off)
 	return ss_findrnb(s, off, S_NPOS);
 }
 
+size_t ss_find_cn(const ss_t *s, const size_t off, const char *t,
+		  const size_t ts)
+{
+	return ss_findr_cn(s, off, S_NPOS, t, ts);
+}
+
 size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off,
 		const ss_t *tgt)
 {
 	RETURN_IF(!s || !tgt, S_NPOS);
 	const size_t ss = ss_real_off(s, max_off), ts = sd_get_size(tgt);
-	if (ss == 0 || ts == 0 || (off + ts) > ss)
-		return S_NPOS;
+	RETURN_IF(!ss || !ts || (off + ts) > ss, S_NPOS);
 	const char *s0 = get_str_r(s), *t0 = get_str_r(tgt);
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
@@ -1831,7 +1836,7 @@ size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off,
 	for (; p < pm ; p++)			       			\
 		if (LOOP_STOP_COND)					\
 			break;						\
-	return p < pm ? p - p0 : S_NPOS; }
+	return p >= p0 ? (size_t)(p - p0) : S_NPOS; }
 
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
 {
@@ -1861,6 +1866,15 @@ size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off,
 size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off)
 {
 	SS_FINDRX_AUX(*p != 9 && *p != 10 && *p != 13 && *p != 32);
+}
+
+size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off,
+		   const char *t, const size_t ts)
+{
+	RETURN_IF(!s || !t, S_NPOS);
+	const size_t ss = ss_real_off(s, max_off);
+	RETURN_IF(!ss || !ts || (off + ts) > ss, S_NPOS);
+	return ss_find_csum_fast(get_str_r(s), off, ss, t, ts);
 }
 
 #undef SS_FINDRX_AUX
@@ -2049,9 +2063,8 @@ ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes)
 ssize_t ss_write(const int handle, const ss_t *s, const size_t offset,
 		 const size_t bytes)
 {
-	ssize_t res = -1;
 	size_t ss = s ? ss_size(s) : 0,
-	       wr_size = handle >= 0 && offset > ss ? 0 : ss - offset;
+	       wr_size = handle >= 0 && offset >= ss ? 0 : S_MIN(ss - offset, bytes);
 	return wr_size > 0 ? write(handle, get_str_r(s), wr_size) : -1;
 }
 
