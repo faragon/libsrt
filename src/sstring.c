@@ -1798,7 +1798,7 @@ size_t ss_findb(const ss_t *s, const size_t off)
 }
 
 size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask,
-		 const char excl_mask)
+		 const unsigned char excl_mask)
 {
 	return ss_findrbm(s, off, S_NPOS, incl_mask, excl_mask);
 }
@@ -1844,7 +1844,7 @@ size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
 }
 
 size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off,
-		  const char incl_mask, const char excl_mask)
+		  const char incl_mask, const unsigned char excl_mask)
 {
 	SS_FINDRX_AUX((*p & incl_mask) == incl_mask &&
 		      (*p & excl_mask & ~incl_mask) == 0);

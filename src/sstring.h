@@ -647,7 +647,7 @@ size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt);
 size_t ss_findb(const ss_t *s, const size_t off);
 
 /* #API: |Find byte(s) via mask into string|input string; search offset start; target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
-size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const char excl_mask);
+size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const unsigned char excl_mask);
 
 /* #API: |Find character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
 size_t ss_findc(const ss_t *s, const size_t off, const int c);
@@ -665,7 +665,7 @@ size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off);
 
 /* #API: |Find byte(s) via mask into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
-size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const char excl_mask);
+size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const unsigned char excl_mask);
 
 /* #API: |Find character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
 size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c);

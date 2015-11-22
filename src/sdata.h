@@ -146,7 +146,7 @@ struct SData_Small
 struct SData_Full
 {
 	struct SData d;
-	unsigned char unused[3];
+	unsigned char unused[S_BPWORD - sizeof(struct SData)];
         size_t size, alloc_size;
 };
 

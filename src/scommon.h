@@ -337,7 +337,7 @@ S_INLINE suint32_t *s_mar_u32(void *a)
 S_INLINE unsigned short s_ld_le_u16(const void *a)
 {
 	const unsigned char *p = (const unsigned char *)a;
-	return p[1] << 8 | p[0];
+	return (unsigned short)(p[1] << 8 | p[0]);
 }
 
 S_INLINE void s_st_le_u16(void *a, unsigned short v)
