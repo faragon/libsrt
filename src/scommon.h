@@ -347,8 +347,25 @@ S_INLINE void s_st_le_u16(void *a, unsigned short v)
 	p[1] = (unsigned char)(v >> 8);
 }
 
+S_INLINE unsigned int s_ld_le_u32(const void *a)
+{
+	const unsigned char *p = (const unsigned char *)a;
+	return (unsigned int)(p[3] << 24 | p[2] << 16 | p[1] << 8 | p[0]);
+}
+
+S_INLINE void s_st_le_u32(void *a, unsigned int v)
+{
+	unsigned char *p = (unsigned char *)a;
+	p[0] = (unsigned char)v;
+	p[1] = (unsigned char)(v >> 8);
+	p[2] = (unsigned char)(v >> 16);
+	p[3] = (unsigned char)(v >> 24);
+}
+
 #define S_LD_LE_U16(a) s_ld_le_u16(a)
 #define S_ST_LE_U16(a, v) s_st_le_u16(a, v)
+#define S_LD_LE_U32(a) s_ld_le_u32(a)
+#define S_ST_LE_U32(a, v) s_st_le_u32(a, v)
 
 #ifdef S_UNALIGNED_MEMORY_ACCESS
 	#define S_LD_U32(a) s_ld_u32((const void *)(a))
