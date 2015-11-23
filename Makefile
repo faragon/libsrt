@@ -53,6 +53,9 @@ endif
 ifndef HAS_JPG
 	HAS_JPG = 0
 endif
+ifndef HAS_LL1
+	HAS_LL1 = 0
+endif
 
 COMMON_FLAGS = -pipe
 
@@ -192,6 +195,10 @@ endif
 ifeq ($(HAS_JPG), 1)
 	COMMON_FLAGS += -DHAS_JPG
 	LDFLAGS += -ljpeg
+endif
+
+ifeq ($(HAS_LL1), 1)
+	COMMON_FLAGS += -DHAS_LL1
 endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)

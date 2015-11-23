@@ -16,7 +16,7 @@
 #define DEBUG_IMGC
 #define MY_COMMA ,
 #define FMT_IMGS(a) \
-	"{tga|ppm|pgm" IF_PNG("|png") IF_JPG("|jpg|jpeg") a "}"
+	"{tga|ppm|pgm" IF_PNG("|png") IF_JPG("|jpg|jpeg") IF_LL1("|ll1") a "}"
 #define FMT_IMGS_IN FMT_IMGS()
 #define FMT_IMGS_OUT FMT_IMGS("|raw")
 #define MAX_FILE_SIZE (1024 * 1024 * 1024)
@@ -40,11 +40,17 @@
 #else
 	#define IF_JPG(a)
 #endif
+#ifdef HAS_LL1 /* not implemented, yet */
+	#include "ll1.h"
+	#define IF_LL1(a) a
+#else
+	#define IF_LL1(a)
+#endif
 
 enum ImgTypes
 {
 	IMG_error, IMG_tga, IMG_ppm, IMG_pgm, IMG_png, IMG_jpg, IMG_raw,
-	IMG_none
+	IMG_ll1, IMG_none
 };
 
 enum Filters
@@ -137,6 +143,7 @@ static enum ImgTypes file_type(const char *file_name)
 	       IF_PNG(!strncmp(file_name + sf, "png", 3) ? IMG_png :)
 	       IF_JPG(!strncmp(file_name + sf, "jpg", 3) ? IMG_jpg :)
 	       IF_JPG(!strncmp(file_name + sf - 1, "jpeg", 4) ? IMG_jpg :)
+	       IF_LL1(!strncmp(file_name + sf, "ll1", 3) ? IMG_ll1 :)
 	       !strncmp(file_name + sf, "raw", 3) ? IMG_raw : IMG_error;
 }
 
@@ -149,6 +156,7 @@ static int exit_with_error(const char **argv, const char *msg,
 		"\tStats: %s input.pgm\n"
 		IF_PNG("\tConvert: %s input.png output.ppm\n")
 		IF_JPG("\tConvert: %s input.jpg output.tga\n")
+		IF_LL1("\tConvert: %s input.ppm output.ll1\n")
 		"\tConvert: %s input.ppm output.tga\n"
 		"\tConvert + filter: %s input.ppm output.tga 5\n"
 		"Filters: 0 (none), 1 left->right DPCM, 2 reverse of (1), "
@@ -158,8 +166,8 @@ static int exit_with_error(const char **argv, const char *msg,
 		"11 Paeth DPCM, 12 reverse of (11),\n\t 13 red substract, 14 "
 		"reverse of (13), 15 green substract, 16 reverse\n\t of (15), "
 		"17 blue substract, 18 reverse of (17)\n",
-		exit_code, msg, v0, v0,
-		IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA) v0, v0);
+		exit_code, msg, v0, v0, IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA)
+		IF_LL1(v0 MY_COMMA) v0, v0);
 	return exit_code;
 }
 
@@ -195,7 +203,7 @@ static sbool_t tga_rgb_swap(const size_t bpp, const size_t buf_size,
 static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 {
 	const char *t = ss_get_buffer_r(tga);
-	size_t ts = ss_size(tga);
+	const size_t ts = ss_size(tga);
 	RETURN_IF(ts < TGA_RGBHDR || !valid_tga(t), 0);
 	set_rgbi(ri, S_LD_LE_U16(t + TGA_W), S_LD_LE_U16(t + TGA_H),
 		 t[TGA_BPP], t[TGA_TYPE] == TGA_RAW_GRAY ? 1 : t[TGA_BPP]/8);
@@ -230,7 +238,7 @@ static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 {
 	RETURN_IF(!rgb || (!valid_rgbi(ri) && (ri->bpp / ri->chn) != 8), 0);
 	RETURN_IF(ri->chn != 1 && ri->chn != 3 && ri->chn != 4, 0);
-	size_t copy_size = ss_size(rgb), buf_size = copy_size + TGA_RGBHDR;
+	size_t buf_size = ri->bmp_size + TGA_RGBHDR;
 	RETURN_IF(ss_reserve(tga, buf_size) < buf_size, 0);
 	char *h = ss_get_buffer(*tga);
 	memset(h, 0, TGA_RGBHDR);
@@ -245,7 +253,7 @@ static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 	if (ri->chn == 1)
 		ss_cat(tga, rgb);
 	else
-		tga_rgb_swap(ri->bpp, copy_size, ss_get_buffer_r(rgb),
+		tga_rgb_swap(ri->bpp, ri->bmp_size, ss_get_buffer_r(rgb),
 			     ss_get_buffer(*tga) + TGA_RGBHDR);
 	ss_set_size(*tga, buf_size);
 	return ss_size(*tga);
@@ -272,9 +280,9 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 	size_t ps = ss_size(ppm);
 	ri->chn = p[1] == '5' ? 1 : p[1] == '6' ? 3 : 0;
 	RETURN_IF(ps < 16 || p[0] != 'P' || !ri->chn, 0);
-	size_t off = 2, nf = 0, nl, nl2, i;
+	size_t off = 2, nf = 0, nl, nl2, i = 0;
 	int f[PPM_NFIELDS];
-	for (; off < ps && nf < PPM_NFIELDS; off = nl + 1) {
+	for (; i != S_NPOS && nf < PPM_NFIELDS && off < ps; off = nl + 1) {
 		nl = ss_findc(ppm, off, '\n');
 		if (nl == S_NPOS)
 			break;
@@ -282,10 +290,8 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 		nl2 = nl2 == S_NPOS ? nl : nl2;
 		for (i = off; i < nl2;) { /* get fields */
 			i = ss_findrbm(ppm, i, nl2, 0x30, 0xc0); /* digits */
-			if (i == S_NPOS) {
-				off = ps;
+			if (i == S_NPOS)
 				break;
-			}
 			f[nf] = atoi(p + i);
 			if (++nf == PPM_NFIELDS)
 				break;
@@ -758,7 +764,8 @@ static size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in,
 	return it == IMG_tga ? tga2rgb(rgb, ri, in) :
 	       it == IMG_ppm || it == IMG_pgm ? ppm2rgb(rgb, ri, in) :
 	       IF_PNG(it == IMG_png ? png2rgb(rgb, ri, in) :)
-	       IF_JPG(it == IMG_jpg ? jpg2rgb(rgb, ri, in) :) 0;
+	       IF_JPG(it == IMG_jpg ? jpg2rgb(rgb, ri, in) :)
+	       IF_LL1(it == IMG_ll1 ? ll12rgb(rgb, ri, in) :) 0;
 }
 
 static size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
@@ -791,6 +798,7 @@ static size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 		   ot == IMG_ppm || ot == IMG_pgm ? rgb2ppm(out, rgb, ri) :
 		   IF_PNG(ot == IMG_png ? rgb2png(out, rgb, ri) :)
 		   IF_JPG(ot == IMG_jpg ? rgb2jpg(out, rgb, ri) :)
+		   IF_LL1(ot == IMG_ll1 ? rgb2ll1(out, rgb, ri) :)
 		   ot == IMG_raw ? ss_size(ss_cpy(out, rgb)) :
 		   ot == IMG_none ? rgb_info(rgb, ri) : 0;
 	ss_free(&rgb_aux);
