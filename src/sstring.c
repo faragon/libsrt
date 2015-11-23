@@ -214,14 +214,9 @@ S_INLINE size_t get_str_off(const ss_t *s)
 	return (size_t)(get_str_r(s) - (const char *)s);
 }
 
-S_INLINE void set_size(ss_t *s, const size_t size)
-{
-	sd_set_size((sd_t *)s, size);
-}
-
 S_INLINE void inc_size(ss_t *s, const size_t inc_size)
 {
-	set_size(s, sd_get_size(s) + inc_size);
+	ss_set_size(s, sd_get_size(s) + inc_size);
 }
 
 S_INLINE void set_alloc_size(ss_t *s, const size_t alloc_size)
@@ -286,7 +281,7 @@ static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_t_sz)
 	/* Convert string: */
 	memmove((char *)s + s2_off, s_str, size);
 	s->is_full = sd_alloc_size_to_is_big(new_alloc_size, &ssf);
-	set_size(s, size);
+	ss_set_size(s, size);
 	set_alloc_size(s, new_alloc_size);
 	set_unicode_size(s, unicode_size);
 }
@@ -361,7 +356,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const sint_t num)
 	const size_t out_size = at + digits;
         if (ss_reserve(s, out_size) >= out_size) {
 		memcpy(get_str(*s) + at, btmp + off, digits);
-		set_size(*s, out_size);
+		ss_set_size(*s, out_size);
 		inc_unicode_size(*s, digits);
 	}
 	return *s;
@@ -460,7 +455,7 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 		ss_free(&s_bck);
 	}
 	if (*s) {
-		set_size(*s, sso_req);
+		ss_set_size(*s, sso_req);
 		set_unicode_size_cached(*s, is_cached_usize);
 		set_unicode_size(*s, cached_usize);
 	}
@@ -504,7 +499,7 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 				set_unicode_size_cached(*s, S_FALSE);
 		}
 		out_size = at + enc_size;
-		set_size(*s, out_size);
+		ss_set_size(*s, out_size);
 	}
 	return ss_check(s);
 }
@@ -522,11 +517,11 @@ static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 		     copy_size = ss0 - off - src_size;
 	if (*s == src) { /* BEHAVIOR: aliasing: copy-only */
 		if (off + n >= ss0) { /* tail clean cut */
-			set_size(*s, off);
+			ss_set_size(*s, off);
 		} else {
 			char *ps = get_str(*s);
 			memmove(ps + off, ps + off + n, copy_size);
-			set_size(*s, ss0 - n);
+			ss_set_size(*s, ss0 - n);
 		}
 		set_unicode_size_cached(*s, S_FALSE);
 	} else { /* copy or cat */
@@ -536,7 +531,7 @@ static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 			memcpy(po + at, get_str_r(src), off);
 			memcpy(po + at + off,
 			       get_str_r(src) + off + n, copy_size);
-			set_size(*s, out_size);
+			ss_set_size(*s, out_size);
 			set_unicode_size_cached(*s, S_FALSE);
 		}
 	}
@@ -574,7 +569,7 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 			memcpy(po + at + head_size,
 			       get_str_r(src) + head_size + cut_size,
 			       tail_size);
-			set_size(*s, out_size);
+			ss_set_size(*s, out_size);
 			if (is_unicode_size_cached(*s) &&
 			    (at == 0 || at == sso0)) {
 				prefix_usize = get_unicode_size(*s);
@@ -587,7 +582,7 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 		set_unicode_size(*s, prefix_usize + cus - actual_n);
 	else /* BEHAVIOR: unicode char count invalidation */
 		set_unicode_size_cached(*s, S_FALSE);
-	set_size(*s, out_size);
+	ss_set_size(*s, out_size);
 	return ss_check(s);
 }
 
@@ -678,7 +673,7 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		*s = out;
 		ss_free(&s_bck);
 	}
-	set_size(*s, (size_t)(o - o0));
+	ss_set_size(*s, (size_t)(o - o0));
 	return *s;
 }
 
@@ -701,13 +696,13 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 			}
 			memset(o + at + src_size, fill_byte,
 				n - src_size);
-			set_size(*s, out_size);
+			ss_set_size(*s, out_size);
 		}
 	} else { /* else: cut (implicit) */
 		if (ss_reserve(s, out_size) >= out_size) {
 			if (!aliasing)
 				memcpy(get_str(*s) + at, get_str_r(src), n);
-			set_size(*s, out_size);
+			ss_set_size(*s, out_size);
 		}
 	}
 	return *s;
@@ -760,7 +755,7 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 				inc_size(*s, head_size);
 			}
 		} else { /* cut */
-			set_size(*s, head_size);
+			ss_set_size(*s, head_size);
 			set_unicode_size(*s, actual_unicode_count);
 		}
 	}
@@ -798,7 +793,7 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 			else
 				if (i > 0) /* copy: shift data */
 					memmove(pt, ps + i, ss - i);
-			set_size(*s, at + ss - i);
+			ss_set_size(*s, at + ss - i);
 			set_unicode_size(*s, cat_usize + src_usize - i);
 		}
 	} else {
@@ -833,7 +828,7 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 			char *pt = get_str(*s);
 			if (!aliasing)
 				 memcpy(pt + at, ps, copy_size);
-			set_size(*s, out_size);
+			ss_set_size(*s, out_size);
 			set_unicode_size(*s, cat_usize + src_usize - nspaces);
 		}
 	} else {
@@ -863,7 +858,7 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, const int handle,
 				l0 = read(handle, sc + off, buf_size);
 				if (l0 > 0) {
 					off += l0;
-					set_size(*s, off);
+					ss_set_size(*s, off);
 					set_unicode_size_cached(*s, S_FALSE);
 					l = l < 0 ? l0 : l + l0;
 				} else {
@@ -1002,7 +997,7 @@ void ss_set_len(ss_t *s, const size_t new_len)
 {
 	if (s) {
 		const size_t max_size = ss_get_max_size(s);
-		set_size(s, S_MIN(new_len, max_size));
+		ss_set_size(s, S_MIN(new_len, max_size));
 		set_unicode_size_cached(s, S_FALSE); /* BEHAVIOR: cache lost */
 	}
 }
@@ -1223,7 +1218,7 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 		ASSERT_RETURN_IF(off >= ss, ss_clear(s)); /* BEHAVIOR: empty */
 		const size_t copy_size = S_MIN(ss - off, n);
 		memmove(ps, ps + off, copy_size);
-		set_size(*s, copy_size);
+		ss_set_size(*s, copy_size);
 		set_unicode_size_cached(*s, S_FALSE); /* BEHAVIOR: cache lost */
 	} else {
 		if (*s)
@@ -1249,7 +1244,7 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 		ASSERT_RETURN_IF(off >= ss, ss_clear(s)); /* BEHAVIOR: empty */
 		const size_t copy_size = S_MIN(ss - off, n_size);
 		memmove(ps, ps + off, copy_size);
-		set_size(*s, copy_size);
+		ss_set_size(*s, copy_size);
 		if (n == actual_unicode_count) {
 			set_unicode_size_cached(*s, S_TRUE);
 			set_unicode_size(*s, n);
@@ -1696,7 +1691,7 @@ ss_t *ss_check(ss_t **s)
 	S_ASSERT(ss <= ssmax);
 	if (ss > ssmax) { /* This should never happen */
 		S_ASSERT(ss > ssmax);
-		set_size(*s, ssmax);
+		ss_set_size(*s, ssmax);
 		set_unicode_size_cached(*s, S_FALSE); /* Invalidate cache */
 	}
 	return *s;
@@ -2043,7 +2038,7 @@ int ss_popchar(ss_t **s)
 		if (SSU8_VALID_START(s_str[off])) {
 			int u_char = EOF;
 			ss_utf8_to_wc(s_str, off, sd_get_size(*s), &u_char, *s);
-			set_size(*s, off);
+			ss_set_size(*s, off);
 			dec_unicode_size(*s, 1);
 			return u_char;
 		}
