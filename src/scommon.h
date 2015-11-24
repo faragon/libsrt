@@ -194,8 +194,8 @@ extern "C" {
 #else
 #define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
 #endif
-#define RETURN_IF(a, v) if (a) return (v)
-#define ASSERT_RETURN_IF(a, v) S_ASSERT(!(a)); if (a) return (v)
+#define RETURN_IF(a, v) if (a) return (v); else ;
+#define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
 
 /*
  * Types
