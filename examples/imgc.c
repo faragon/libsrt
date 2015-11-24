@@ -292,8 +292,8 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 			i = ss_findrbm(ppm, i, nl2, 0x30, 0xc0); /* digits */
 			if (i == S_NPOS)
 				break;
-			f[nf] = atoi(p + i);
-			if (++nf == PPM_NFIELDS)
+			f[nf++] = atoi(p + i);
+			if (nf == PPM_NFIELDS)
 				break;
 			i = ss_findrb(ppm, i + 1, nl2);
 		}
