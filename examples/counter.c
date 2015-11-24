@@ -8,6 +8,17 @@
 
 #include "../src/libsrt.h"
 
+#define COUNTER_USE_BITSET
+/* If COUNTER_USE_BITSET is not defined, map implementation would be used,
+ * which is much slower than the bitset (because map is implemented with a
+ * binary tree). The point is showing two ways of counting elements (a very
+ * fast, for specific elements that fit in a bitset, and a slower, that has
+ * no element size limitation -although in this example the map is used for
+ * counting just integers, too-).
+ * E.g. counting 24bpp bitmaps the bitset mode counts at 800MB/s while the
+ * map mode counts at 20MB/s (Intel i5-3330 @3GHz on Ubuntu 15 + gcc 5.1.1)
+ */
+
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
@@ -37,13 +48,21 @@ int main(int argc, const char **argv)
 		return syntax_error(argv, 6);
 	if (climit0 < 0)
 		return syntax_error(argv, 7);
-	sb_t *bs = sb_alloc(0);
 	int exit_code = 0;
 	size_t count = 0;
 	size_t cmax = csize == 4 ? 0xffffffff :
 				   0xffffffff & ((1 << (csize * 8)) - 1);
 	size_t climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
+#ifdef COUNTER_USE_BITSET
+	#define COUNTER_SET(val) sb_set(&bs, val)
+	#define COUNTER_POPCOUNT sb_popcount(bs)
+	sb_t *bs = sb_alloc(0);
 	sb_eval(&bs, cmax);
+#else
+	#define COUNTER_SET(val) sm_uu32_insert(&m, val, 1)
+	#define COUNTER_POPCOUNT sm_size(m)
+	sm_t *m = sm_alloc(SM_U32U32, 0);
+#endif
 	unsigned char buf[3 * 4 * 128];
 	int i;
 	ssize_t l;
@@ -54,9 +73,9 @@ int main(int argc, const char **argv)
 			break;
 		#define CNTLOOP(inc, val)			\
 			for (i = 0; i < l; i += inc) {		\
-				sb_set(&bs, val);		\
+				COUNTER_SET(val);		\
 				count++;			\
-				if (sb_popcount(bs) >= climit)	\
+				if (COUNTER_POPCOUNT >= climit)	\
 					goto done;		\
 			}
 		switch (csize) {
@@ -77,8 +96,12 @@ int main(int argc, const char **argv)
 		#undef CNTLOOP
 	}
 done:
-	printf(FMT_ZU ", " FMT_ZU, count, sb_popcount(bs));
+	printf(FMT_ZU ", " FMT_ZU, count, COUNTER_POPCOUNT);
+#ifdef COUNTER_USE_BITSET
 	sb_free(&bs);
+#else
+	sm_free(&m);
+#endif
 	return exit_code;
 }
 
