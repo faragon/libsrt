@@ -63,9 +63,9 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		t[i] = OP(s[i], 0);					\
 	for (; i < bs; i += ps) {					\
 		t[i] = OP(s[i], p[i - ps]);				\
-		if (ps >= 2) t[i + 1] = OP(s[i], p[i - ps + 1]);	\
-		if (ps >= 3) t[i + 2] = OP(s[i], p[i - ps + 2]);	\
-		if (ps >= 4) t[i + 3] = OP(s[i], p[i - ps + 3]);	\
+		if (ps >= 2) t[i + 1] = OP(s[i + 1], p[i - ps + 1]);	\
+		if (ps >= 3) t[i + 2] = OP(s[i + 2], p[i - ps + 2]);	\
+		if (ps >= 4) t[i + 3] = OP(s[i + 3], p[i - ps + 3]);	\
 	}
 
 #define D3ALG_LOOP(ps, i, s, t, p, OP3, T)				  \
