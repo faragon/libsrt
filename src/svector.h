@@ -41,17 +41,20 @@ enum eSV_Type
 	SV_GEN
 };
 
+typedef int (*sv_cmp_t)(const void *a, const void *b);
+
 struct SVector
 {
 	struct SData_Full df;
 	char sv_type;
 	size_t elem_size;
+	sv_cmp_t cmpf;
 	size_t aux, aux2;	 /* Used by derived types */
 };
 
 typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
 
-#define EMPTY_SV { EMPTY_SData_Full(sizeof(struct SVector)), SV_U8, 0, 0, 0 }
+#define EMPTY_SV { EMPTY_SData_Full(sizeof(struct SVector)), SV_U8, 0, 0, 0, 0 }
 
 /*
  * Variable argument functions
@@ -75,23 +78,23 @@ typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
 #API: |Allocate typed vector (stack)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2|
 sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 
-#API: |Allocate generic vector (stack)|element size; space preallocated to store n elements|vector|O(1)|1;2|
-sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve)
+#API: |Allocate generic vector (stack)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2|
+sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve, const sv_cmp_t f)
 */
-#define sv_alloca(elem_size, num_elems)					\
+#define sv_alloca(elem_size, num_elems, cmp_f)				\
 	sv_alloc_raw(							\
 		SV_GEN, elem_size, S_TRUE,				\
 		alloca(SV_SIZE_TO_ALLOC_SIZE(num_elems,	elem_size)),	\
-		SV_SIZE_TO_ALLOC_SIZE(num_elems, elem_size))
+		SV_SIZE_TO_ALLOC_SIZE(num_elems, elem_size), cmp_f)
 #define sv_alloca_t(type, num_elems)					      \
 	sv_alloc_raw(							      \
 		type, sv_elem_size(type), S_TRUE,			      \
 		alloca(SV_SIZE_TO_ALLOC_SIZE(num_elems, sv_elem_size(type))), \
-		SV_SIZE_TO_ALLOC_SIZE(num_elems, sv_elem_size(type)))
-sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size, const sbool_t ext_buf, void *buffer, const size_t buffer_size);
+		SV_SIZE_TO_ALLOC_SIZE(num_elems, sv_elem_size(type)), NULL)
+sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size, const sbool_t ext_buf, void *buffer, const size_t buffer_size, const sv_cmp_t f);
 
-/* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements|vector|O(1)|1;2| */
-sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve);
+/* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2| */
+sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve, const sv_cmp_t f);
 
 /* #API: |Allocate typed vector (heap)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2| */
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve);
@@ -200,6 +203,9 @@ sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 
 /* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_resize(sv_t **v, const size_t n);
+
+/* #API: |Sort vector|input/output vector|O(n log n) (relies on libc qsort implementation)|0;1| */
+sv_t *sv_sort(sv_t **v);
 
 /*
  * Search

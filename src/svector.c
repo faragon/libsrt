@@ -113,6 +113,26 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
  * Internal functions
  */
 
+#define BUILD_CMP_I(FN, T)				\
+	static int FN(const void *a, const void *b) {	\
+		return *((T *)a) - *((T *)b);		\
+	}
+
+#define BUILD_CMP_U(FN, T)				\
+	static int FN(const void *a, const void *b) {	\
+		T a2 = *((T *)a), b2 = *((T *)b);	\
+		return a2 < b2 ? -1 : a2 == b2 ? 0 : 1;	\
+	}
+
+BUILD_CMP_I(__sv_cmp_i8, char)
+BUILD_CMP_I(__sv_cmp_i16, short)
+BUILD_CMP_I(__sv_cmp_i32, int)
+BUILD_CMP_I(__sv_cmp_i64, sint_t)
+BUILD_CMP_I(__sv_cmp_u8, unsigned char)
+BUILD_CMP_I(__sv_cmp_u16, unsigned short)
+BUILD_CMP_I(__sv_cmp_u32, unsigned int)
+BUILD_CMP_I(__sv_cmp_u64, suint_t)
+
 static size_t get_size(const sv_t *v)
 {
 	return ((const struct SData_Full *)v)->size;
@@ -125,12 +145,13 @@ static void set_size(sv_t *v, const size_t size)
 }
 
 static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
-			   const size_t initial_num_elems_reserve)
+			   const size_t initial_num_elems_reserve,
+			   const sv_cmp_t f)
 {
 	const size_t alloc_size = SDV_HEADER_SIZE + elem_size *
 						    initial_num_elems_reserve;
 	return sv_alloc_raw(t, elem_size, S_FALSE, __sd_malloc(alloc_size),
-			    alloc_size);
+			    alloc_size, f);
 }
 
 static void sv_copy_elems(sv_t *v, const size_t v_off, const sv_t *src,
@@ -168,7 +189,7 @@ static sv_t *aux_dup(const sv_t *src, const size_t n_elems)
 	const size_t ss = get_size(src),
 		     size = n_elems < ss ? n_elems : ss;
 	sv_t *v = src->sv_type == SV_GEN ?
-			sv_alloc(src->elem_size, ss) :
+			sv_alloc(src->elem_size, ss, src->cmpf) :
 			sv_alloc_t((enum eSV_Type)src->sv_type, ss);
 	if (v) {
 		sv_copy_elems(v, 0, src, 0, size);
@@ -191,7 +212,7 @@ static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_elems)
 	if (s == NULL) { /* reserve from NULL/sv_void */
 		ASSERT_RETURN_IF(!src, 0);
 		*v = src->sv_type == SV_GEN ?
-			sv_alloc(src->elem_size, max_elems) :
+			sv_alloc(src->elem_size, max_elems, src->cmpf) :
 			sv_alloc_t((enum eSV_Type)src->sv_type, max_elems);
 		return __sv_get_max_size(*v);
 	}
@@ -303,7 +324,7 @@ static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
 
 sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 		   const sbool_t ext_buf, void *buffer,
-		   const size_t buffer_size)
+		   const size_t buffer_size, const sv_cmp_t f)
 {
 	RETURN_IF(!elem_size || !buffer, sv_void);
         sv_t *v = (sv_t *)buffer;
@@ -311,17 +332,22 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size,
 	v->sv_type = t;
 	v->elem_size = elem_size;
 	v->aux = v->aux2 = 0;
+	v->cmpf = t == SV_I8 ? __sv_cmp_i8 : t == SV_U8 ? __sv_cmp_u8 :
+		  t == SV_I16 ? __sv_cmp_i16 : t == SV_U16 ? __sv_cmp_u16 :
+		  t == SV_I32 ? __sv_cmp_i32 : t == SV_U32 ? __sv_cmp_u32 :
+		  t == SV_I64 ? __sv_cmp_i64 : t == SV_U64 ? __sv_cmp_u64 : f;
 	return v;
 }
 
-sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve)
+sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve,
+		 const sv_cmp_t f)
 {
-	return sv_alloc_base(SV_GEN, elem_size, initial_num_elems_reserve);
+	return sv_alloc_base(SV_GEN, elem_size, initial_num_elems_reserve, f);
 }
 
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 {
-	return sv_alloc_base(t, sv_elem_size(t), initial_num_elems_reserve);
+	return sv_alloc_base(t, sv_elem_size(t), initial_num_elems_reserve, 0);
 }
 
 SD_BUILDFUNCS(sv)
@@ -460,6 +486,13 @@ sv_t *sv_erase(sv_t **v, const size_t off, const size_t n)
 sv_t *sv_resize(sv_t **v, const size_t n)
 {
 	return aux_resize(v, S_FALSE, (v ? *v : NULL), n);
+}
+
+sv_t *sv_sort(sv_t **v)
+{
+	RETURN_IF(!v || !*v || !(*v)->cmpf, sv_check(v));
+	qsort(__sv_get_buffer(*v), get_size(*v), (*v)->elem_size, (*v)->cmpf);
+	return *v;
 }
 
 /*
