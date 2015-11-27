@@ -34,6 +34,26 @@ static int cmp_s(const struct SMapSx *a, const struct SMapSx *b)
 	return ss_cmp(a->k, b->k);
 }
 
+static int rw_inc_SM_I32I32(const st_t *t, stn_t *node, const stn_t *new_data)
+{
+	return ((struct SMapii *)node)->v += ((struct SMapii *)new_data)->v;
+}
+
+static int rw_inc_SM_U32U32(const st_t *t, stn_t *node, const stn_t *new_data)
+{
+	return ((struct SMapuu *)node)->v += ((struct SMapuu *)new_data)->v;
+}
+
+static int rw_inc_SM_IntInt(const st_t *t, stn_t *node, const stn_t *new_data)
+{
+	return ((struct SMapII *)node)->v += ((struct SMapII *)new_data)->v;
+}
+
+static int rw_inc_SM_StrInt(const st_t *t, stn_t *node, const stn_t *new_data)
+{
+	return ((struct SMapSI *)node)->v += ((struct SMapSI *)new_data)->v;
+}
+
 static void aux_is_delete(void *node)
 {
 	ss_free(&((struct SMapIS *)node)->v);
@@ -364,31 +384,64 @@ sbool_t sm_s_count(const sm_t *m, const ss_t *k)
  * Insert
  */
 
-sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
+S_INLINE sbool_t sm_ii32_insert_aux(sm_t **m, const sint32_t k,
+				    const sint32_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapii n;
 	n.k = k;
 	n.v = v;
-	return st_insert((st_t **)m, (const stn_t *)&n);
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
 
-sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
+sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v)
+{
+	return sm_ii32_insert_aux(m, k, v, NULL);
+}
+
+sbool_t sm_ii32_inc(sm_t **m, const sint32_t k, const sint32_t v)
+{
+	return sm_ii32_insert_aux(m, k, v, rw_inc_SM_I32I32);
+}
+
+S_INLINE sbool_t sm_uu32_insert_aux(sm_t **m, const suint32_t k,
+				    const suint32_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
 	n.k = k;
 	n.v = v;
-	return st_insert((st_t **)m, (const stn_t *)&n);
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
 
-sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
+sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v)
+{
+	return sm_uu32_insert_aux(m, k, v, NULL);
+}
+
+sbool_t sm_uu32_inc(sm_t **m, const suint32_t k, const suint32_t v)
+{
+	return sm_uu32_insert_aux(m, k, v, rw_inc_SM_U32U32);
+}
+
+S_INLINE sbool_t sm_ii_insert_aux(sm_t **m, const sint_t k,
+			          const sint_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapII n;
 	n.x.k = k;
 	n.v = v;
-	return st_insert((st_t **)m, (const stn_t *)&n);
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
+}
+
+sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v)
+{
+	return sm_ii_insert_aux(m, k, v, NULL);
+}
+
+sbool_t sm_ii_inc(sm_t **m, const sint_t k, const sint_t v)
+{
+	return sm_ii_insert_aux(m, k, v, rw_inc_SM_IntInt);
 }
 
 sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v)
@@ -409,14 +462,25 @@ sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
+S_INLINE sbool_t sm_si_insert_aux(sm_t **m, const ss_t *k,
+				  const sint_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSI n;
 	n.x.k = NULL;
 	ss_cpy(&n.x.k, k);
 	n.v = v;
-	return st_insert((st_t **)m, (const stn_t *)&n);
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
+}
+
+sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v)
+{
+	return sm_si_insert_aux(m, k, v, NULL);
+}
+
+sbool_t sm_si_inc(sm_t **m, const ss_t *k, const sint_t v)
+{
+	return sm_si_insert_aux(m, k, v, rw_inc_SM_StrInt);
 }
 
 sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)

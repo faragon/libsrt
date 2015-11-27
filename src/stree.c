@@ -19,10 +19,6 @@
 #include "scommon.h"
 #include "svector.h"
 
-#ifndef STREE_DISABLE_KEY_OVERWRITING
-#define STREE_ALLOW_KEY_OVERWRITING
-#endif
-
 /*
  * Helper macros
  */
@@ -322,6 +318,11 @@ st_t *st_dup(const st_t *t)
 
 sbool_t st_insert(st_t **tt, const stn_t *n)
 {
+	return st_insert_rw(tt, n, NULL);
+}
+
+sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
+{
 	ASSERT_RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
 	st_t *t = *tt;
 	const size_t ts = get_size(t);
@@ -400,9 +401,10 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 			break;
 		const sint_t cmp = t->f.cmp(w[c].n, n);
 		if (!cmp) {
-#ifdef STREE_ALLOW_KEY_OVERWRITING
-			update_node_data(t, w[c].n, n);
-#endif
+			if (rw_f)
+				rw_f(t, w[c].n, n);
+			else
+				update_node_data(t, w[c].n, n);
 			break;
 		}
 		/* Step down: left or right */

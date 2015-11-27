@@ -165,6 +165,18 @@ sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
 /* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
 sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
 
+/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+sbool_t sm_ii32_inc(sm_t **m, const sint32_t k, const sint32_t v);
+
+/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+sbool_t sm_uu32_inc(sm_t **m, const suint32_t k, const suint32_t v);
+
+/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+sbool_t sm_ii_inc(sm_t **m, const sint_t k, const sint_t v);
+
+/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+sbool_t sm_si_inc(sm_t **m, const ss_t *k, const sint_t v);
+
 /*
  * Delete
  */
