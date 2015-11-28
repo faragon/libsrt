@@ -152,7 +152,7 @@ st_t *st_dup(const st_t *t);
 /* #API: |Insert element into tree|tree; element to insert|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)|1;2| */
 sbool_t st_insert(st_t **t, const stn_t *n);
 
-/* #API: |Insert element into tree, with rewrite function (in case of key already written)|tree; element to insert; rewrite function (if NULL it will behave like st_inssert()|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)|1;2| */
+/* #API: |Insert element into tree, with rewrite function (in case of key already written)|tree; element to insert; rewrite function (if NULL it will behave like st_insert()|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)|1;2| */
 sbool_t st_insert_rw(st_t **t, const stn_t *n, const st_rewrite_t rw_f);
 
 /* #API: |Delete tree element|tree; element to delete; node delete handling callback (optional if e.g. nodes use no extra dynamic memory references)|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
