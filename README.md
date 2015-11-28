@@ -137,17 +137,21 @@ String-specific advantages (ss_t)
 String-specific disadvantages/limitations
 ===
 
- * No reference counting support. Rationale: simplicity.
+* No reference counting support. Rationale: simplicity.
+* ss_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
 
 Vector-specific advantages (sv_t)
 ===
 
- * Variable-length concatenation and push functions.
- * Allow explicit size for allocation (8, 16, 32, 64 bits) with size-agnostic generic signed/unsigned functions (easier coding).
+* Variable-length concatenation and push functions.
+* Allow explicit size for allocation (8, 16, 32, 64 bits) with size-agnostic generic signed/unsigned functions (easier coding).
+* Allow variable-size generic element.
+* Sorting.
 
 Vector-specific disadvantages/limitations
 ===
 
+* No insert function. Rationale: insert is slow (O(n)). Could be added, if someone asks for it.
 
 Tree-specific advantages (st_t)
 ===
@@ -155,28 +159,30 @@ Tree-specific advantages (st_t)
 * Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require at least 3x more memory -see doc/benchmarks.md-).
 * Top-down implementation (insertion/deletion/traverse/search)
 * Zero node allocation cost (via pre-allocation or amortization)
-* O(1) allocation and deallocation
-* O(log(n)) node insert/delete/search (much faster than hash-map worst case, which is O(n) when rehashing is required)
+* O(1) allocation
+* O(1) deallocation for constant-size types, O(n) for types requiring additional memory management.
+* O(log(n)) node insert/delete/search (much faster than hash-map worst case, which is O(n) when rehashing is required).
 * O(n) sorted node enumeration (amortized O(n log(n))). Tree traversal provided cases: preorder, inorder, postorder.
 * O(n) unsorted node enumeration (faster than the sorted case)
 
 Tree-specific disadvantages/limitations
 ===
 
-* ss_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
+* There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
+* Fix
 
 Map-specific advantages (sm_t)
 ===
 
- * Abstraction over the tree implementation (st_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
- * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
- * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
- * O(1) for allocation
- * O(1) for deleting maps without strings (one or zero calls to 'free' C function)
- * O(n) for deleting maps with strings (n + one or zero calls to 'free' C function)
- * O(log n) insert, search, delete
- * O(n) sorted enumeration (amortized O(n log n))
- * O(n) unsorted enumeration (faster than the sorted case)
+* Abstraction over the tree implementation (st_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
+* Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
+* Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
+* O(1) for allocation
+* O(1) for deleting maps without strings (one or zero calls to 'free' C function)
+* O(n) for deleting maps with strings (n + one or zero calls to 'free' C function)
+* O(log n) insert, search, delete
+* O(n) sorted enumeration (amortized O(n log n))
+* O(n) unsorted enumeration (faster than the sorted case)
 
 Map-specific disadvantages/limitations
 ===

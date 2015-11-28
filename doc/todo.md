@@ -9,14 +9,12 @@ Short-term
 * List C library dependencies
 * Tests using stack space
 * Add tests covering expansion between small/medium/full strings
-* Add map counter (e.g. key-value, where value is a counter)
 * Write some examples
 * Tests
  * add grow from NULL tests
  * add tests for every operation related to unicode caching.
  * check case unicode size (add tests: e.g. erasing with overflow, etc.)
  * aliasing: stack, lower/middle/upper case checks, etc.
- * sstring accessors (ss_get_buffer, ...)
  * add checks for all corner cases (!)
  * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
 
