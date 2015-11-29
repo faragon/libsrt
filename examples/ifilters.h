@@ -149,6 +149,87 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		return S_TRUE;						     \
 	}
 
+#define RGB_PACK(rgba, ps)						\
+	(unsigned)((ps == 4 ? ((unsigned char *)(rgba))[3] << 24 : 0) |	\
+		   ((unsigned char *)(rgba))[0] << 16 |			\
+		   ((unsigned char *)(rgba))[1] << 8 |			\
+		   ((unsigned char *)(rgba))[2])
+
+#define RGBA_CNTMIN_ROW(r, len, ps, cnt, cmin, cselect, ct, k)	\
+	sb_reset(bs);						\
+	for (k = 0; k < len && sb_popcount(bs) < cmin; k += ps)	\
+		sb_set(&bs, RGB_PACK(r + k, ps));		\
+	cnt = sb_popcount(bs);					\
+	if (cnt < cmin) {					\
+		cmin = cnt;					\
+		cselect = ct;					\
+	}
+
+#define INLINE_VALG_ROW_CNT(OP, s, p, t, blks, rs, nrow, ps,	\
+			    cnt, cmin, cselect, ct, i)		\
+	if (nrow == 0)						\
+		for (i = 0; i < blks; i++)			\
+			(t)[i] = OP((s)[i], 0);			\
+	else							\
+		for (i = 0; i < blks; i++)			\
+			(t)[i] = OP((s)[i], (p)[i - rs]);	\
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+
+#define INLINE_HALG_ROW_CNT(OP, s, p, p0, t, blks, ps, cnt, cmin,	\
+			    cselect, ct, i)				\
+	for (i = 0; i < ps; i++)					\
+		(t)[i] = OP((s)[i], (p0)[i]);				\
+	for (; i < blks; i += ps) {					\
+		(t)[i] = OP((s)[i], (p)[i - ps]);			\
+		if (ps >= 2) (t)[i + 1] = OP((s)[i], (p)[i - ps + 1]);	\
+		if (ps >= 3) (t)[i + 2] = OP((s)[i], (p)[i - ps + 2]);	\
+		if (ps >= 4) (t)[i + 3] = OP((s)[i], (p)[i - ps + 3]);	\
+	}								\
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+
+#define INLINE_2DALG_ROW_CNT(OP3, s, p, p0, t, blks, rs, nrow, ps, cnt,	      \
+			     cmin, cselect, ct, i, T)			      \
+	i = 0;								      \
+	if (!nrow) {							      \
+		for (; i < ps; i++)					      \
+			(t)[i] = OP3((s)[i], 0, 0, 0, T);		      \
+		for (; i < blks; i += ps) {				      \
+			(t)[i] = OP3((s)[i], (p)[i - 4], 0, 0, T);	      \
+			if (ps >= 2)					      \
+				(t)[i + 1] = OP3((s)[i + 1], (p)[i - ps + 1], \
+					       0, 0, T); 		      \
+			if (ps >= 3) 					      \
+				(t)[i + 2] = OP3((s)[i + 2], (p)[i - ps + 2], \
+					       0, 0, T);		      \
+			if (ps >= 4)					      \
+				(t)[i + 3] = OP3((s)[i + 3], (p)[i - ps + 3], \
+					       0, 0, T);		      \
+		}							      \
+	} else {							      \
+		for (; i < blks; i += ps) {				      \
+			(t)[i] = OP3((s)[i], (p)[i - 4], (p)[i - rs],	      \
+				   (p)[i - rs - 4], T);			      \
+			if (ps >= 2)					      \
+				(t)[i + 1] = OP3((s)[i + 1], (p)[i - 4 + 1],  \
+					       (p)[i - rs + 1],		      \
+					       (p)[i - rs - 4 + 1], T);	      \
+			if (ps >= 3)					      \
+				(t)[i + 2] = OP3((s)[i + 2], (p)[i - 4 + 2],  \
+					       (p)[i - rs + 2],		      \
+					       (p)[i - rs - 4 + 2], T);	      \
+			if (ps >= 4)					      \
+				(t)[i + 3] = OP3((s)[i + 3], (p)[i - 4 + 3],  \
+					       (p)[i - rs + 3],		      \
+					       (p)[i - rs - 4 + 3], T);	      \
+		}							      \
+	}								      \
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+
+#define INLINE_RGB_ROW_CNT(OP, s, p, p0, t, blks, ps, i, T)	\
+	OP(t, s, (const T *)p0);				\
+	for (i = ps; i < blks; i += ps)				\
+		OP(t + i, s + i, p + i - ps);
+
 BUILD_HALG(hrgb2dpcm, HDALG_LOOP, DPCM_ENC, s)
 BUILD_HALG(hdpcm2rgb, HDALG_LOOP, DPCM_DEC, t)
 BUILD_HALG(hrgb2dxor, HDALG_LOOP, DXOR_ENC, s)
