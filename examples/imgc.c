@@ -27,9 +27,7 @@
 	#define IF_DEBUG_IMGC(a)
 #endif
 #ifdef HAS_PNG
-	#include <zlib.h>
 	#include <png.h>
-	#include <pngconf.h>
 	#define IF_PNG(a) a
 #else
 	#define IF_PNG(a)
