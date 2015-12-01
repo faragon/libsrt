@@ -20,7 +20,7 @@ extern "C" {
 #include "scommon.h"
 
 
-/* #API: |Simple hash: 32 bit hash from adding chunks ("fair" enough for hash routing, but not for generic hash tables)|buffer;buffer size (in bytes)|32-bit hash|O(n)|0;1| */
+/* #notAPI: |Simple hash: 32 bit hash from adding chunks ("fair" enough for hash routing, but not for generic hash tables)|buffer;buffer size (in bytes)|32-bit hash|O(n)|0;1| */
 unsigned sh_csum32(const void *buf, const size_t buf_size);
 
 #ifdef __cplusplus
