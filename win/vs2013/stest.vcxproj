@@ -160,6 +160,7 @@
     <ClCompile Include="..\..\src\stree.c" />
     <ClCompile Include="..\..\src\schar.c" />
     <ClCompile Include="..\..\src\svector.c" />
+    <ClCompile Include="..\..\src\sbitio.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\scommon.h" />
