@@ -205,7 +205,7 @@ CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
 VPATH   = src:examples
-SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c
+SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c sbitio.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a

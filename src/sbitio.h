@@ -15,64 +15,35 @@ extern "C" {
 
 #include "scommon.h"
 
-S_INLINE void sbitio_write_init(size_t *acc)
+struct SBitIO
 {
-	*acc = 0;
+	unsigned char *bw;
+	const unsigned char *br;
+	size_t off, acc, accbuf;
+};
+
+typedef struct SBitIO sbio_t;
+
+/* #notAPI: |Bit stream byte offset|bit I/O struct|offset (bytes)|O(1)|0;1| */
+S_INLINE size_t sbio_off(sbio_t *bio)
+{
+	return bio->off;
 }
 
-S_INLINE void sbitio_write(unsigned char *b, size_t *i, size_t *acc, size_t c, size_t cbits)
-{
-	if (*acc) {
-		size_t xbits = 8 - *acc;
-		b[(*i)++] |= (c << *acc);
-		c >>= xbits;
-		cbits -= xbits;
-	}
-	size_t copy_size = cbits / 8;
-	switch (copy_size) {
-	case 3: b[(*i)++] = (unsigned char)c; c >>= 8;
-	case 2: b[(*i)++] = (unsigned char)c; c >>= 8;
-	case 1: b[(*i)++] = (unsigned char)c; c >>= 8;
-	}
-	*acc = cbits % 8;
-	if (*acc)
-		b[*i] = (unsigned char)c;
-}
+/* #notAPI: |Initialize bit I/O for writing|bit I/O struct; write buffer||O(1)|0;1| */
+void sbio_write_init(sbio_t *bio, unsigned char *b);
 
-S_INLINE void sbitio_write_close(unsigned char *b, size_t *i, size_t *acc)
-{
-	if (*acc)
-		b[++*i] = 0;
-	*acc = 0;
-}
+/* #notAPI: |Write code|bit I/O struct; code; code size (bits)||O(n)|0;1| */
+void sbio_write(sbio_t *bio, size_t c, size_t cbits);
 
-S_INLINE void sbitio_read_init(size_t *acc, size_t *accbuf)
-{
-	*acc = *accbuf = 0;
-}
+/* #notAPI: |Finish write|bit I/O struct|written bytes|O(1)|0;1| */
+size_t sbio_write_close(sbio_t *bio);
 
-S_INLINE size_t sbitio_read(const unsigned char *b, size_t *i, size_t *acc, size_t *accbuf, size_t code_bits)
-{
-	size_t code = 0;
-	if (*acc) {
-		code |= *accbuf;
-		code_bits -= *acc;
-	}
-	if (code_bits >= 8) {
-		code |= ((size_t)b[(*i)++] << *acc);
-		code_bits -= 8;
-		*acc += 8;
-	}
-	if (code_bits > 0) {
-		*accbuf = b[(*i)++];
-		code |= ((*accbuf & S_NBITMASK(code_bits)) << *acc);
-		*accbuf >>= code_bits;
-		*acc = 8 - code_bits;
-	} else {
-		*acc = 0;
-	}
-	return code;
-}
+/* #notAPI: |Initialize bit I/O for reading|bit I/O struct; write buffer||O(1)|0;1| */
+void sbio_read_init(sbio_t *bio, const unsigned char *b);
+
+/* #notAPI: |Read code|bit I/O struct; code size (bits)|code read|O(n)|0;1| */
+size_t sbio_read(sbio_t *bio, size_t code_bits);
 
 #ifdef __cplusplus
 }      /* extern "C" { */

@@ -159,41 +159,39 @@ static sbool_t slzw_short_codes(size_t normal_count, size_t esc_count)
 		S_TRUE : S_FALSE;
 }
 
-static size_t slzw_bitio_read(const unsigned char *b, size_t *i, size_t *acc,
-			      size_t *accbuf, size_t cbits,
-			      size_t *normal_count, size_t *esc_count)
+static size_t slzw_bio_read(sbio_t *bio, size_t cbits, size_t *normal_count,
+			      size_t *esc_count)
 {
 	size_t c;
 	if (slzw_short_codes(*normal_count, *esc_count)) {
-		c = sbitio_read(b, i, acc, accbuf, 8);
+		c = sbio_read(bio, 8);
 		if (c == 255) {
-			c = sbitio_read(b, i, acc, accbuf, cbits);
+			c = sbio_read(bio, cbits);
 			(*esc_count)++;
 		} else {
 			(*normal_count)++;
 		}
 	} else {
-		c = sbitio_read(b, i, acc, accbuf, cbits);
+		c = sbio_read(bio, cbits);
 		(*normal_count)++;
 	}
 	return c;
 }
 
-static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc,
-			     size_t c, size_t cbits, size_t *normal_count,
-			     size_t *esc_count)
+static void slzw_bio_write(sbio_t *bio, size_t c, size_t cbits,
+			     size_t *normal_count, size_t *esc_count)
 {
 	if (slzw_short_codes(*normal_count, *esc_count)) {
 		if (c < 255) {
-	                sbitio_write(b, i, acc, c, 8);
+	                sbio_write(bio, c, 8);
 			(*normal_count)++;
 #if SLZW_DEBUG
 			fprintf(stderr, "%u (8 (%u))\n",
 				(unsigned)c, (unsigned)cbits);
 #endif
 		} else {
-	                sbitio_write(b, i, acc, 255, 8);
-			sbitio_write(b, i, acc, c, cbits);
+	                sbio_write(bio, 255, 8);
+			sbio_write(bio, c, cbits);
 			(*esc_count)++;
 #if SLZW_DEBUG
 			fprintf(stderr, "%u (prefix + %u)\n",
@@ -201,7 +199,7 @@ static void slzw_bitio_write(unsigned char *b, size_t *i, size_t *acc,
 #endif
 		}
 	} else {
-		sbitio_write(b, i, acc, c, cbits);
+		sbio_write(bio, c, cbits);
 		(*normal_count)++;
 #if SLZW_DEBUG
 		fprintf(stderr, "%u (%u)\n", (unsigned)c, (unsigned)cbits);
@@ -677,8 +675,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Output encoding control
 	 */
 	size_t normal_count = 0, esc_count = 0;
-	size_t oi = 0, next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1, acc;
-	sbitio_write_init(&acc);
+	size_t next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1;
+	sbio_t bio;
+	sbio_write_init(&bio, o);
 	/*
 	 * Initialize data structures
 	 */
@@ -711,16 +710,16 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		if (rle_mode) {
 			size_t ch = run_length >> SLZW_RLE_BITSD2,
 			       cl = run_length & S_NBITMASK(SLZW_RLE_BITSD2);
-			slzw_bitio_write(o, &oi, &acc, rle_mode, curr_code_len,
+			slzw_bio_write(&bio, rle_mode, curr_code_len,
 					 &normal_count, &esc_count);
-			sbitio_write(o, &oi, &acc, cl, SLZW_RLE_BITSD2);
-			sbitio_write(o, &oi, &acc, ch, SLZW_RLE_BITSD2);
-			sbitio_write(o, &oi, &acc, s[i], 8);
+			sbio_write(&bio, cl, SLZW_RLE_BITSD2);
+			sbio_write(&bio, ch, SLZW_RLE_BITSD2);
+			sbio_write(&bio, s[i], 8);
 			if (run_elem_size >= 3) {
-				sbitio_write(o, &oi, &acc, s[i + 1], 8);
-				sbitio_write(o, &oi, &acc, s[i + 2], 8);
+				sbio_write(&bio, s[i + 1], 8);
+				sbio_write(&bio, s[i + 2], 8);
 				if (run_elem_size >= 4)
-					sbitio_write(o, &oi, &acc, s[i + 3], 8);
+					sbio_write(&bio, s[i + 3], 8);
 			}
 			i += run_length * run_elem_size;
 			if (i == ss)
@@ -774,7 +773,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		node_codes[new_node] = (slzw_ndx_t)next_code;
 		node_lutref[new_node] = 0;
-		slzw_bitio_write(o, &oi, &acc, (size_t)node_codes[curr_node],
+		slzw_bio_write(&bio, (size_t)node_codes[curr_node],
 			         curr_code_len, &normal_count, &esc_count);
 		if (next_code == (size_t)(1 << curr_code_len))
 
@@ -785,7 +784,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 */
 		if (++next_code == SLZW_CODE_LIMIT ||
 		    lut_stack_in_use == SLZW_MAX_LUTS) {
-			slzw_bitio_write(o, &oi, &acc, SLZW_RESET,
+			slzw_bio_write(&bio, SLZW_RESET,
 					 curr_code_len, &normal_count,
 					 &esc_count);
 		        SLZW_ENC_RESET(node_lutref, lut_stack_in_use,
@@ -796,20 +795,20 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Write last code, the "end of information" mark, and fill bits with 0
 	 */
-	slzw_bitio_write(o, &oi, &acc, (size_t)node_codes[curr_node],
-			 curr_code_len, &normal_count, &esc_count);
+	slzw_bio_write(&bio, (size_t)node_codes[curr_node], curr_code_len,
+		       &normal_count, &esc_count);
 #if SLZW_USE_STOP_CODE
-	slzw_bitio_write(o, &oi, &acc, SLZW_STOP, curr_code_len, &normal_count,
-			 &esc_count);
+	slzw_bio_write(&bio, SLZW_STOP, curr_code_len, &normal_count,
+		       &esc_count);
 #endif
-	sbitio_write_close(o, &oi, &acc);
-	return oi;
+	return sbio_write_close(&bio);
 }
 
 size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
 	RETURN_IF(!s || !o || !ss, 0);
-	size_t i, acc, accbuf, oi, normal_count = 0, esc_count = 0, last_code,
+	sbio_t bio;
+	size_t oi = 0, normal_count = 0, esc_count = 0, last_code,
 	       curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
 	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT],
@@ -817,8 +816,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Init read buffer
 	 */
-	oi = 0;
-	sbitio_read_init(&acc, &accbuf);
+	sbio_read_init(&bio, s);
 	/*
 	 * Initialize root node
 	 */
@@ -828,10 +826,9 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * Code expand loop
 	 */
 	size_t new_code;
-	for (i = 0; i < ss;) {
-		new_code = slzw_bitio_read(s, &i, &acc, &accbuf,
-					   curr_code_len, &normal_count,
-					   &esc_count);
+	for (; sbio_off(&bio) < ss;) {
+		new_code = slzw_bio_read(&bio, curr_code_len, &normal_count,
+					 &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {
 				o[oi++] = lastwc = xbyte[new_code];
@@ -874,22 +871,19 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		if (new_code >= SLZW_RLE1 && new_code <= SLZW_RLE4) {
 			union s_u32 rle;
 			size_t count, cl, ch;
-			cl = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
-			ch = sbitio_read(s, &i, &acc, &accbuf, SLZW_RLE_BITSD2);
+			cl = sbio_read(&bio, SLZW_RLE_BITSD2);
+			ch = sbio_read(&bio, SLZW_RLE_BITSD2);
 			count = ch << SLZW_RLE_BITSD2 | cl;
-			rle.b[0] = (unsigned char)sbitio_read(s, &i, &acc,
-							      &accbuf, 8);
+			rle.b[0] = (unsigned char)sbio_read(&bio, 8);
 			if (new_code == SLZW_RLE1) {
 				memset(o + oi, rle.b[0], count);
 			} else {
-				rle.b[1] = (unsigned char)sbitio_read(
-						s, &i, &acc, &accbuf, 8);
-				rle.b[2] = (unsigned char)sbitio_read(
-						s, &i, &acc, &accbuf, 8);
+				rle.b[1] = (unsigned char)sbio_read(&bio, 8);
+				rle.b[2] = (unsigned char)sbio_read(&bio, 8);
 				if (new_code == SLZW_RLE4) {
 					count *= 4;
-					rle.b[3] = (unsigned char)sbitio_read(
-						      s, &i, &acc, &accbuf, 8);
+					rle.b[3] = (unsigned char)sbio_read(
+						      &bio, 8);
 					s_memset32(o + oi, rle.a32, count);
 				} else {
 					count *= 3;
