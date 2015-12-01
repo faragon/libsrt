@@ -69,13 +69,11 @@ sb_t *sb_reset(const sb_t *src)
  * Accessors
  */
 
-/* #API: |Reset bitset|bitset|output bitset|O(n)|0;1| */
+/* #API: |Reset bitset|bitset|output bitset|O(1)|0;1| */
 sb_t *sb_reset(sb_t *b)
 {
 	RETURN_IF(!b, 0);
-	if (b->aux && b->aux2)
-		memset(__sv_get_buffer(b), 0, b->aux);
-	b->aux2 = 0;
+	b->aux2 = b->aux = 0;
 	return b;
 }
 
