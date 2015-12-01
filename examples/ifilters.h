@@ -155,27 +155,28 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		   ((unsigned char *)(rgba))[1] << 8 |			\
 		   ((unsigned char *)(rgba))[2])
 
-#define RGBA_CNTMIN_ROW(r, len, ps, cnt, cmin, cselect, ct, k)	\
-	sb_reset(bs);						\
-	for (k = 0; k < len && sb_popcount(bs) < cmin; k += ps)	\
-		sb_set(&bs, RGB_PACK(r + k, ps));		\
-	cnt = sb_popcount(bs);					\
-	if (cnt < cmin) {					\
-		cmin = cnt;					\
-		cselect = ct;					\
+#define RGBA_CNTMIN_ROW(r, len, ps, cnt, cmin, cselect, ct, k, t2)	\
+	sb_reset(bs);							\
+	for (k = 0; k < len && sb_popcount(bs) < cmin; k += ps)		\
+		sb_set(&bs, RGB_PACK(r + k, ps));			\
+	cnt = sb_popcount(bs);						\
+	if (cnt < cmin) {						\
+		cmin = cnt;						\
+		cselect = ct;						\
+		memcpy(t2, r, len);					\
 	}
 
-#define INLINE_VALG_ROW_CNT(OP, s, p, t, blks, rs, nrow, ps,	\
-			    cnt, cmin, cselect, ct, i)		\
-	if (nrow == 0)						\
-		for (i = 0; i < blks; i++)			\
-			(t)[i] = OP((s)[i], 0);			\
-	else							\
-		for (i = 0; i < blks; i++)			\
-			(t)[i] = OP((s)[i], (p)[i - rs]);	\
-	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+#define INLINE_VALG_ROW_CNT(OP, s, p, t, t2, blks, rs, nrow, ps,	\
+			    cnt, cmin, cselect, ct, i)			\
+	if (nrow == 0)							\
+		for (i = 0; i < blks; i++)				\
+			(t)[i] = OP((s)[i], 0);				\
+	else								\
+		for (i = 0; i < blks; i++)				\
+			(t)[i] = OP((s)[i], (p)[i - rs]);		\
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k, t2)
 
-#define INLINE_HALG_ROW_CNT(OP, s, p, p0, t, blks, ps, cnt, cmin,	\
+#define INLINE_HALG_ROW_CNT(OP, s, p, p0, t, t2, blks, ps, cnt, cmin,	\
 			    cselect, ct, i)				\
 	for (i = 0; i < ps; i++)					\
 		(t)[i] = OP((s)[i], (p0)[i]);				\
@@ -185,9 +186,9 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		if (ps >= 3) (t)[i + 2] = OP((s)[i], (p)[i - ps + 2]);	\
 		if (ps >= 4) (t)[i + 3] = OP((s)[i], (p)[i - ps + 3]);	\
 	}								\
-	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k, t2)
 
-#define INLINE_2DALG_ROW_CNT(OP3, s, p, p0, t, blks, rs, nrow, ps, cnt,	      \
+#define INLINE_2DALG_ROW_CNT(OP3, s, p, p0, t, t2, blks, rs, nrow, ps, cnt,   \
 			     cmin, cselect, ct, i, T)			      \
 	i = 0;								      \
 	if (!nrow) {							      \
@@ -223,7 +224,7 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 					       (p)[i - rs - 4 + 3], T);	      \
 		}							      \
 	}								      \
-	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k)
+	RGBA_CNTMIN_ROW(t, blks, ps, cnt, cmin, cselect, ct, k, t2)
 
 #define INLINE_RGB_ROW_CNT(OP, s, p, p0, t, blks, ps, i, T)	\
 	OP(t, s, (const T *)p0);				\
