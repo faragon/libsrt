@@ -149,12 +149,6 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		return S_TRUE;						     \
 	}
 
-#define RGB_PACK(rgba, ps)						\
-	(unsigned)((ps == 4 ? ((unsigned char *)(rgba))[3] << 24 : 0) |	\
-		   ((unsigned char *)(rgba))[0] << 16 |			\
-		   ((unsigned char *)(rgba))[1] << 8 |			\
-		   ((unsigned char *)(rgba))[2])
-
 #define RGBA_CNTMIN_ROW(r, len, ps, cnt, cmin, cselect, ct, k, t2)	\
 	sb_reset(bs);							\
 	for (k = 0; k < len && sb_popcount(bs) < cmin; k += ps)		\

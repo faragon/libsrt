@@ -35,5 +35,50 @@ static void set_rgbi(struct RGB_Info *i, size_t w, size_t h, size_t b, size_t c)
 	}
 }
 
+/*
+ * Pixel packing is related to counting colors and fast pixel comparisons.
+ */
+
+S_INLINE unsigned short rgbi_pack2(const unsigned char *p)
+{
+	return S_LD_LE_U16(p);
+}
+
+S_INLINE unsigned rgbi_pack3(const unsigned char *rgb)
+{
+	return PIX_PACK2(rgb) | ((unsigned char *)(rgb))[2] << 8;
+}
+
+S_INLINE unsigned rgbi_pack4(const unsigned char *rgba)
+{
+	return S_LD_LE_U32(rgba);
+}
+
+S_INLINE suint64_t rgbi_pack6(const unsigned char *rgb)
+{
+	return S_LD_LE_U32(rgb) | ((suint64_t)S_LD_LE_U16(rgb + 4)) << 32;
+}
+
+S_INLINE unsigned short rgbi_pack8(const unsigned char *rgba)
+{
+	return S_LD_LE_U32(rgba) | ((suint64_t)S_LD_LE_U32(rgba + 4)) << 32;
+}
+
+/* TODO: check if the compiler is able to optimize this properly */
+S_INLINE
+suint64_t rgbi_get(const char *b, size_t x, size_t y, size_t rs, size_t ps)
+{
+	switch (ps) {
+	case 1: return (unsigned char)b[y * rs + x];
+	case 2: return rgbi_pack2(b + y * rs + x * ps);
+	case 3: return rgbi_pack3(b + y * rs + x * ps);
+	case 4: return rgbi_pack4(b + y * rs + x * ps);
+	case 6: return rgbi_pack6(b + y * rs + x * ps);
+	case 8: return rgbi_pack8(b + y * rs + x * ps);
+	default: break;
+	}
+	return 0;
+}
+
 #endif  /* RGBI_H */
 
