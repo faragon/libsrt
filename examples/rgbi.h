@@ -59,7 +59,7 @@ S_INLINE suint64_t rgbi_pack6(const unsigned char *rgb)
 	return S_LD_LE_U32(rgb) | ((suint64_t)S_LD_LE_U16(rgb + 4)) << 32;
 }
 
-S_INLINE unsigned short rgbi_pack8(const unsigned char *rgba)
+S_INLINE suint64_t rgbi_pack8(const unsigned char *rgba)
 {
 	return S_LD_LE_U32(rgba) | ((suint64_t)S_LD_LE_U32(rgba + 4)) << 32;
 }
