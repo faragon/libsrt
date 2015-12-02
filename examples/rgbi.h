@@ -46,7 +46,7 @@ S_INLINE unsigned short rgbi_pack2(const unsigned char *p)
 
 S_INLINE unsigned rgbi_pack3(const unsigned char *rgb)
 {
-	return PIX_PACK2(rgb) | ((unsigned char *)(rgb))[2] << 8;
+	return rgbi_pack2(rgb) | rgb[2] << 8;
 }
 
 S_INLINE unsigned rgbi_pack4(const unsigned char *rgba)
@@ -66,8 +66,9 @@ S_INLINE suint64_t rgbi_pack8(const unsigned char *rgba)
 
 /* TODO: check if the compiler is able to optimize this properly */
 S_INLINE
-suint64_t rgbi_get(const char *b, size_t x, size_t y, size_t rs, size_t ps)
+suint64_t rgbi_get(const char *buf, size_t x, size_t y, size_t rs, size_t ps)
 {
+	const unsigned char *b = (const unsigned char *)buf;
 	switch (ps) {
 	case 1: return (unsigned char)b[y * rs + x];
 	case 2: return rgbi_pack2(b + y * rs + x * ps);
