@@ -9,6 +9,8 @@ Short-term
 * List C library dependencies
 * Tests using stack space
 * Add tests covering expansion between small/medium/full strings
+* Renaming
+ * sv_u_at/sv_i_at to sv_at_u/sv_i_at
 * Write some examples
 * Tests
  * add grow from NULL tests
@@ -18,7 +20,7 @@ Short-term
  * add checks for all corner cases (!)
  * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
 
-Mid-term
+Mid/long-term
 ---
 
 * Dynamic disk/RAM (mmap) allocators
@@ -48,7 +50,7 @@ Mid-term
 * Write examples
  * Key-value database: string/int-string/int key-value), zero alloc case (key/value fitting on fixed-size node), KKV (key-key-value)
 
-Long-term (never)
+Never (?)
 ---
 
 * Time/date
