@@ -58,10 +58,10 @@ static struct sd_conf svf = {	(size_t (*)(const sd_t *))__sv_get_max_size,
  * Push-related function pointers
  */
 
-#define SV_STx(f, TS, TL)		\
-	static void f(void *st, TL *c)	\
-	{				\
-		*(TS *)(st) = (TS)*(c);	\
+#define SV_STx(f, TS, TL)			\
+	static void f(void *st, TL *c)		\
+	{					\
+		*(TS *)(st) = (TS)*(c);		\
 	}
 
 SV_STx(svsti8, char, const sint_t)
@@ -88,7 +88,7 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
 #define SV_LDx(f, TL, TO)						\
 	static TO *f(const void *ld, TO *out, const size_t index)	\
 	{								\
-		 *out = (TO)((TL *)ld)[index];				\
+		 *out = ((TL *)ld)[index];				\
 		return out;						\
 	}
 
@@ -600,6 +600,49 @@ suint_t sv_u_at(const sv_t *v, const size_t index)
 }
 
 #undef SV_IU_AT
+
+/*
+ * Vector "set": set element value at given position
+ */
+
+#define SV_SET_CHECK(v, index)						\
+	RETURN_IF(!v || !*v, S_FALSE);					\
+	if (index >= get_size(*v)) {					\
+		size_t new_size = index + 1;				\
+		RETURN_IF(sv_reserve(v, new_size) < new_size, S_FALSE);	\
+		set_size(*v, new_size);					\
+	}
+
+#define SV_SET_INT_CHECK(v, index)					\
+	SV_SET_CHECK(v, index)						\
+	RETURN_IF((*v)->sv_type > SV_LAST_INT, SV_DEFAULT_SIGNED_VAL)
+
+sbool_t sv_set(sv_t **v, const size_t index, const void *value)
+{
+	RETURN_IF(!value, S_FALSE);
+	SV_SET_CHECK(v, index);
+	memcpy(ptr_to_elem(*v, index), value, (*v)->elem_size);
+	return S_TRUE;
+}
+
+#define SV_IU_SET(v, index, val)					\
+	SV_SET_INT_CHECK(v, index)					\
+	svstx_f[(int)(*v)->sv_type](ptr_to_elem(*v, index),		\
+						(const sint_t *)&val);
+
+sbool_t sv_set_i(sv_t **v, const size_t index, sint_t value)
+{
+	SV_IU_SET(v, index, value);
+}
+
+sbool_t sv_set_u(sv_t **v, const size_t index, suint_t value)
+{
+	SV_IU_SET(v, index, value);
+}
+
+#undef SV_IU_SET
+#undef SV_SET_CHECK
+#undef SV_SET_INT_CHECK
 
 /*
  * Vector "push": add element in the last position

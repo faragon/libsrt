@@ -241,6 +241,19 @@ sint_t sv_i_at(const sv_t *v, const size_t index);
 suint_t sv_u_at(const sv_t *v, const size_t index);
 
 /*
+ * Vector "set": set element value at given position
+ */
+
+/* #API: |Vector random access write (generic data)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+sbool_t sv_set(sv_t **v, const size_t index, const void *value);
+
+/* #API: |Vector random access write (integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+sbool_t sv_set_i(sv_t **v, const size_t index, sint_t value);
+
+/* #API: |Vector random access write (unsigned integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+sbool_t sv_set_u(sv_t **v, const size_t index, suint_t value);
+
+/*
  * Vector "push": add element in the last position
  */
 
