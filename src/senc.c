@@ -849,7 +849,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] =
 								xbyte[code];
 			parents[next_inc_code] = (slzw_ndx_t)last_code;
-			if (next_inc_code < SLZW_CODE_LIMIT)
+			if (next_inc_code < SLZW_MAX_CODE)
 				next_inc_code++;
 			if (next_inc_code == (size_t)(1 << curr_code_len) &&
 			    next_inc_code < SLZW_CODE_LIMIT) {
