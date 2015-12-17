@@ -1922,35 +1922,49 @@ static int test_sv_find()
 	return res;
 }
 
-static int test_sv_push_pop()
+static int test_sv_push_pop_set()
 {
 	struct AA *t = NULL;
-	sv_t *a = sv_alloc(sizeof(struct AA), 10, NULL);
-	sv_t *b = sv_alloca(sizeof(struct AA), 10, NULL);
+	size_t as = 10;
+	sv_t *a = sv_alloc(sizeof(struct AA), as, NULL);
+	sv_t *b = sv_alloca(sizeof(struct AA), as, NULL);
 	int res = (!a || !b) ? 1 : 0;
 	if (!res) {
 		res |= (sv_push(&a, &a2, &a2, &a1) ? 0 : 4);
-		res |= (sv_len(a) == 3? 0 : 8);
+		res |= (sv_len(a) == 3 ? 0 : 8);
 		res |= (((t = (struct AA *)sv_pop(a)) &&
 			t->a == a1.a && t->b == a1.b)? 0 : 16);
-		res |= (sv_len(a) == 2? 0 : 32);
+		res |= (sv_len(a) == 2 ? 0 : 32);
 		res |= (sv_push(&b, &a2) ? 0 : 64);
-		res |= (sv_len(b) == 1? 0 : 128);
+		res |= (sv_len(b) == 1 ? 0 : 128);
 		res |= (((t = (struct AA *)sv_pop(b)) &&
 			 t->a == a2.a && t->b == a2.b)? 0 : 256);
-		res |= (sv_len(b) == 0? 0 : 512);
+		res |= (sv_len(b) == 0 ? 0 : 512);
+		sv_set(&a, 0, &a2);
+		sv_set(&a, 1000, &a1);
+		sv_set(&b, 0, &a2);
+		sv_set(&b, as - 1, &a1);
+		t = (struct AA *)sv_at(a, 0);
+		res |= t->a == a2.a ? 0 : 1024;
+		t = (struct AA *)sv_at(a, 1000);
+		res |= t->a == a1.a ? 0 : 2048;
+		t = (struct AA *)sv_at(b, 0);
+		res |= t->a == a2.a ? 0 : 4096;
+		t = (struct AA *)sv_at(b, as - 1);
+		res |= t->a == a1.a ? 0 : 8192;
 	}
 	sv_free(&a);
 	return res;
 }
 
-static int test_sv_push_pop_i()
+static int test_sv_push_pop_set_i()
 {
 	enum eSV_Type t[] = { SV_I8, SV_I16, SV_I32, SV_I64 };
 	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
-		sv_t *a = sv_alloc_t(t[i], 10);
-		sv_t *b = sv_alloca_t(t[i], 10);
+		size_t as = 10;
+		sv_t *a = sv_alloc_t(t[i], as);
+		sv_t *b = sv_alloca_t(t[i], as);
 		do {
 			if (!a || !b) {
 				res |= 1 << (i * 4);
@@ -1968,21 +1982,30 @@ static int test_sv_push_pop_i()
 				res |= 4 << (i * 4);
 				break;
 			}
+			sv_set_i(&a, 0, -2);
+			sv_set_i(&a, 1000, -1);
+			sv_set_i(&b, 0, -2);
+			sv_set_i(&b, as - 1, -1);
+			res |= sv_i_at(a, 0) == -2 ? 0 : -1;
+			res |= sv_i_at(a, 1000) == -1 ? 0 : -1;
+			res |= sv_i_at(b, 0) == -2 ? 0 : -1;
+			res |= sv_i_at(b, as - 1) == -1 ? 0 : -1;
 		} while (0);
 		sv_free(&a);
 	}
 	return res;
 }
 
-static int test_sv_push_pop_u()
+static int test_sv_push_pop_set_u()
 {
 	suint_t init[] = { (suint_t)-1, (suint_t)-1, (suint_t)-1, (suint_t)-1 },
 		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
 	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
 	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
-		sv_t *a = sv_alloc_t(t[i], 10);
-		sv_t *b = sv_alloca_t(t[i], 10);
+		size_t as = 10;
+		sv_t *a = sv_alloc_t(t[i], as);
+		sv_t *b = sv_alloca_t(t[i], as);
 		sint_t r;
 		if (!(a && b && sv_push_u(&a, (suint_t)-1) &&
 		      sv_push_u(&b, init[i]) &&
@@ -2899,9 +2922,9 @@ int main()
 	STEST_ASSERT(test_sv_erase());
 	STEST_ASSERT(test_sv_resize());
 	STEST_ASSERT(test_sv_find());
-	STEST_ASSERT(test_sv_push_pop());
-	STEST_ASSERT(test_sv_push_pop_i());
-	STEST_ASSERT(test_sv_push_pop_u());
+	STEST_ASSERT(test_sv_push_pop_set());
+	STEST_ASSERT(test_sv_push_pop_set_i());
+	STEST_ASSERT(test_sv_push_pop_set_u());
 	STEST_ASSERT(test_sv_push_raw());
 	STEST_ASSERT(test_st_alloc());
 	STEST_ASSERT(test_st_insert_del());
