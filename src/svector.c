@@ -633,11 +633,13 @@ sbool_t sv_set(sv_t **v, const size_t index, const void *value)
 sbool_t sv_set_i(sv_t **v, const size_t index, sint_t value)
 {
 	SV_IU_SET(v, index, value);
+	return S_TRUE;
 }
 
 sbool_t sv_set_u(sv_t **v, const size_t index, suint_t value)
 {
 	SV_IU_SET(v, index, value);
+	return S_TRUE;
 }
 
 #undef SV_IU_SET
