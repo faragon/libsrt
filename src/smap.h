@@ -90,6 +90,13 @@ void sm_free(sm_t **m, ...)
 void sm_free_aux(const size_t nargs, sm_t **s, ...);
 
 /*
+ * Copy
+ */
+
+/* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|0;1| */
+sm_t *sm_cpy(sm_t **m, const sm_t *src);
+
+/*
  * Accessors
  */
 

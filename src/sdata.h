@@ -69,7 +69,7 @@ extern "C" {
 		sd_set_size((sd_t *)c, s);				\
 	}								\
 	size_t pfix##_len(const pfix##_t *c) {				\
-		return sd_get_size((const sd_t *)c);				\
+		return sd_get_size((const sd_t *)c);			\
 	}								\
 
 /*
@@ -191,6 +191,11 @@ S_INLINE void sd_reset_alloc_errors(sd_t *d)
 {
 	if (d)
 		d->alloc_errors = 0;
+}
+
+S_INLINE sbool_t sd_is_using_ext_buffer(const sd_t *d)
+{
+	return d && d->ext_buffer ? S_TRUE : S_FALSE;
 }
 
 size_t sd_alloc_size_to_mt_size(const size_t a_size, const struct sd_conf *f);

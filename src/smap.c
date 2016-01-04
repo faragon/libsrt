@@ -260,6 +260,65 @@ void sm_set_defaults(sm_t *m, const sint_t i_def_v, const ss_t *s_def_v)
 }
 
 /*
+ * Copy
+ */
+
+sm_t *sm_cpy(sm_t **m, const sm_t *src)
+{
+	RETURN_IF(!m || !src, NULL); /* BEHAVIOR */
+	size_t i;
+	const enum eSM_Type t = (enum eSM_Type)src->f.type;
+	size_t ss = sm_size(src),
+	       src_buf_size = ST_SIZE_TO_ALLOC_SIZE(ss, sm_elem_size(t));
+	if (*m) {
+		if (sd_is_using_ext_buffer((const sd_t *)src))
+		{	/* If using ext buffer, we'll have grow limits */
+			sm_reset(*m);
+			size_t oe = st_capacity(*m),
+			       os = ST_SIZE_TO_ALLOC_SIZE(oe, sm_elem_size(t));
+			RETURN_IF(os < src_buf_size, NULL); /* BEHAVIOR */
+			*m = sm_alloc_raw(t, S_TRUE, *m, os);
+		} else {
+			if ((*m)->f.type == t) {
+				st_reserve(m, ss);
+			} else {
+				sm_free(m);
+				*m = NULL;
+			}
+		}
+	}
+	if (!*m)
+		*m = sm_alloc(t, ss);
+	RETURN_IF(!*m || st_capacity(*m) < ss, NULL); /* BEHAVIOR */
+	switch (t) {
+	/*
+	 * Fast copy: compact structure (without strings)
+	 */
+	case SM_I32I32: case SM_U32U32: case SM_IntInt: case SM_IntPtr:
+		memcpy(*m, src, src_buf_size);
+		break;
+	/*
+	 * Slow map copy for types having strings as key or value:
+	 */
+#define case_SM_CPY_InsertLoop(SM_xy, ST, INSERTF)			\
+	case SM_xy:							\
+		for (i = 0; i < ss; i++) {				\
+			const ST *s = (const ST *)sm_enum_r(*m, i);	\
+			INSERTF(m, s->x.k, s->v);			\
+		}							\
+		break;
+	case_SM_CPY_InsertLoop(SM_IntStr, struct SMapIS, sm_is_insert);
+	case_SM_CPY_InsertLoop(SM_StrInt, struct SMapSI, sm_si_insert);
+	case_SM_CPY_InsertLoop(SM_StrStr, struct SMapSS, sm_ss_insert);
+	case_SM_CPY_InsertLoop(SM_StrPtr, struct SMapSP, sm_sp_insert);
+#undef case_SM_CPY_InsertLoop
+	default:
+		break;
+	}
+	return *m;
+}
+
+/*
  * Accessors
  */
 
