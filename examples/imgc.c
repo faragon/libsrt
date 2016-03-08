@@ -17,7 +17,7 @@
 #define MY_COMMA ,
 #define FMT_IMGS(a) \
 	"{tga|ppm|pgm" IF_PNG("|png") IF_JPG("|jpg|jpeg") IF_LL1("|ll1") a "}"
-#define FMT_IMGS_IN FMT_IMGS()
+#define FMT_IMGS_IN FMT_IMGS("")
 #define FMT_IMGS_OUT FMT_IMGS("|raw")
 #define MAX_FILE_SIZE (1024 * 1024 * 1024)
 
