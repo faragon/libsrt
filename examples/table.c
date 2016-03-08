@@ -365,7 +365,8 @@ static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
 
 static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 {
-	enum eJSFSM { JSSearchOpen, JSSearchRow, JSSearchField, JSFillField, JSFillFieldQ };
+	enum eJSFSM { JSSearchOpen, JSSearchRow, JSSearchField, JSFillField,
+		      JSFillFieldQ };
 	enum eJSFSM st = JSSearchOpen;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
 	size_t off, o2, o3, o4, o5, tr, td, nfield = 0, nrow = 0;
