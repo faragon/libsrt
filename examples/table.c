@@ -24,7 +24,8 @@
 	#define DBG_ENC_FIELD(type, field, nrow, nfield)
 #endif
 
-#define BUF_SIZE 8192
+#define RBUF_SIZE 8192
+#define WBUF_SIZE (3 * RBUF_SIZE)
 
 enum EncStep
 {
@@ -95,10 +96,10 @@ static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
 	}
 }
 
-#define HTML_TABLE	"<table>"
-#define HTML_TABLE_S	7
-#define HTML_TABLEX	"</table>"
-#define HTML_TABLEX_S	8
+#define HTML_TBL	"<table>"
+#define HTML_TBL_S	7
+#define HTML_TBLX	"</table>"
+#define HTML_TBLX_S	8
 #define HTML_TR		"<tr>"
 #define HTML_TR_S	4
 #define HTML_TRX	"</tr>"
@@ -113,7 +114,7 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 {
 	switch (em) {
 	case SENC_begin:
-		ss_cat_cn(out, HTML_TABLE, HTML_TABLE_S);
+		ss_cat_cn(out, HTML_TBL, HTML_TBL_S);
 		break;
 	case SENC_field:
 		DBG_ENC_FIELD("html", field, nrow, nfield);
@@ -129,27 +130,27 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 	case SENC_end:
 		if (nrow > 0 || nfield > 0) /* close previous row */
 			ss_cat_cn(out, HTML_TRX, HTML_TRX_S);
-		ss_cat_cn(out, HTML_TABLEX, HTML_TABLEX_S);
+		ss_cat_cn(out, HTML_TBLX, HTML_TBLX_S);
 		break;
 	default:
 		break;
 	}
 }
 
-#define JSON_OPEN	"{"
-#define JSON_OPEN_S	1
-#define JSON_OPENX	"}"
-#define JSON_OPENX_S	1
-#define JSON_ARRAY	"["
-#define JSON_ARRAY_S	1
-#define JSON_ARRAYX	"]"
-#define JSON_ARRAYX_S	1
-#define JSON_COMMA	","
-#define JSON_COMMA_S	1
-#define JSON_ESC	"\\"
-#define JSON_ESC_S	1
-#define JSON_QUOTE	"\""
-#define JSON_QUOTE_S	1
+#define JS_OPEN		"{"
+#define JS_OPEN_S	1
+#define JS_OPENX	"}"
+#define JS_OPENX_S	1
+#define JS_ARR		"["
+#define JS_ARR_S	1
+#define JS_ARRX		"]"
+#define JS_ARRX_S	1
+#define JS_COM		","
+#define JS_COM_S	1
+#define JS_ESC		"\\"
+#define JS_ESC_S	1
+#define JS_QT		"\""
+#define JS_QT_S		1
 
 static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
 		     const ss_t *field, ss_t **out)
@@ -183,14 +184,13 @@ static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
 static ssize_t csv2x(int in_fd, int out_fd, f_enc out_enc_f)
 {
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
-	size_t l, nl, qo, co, off, nfield = 0, nrow = 0;
-	const size_t rb_sz = 8192, wb_sz = 32768;
+	size_t l, nl, qo, co, o, nfield = 0, nrow = 0;
 	sbool_t quote_opened = S_FALSE, quote_pending = S_FALSE,
 		fatal_error = S_FALSE;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
-	for (; ss_read(&rb, 0, rb_sz) > 0;) {
-		if (ss_size(wb) > wb_sz &&
+	for (; ss_read(&rb, 0, RBUF_SIZE) > 0;) {
+		if (ss_size(wb) > WBUF_SIZE &&
 		    ss_write(out_fd, wb, 0, ss_size(wb)) < 0) {
 			ss_set_size(wb, 0);
 			nrow = -2; /* write error */
@@ -198,51 +198,51 @@ static ssize_t csv2x(int in_fd, int out_fd, f_enc out_enc_f)
 			break;
 		}
 		l = ss_size(rb);
-		for (off = 0; off < l;) { /* process buffer */
+		for (o = 0; o < l;) { /* process buffer */
 			if (quote_pending) {
 				quote_pending = S_FALSE;
-				if (ss_at(rb, off) == '"') { /* double " */
-					off++;
+				if (ss_at(rb, o) == '"') { /* double " */
+					o++;
 					continue;
 				}
 				quote_opened = S_TRUE;
 			}
-			qo = ss_findc(rb, off, '"');
+			qo = ss_findc(rb, o, '"');
 			if (quote_opened) {
 				if (qo == S_NPOS) {
-					ss_cat_substr(&field, rb, off, S_NPOS);
+					ss_cat_substr(&field, rb, o, S_NPOS);
 					break; /* buffer empty */
 				}
-				ss_cat_substr(&field, rb, off, qo - off);
-				off = qo + 1;
+				ss_cat_substr(&field, rb, o, qo - o);
+				o = qo + 1;
 				quote_opened = S_FALSE;
 				continue;
 			}
-			co = ss_findc(rb, off, ',');
-			nl = ss_findc(rb, off, '\n');
+			co = ss_findc(rb, o, ',');
+			nl = ss_findc(rb, o, '\n');
 			sbool_t coqo = co < qo, nlqo = nl < qo, nlco = nl < co,
 				conl = co < nl;
 			if ((nlco && nlqo) || (conl && coqo)) {
-				size_t o2 = nlco && nlqo ? nl : co;
-				ss_cat_substr(&field, rb, off, o2 - off);
+				size_t p = nlco && nlqo ? nl : co;
+				ss_cat_substr(&field, rb, o, p - o);
 				out_enc_f(SENC_field, nrow, nfield, field, &wb);
 				nfield++;
 				ss_set_size(field, 0);
-				if (o2 == nl) {
+				if (p == nl) {
 					nfield = 0;
 					nrow++;
 				}
-				off = o2 + 1;
+				o = p + 1;
 				continue;
 			}
 			sbool_t qonl = qo < nl, qoco = qo < co;
 			if (qonl && qoco) { /* qo nl (co) / qo co (nl) */
-				ss_cat_substr(&field, rb, off, qo - off);
-				off = qo + 1;
+				ss_cat_substr(&field, rb, o, qo - o);
+				o = qo + 1;
 				quote_pending = S_TRUE;
 				continue;
 			}
-			ss_cat_substr(&field, rb, off, S_NPOS);
+			ss_cat_substr(&field, rb, o, S_NPOS);
 			break;	/* buffer empty */
 		}
 	}
@@ -260,19 +260,12 @@ static ssize_t csv2x(int in_fd, int out_fd, f_enc out_enc_f)
 	return nrow;
 }
 
-size_t search_tag(ss_t **s, size_t off, int in_fd, const char *t,
-		  const size_t ts)
+sbool_t sflush(ss_t *wb, int out_fd, const size_t buf_size)
 {
-	const size_t bs = S_MAX(BUF_SIZE, ts);
-	for (;;) {
-		off = ss_find_cn(*s, off, t, ts);
-		RETURN_IF(off != S_NPOS, off);
-		const size_t ss = ss_size(*s);
-		ss_cat_read(s, in_fd, bs);
-		const size_t ss2 = ss_size(*s);
-		RETURN_IF(ss2 == ss, S_NPOS);   /* Not found at EOF */
-		off = ss - ts - 1;
-	}
+	const size_t wbss = ss_size(wb);
+	return wbss > buf_size && ss_write(out_fd, wb, 0, wbss) < 0 ?
+		S_FALSE :	/* write error */
+		S_TRUE;		/* write OK */
 }
 
 static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
@@ -280,73 +273,75 @@ static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
 	enum eHTFSM { HTSearchTable, HTSearchRow, HTSearchField, HTFillField };
 	enum eHTFSM st = HTSearchTable;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
-	size_t off, o2, o3, tr, td, nfield = 0, nrow = 0;
+	size_t o, p, q, tr, nfield = 0, nrow = 0;
 	sbool_t fatal_error = S_FALSE;
-	const size_t rb_sz = 8192, wb_sz = 32768;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
-	for (; ss_read(&rb, 0, rb_sz) > 0;) {
-		if (ss_size(wb) > wb_sz &&
-		    ss_write(out_fd, wb, 0, ss_size(wb)) < 0) {
-			ss_set_size(wb, 0);
-			nrow = -2; /* write error */
+	for (;;) {
+		ss_erase(&rb, 0, o);
+		const size_t ss0 = ss_size(rb),
+			     ss = ss_size(ss_cat_read(&rb, 0, RBUF_SIZE));
+		if (ss == ss0)
+			break;	/* EOF */
+		const size_t z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
+		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
-			break;
+			break;	/* write error */
 		}
-		for (off = 0; off < ss_size(rb);) { /* process buffer */
-			if (st == HTFillField) {
-				o2 = search_tag(&rb, off, in_fd, HTML_TDX,
-								 HTML_TDX_S);
-				if (o2 == S_NPOS) {
-					ss_cat_substr(&field, rb, off, S_NPOS);
-					break; /* buffer empty */
+		for (o = 0; o < ss;) { /* process buffer */
+			switch (st) {
+			case HTFillField:
+				p = ss_findr_cn(rb, o, z, HTML_TDX, HTML_TDX_S);
+				if (p == S_NPOS) {
+					ss_cat_substr(&field, rb, o, S_NPOS);
+					o = ss; /* buffer empty */
+					break;
 				}
-				ss_cat_substr(&field, rb, off, o2 - off);
+				ss_cat_substr(&field, rb, o, p - o);
 				out_enc_f(SENC_field, nrow, nfield, field, &wb);
 				ss_set_size(field, 0);
-				nfield++;
 				st = HTSearchField;
-				off = o2 + HTML_TDX_S;
-				continue;
-			}
-			if (st == HTSearchField) {
-				o2 = search_tag(&rb, off, in_fd, HTML_TD,
-								 HTML_TD_S);
-				o3 = search_tag(&rb, off, in_fd, HTML_TR,
-								 HTML_TR_S);
-				if (o2 == S_NPOS && o3 == S_NPOS)
+				o = p + HTML_TDX_S;
+				nfield++;
+				break;
+			case HTSearchField:
+				p = ss_findr_cn(rb, o, z, HTML_TD, HTML_TD_S);
+				q = ss_findr_cn(rb, o, z, HTML_TR, HTML_TR_S);
+				if (p == S_NPOS && q == S_NPOS) {
+					o = ss;
 					break; /* buffer empty */
-				if (o3 < o2 && (nfield || nrow)) {
+				}
+				if (q < p && (nfield || nrow)) {
 					nrow++;
 					nfield = 0;
 				}
 				st = HTFillField;
-				off = o2 + HTML_TD_S;
-				continue;
-			}
-			if (st == HTSearchRow) {
-				o2 = search_tag(&rb, off, in_fd, HTML_TR,
-								 HTML_TR_S);
-				if (o2 == S_NPOS)
+				o = p + HTML_TD_S;
+				break;
+			case HTSearchRow:
+				p = ss_findr_cn(rb, o, z, HTML_TR, HTML_TR_S);
+				if (p == S_NPOS) {
+					o = ss;
 					break; /* buffer empty */
+				}
 				if (nfield || nrow){
 					nrow++;
 					nfield = 0;
 				}
 				st = HTSearchField;
-				off = o2 + HTML_TR_S;
-				continue;
-			}
-			if (st == HTSearchTable) {
-				o2 = search_tag(&rb, off, in_fd, HTML_TABLE,
-								 HTML_TABLE_S);
-				if (o2 == S_NPOS)
+				o = p + HTML_TR_S;
+				break;
+			case HTSearchTable:
+				p = ss_findr_cn(rb, o, z, HTML_TBL, HTML_TBL_S);
+				if (p == S_NPOS)
 					break; /* buffer empty */
 				st = HTSearchRow;
-				off = o2 + HTML_TABLE_S;
-				continue;
+				o = p + HTML_TBL_S;
+				break;
+			default:
+				o = ss; /* this should never happen */
+				break;
 			}
-			break;
 		}
 	}
 	if (!fatal_error) {
@@ -356,11 +351,11 @@ static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
 			nfield++;
 		}
 		out_enc_f(SENC_end, nrow, nfield, field, &wb);
-		if (ss_size(wb) > 0 && ss_write(out_fd, wb, 0, ss_size(wb)) < 0)
-			nrow = -2; /* write error */
+                if (!sflush(wb, out_fd, 0))
+                        fatal_error = S_TRUE;
 	}
 	ss_free(&rb, &wb, &field);
-	return nrow;
+	return fatal_error ? - 2 : nrow;
 }
 
 static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
@@ -369,147 +364,149 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 		      JSFillFieldQ };
 	enum eJSFSM st = JSSearchOpen;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
-	size_t off, o2, o3, o4, o5, tr, td, nfield = 0, nrow = 0;
-	const size_t rb_sz = 8192, wb_sz = 32768;
-	sbool_t fatal_error = S_FALSE;
+	size_t o, p, q, r, s, tr, nfield = 0, nrow = 0;
+	sbool_t fatal_error = S_FALSE, done = S_FALSE;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
-	for (; ss_read(&rb, 0, rb_sz) > 0;) {
-		if (ss_size(wb) > wb_sz &&
-		    ss_write(out_fd, wb, 0, ss_size(wb)) < 0) {
-			ss_set_size(wb, 0);
-			nrow = -2; /* write error */
+	while (!done) {
+		ss_erase(&rb, 0, o);
+		const size_t ss0 = ss_size(rb),
+			     ss = ss_size(ss_cat_read(&rb, 0, RBUF_SIZE));
+		if (ss == ss0)
+			break;	/* EOF */
+		const size_t z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
+		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
-			break;
+			break;	/* write error */
 		}
-		for (off = 0; off < ss_size(rb);) { /* process buffer */
-			if (st == JSFillFieldQ) {
-				o2 = search_tag(&rb, off, in_fd, JSON_QUOTE,
-								 JSON_QUOTE_S);
-				o3 = search_tag(&rb, off, in_fd, JSON_COMMA,
-								 JSON_COMMA_S);
-				o4 = search_tag(&rb, off, in_fd, JSON_ARRAYX,
-								 JSON_ARRAYX_S);
-				o5 = search_tag(&rb, off, in_fd, JSON_ESC,
-								 JSON_ESC_S);
-				if (o2 == S_NPOS && o3 == S_NPOS &&
-				    o4 == S_NPOS && o5 == S_NPOS) {
-					ss_cat_substr(&field, rb, off, S_NPOS);
+		for (o = 0; !done && o < ss;) { /* process buffer */
+			switch (st) {
+			case JSFillFieldQ:
+				p = ss_findr_cn(rb, o, z, JS_QT, JS_QT_S);
+				q = ss_findr_cn(rb, o, z, JS_COM, JS_COM_S);
+				r = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
+				s = ss_findr_cn(rb, o, z, JS_ESC, JS_ESC_S);
+				if (p == S_NPOS && q == S_NPOS &&
+				    r == S_NPOS && s == S_NPOS) {
+					ss_cat_substr(&field, rb, o, S_NPOS);
+					o = ss;
 					break; /* buffer empty */
 				}
-				if (o2 < o5) {
-					ss_cat_substr(&field, rb, off, o2 - off);
+				if (p < s) {
+					ss_cat_substr(&field, rb, o, p - o);
 					ss_dec_esc_json(&field, field);
-					out_enc_f(SENC_field, nrow, nfield, field, &wb);
+					out_enc_f(SENC_field, nrow, nfield,
+								field, &wb);
 					ss_set_size(field, 0);
 					nfield++;
-					if (o2 < o3 && o3 < o4) {
-						off = o3 + JSON_COMMA_S;
+					if (p < q && q < r) {
+						o = q + JS_COM_S;
 						st = JSSearchField;
-						continue;
-					} else if (o2 < o4 && o4 != S_NPOS) {
-						off = o4 + JSON_ARRAYX_S;
+						break;
+					} else if (p < r && r != S_NPOS) {
+						o = r + JS_ARRX_S;
 					} else
-						off = o2 + JSON_QUOTE_S;
+						o = p + JS_QT_S;
 					st = JSSearchRow;
-					continue;
+					break;
 				}
-				if (o5 != S_NPOS) {
-					search_tag(&rb, o5 + JSON_ESC_S, in_fd,
-						   JSON_ESC, JSON_ESC_S);
-					ss_cat_substr(&field, rb, off, o5 - off + 1);
-					off = o5 + JSON_ESC_S;
-					continue;
+				if (s != S_NPOS) {
+					o = s + JS_ESC_S + 1;
+					break;
 				}
+				o = ss; /* this should not happen; to do: validate */
 				break;
-			}
-			if (st == JSFillField) {
-				o3 = search_tag(&rb, off, in_fd, JSON_COMMA,
-								 JSON_COMMA_S);
-				o4 = search_tag(&rb, off, in_fd, JSON_ARRAYX,
-								 JSON_ARRAYX_S);
-				o5 = search_tag(&rb, off, in_fd, JSON_ESC,
-								 JSON_ESC_S);
-				if (o3 == S_NPOS && o4 == S_NPOS && o5 == S_NPOS) {
-					ss_cat_substr(&field, rb, off, S_NPOS);
-					break; /* buffer empty */
+			case JSFillField:
+				q = ss_findr_cn(rb, o, z, JS_COM, JS_COM_S);
+				r = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
+				s = ss_findr_cn(rb, o, z, JS_ESC, JS_ESC_S);
+				if (q == S_NPOS && r == S_NPOS && s == S_NPOS) {
+					ss_cat_substr(&field, rb, o, S_NPOS);
+					s = ss; /* buffer empty */
+					break;
 				}
-				sbool_t o3_wins = o3 < o4 && o3 < o5,
-					o4_wins = o4 < o3 && o4 < o5;
-				if (o3_wins || o4_wins) {
-					size_t ox, next_off;
-					if (o3_wins) {
-						ox = o3;
+				sbool_t q_wins = q < r && q < s,
+					r_wins = r < q && r < s;
+				if (q_wins || r_wins) {
+					size_t ox, next_o;
+					if (q_wins) {
+						ox = q;
 						st = JSSearchField;
-						next_off = o3 + JSON_COMMA_S;
+						next_o = q + JS_COM_S;
 					} else {
-						ox = o4;
+						ox = r;
 						st = JSSearchRow;
-						next_off = o4 + JSON_ARRAYX_S;
+						next_o = r + JS_ARRX_S;
 					}
-					ss_cat_substr(&field, rb, off, ox - off);
+					ss_cat_substr(&field, rb, o, ox - o);
 					ss_dec_esc_json(&field, field);
-					out_enc_f(SENC_field, nrow, nfield, field, &wb);
+					out_enc_f(SENC_field, nrow, nfield,
+								field, &wb);
 					ss_set_size(field, 0);
 					nfield++;
-					off = next_off;
-					continue;
+					o = next_o;
+					break;
 				}
-				if (o5 != S_NPOS) {
-					search_tag(&rb, o5 + JSON_ESC_S, in_fd,
-						   JSON_ESC, JSON_ESC_S);
-					ss_cat_substr(&field, rb, off, o5 - off + 1);
-					off = o5 + JSON_ESC_S;
-					continue;
+				if (s != S_NPOS) {
+					o = s + JS_ESC_S + 1;
+					break;
 				}
+				o = ss; /* this should not happen; to do: validate */
 				break;
-			}
-			if (st == JSSearchField) {
-				o2 = search_tag(&rb, off, in_fd, JSON_QUOTE,
-								 JSON_QUOTE_S);
-				o3 = search_tag(&rb, off, in_fd, JSON_COMMA,
-								 JSON_COMMA_S);
-				o4 = search_tag(&rb, off, in_fd, JSON_ARRAYX,
-								 JSON_ARRAYX_S);
-				if (o2 == S_NPOS && o3 == S_NPOS && o4 == S_NPOS)
-					break; /* buffer empty */
-				if (o2 < o3 && o2 < o4) {
-					off = o2 + JSON_QUOTE_S;
+			case JSSearchField:
+				p = ss_findr_cn(rb, o, z, JS_QT, JS_QT_S);
+				q = ss_findr_cn(rb, o, z, JS_COM, JS_COM_S);
+				r = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
+				if (p == S_NPOS && q == S_NPOS && r == S_NPOS) {
+					s = ss; /* buffer empty */
+					break;
+				}
+				if (p < q && p < r) {
+					o = p + JS_QT_S;
 					st = JSFillFieldQ;
 				} else {
 					st = JSFillField;
-					/* No offset changes */
+					/* No oset changes */
 				}
-				continue;
-			}
-			if (st == JSSearchRow) {
-				o2 = search_tag(&rb, off, in_fd, JSON_ARRAY,
-								 JSON_ARRAY_S);
-				if (o2 == S_NPOS)
-					break; /* buffer empty */
+				break;
+			case JSSearchRow:
+				p = ss_findr_cn(rb, o, z, JS_ARR, JS_ARR_S);
+				q = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
+				if (q < p) {
+					s = ss;
+					done = S_TRUE;
+					break;
+				}
+				if (p == S_NPOS) {
+					s = ss; /* buffer empty */
+					break;
+				}
 				if (nfield || nrow){
 					nrow++;
 					nfield = 0;
 				}
 				st = JSSearchField;
-				off = o2 + JSON_ARRAY_S;
-				continue;
-			}
-			if (st == JSSearchOpen) {
-				o2 = search_tag(&rb, off, in_fd, JSON_OPEN,
-								 JSON_OPEN_S);
-				if (o2 == S_NPOS)
-					break; /* EOF */
-				off = o2 + JSON_OPEN_S;
-				o2 = search_tag(&rb, off, in_fd, JSON_ARRAY,
-								 JSON_ARRAY_S);
-				if (o2 == S_NPOS)
-					break; /* EOF */
+				o = p + JS_ARR_S;
+				break;
+			case JSSearchOpen:
+				p = ss_findr_cn(rb, o, z, JS_OPEN, JS_OPEN_S);
+				if (p == S_NPOS) {
+					s = ss; /* buffer empty */
+					break;
+				}
+				o = p + JS_OPEN_S;
+				p = ss_findr_cn(rb, o, z, JS_ARR, JS_ARR_S);
+				if (p == S_NPOS) {
+					s = ss; /* buffer empty */
+					break;
+				}
 				st = JSSearchRow;
-				off = o2 + JSON_ARRAY_S;
-				continue;
+				o = p + JS_ARR_S;
+				break;
+			default:
+				o = ss; /* this should never happen */
+				break;
 			}
-			break;
 		}
 	}
 	if (!fatal_error) {
@@ -520,10 +517,10 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 			nfield++;
 		}
 		out_enc_f(SENC_end, nrow, nfield, field, &wb);
-		if (ss_size(wb) > 0 && ss_write(out_fd, wb, 0, ss_size(wb)) < 0)
-			nrow = -2; /* write error */
+                if (!sflush(wb, out_fd, 0))
+                        fatal_error = S_TRUE;
 	}
 	ss_free(&rb, &wb, &field);
-	return nrow;
+	return fatal_error ? - 2 : nrow;
 }
 
