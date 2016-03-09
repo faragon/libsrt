@@ -365,7 +365,8 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 	enum eJSFSM st = JSSearchOpen;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
 	size_t o, p, q, r, s, tr, nfield = 0, nrow = 0;
-	sbool_t fatal_error = S_FALSE, done = S_FALSE;
+	sbool_t fatal_error = S_FALSE, done = S_FALSE,
+		q_wins, r_wins;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
 	while (!done) {
@@ -425,8 +426,8 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 					s = ss; /* buffer empty */
 					break;
 				}
-				sbool_t q_wins = q < r && q < s,
-					r_wins = r < q && r < s;
+				q_wins = q < r && q < s;
+				r_wins = r < q && r < s;
 				if (q_wins || r_wins) {
 					size_t ox, next_o;
 					if (q_wins) {
