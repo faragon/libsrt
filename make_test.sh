@@ -119,7 +119,7 @@ then
 	echo "Documentation generation test..." | tee -a $LOG
 	DOC_OUT=$PWD/doc_out
 	mkdir "$DOC_OUT" 2>/dev/null
-	cd aux
+	cd utl
 	if ! ./mk_doc.sh "$DOC_OUT" ; then
 		ERRORS=$((ERRORS + 1))
 	fi
@@ -127,7 +127,7 @@ then
 fi
 
 echo -n "Checking style... "
-if ! aux/check_style.sh src/*c examples/*c ; then
+if ! utl/check_style.sh src/*c examples/*c ; then
 	echo "ERROR" | tee -a $LOG
 else
 	echo "OK" | tee -a $LOG
