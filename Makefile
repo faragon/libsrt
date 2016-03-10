@@ -12,8 +12,8 @@
 # Build with gcc cross compiler (ARM): make CC=arm-linux-gnueabi-gcc
 #
 # Observations:
-# - On FreeSD use gmake instead of make (as in that system "make" is "pmake", and
-#   not GNU make). If not installed, use: pkg install gmake
+# - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
+#   and not GNU make). If not installed, use: pkg install gmake
 #
 # Copyright (c) 2015 F. Aragon. All rights reserved.
 #
@@ -71,7 +71,8 @@ ifndef OCTEON
 	OCTEON = 0
 	ifeq ($(UNAME_M), mips64)
 		ifeq ($(UNAME), Linux)
-			OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | grep Octeon | head -1 | wc -l)
+			OCTEON = $(shell cat /proc/cpuinfo | grep cpu.model | \
+					 grep Octeon | head -1 | wc -l)
 		endif
 	endif
 endif
@@ -176,12 +177,13 @@ else
 	endif
 endif
 
-# ARM v6 little endian (e.g. ARM11 on Raspberr Pi I): the flag will enable HW unaligned access
+# ARM v6 little endian (e.g. ARM11 on Raspberr Pi I): the flag will enable
+# HW unaligned access
 ifeq ($(UNAME_M), armv6l)
 	COMMON_FLAGS += -march=armv6
 endif
 
-# ARM v7-a little endian (e.g. ARM Cortex A5/7/8/9/15/17, QC Scorpion/Krait, etc.)
+# ARM v7-a little endian (e.g. ARM Cortex A5/7/8/9/15/17, QC Scorpion/Krait)
 # (ARM v7-m and v7-r will be built as ARM v5)
 ifeq ($(UNAME_M), armv7l)
 	COMMON_FLAGS += -march=armv7-a
@@ -205,7 +207,8 @@ CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
 VPATH   = src:examples
-SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c smap.c sdmap.c shash.c sbitio.c
+SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c \
+	  smap.c sdmap.c shash.c sbitio.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a
@@ -224,6 +227,7 @@ $(EXES): $% $(LIBSRT)
 run_tests: stest
 	@./$(TEST)
 clean:
-	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out callgrind* out\.txt
+	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out \
+	       callgrind* out\.txt clang_analysis.txt *\.errors
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 
