@@ -119,17 +119,18 @@ then
 	echo "Documentation generation test..." | tee -a $LOG
 	DOC_OUT=$PWD/doc_out
 	mkdir "$DOC_OUT" 2>/dev/null
-	cd doc
+	cd aux
 	if ! ./mk_doc.sh "$DOC_OUT" ; then
 		ERRORS=$((ERRORS + 1))
 	fi
 	cd ..
 fi
 
-# Check C style (look for lines larger than 80 characters):
-if (( $(grep  '.\{81,\}' src/*c examples/*c | wc -l) > 0 )) ; then
-	echo "Style error" | tee -a $LOG
-	ERRORS=$((ERRORS + 1))
+echo -n "Checking style... "
+if ! aux/check_style.sh src/*c examples/*c ; then
+	echo "ERROR" | tee -a $LOG
+else
+	echo "OK" | tee -a $LOG
 fi
 
 exit $ERRORS
