@@ -273,7 +273,7 @@ static ssize_t html2x(int in_fd, int out_fd, f_enc out_enc_f)
 	enum eHTFSM { HTSearchTable, HTSearchRow, HTSearchField, HTFillField };
 	enum eHTFSM st = HTSearchTable;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
-	size_t o, p, q, tr, nfield = 0, nrow = 0;
+	size_t o = 0, p, q, tr, nfield = 0, nrow = 0;
 	sbool_t fatal_error = S_FALSE;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
@@ -364,7 +364,7 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 		      JSFillFieldQ };
 	enum eJSFSM st = JSSearchOpen;
 	RETURN_IF(in_fd < 0 || out_fd < 0 || !out_enc_f, -1);
-	size_t o, p, q, r, s, tr, nfield = 0, nrow = 0;
+	size_t o = 0, p, q, r, s, tr, nfield = 0, nrow = 0;
 	sbool_t fatal_error = S_FALSE, done = S_FALSE,
 		q_wins, r_wins;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
