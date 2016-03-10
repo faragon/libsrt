@@ -423,7 +423,7 @@ static ssize_t json2x(int in_fd, int out_fd, f_enc out_enc_f)
 				s = ss_findr_cn(rb, o, z, JS_ESC, JS_ESC_S);
 				if (q == S_NPOS && r == S_NPOS && s == S_NPOS) {
 					ss_cat_substr(&field, rb, o, S_NPOS);
-					s = ss; /* buffer empty */
+					o = ss; /* buffer empty */
 					break;
 				}
 				q_wins = q < r && q < s;
