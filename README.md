@@ -212,13 +212,13 @@ Test-covered platforms
 ===
 
 | ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
-| --- | --------- | --------- | ---------------------------------- | -- | --------- | ------------- | ------------- |
+| --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
 | ARM v5 (Feroceon) | 32 | little | no | Linux Debian "wheezy" | gcc, g++ | none | manual |
 | ARM v6 (ARM11) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
-| ARM v7 (Krait 400) | 32 | little | yes | Linux Android 5.1.1 | gcc, g++ | none | manual |
+| ARM v7 (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | Linux Vyatta | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
 
