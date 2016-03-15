@@ -9,7 +9,7 @@ extern "C" {
  *
  * Bit set/array/vector handling.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  *
  * Features:
  * - Fast: over 300 million bit set per second on i5-3330 @3GHz
@@ -100,7 +100,7 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
-/* #API: |Set nth bit to 1|bitset; bit offset|O(1) with the exception of O(n) for first case of not covering unitializated areas -for real-time requirement, force set + clear at last expected writable position-|1;2| */
+/* #API: |Set nth bit to 1|bitset; bit offset||O(n) -O(1) amortized-|1;2| */
 
 S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
@@ -134,7 +134,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 	}
 }
 
-/* #API: |Set nth bit to 0|bitset; bit offset|O(1)|0;1| */
+/* #API: |Set nth bit to 0|bitset; bit offset||O(1)|0;1| */
 
 S_INLINE void sb_clear(sb_t **b, const size_t nth)
 {
