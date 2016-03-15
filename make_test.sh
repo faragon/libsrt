@@ -2,12 +2,34 @@
 #
 # make_test.sh
 #
+# Syntax: ./make_test.sh [mask]
+#
+# Where:
+# - No parameters: all tests
+# - mask = "or" operation of the following:
+#		 1: Validate all available C/C++ builds
+#		 2: Valgrind memcheck
+#		 4: Clang static analyzer
+#		 8: Generate documentation
+#		16: Check coding style
+#
+# Examples:
+# ./make_test.sh    # Equivalent to ./make_test.sh 31
+# ./make_test.sh 1  # Do the builds
+# ./make_test.sh 17 # Do the builds and check coding style
+# ./make_test.sh 24 # Generate documentation and check coding style
+#
 # libsrt build, test, and documentation generation.
 #
-# Copyright (c) 2015 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2016 F. Aragon. All rights reserved.
 #
 
-if [ "$SKIP_FORCE32" == "1" ] ; then FORCE32T="" ; else FORCE32T="FORCE32=1" ; fi
+if (($# == 1)) && (($1 >= 1 && $1 < 32)) ; then TMUX=$1 ; else TMUX=31 ; fi
+if [ "$SKIP_FORCE32" == "1" ] ; then
+	FORCE32T=""
+else
+	FORCE32T="FORCE32=1"
+fi
 TEST_CC[0]="gcc"
 TEST_CC[1]="gcc"
 TEST_CC[2]="gcc"
@@ -54,83 +76,102 @@ INNER_LOOP_FLAGS[0]=""
 INNER_LOOP_FLAGS[1]="DEBUG=1"
 INNER_LOOP_FLAGS[2]="MINIMAL_BUILD=1"
 INNER_LOOP_FLAGS[3]="MINIMAL_BUILD=1 DEBUG=1"
-LOG=out.txt
 ERRORS=0
-echo "make_test.sh start" > $LOG
+NPROCS=0
+MJOBS=1
+
+if [ -e /proc/cpuinfo ] ; then # Linux CPU count
+	NPROCS=$(grep processor /proc/cpuinfo | wc -l)
+fi
+if [ $(uname) = Darwin ] ; then # OSX CPU count
+	NPROCS=$(sysctl hw.ncpu | awk '{print $2}')
+fi
+if (( NPROCS > MJOBS )) ; then MJOBS=$NPROCS ; fi
+
+echo "make_test.sh running..."
 
 # Locate GNU Make
-if [ "$MAKE" == "" ]
-then
-	if type gmake >/dev/null 2>/dev/null ; then MAKE=gmake ; else MAKE=make ; fi
+if [ "$MAKE" == "" ] ; then
+	if type gmake >/dev/null 2>&1 ; then
+		MAKE=gmake
+	else
+		MAKE=make
+	fi
 fi
 
-for ((i = 0 ; i < ${#TEST_CC[@]}; i++))
-do
-	if type ${TEST_CC[$i]} >/dev/null 2>/dev/null
-	then
-		for ((j = 0 ; j < ${#INNER_LOOP_FLAGS[@]}; j++))
-		do
-			CMD="$MAKE CC=${TEST_CC[$i]} ${TEST_FLAGS[$i]} ${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
-			$MAKE clean >/dev/null 2>/dev/null
-			echo -n "Test #$i.$j: [$CMD] ..." | tee -a $LOG
-			if $CMD >>$LOG 2>&1 ; then
-				echo " OK" | tee -a $LOG
-			else 	echo " ERROR" | tee -a $LOG
-				ERRORS=$((ERRORS + 1))
-			fi
-		done
-	else
-		echo "Test #$i: ${TEST_CC[$i]} compiler not found (test skipped)" | tee -a $LOG
-	fi
-done
+if (($TMUX & 1)) ; then
+	for ((i = 0 ; i < ${#TEST_CC[@]}; i++)) ; do
+		if type ${TEST_CC[$i]} >/dev/null 2>&1 >/dev/null ; then
+			for ((j = 0 ; j < ${#INNER_LOOP_FLAGS[@]}; j++)) ; do
+				CMD="$MAKE -j $MJOBS CC=${TEST_CC[$i]} ${TEST_FLAGS[$i]}"
+				CMD="$CMD${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
+				$MAKE clean >/dev/null 2>&1
+				echo -n "Test #$i.$j: [$CMD] ..."
+				if $CMD >/dev/null 2>&1 ; then
+					echo " OK"
+				else 	echo " ERROR"
+					ERRORS=$((ERRORS + 1))
+				fi
+			done
+		else
+			echo "Test #$i: ${TEST_CC[$i]} compiler not found (skipped)"
+		fi
+	done
+fi
 
 VAL_ERR_TAG="ERROR SUMMARY:"
 VAL_ERR_FILE=valgrind.errors
 
-if type valgrind >/dev/null 2>/dev/null
-then
-	echo -n "Valgrind test..." | tee -a $LOG
-	if $MAKE clean >/dev/null 2>/dev/null ; $MAKE DEBUG=1 >>$LOG 2>&1 ; valgrind --track-origins=yes --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./stest >>$LOG 2>$VAL_ERR_FILE ; then
-		VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILE" | awk -F 'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
+if (($TMUX & 2)) && type valgrind >/dev/null 2>&1 ; then
+	echo -n "Valgrind test..."
+	if $MAKE clean >/dev/null 2>&1 &&				  \
+	   $MAKE -j $MJOBS DEBUG=1 >/dev/null 2>&1 &&			  \
+	   valgrind --track-origins=yes --tool=memcheck --leak-check=yes  \
+		    --show-reachable=yes --num-callers=20 --track-fds=yes \
+		    ./stest >/dev/null 2>$VAL_ERR_FILE ; then
+		VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILE" | awk -F \
+			   'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
 		if (( $VAL_ERRS > 0 )) ; then
 			ERRORS=$((ERRORS + $VAL_ERRS))
-			echo " ERROR" | tee -a $LOG
+			echo " ERROR"
 		else
-			echo " OK" | tee -a $LOG
+			echo " OK"
 		fi
-	else 	echo " ERROR" | tee -a $LOG
+	else 	echo " ERROR"
 		ERRORS=$((ERRORS + 1))
 	fi
 fi
 
-if type scan-build >/dev/null 2>/dev/null
-then
-	echo -n "Clang static analyzer..." | tee -a $LOG
+if (($TMUX & 4)) && type scan-build >/dev/null 2>&1 ; then
+	echo -n "Clang static analyzer..."
 	$MAKE clean
 	if scan-build $MAKE CC=clang 2>&1 >clang_analysis.txt ; then
-		echo " OK" | tee -a $LOG
-	else	echo " ERROR" | tee -a $LOG
+		echo " OK"
+	else	echo " ERROR"
 		ERRORS=$((ERRORS + 1))
 	fi
 fi
 
-if type python3 >/dev/null 2>/dev/null
-then
-	echo "Documentation generation test..." | tee -a $LOG
-	DOC_OUT=$PWD/doc_out
-	mkdir "$DOC_OUT" 2>/dev/null
-	cd utl
-	if ! ./mk_doc.sh "$DOC_OUT" ; then
-		ERRORS=$((ERRORS + 1))
+if (($TMUX & 8)) ; then
+	if  type python3 >/dev/null 2>&1 ; then
+		echo "Documentation generation test..."
+		if ! utl/mk_doc.sh src out_doc ; then
+			ERRORS=$((ERRORS + 1))
+		fi
+	else
+		echo "WARNING: doc not generated (python3 not found)"
 	fi
-	cd ..
 fi
 
-echo -n "Checking style... "
-if ! utl/check_style.sh src/*c examples/*c ; then
-	echo "ERROR" | tee -a $LOG
-else
-	echo "OK" | tee -a $LOG
+if (($TMUX & 16)) ; then
+	echo "Checking style..."
+	ls -1  src/*c examples/*c examples/*h Makefile *\.sh utl/*\.sh | \
+	while read line ; do
+		if ! utl/check_style.sh "$line" ; then
+			echo "$line... ERROR"
+			ERRORS=$((ERRORS + 1))
+		fi
+	done
 fi
 
 exit $ERRORS
