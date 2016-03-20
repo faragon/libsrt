@@ -9,7 +9,7 @@ extern "C" {
  *
  * Common definitions.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #ifdef _MSC_VER
@@ -264,7 +264,8 @@ union s_u32 {
     defined(__ARM_FEATURE_UNALIGNED) ||					\
     defined(_MIPS_ARCH_OCTEON) && _MIPS_ARCH_OCTEON ||			\
     defined(__OCTEON__) && __OCTEON__ ||				\
-    defined(__ppc__) || defined(__POWERPC__)
+    defined(__ppc__) || defined(__POWERPC__) ||				\
+    defined(_M_AMD64) || defined(_M_IX86)
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
@@ -278,7 +279,7 @@ union s_u32 {
     defined(__AVR__) || defined(__MSP430__) ||				    \
     defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		    \
     defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) ||	    \
-    defined(__IEEE_LITTLE_ENDIAN)
+    defined(__IEEE_LITTLE_ENDIAN) || defined(_M_AMD64) || defined(_M_IX86)
 	#define S_IS_LITTLE_ENDIAN 1
 #endif
 
