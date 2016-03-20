@@ -46,7 +46,7 @@ typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 #define sb_free			sv_free
 
 /*
-#API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|0;1|
+#API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|1;2|
 sb_t *sb_alloca(const size_t initial_num_elems_reserve)
 
 #API: |Allocate bitset (heap)|space preallocated to store n elements|bitset|O(1)|1;2|
@@ -58,18 +58,16 @@ sb_t *sb_free(sb_t **b, ...)
 #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|0;1|
 sb_t *sb_shrink(sb_t **c)
 
-#API: |Duplicate bitset|bitset|output bitset|O(n)|0;1|
+#API: |Duplicate bitset|bitset|output bitset|O(n)|1;2|
 sb_t *sb_dup(const sb_t *src)
 
-#API: |Reset bitset|bitset|output bitset|O(n)|0;1|
-sb_t *sb_reset(const sb_t *src)
 */
 
 /*
  * Accessors
  */
 
-/* #API: |Reset bitset|bitset|output bitset|O(1)|0;1| */
+/* #API: |Reset bitset|bitset|output bitset|O(1)|1;2| */
 sb_t *sb_reset(sb_t *b)
 {
 	RETURN_IF(!b, 0);
@@ -106,8 +104,9 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
 	S_ASSERT(b);
 	if (b) {
-		const size_t pos = nth / 8, mask = 1 << (nth % 8);
 		unsigned char *buf;
+		const size_t pos = nth / 8, mask = 1 << (nth % 8),
+			     pinc = pos + 1;
 		if (!(*b)) { /* BEHAVIOR: if NULL, assume heap allocation */
 			*b = sb_alloc(nth);
 			if (!(*b)) {
@@ -115,12 +114,12 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 				return;
 			}
 		}
-		if (pos >= (*b)->aux) {
-			const size_t pinc = pos + 1 + (mask ? 1 : 0);
+		if (pinc > (*b)->aux) {
 			if (sv_reserve(b, pinc) < pinc) {
 				S_ERROR("not enough memory");
 				return;
 			}
+			sv_set_size(*b, pinc);
 			buf = (unsigned char *)__sv_get_buffer(*b);
 			memset(buf + (*b)->aux, 0, pinc - (*b)->aux);
 			(*b)->aux = pinc;
@@ -154,7 +153,7 @@ S_INLINE void sb_clear(sb_t **b, const size_t nth)
 	/* else: NULL bitset is implicitly considered as set to 0 */
 }
 
-/* #API: |Force evaluation of first N bits (equivalent to set to 0 all not previously referenced bits)|bitset; bit offset|-|O(n)|1;2| */
+/* #API: |Force evaluation of first N bits -equivalent to set to 0 all not previously referenced bits-|bitset; bit offset|-|O(n)|1;2| */
 
 S_INLINE void sb_eval(sb_t **b, const size_t nth)
 {

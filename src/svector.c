@@ -3,7 +3,7 @@
  *
  * Vector handling.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */ 
 
 #include "svector.h"
@@ -192,6 +192,8 @@ static sv_t *aux_dup(const sv_t *src, const size_t n_elems)
 			sv_alloc(src->elem_size, ss, src->cmpf) :
 			sv_alloc_t((enum eSV_Type)src->sv_type, ss);
 	if (v) {
+		v->aux = src->aux;
+		v->aux2 = src->aux2;
 		sv_copy_elems(v, 0, src, 0, size);
 		set_size(v, size);
 	} else {

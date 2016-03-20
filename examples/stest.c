@@ -5,7 +5,7 @@
  * detecting if something gets broken; it will be converted into
  * a proper API validation).
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
  
 #include "../src/libsrt.h"
@@ -106,6 +106,31 @@ MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_squote)
 /*
  * Tests
  */
+
+static int test_sb(size_t nelems)
+{
+	sb_t *a = sb_alloca(nelems), *b = sb_alloc(0);
+	#define TEST_SB(bs, ne) 	\
+		sb_eval(&bs, ne);	\
+		sb_set(&bs, 0);		\
+		sb_set(&bs, ne - 1);
+	TEST_SB(a, nelems);
+	TEST_SB(b, nelems);
+	#undef TEST_SB
+	sb_t *da = sb_dup(a), *db = sb_dup(b);
+	int res = sb_popcount(a) != sb_popcount(b) ||
+		  sb_popcount(da) != sb_popcount(db) ||
+		  sb_popcount(a) != sb_popcount(da) ||
+		  sb_popcount(a) != 2 ? 1 :
+		  !sb_test(a, 0) || !sb_test(b, 0) ||
+		  !sb_test(da, 0) || !sb_test(db, 0) ? 2 : 0;
+	sb_reset(da);
+	sb_reset(db);
+	res |= sb_popcount(da) || sb_popcount(db) ? 4 :
+	       sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
+	sb_free(&b, &db);
+	return res;
+}
 
 static int test_ss_alloc(const size_t max_size)
 {
@@ -2611,6 +2636,15 @@ int main()
 			"some tests -those will be skipped-)\n");
 	}
 	STEST_START;
+	STEST_ASSERT(test_sb(2));
+	STEST_ASSERT(test_sb(3));
+	STEST_ASSERT(test_sb(101));
+	STEST_ASSERT(test_sb(1024));
+	STEST_ASSERT(test_sb(1500));
+	STEST_ASSERT(test_sb(8192));
+	STEST_ASSERT(test_sb(10001));
+	STEST_ASSERT(test_sb(128 * 1024));
+	STEST_ASSERT(test_sb(1000 * 1000 + 1));
 	STEST_ASSERT(test_ss_alloc(0));
 	STEST_ASSERT(test_ss_alloc(16));
 	STEST_ASSERT(test_ss_alloca(32));
