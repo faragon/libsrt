@@ -3,7 +3,7 @@
  *
  * Debug helpers (data formatting, etc.).
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */ 
 
 #include "sdbg.h"
@@ -31,7 +31,7 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 	ss_cat_printf(log, 512, "sv_t: t: %s, elem size: %zu, sz: %zu, { ",
 		      sv_type_to_label(t), elem_size, elems);
 	size_t i = 0;
-	ss_t *aux = ss_alloca(elem_size);
+	ss_t *aux = ss_alloca(elem_size * 2);
 	const char *buf = (const char *)sv_get_buffer_r(v);
 	for (; i < elems; i++) {
 		ss_cpy_cn(&aux, buf + i * elem_size , elem_size);
