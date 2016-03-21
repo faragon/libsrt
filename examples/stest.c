@@ -128,7 +128,7 @@ static int test_sb(size_t nelems)
 	sb_reset(db);
 	res |= sb_popcount(da) || sb_popcount(db) ? 4 :
 	       sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
-	sb_free(&b, &db);
+	sb_free(&b, &da, &db);
 	return res;
 }
 
