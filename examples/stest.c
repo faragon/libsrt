@@ -2730,10 +2730,12 @@ int main()
 	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "0123456789ABCDEF",
 			       "MDEyMzQ1Njc4OUFCQ0RFRg==");
 	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, "01", "MDE=");
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "\xf8", "f8");
 	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "\xff\xff", "ffff");
 	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, "01z", "30317a");
 	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "0123456789ABCDEF",
 			       "30313233343536373839414243444546");
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "\xf8", "F8");
 	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "\xff\xff", "FFFF");
 	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, "01z", "30317A");
 	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml, "hi\"&'<>there",

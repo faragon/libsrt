@@ -126,18 +126,19 @@ static size_t senc_hex_aux(const unsigned char *s, const size_t ss,
 	RETURN_IF(!s, 0);
 	const size_t out_size = ss * 2;
 	size_t i = ss, j = out_size;
-	size_t tail = ss - (ss % 2);
 	#define ENCHEX_LOOP(ox, ix) {		\
 		const int next = s[ix - 1];	\
 		o[ox - 2] = t[next >> 4];	\
 		o[ox - 1] = t[next & 0x0f];	\
 		}
-	if (tail)
-		for (; i > 0; i--, j -= 2)
-			ENCHEX_LOOP(j, i);
-	for (; i > 0; i -= 2, j -= 4) {
-		ENCHEX_LOOP(j - 2, i - 1);
+	if (ss % 2) {
 		ENCHEX_LOOP(j, i);
+		i--;
+		j -= 2;
+	}
+	for (; i > 0; i -= 2, j -= 4) {
+		ENCHEX_LOOP(j, i);
+		ENCHEX_LOOP(j - 2, i - 1);
 	}
 	#undef ENCHEX_LOOP
 	return out_size;
