@@ -112,8 +112,7 @@ size_t sc_wc_to_utf8(const int c, char *s, const size_t off,
 		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24)); break;
 		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30)); break;
 		}
-		switch (len)
-		{
+		switch (len) {
 		case 6: s[off+5] = (char)(SSU8_SX |
 					  ((c >> (6 * (len-6))) & SSUB_MX));
 		case 5: s[off+4] = (char)(SSU8_SX |
@@ -158,8 +157,7 @@ size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
 		}
 		if ((off + c_sz) <= max_off) {
 			out <<= (6 * (c_sz - 1));
-			switch (c_sz)
-			{
+			switch (c_sz) {
 			case 6: out|= (s[off+5] & SSUB_MX);
 			case 5: out|= (s[off+4] & SSUB_MX) << (6 * (c_sz - 5));
 			case 4: out|= (s[off+3] & SSUB_MX) << (6 * (c_sz - 4));

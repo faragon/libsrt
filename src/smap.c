@@ -144,8 +144,7 @@ static int aux_sp_ss_sort(struct STraverseParams *tp)
 static void smf_setup(const enum eSM_Type t, struct STConf *f)
 {
 	memset(f, 0, sizeof(*f));
-	switch (t)
-	{
+	switch (t) {
 	case SM_U32U32:
 		f->cmp = (st_cmp_t)cmp_u;
 		break;
