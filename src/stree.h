@@ -9,7 +9,7 @@ extern "C" {
  *
  * Self-balancing sorted binary tree.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  *
  * Features:
  * - See documentation for API reference.
@@ -23,17 +23,17 @@ extern "C" {
 
 #ifdef S_TREE_HUGE /* Up to 2^63 - 1 nodes */
 	#define ST_NODE_BITS 63
-	#define ST_NIL	((((suint_t)1)<<ST_NODE_BITS) - 1)
-	typedef suint_t stndx_t;
+	#define ST_NIL	((((uint64_t)1)<<ST_NODE_BITS) - 1)
+	typedef uint64_t stndx_t;
 #else /* Up to 2^31 - 1 nodes */
 	#if S_BPWORD >=4 
 		#define ST_NODE_BITS 31
-		#define ST_NIL	((((suint32_t)1)<<ST_NODE_BITS) - 1)
+		#define ST_NIL	((((uint32_t)1)<<ST_NODE_BITS) - 1)
 	#else
 		#define ST_NODE_BITS (S_BPWORD * 8 - 1)
 		#define ST_NIL	((((unsigned)1)<<ST_NODE_BITS) - 1)
 	#endif
-	typedef suint32_t stndx_t;
+	typedef uint32_t stndx_t;
 #endif
 
 typedef int (*st_cmp_t)(const void *tree_node, const void *new_node);
@@ -44,7 +44,7 @@ struct STConf
 	size_t type;
 	size_t node_size;
 	st_cmp_t cmp;
-	sint_t iaux1, iaux2;
+	int64_t iaux1, iaux2;
 	const void *paux1, *paux2;
 };
 

@@ -9,7 +9,7 @@ extern "C" {
  *
  * String handling.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "scommon.h"
@@ -198,7 +198,7 @@ ss_t *ss_dup_wn(const wchar_t *src, const size_t src_size);
 ss_t *ss_dup_w(const wchar_t *src);
 
 /* #API: |Duplicate from integer|integer|output result|O(1)|1;2| */
-ss_t *ss_dup_int(const sint_t num);
+ss_t *ss_dup_int(const int64_t num);
 
 /* #API: |Duplicate string with lowercase conversion|string|output result|O(n)|1;2| */
 ss_t *ss_dup_tolower(const ss_t *src);
@@ -316,7 +316,7 @@ ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...);
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Overwrite string with integer to string copy|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_int(ss_t **s, const sint_t num);
+ss_t *ss_cpy_int(ss_t **s, const int64_t num);
 
 /* #API: |Overwrite string with input string lowercase conversion copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_tolower(ss_t **s, const ss_t *src);
@@ -449,7 +449,7 @@ ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...);
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Concatenate integer|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_int(ss_t **s, const sint_t num);
+ss_t *ss_cat_int(ss_t **s, const int64_t num);
 
 /* #API: |Concatenate "lowercased" string|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_tolower(ss_t **s, const ss_t *src);

@@ -9,7 +9,7 @@ extern "C" {
  *
  * Vector handling.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */ 
 
 #include "sdata.h"
@@ -215,10 +215,10 @@ sv_t *sv_sort(sv_t **v);
 size_t sv_find(const sv_t *v, const size_t off, const void *target);
 
 /* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
-size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target);
+size_t sv_find_i(const sv_t *v, const size_t off, const int64_t target);
 
 /* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
-size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target);
+size_t sv_find_u(const sv_t *v, const size_t off, const uint64_t target);
 
 /*
  * Compare
@@ -235,10 +235,10 @@ int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2o
 const void *sv_at(const sv_t *v, const size_t index);
 
 /* #API: |Vector random access (integer)|vector; location|Element value|O(1)|1;2| */
-sint_t sv_i_at(const sv_t *v, const size_t index);
+int64_t sv_i_at(const sv_t *v, const size_t index);
 
 /* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|1;2| */
-suint_t sv_u_at(const sv_t *v, const size_t index);
+uint64_t sv_u_at(const sv_t *v, const size_t index);
 
 /*
  * Vector "set": set element value at given position
@@ -248,10 +248,10 @@ suint_t sv_u_at(const sv_t *v, const size_t index);
 sbool_t sv_set(sv_t **v, const size_t index, const void *value);
 
 /* #API: |Vector random access write (integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
-sbool_t sv_set_i(sv_t **v, const size_t index, sint_t value);
+sbool_t sv_set_i(sv_t **v, const size_t index, int64_t value);
 
 /* #API: |Vector random access write (unsigned integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
-sbool_t sv_set_u(sv_t **v, const size_t index, suint_t value);
+sbool_t sv_set_u(sv_t **v, const size_t index, uint64_t value);
 
 /*
  * Vector "push": add element in the last position
@@ -267,10 +267,10 @@ sbool_t sv_push(sv_t **v, const void *c1, ...)
 size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...);
 
 /* #API: |Push/add element (integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
-sbool_t sv_push_i(sv_t **v, const sint_t c);
+sbool_t sv_push_i(sv_t **v, const int64_t c);
 
 /* #API: |Push/add element (unsigned integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
-sbool_t sv_push_u(sv_t **v, const suint_t c);
+sbool_t sv_push_u(sv_t **v, const uint64_t c);
 
 /*
  * Vector "pop": extract element from last position
@@ -280,10 +280,10 @@ sbool_t sv_push_u(sv_t **v, const suint_t c);
 void *sv_pop(sv_t *v);
 
 /* #API: |Pop/extract element (integer)|vector|Integer element|O(1)|1;2| */
-sint_t sv_pop_i(sv_t *v);
+int64_t sv_pop_i(sv_t *v);
 
 /* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(1)|1;2| */
-suint_t sv_pop_u(sv_t *v);
+uint64_t sv_pop_u(sv_t *v);
 
 /*
  * Functions intended for helping compiler optimization

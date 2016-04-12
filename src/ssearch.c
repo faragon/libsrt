@@ -3,7 +3,7 @@
  *
  * Real-time string search using the Rabin-Karp algorithm.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "ssearch.h"
@@ -159,7 +159,6 @@ size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
 #undef S_FIND_CSUM_SEARCH1
 #undef S_FIND_CSUM_SEARCH1
 #undef S_FIND_CSUM_SEARCH2
-
 
 #ifdef S_ENABLE_OTHER_EXAMPLES
 /*

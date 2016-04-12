@@ -9,7 +9,7 @@ extern "C" {
  *
  * Distributed map handling (same-process clustering)
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "smap.h"
@@ -19,7 +19,7 @@ extern "C" {
  */
 
 typedef struct S_DMap sdm_t;
-typedef size_t (*sdm_i_hash_t)(const sdm_t *dm, const sint_t k);
+typedef size_t (*sdm_i_hash_t)(const sdm_t *dm, const int64_t k);
 typedef size_t (*sdm_s_hash_t)(const sdm_t *dm, const ss_t *k);
 
 struct S_DMap
@@ -61,7 +61,7 @@ void sdm_free_aux(const size_t nargs, sdm_t **s, ...);
 void sdm_set_routing(sdm_t *dm, sdm_i_hash_t irf, sdm_s_hash_t srf);
 
 /* #API: |Get route to subtree (integer key)|dmap; key|subtree id|O(1)|1;2| */
-size_t sdm_i_route(const sdm_t *dm, const sint_t k);
+size_t sdm_i_route(const sdm_t *dm, const int64_t k);
 
 /* #API: |Get route to subtree (string key)|dmap; key|subtree id|O(1)|0;1| */
 size_t sdm_s_route(const sdm_t *dm, const ss_t *k);

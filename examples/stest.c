@@ -385,7 +385,7 @@ static int test_ss_dup_w()
 	return res;
 }
 
-static int test_ss_dup_int(const sint_t num, const char *expected)
+static int test_ss_dup_int(const int64_t num, const char *expected)
 {
 	ss_t *a = ss_dup_int(num);
 	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
@@ -511,7 +511,7 @@ static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
 	return res;
 }
 
-static int test_ss_dup_char(const sint32_t in, const char *expected)
+static int test_ss_dup_char(const int32_t in, const char *expected)
 {
 	ss_t *a = ss_dup_char(in);
 	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
@@ -623,7 +623,7 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 	return res;
 }
 
-static int test_ss_cpy_int(const sint_t num, const char *expected)
+static int test_ss_cpy_int(const int64_t num, const char *expected)
 {
 	ss_t *a = NULL;
 	ss_cpy_int(&a, num);
@@ -761,7 +761,7 @@ static int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
 	return res;
 }
 
-static int test_ss_cpy_char(const sint32_t in, const char *expected)
+static int test_ss_cpy_char(const int32_t in, const char *expected)
 {
 	ss_t *a = ss_dup_c("zz");
 	ss_cpy_char(&a, in);
@@ -892,7 +892,7 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	return res;
 }
 
-static int test_ss_cat_int(const char *in, const sint_t num,
+static int test_ss_cat_int(const char *in, const int64_t num,
 			   const char *expected)
 {
 	ss_t *a = ss_dup_c(in);
@@ -2023,7 +2023,7 @@ static int test_sv_push_pop_set_i()
 
 static int test_sv_push_pop_set_u()
 {
-	suint_t init[] = { (suint_t)-1, (suint_t)-1, (suint_t)-1, (suint_t)-1 },
+	uint64_t init[] = { (uint64_t)-1, (uint64_t)-1, (uint64_t)-1, (uint64_t)-1 },
 		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
 	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
 	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
@@ -2031,11 +2031,11 @@ static int test_sv_push_pop_set_u()
 		size_t as = 10;
 		sv_t *a = sv_alloc_t(t[i], as);
 		sv_t *b = sv_alloca_t(t[i], as);
-		sint_t r;
-		if (!(a && b && sv_push_u(&a, (suint_t)-1) &&
+		int64_t r;
+		if (!(a && b && sv_push_u(&a, (uint64_t)-1) &&
 		      sv_push_u(&b, init[i]) &&
-		      (r = (sint_t)sv_pop_u(a)) && r == sv_pop_i(b) &&
-		      r == (sint_t)expected[i] &&
+		      (r = (int64_t)sv_pop_u(a)) && r == sv_pop_i(b) &&
+		      r == (int64_t)expected[i] &&
 		      sv_len(a) == 0 && sv_len(b) == 0))
 			res |= 1 << i;
 		sv_free(&a);
@@ -2337,7 +2337,7 @@ static int test_sm_sp_at()
 
 #define TEST_SM_X_COUNT(T, v)				\
 	int res = 0;					\
-	suint32_t i, tcount = 100;			\
+	uint32_t i, tcount = 100;			\
 	sm_t *m = sm_alloc(T, tcount);			\
 	for (i = 0; i < tcount; i++)			\
 		sm_uu32_insert(&m, (unsigned)i, v);	\
@@ -2551,15 +2551,15 @@ static int test_sdm_alloc()
 	sdm_t *dm = sdm_alloc(SM_IntInt, 4, 1);
 	RETURN_IF(!dm, 1);
 	sm_t **submaps = sdm_submaps(dm);
-	sint_t c = 0;
+	int64_t c = 0;
 	size_t nelems = 1000000;
-	for (; c < (sint_t)nelems; c++) {
+	for (; c < (int64_t)nelems; c++) {
 		const size_t route = sdm_i_route(dm, c);
 		sm_ii_insert(&submaps[route], c, c);
 	}
 	size_t sdmsz = sdm_size(dm);
 	size_t nelems_check = 0;
-	for (c = 0; c < (sint_t)sdmsz; c++)
+	for (c = 0; c < (int64_t)sdmsz; c++)
 		nelems_check += sm_size(submaps[c]);
 	sdm_free(&dm);
 	return nelems == nelems_check ? 0 : 2;
@@ -2589,11 +2589,11 @@ static int test_endianess()
 static int test_alignment()
 {
 	int res = 0;
-	char ac[sizeof(suint32_t)] = { 0 }, bc[sizeof(suint32_t)] = { 0 },
-	     cc[sizeof(size_t)], dd[sizeof(suint64_t)];
+	char ac[sizeof(uint32_t)] = { 0 }, bc[sizeof(uint32_t)] = { 0 },
+	     cc[sizeof(size_t)], dd[sizeof(uint64_t)];
 	unsigned a = 0x12345678, b = 0x87654321;
 	size_t c = ((size_t)-1) & a;
-	suint64_t d = (suint64_t)a << 32 | b;
+	uint64_t d = (uint64_t)a << 32 | b;
 	S_ST_U32(&ac, a);
 	S_ST_U32(&bc, b);
 	S_ST_SZT(&cc, c);
@@ -2897,7 +2897,7 @@ int main()
 	 *		       chinese             N~          n~         */
 	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac",
 			       "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };
-	const sint32_t uc[] = { 'a', 0x24, 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
+	const int32_t uc[] = { 'a', 0x24, 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
 	unsigned i = 0;
 	for (; i < sizeof(utf8) / sizeof(utf8[0]); i++) {
 		STEST_ASSERT(test_sc_utf8_to_wc(utf8[i], uc[i]));

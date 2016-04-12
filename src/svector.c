@@ -33,8 +33,8 @@ static size_t svt_sizes[SV_LAST_INT + 1] = {	sizeof(char),
 						sizeof(unsigned short),
 						sizeof(int),
 						sizeof(unsigned int),
-						sizeof(sint_t),
-						sizeof(suint_t)
+						sizeof(int64_t),
+						sizeof(uint64_t)
 					};
 static struct SVector sv_void0 = EMPTY_SV;
 static sv_t *sv_void = (sv_t *)&sv_void0;
@@ -64,16 +64,16 @@ static struct sd_conf svf = {	(size_t (*)(const sd_t *))__sv_get_max_size,
 		*(TS *)(st) = (TS)*(c);		\
 	}
 
-SV_STx(svsti8, char, const sint_t)
-SV_STx(svstu8, unsigned char, const suint_t)
-SV_STx(svsti16, short, const sint_t)
-SV_STx(svstu16, unsigned short, const suint_t)
-SV_STx(svsti32, sint32_t, const sint_t)
-SV_STx(svstu32, suint32_t, const suint_t)
-SV_STx(svsti64, sint_t, const sint_t)
-SV_STx(svstu64, suint_t, const suint_t)
+SV_STx(svsti8, char, const int64_t)
+SV_STx(svstu8, unsigned char, const uint64_t)
+SV_STx(svsti16, short, const int64_t)
+SV_STx(svstu16, unsigned short, const uint64_t)
+SV_STx(svsti32, int32_t, const int64_t)
+SV_STx(svstu32, uint32_t, const uint64_t)
+SV_STx(svsti64, int64_t, const int64_t)
+SV_STx(svstu64, uint64_t, const uint64_t)
 
-typedef void (*T_SVSTX)(void *, const sint_t *);
+typedef void (*T_SVSTX)(void *, const int64_t *);
 
 static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
 						svsti16, (T_SVSTX)svstu16,
@@ -92,16 +92,16 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
 		return out;						\
 	}
 
-SV_LDx(svldi8, const char, sint_t)
-SV_LDx(svldu8, const unsigned char, suint_t)
-SV_LDx(svldi16, const short, sint_t)
-SV_LDx(svldu16, const unsigned short, suint_t)
-SV_LDx(svldi32, const sint32_t, sint_t)
-SV_LDx(svldu32, const suint32_t, suint_t)
-SV_LDx(svldi64, const sint_t, sint_t)
-SV_LDx(svldu64, const suint_t, suint_t)
+SV_LDx(svldi8, const char, int64_t)
+SV_LDx(svldu8, const unsigned char, uint64_t)
+SV_LDx(svldi16, const short, int64_t)
+SV_LDx(svldu16, const unsigned short, uint64_t)
+SV_LDx(svldi32, const int32_t, int64_t)
+SV_LDx(svldu32, const uint32_t, uint64_t)
+SV_LDx(svldi64, const int64_t, int64_t)
+SV_LDx(svldu64, const uint64_t, uint64_t)
 
-typedef sint_t *(*T_SVLDX)(const void *, sint_t *, const size_t);
+typedef int64_t *(*T_SVLDX)(const void *, int64_t *, const size_t);
 
 static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
 						svldi16, (T_SVLDX)svldu16,
@@ -127,11 +127,11 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
 BUILD_CMP_I(__sv_cmp_i8, char)
 BUILD_CMP_I(__sv_cmp_i16, short)
 BUILD_CMP_I(__sv_cmp_i32, int)
-BUILD_CMP_I(__sv_cmp_i64, sint_t)
+BUILD_CMP_I(__sv_cmp_i64, int64_t)
 BUILD_CMP_I(__sv_cmp_u8, unsigned char)
 BUILD_CMP_I(__sv_cmp_u16, unsigned short)
 BUILD_CMP_I(__sv_cmp_u32, unsigned int)
-BUILD_CMP_I(__sv_cmp_u64, suint_t)
+BUILD_CMP_I(__sv_cmp_u64, uint64_t)
 
 static size_t get_size(const sv_t *v)
 {
@@ -520,7 +520,7 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	RETURN_IF(!v || v->sv_type < SV_I8 ||				\
 		  v->sv_type > SV_U64, S_NPOS);				\
 	char i8; unsigned char u8; short i16; unsigned short u16;	\
-	int i32; unsigned u32; sint_t i64; suint_t u64;			\
+	int i32; unsigned u32; int64_t i64; uint64_t u64;			\
 	void *src;							\
 	switch (v->sv_type) {						\
 	case SV_I8: i8 = (char)target; src = &i8; break;		\
@@ -529,18 +529,18 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	case SV_U16: u16 = (unsigned short)target; src = &u16; break;	\
 	case SV_I32: i32 = (int)target; src = &i32; break;		\
 	case SV_U32: u32 = (unsigned)target; src = &u32; break;		\
-	case SV_I64: i64 = (sint_t)target; src = &i64; break;		\
-	case SV_U64: u64 = (suint_t)target; src = &u64; break;		\
+	case SV_I64: i64 = (int64_t)target; src = &i64; break;		\
+	case SV_U64: u64 = (uint64_t)target; src = &u64; break;		\
 	default: src = NULL;						\
 	}
 
-size_t sv_find_i(const sv_t *v, const size_t off, const sint_t target)
+size_t sv_find_i(const sv_t *v, const size_t off, const int64_t target)
 {
 	SV_FIND_iu(v, off, target);
 	return sv_find(v, off, src);
 }
 
-size_t sv_find_u(const sv_t *v, const size_t off, const suint_t target)
+size_t sv_find_u(const sv_t *v, const size_t off, const uint64_t target)
 {
 	SV_FIND_iu(v, off, target);
 	return sv_find(v, off, src);
@@ -588,17 +588,17 @@ const void *sv_at(const sv_t *v, const size_t index)
 	const size_t size = get_size(v);			\
 	RETURN_IF(index >= size, def_val);			\
 	const void *p = __sv_get_buffer_r(v);			\
-	sint_t tmp;						\
+	int64_t tmp;						\
 	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, index));
 
-sint_t sv_i_at(const sv_t *v, const size_t index)
+int64_t sv_i_at(const sv_t *v, const size_t index)
 {
-	SV_IU_AT(sint_t, SV_DEFAULT_SIGNED_VAL);
+	SV_IU_AT(int64_t, SV_DEFAULT_SIGNED_VAL);
 }
 
-suint_t sv_u_at(const sv_t *v, const size_t index)
+uint64_t sv_u_at(const sv_t *v, const size_t index)
 {
-	SV_IU_AT(suint_t, SV_DEFAULT_UNSIGNED_VAL);
+	SV_IU_AT(uint64_t, SV_DEFAULT_UNSIGNED_VAL);
 }
 
 #undef SV_IU_AT
@@ -630,15 +630,15 @@ sbool_t sv_set(sv_t **v, const size_t index, const void *value)
 #define SV_IU_SET(v, index, val)					\
 	SV_SET_INT_CHECK(v, index)					\
 	svstx_f[(int)(*v)->sv_type](ptr_to_elem(*v, index),		\
-						(const sint_t *)&val);
+						(const int64_t *)&val);
 
-sbool_t sv_set_i(sv_t **v, const size_t index, sint_t value)
+sbool_t sv_set_i(sv_t **v, const size_t index, int64_t value)
 {
 	SV_IU_SET(v, index, value);
 	return S_TRUE;
 }
 
-sbool_t sv_set_u(sv_t **v, const size_t index, suint_t value)
+sbool_t sv_set_u(sv_t **v, const size_t index, uint64_t value)
 {
 	SV_IU_SET(v, index, value);
 	return S_TRUE;
@@ -694,7 +694,7 @@ size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
 	return op_cnt;
 }
 
-sbool_t sv_push_i(sv_t **v, const sint_t c)
+sbool_t sv_push_i(sv_t **v, const int64_t c)
 {
 	SV_PUSH_GROW(v, 1);
 	SV_INT_CHECK(v);
@@ -704,13 +704,13 @@ sbool_t sv_push_i(sv_t **v, const sint_t c)
 	return S_TRUE;
 }
 
-sbool_t sv_push_u(sv_t **v, const suint_t c)
+sbool_t sv_push_u(sv_t **v, const uint64_t c)
 {
 	SV_PUSH_GROW(v, 1);
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
 	SV_PUSH_END(v, 1);
-	svstx_f[(int)(*v)->sv_type](p, (const sint_t *)&c);
+	svstx_f[(int)(*v)->sv_type](p, (const int64_t *)&c);
 	return S_TRUE;
 }
 
@@ -733,7 +733,7 @@ sbool_t sv_push_u(sv_t **v, const suint_t c)
 
 #define SV_POP_IU(T)						\
 	SV_AT_INT_CHECK(v);					\
-	sint_t tmp;						\
+	int64_t tmp;						\
 	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, 0));
 
 void *sv_pop(sv_t *v)
@@ -743,17 +743,17 @@ void *sv_pop(sv_t *v)
 	return p;
 }
 
-sint_t sv_pop_i(sv_t *v)
+int64_t sv_pop_i(sv_t *v)
 {
 	SV_POP_START(SV_DEFAULT_SIGNED_VAL);
 	SV_POP_END;
-	SV_POP_IU(sint_t);
+	SV_POP_IU(int64_t);
 }
 
-suint_t sv_pop_u(sv_t *v)
+uint64_t sv_pop_u(sv_t *v)
 {
 	SV_POP_START(SV_DEFAULT_UNSIGNED_VAL);
 	SV_POP_END;
-	SV_POP_IU(suint_t);
+	SV_POP_IU(uint64_t);
 }
 

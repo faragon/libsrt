@@ -56,7 +56,8 @@ extern "C" {
  * Context
  */
 
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || _MSC_VER >= 1800
+#if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || \
+    defined(_MSC_VER) && _MSC_VER >= 1800
 	#define S_C99_SUPPORT
 #endif
 
@@ -141,17 +142,6 @@ extern "C" {
 	#define S_NARGS_SDMPR(...) (sizeof((const sdm_t ** []){__VA_ARGS__})/sizeof(const sdm_t **))
 #endif
 
-/*
- * Constants
- */
-
-#define S_SIZET_MAX	((size_t)-1)
-#define S_NPOS		S_SIZET_MAX
-#define S_NULL_C	"(null)"
-#define S_NULL_WC	L"(null)"
-#define S_TRUE		(1)
-#define S_FALSE		(0)
-
 #ifdef _MSC_VER
 	#if S_BPWORD == 8
 		#define FMT_ZI "%I64i"
@@ -203,47 +193,49 @@ extern "C" {
 
 #if defined(_MSC_VER)
 	typedef SSIZE_T ssize_t;
-	typedef __int64 sint64_t;
-	typedef unsigned __int64 suint64_t;
-#elif	LONG_MAX == INT_MAX /* 32 bit or 64 bit (LLP64) mode */
-	#ifdef S_MODERN_COMPILER
-		typedef long long sint64_t;
-		typedef unsigned long long suint64_t;
-	#else /* no 64 bit container support: */
-		typedef long sint64_t;
-		typedef unsigned long suint64_t;
-	#endif
-#else /* 64 bit mode (LP64) */
-	#ifdef S_MODERN_COMPILER
-		typedef ssize_t sint64_t;
-		typedef size_t suint64_t;
+#endif
+
+#if !defined(S_C99_SUPPORT) && !defined(__GNUC__)
+	typedef char int8_t;
+	typedef short int16_t;
+	typedef long int32_t;
+	typedef unsigned char uint8_t;
+	typedef unsigned short uint16_t;
+	typedef unsigned long uint32_t;
+	#ifdef _MSC_VER
+		typedef __int64 int64_t;
+		typedef unsigned __int64 uint64_t;
 	#else
-		typedef long sint64_t;
-		typedef unsigned long suint64_t;
+		typedef long long int64_t;
+		typedef unsigned long long uint64_t;
 	#endif
 #endif
-#if S_BPWORD >= 4
-	typedef int sint32_t;
-	typedef unsigned int suint32_t;
-#else
-	typedef long sint32_t;
-	typedef unsigned long suint32_t;
-#endif
-typedef sint64_t sint_t;
-typedef suint64_t suint_t;
+
 typedef unsigned char sbool_t;
 
 union s_u32 {
-	suint32_t a32;
+	uint32_t a32;
 	unsigned char b[4];
 };
 
-#define SINT_MIN (8LL << ((sizeof(sint_t) * 8) - 4))
-#define SINT_MAX (~SINT_MIN)
-#define SINT32_MAX ((sint32_t)(0x7fffffff))
-#define SINT32_MIN ((sint32_t)(0x80000000))
-#define SUINT32_MAX 0xffffffff
-#define SUINT32_MIN 0
+/*
+ * Constants
+ */
+
+#define S_SIZET_MAX	((size_t)-1)
+#define S_NPOS		S_SIZET_MAX
+#define S_NULL_C	"(null)"
+#define S_NULL_WC	L"(null)"
+#define S_TRUE		(1)
+#define S_FALSE		(0)
+#define SINT32_MAX	((int32_t)0x7fffffff)
+#define SINT32_MIN	((int32_t)0x80000000)
+#define SUINT32_MAX	((uint32_t)-1)
+#define SUINT32_MIN	0
+#define SINT64_MAX	((int64_t)0x7fffffffffffffff)
+#define SINT64_MIN	((int64_t)0x8000000000000000)
+#define SUINT64_MAX	((uint64_t)-1)
+#define SUINT64_MIN	0
 
 /*
  * Low-level stuff
@@ -293,46 +285,42 @@ union s_u32 {
 	#define S_NTOH_U32(a) (a)
 #endif
 #define S_HTON_U32(a) S_NTOH_U32(a)
-
-#if S_BPWORD <= 4
-	#define S_LD_UW(a) S_LD_U32(a)
-	typedef suint32_t wide_cmp_t;
-#else
-	#define S_LD_UW(a) S_LD_U64(a)
-	typedef suint_t wide_cmp_t;
-#endif
-
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 
-S_INLINE suint32_t s_ld_u32(const void *a)
+S_INLINE uint32_t s_ld_u32(const void *a)
 {
-	return S_LD_X(a, const suint32_t);
+	return S_LD_X(a, const uint32_t);
 }
-S_INLINE suint64_t s_ld_u64(const void *a)
+
+S_INLINE uint64_t s_ld_u64(const void *a)
 {
-	return S_LD_X(a, const suint64_t);
+	return S_LD_X(a, const uint64_t);
 }
+
 S_INLINE size_t s_ld_szt(const void *a)
 {
 	return S_LD_X(a, const size_t);
 }
-S_INLINE void s_st_u32(void *a, suint32_t v)
+
+S_INLINE void s_st_u32(void *a, uint32_t v)
 {
-	S_ST_X(a, suint32_t, v);
+	S_ST_X(a, uint32_t, v);
 }
-S_INLINE void s_st_u64(void *a, suint64_t v)
+
+S_INLINE void s_st_u64(void *a, uint64_t v)
 {
-	S_ST_X(a, suint64_t, v);
+	S_ST_X(a, uint64_t, v);
 }
-S_INLINE void s_st_szt(void *a, suint32_t v)
+
+S_INLINE void s_st_szt(void *a, uint32_t v)
 {
 	S_ST_X(a, size_t, v);
 }
 
-S_INLINE suint32_t *s_mar_u32(void *a)
+S_INLINE uint32_t *s_mar_u32(void *a)
 {
-	return (suint32_t *)a;
+	return (uint32_t *)a;
 }
 
 S_INLINE unsigned short s_ld_le_u16(const void *a)
@@ -378,34 +366,33 @@ S_INLINE void s_st_le_u32(void *a, unsigned int v)
 #else /* Aligned access supported only for 32 and >= 64 bit CPUs */
 	#if S_IS_LITTLE_ENDIAN
 		#define S_LD_U32(a)					\
-			((suint32_t)*(unsigned char *)(a) |		\
-			 (suint32_t)*((unsigned char *)(a) + 1) << 8 |	\
-			 (suint32_t)*((unsigned char *)(a) + 2) << 16 |	\
-			 (suint32_t)*((unsigned char *)(a) + 3) << 24)
+			((uint32_t)*(unsigned char *)(a) |		\
+			 (uint32_t)*((unsigned char *)(a) + 1) << 8 |	\
+			 (uint32_t)*((unsigned char *)(a) + 2) << 16 |	\
+			 (uint32_t)*((unsigned char *)(a) + 3) << 24)
 		#define S_LD_U64(a)					\
-			((suint64_t)S_LD_U32(a) |			\
-			 (suint64_t)(S_LD_U32((unsigned char *)(a) +	\
+			((uint64_t)S_LD_U32(a) |			\
+			 (uint64_t)(S_LD_U32((unsigned char *)(a) +	\
 						4)) << 32)
 	#else
 		#define S_LD_U32(a)					\
-			((suint32_t)*(unsigned char *)(a) << 24 |	\
-			 (suint32_t)*((unsigned char *)(a) + 1) << 16 |	\
-			 (suint32_t)*((unsigned char *)(a) + 2) << 8 |	\
-			 (suint32_t)*((unsigned char *)(a) + 3))
+			((uint32_t)*(unsigned char *)(a) << 24 |	\
+			 (uint32_t)*((unsigned char *)(a) + 1) << 16 |	\
+			 (uint32_t)*((unsigned char *)(a) + 2) << 8 |	\
+			 (uint32_t)*((unsigned char *)(a) + 3))
 		#define S_LD_U64(a)				\
-			(((suint64_t)S_LD_U32(a)) << 32 |	\
+			(((uint64_t)S_LD_U32(a)) << 32 |	\
 			 S_LD_U32((unsigned char *)(a) + 4))
 	#endif
-#if S_BPWORD == 4
-	#define S_LD_SZT(a) S_LD_U32(a)
-#elif S_BPWORD == 8
-	#define S_LD_SZT(a) S_LD_U64(a)
-#else
-	#error "Only 32 and 64-bit GPR CPUs are supported (i.e. not 16, nor 48-bit CPUs)"
-#endif
+	S_INLINE size_t S_LD_SZT(const void *a)
+	{
+		size_t tmp;
+		memcpy(&tmp, a, sizeof(tmp));
+		return tmp;
+	}
 	#define S_UAST_X(a, T, v) { T w = (T)v; memcpy((a), &w, sizeof(w)); }
-	#define S_ST_U32(a, v) S_UAST_X(a, suint32_t, v)
-	#define S_ST_U64(a, v) S_UAST_X(a, suint64_t, v)
+	#define S_ST_U32(a, v) S_UAST_X(a, uint32_t, v)
+	#define S_ST_U64(a, v) S_UAST_X(a, uint64_t, v)
 	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)
 #endif
 
@@ -520,19 +507,15 @@ S_INLINE size_t s_size_t_mul(size_t a, size_t b, size_t val_if_saturated)
  * Integer log2(N) approximation
  */
 
-S_INLINE unsigned slog2(suint_t i)
+S_INLINE unsigned slog2(uint64_t i)
 {
 	unsigned o = 0, test;
 	#define SLOG2STEP(mask, bits)				\
 			test = !!(i & mask);			\
 			o |= test * bits;			\
 			i = test * (i >> bits) | !test * i;
-#if INTPTR_MAX >= INT64_MAX
 	SLOG2STEP(0xffffffff00000000, 32);
-#endif
-#if INTPTR_MAX >= INT32_MAX
 	SLOG2STEP(0xffff0000, 16);
-#endif
 	SLOG2STEP(0xff00, 8);
 	SLOG2STEP(0xf0, 4);
 	SLOG2STEP(0x0c, 2);
@@ -545,10 +528,10 @@ S_INLINE unsigned slog2(suint_t i)
  * Custom "memset" functions
  */
 
-S_INLINE void s_memset32(void *o, suint32_t data, size_t n)
+S_INLINE void s_memset32(void *o, uint32_t data, size_t n)
 {
 	size_t k = 0, n4 = n / 4;
-	suint32_t *o32;
+	uint32_t *o32;
 #if defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 4
 	size_t ua_head = (intptr_t)o & 3;
 	if (ua_head && n4) {
@@ -567,7 +550,7 @@ S_INLINE void s_memset32(void *o, suint32_t data, size_t n)
 	} else
 #endif
 	{
-		o32 = (suint32_t *)o;
+		o32 = (uint32_t *)o;
 		for (; k < n4; k++)
 			S_ST_U32(o32 + k, data);
 	}
@@ -582,7 +565,7 @@ S_INLINE void s_memset24(unsigned char *o, const unsigned char *data, size_t n)
 			memcpy(o + k, data, 3);
 			k = 4 - ua_head;
 		}
-		suint32_t *o32 = s_mar_u32(o + k);
+		uint32_t *o32 = s_mar_u32(o + k);
 		union s_u32 d[3];
 		size_t i, j, copy_size = n - k, c12 = (copy_size / 12);
 		for (i = 0; i < 3; i ++)

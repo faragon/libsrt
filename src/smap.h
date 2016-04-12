@@ -9,7 +9,7 @@ extern "C" {
  *
  * Map handling
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "stree.h"
@@ -33,15 +33,15 @@ enum eSM_Type
 	SM_TotalTypes
 };
 
-struct SMapIx { stn_t n; sint_t k; };
+struct SMapIx { stn_t n; int64_t k; };
 struct SMapSx { stn_t n; ss_t *k; };
 struct SMapSX { stn_t n; const ss_t *k; };
-struct SMapii { stn_t n; sint32_t k, v; };
-struct SMapuu { stn_t n; suint32_t k, v; };
-struct SMapII { struct SMapIx x; sint_t v; };
+struct SMapii { stn_t n; int32_t k, v; };
+struct SMapuu { stn_t n; uint32_t k, v; };
+struct SMapII { struct SMapIx x; int64_t v; };
 struct SMapIS { struct SMapIx x; ss_t *v; };
 struct SMapIP { struct SMapIx x; const void *v; };
-struct SMapSI { struct SMapSx x; sint_t v; };
+struct SMapSI { struct SMapSx x; int64_t v; };
 struct SMapSS { struct SMapSx x; ss_t *v; };
 struct SMapSP { struct SMapSx x; const void *v; };
 
@@ -80,7 +80,7 @@ sm_t *sm_dup(const sm_t *src);
 sbool_t sm_reset(sm_t *m);
 
 /* #API: |Set map integer and string defaults|map; integer default; string default|-|O(1)|0;1| */
-void sm_set_defaults(sm_t *m, const sint_t i_def_v, const ss_t *s_def_v);
+void sm_set_defaults(sm_t *m, const int64_t i_def_v, const ss_t *s_def_v);
 
 /*
 #API: |Free one or more maps (heap)|map; more maps (optional)|-|O(1) for simple maps, O(n) for maps having nodes with strings|0;1|
@@ -108,22 +108,22 @@ size_t sm_size(const sm_t *m);
  */
 
 /* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)|1;2| */
-sint32_t sm_ii32_at(const sm_t *m, const sint32_t k);
+int32_t sm_ii32_at(const sm_t *m, const int32_t k);
 
 /* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)|1;2| */
-suint32_t sm_uu32_at(const sm_t *m, const suint32_t k);
+uint32_t sm_uu32_at(const sm_t *m, const uint32_t k);
 
 /* #API: |Access to integer-interger map|map; integer key|integer|O(log n)|1;2| */
-sint_t sm_ii_at(const sm_t *m, const sint_t k);
+int64_t sm_ii_at(const sm_t *m, const int64_t k);
 
 /* #API: |Access to integer-string map|map; integer key|string|O(log n)|1;2| */
-const ss_t *sm_is_at(const sm_t *m, const sint_t k);
+const ss_t *sm_is_at(const sm_t *m, const int64_t k);
 
 /* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|0;1| */
-const void *sm_ip_at(const sm_t *m, const sint_t k);
+const void *sm_ip_at(const sm_t *m, const int64_t k);
 
 /* #API: |Access to string-integer map|map; string key|integer|O(log n)|0;1| */
-sint_t sm_si_at(const sm_t *m, const ss_t *k);
+int64_t sm_si_at(const sm_t *m, const ss_t *k);
 
 /* #API: |Access to string-string map|map; string key|string|O(log n)|0;1| */
 const ss_t *sm_ss_at(const sm_t *m, const ss_t *k);
@@ -136,10 +136,10 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k);
  */
 
 /* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-sbool_t sm_u_count(const sm_t *m, const suint32_t k);
+sbool_t sm_u_count(const sm_t *m, const uint32_t k);
 
 /* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-sbool_t sm_i_count(const sm_t *m, const sint_t k);
+sbool_t sm_i_count(const sm_t *m, const int64_t k);
 
 /* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
 sbool_t sm_s_count(const sm_t *m, const ss_t *k);
@@ -149,22 +149,22 @@ sbool_t sm_s_count(const sm_t *m, const ss_t *k);
  */
 
 /* #API: |Insert into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ii32_insert(sm_t **m, const sint32_t k, const sint32_t v);
+sbool_t sm_ii32_insert(sm_t **m, const int32_t k, const int32_t v);
 
 /* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
+sbool_t sm_uu32_insert(sm_t **m, const uint32_t k, const uint32_t v);
 
 /* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ii_insert(sm_t **m, const sint_t k, const sint_t v);
+sbool_t sm_ii_insert(sm_t **m, const int64_t k, const int64_t v);
 
 /* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_is_insert(sm_t **m, const sint_t k, const ss_t *v);
+sbool_t sm_is_insert(sm_t **m, const int64_t k, const ss_t *v);
 
 /* #API: |Insert into int-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_ip_insert(sm_t **m, const sint_t k, const void *v);
+sbool_t sm_ip_insert(sm_t **m, const int64_t k, const void *v);
 
 /* #API: |Insert into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_si_insert(sm_t **m, const ss_t *k, const sint_t v);
+sbool_t sm_si_insert(sm_t **m, const ss_t *k, const int64_t v);
 
 /* #API: |Insert into string-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
 sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
@@ -173,23 +173,23 @@ sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
 sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
 
 /* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_ii32_inc(sm_t **m, const sint32_t k, const sint32_t v);
+sbool_t sm_ii32_inc(sm_t **m, const int32_t k, const int32_t v);
 
 /* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_uu32_inc(sm_t **m, const suint32_t k, const suint32_t v);
+sbool_t sm_uu32_inc(sm_t **m, const uint32_t k, const uint32_t v);
 
 /* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_ii_inc(sm_t **m, const sint_t k, const sint_t v);
+sbool_t sm_ii_inc(sm_t **m, const int64_t k, const int64_t v);
 
 /* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_si_inc(sm_t **m, const ss_t *k, const sint_t v);
+sbool_t sm_si_inc(sm_t **m, const ss_t *k, const int64_t v);
 
 /*
  * Delete
  */
 
 /* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
-sbool_t sm_i_delete(sm_t *m, const sint_t k);
+sbool_t sm_i_delete(sm_t *m, const int64_t k);
 
 /* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
 sbool_t sm_s_delete(sm_t *m, const ss_t *k);

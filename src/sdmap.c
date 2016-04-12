@@ -3,7 +3,7 @@
  *
  * Distributed map handling (same-process clustering)
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */ 
 
 #include "sdmap.h"
@@ -18,7 +18,6 @@
 #define SDM_DEF_S_HASH_MAX_SIZE 16
 #endif
 
-
 #define SDM_FUN_DMAP(CHK, REF, FUN, FPFREF)		\
 	if (CHK) {					\
 		size_t i = 0, n = sdm_size(REF);	\
@@ -32,7 +31,7 @@
  * Internal functions
  */
 
-static size_t sdm_default_i_hash(const sdm_t *dm, const sint_t k)
+static size_t sdm_default_i_hash(const sdm_t *dm, const int64_t k)
 {
 	S_ASSERT(dm && dm->nmaps);
 	return dm ? (size_t)(k % dm->nmaps) : (size_t)0;
@@ -165,7 +164,7 @@ void sdm_set_routing(sdm_t *dm, sdm_i_hash_t irf, sdm_s_hash_t srf)
 	}
 }
 
-size_t sdm_i_route(const sdm_t *dm, const sint_t k)
+size_t sdm_i_route(const sdm_t *dm, const int64_t k)
 {
 	S_ASSERT(dm);
 	return dm ? dm->ih(dm, k) : 0;

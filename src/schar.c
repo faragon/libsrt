@@ -3,7 +3,7 @@
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "schar.h"
@@ -92,8 +92,7 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size)
 	return unicode_sz;
 }
 
-
-size_t sc_wc_to_utf8_size(const sint32_t c)
+size_t sc_wc_to_utf8_size(const int32_t c)
 {
 	return c <= 0x7f ? 1 : c <= 0x7ff? 2 : c <= 0xffff? 3 :
 		c <= 0x1fffff? 4 : c <= 0x3ffffff? 5 : 6;
@@ -193,7 +192,7 @@ size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
 
 ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
 				     const size_t s_size,
-				     sint32_t (*ssc_toX)(const sint32_t))
+				     int32_t (*ssc_toX)(const int32_t))
 {
 	int uchr = 0;
 	size_t i = off;
@@ -213,28 +212,28 @@ ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
 
 #ifdef S_MINIMAL_BUILD
 
-sint32_t sc_tolower(const sint32_t c)
+int32_t sc_tolower(const int32_t c)
 {
 	return tolower(c);
 }
 
-sint32_t sc_toupper(const sint32_t c)
+int32_t sc_toupper(const int32_t c)
 {
 	return toupper(c);
 }
 
-sint32_t sc_tolower_tr(const sint32_t c)
+int32_t sc_tolower_tr(const int32_t c)
 {
 	return sc_tolower(c);
 }
 
-sint32_t sc_toupper_tr(const sint32_t c)
+int32_t sc_toupper_tr(const int32_t c)
 {
 	return sc_toupper(c);
 }
 
 size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
-		       unsigned *o, sint32_t (*ssc_toX)(const sint32_t))
+		       unsigned *o, int32_t (*ssc_toX)(const int32_t))
 {
 	return off;
 }
@@ -247,7 +246,7 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
  * from Turkish, for that case, sc_tolower_tr/sc_toupper_tr are provided.
  */
 
-sint32_t sc_tolower(const sint32_t c)
+int32_t sc_tolower(const int32_t c)
 {
 	int j = c < 0x18e ? 0 : c < 0x1a9 ? 1 : c < 0x1e0 ? 2 :
 		c < 0x386 ? 3 : c < 0x460 ? 4 : c < 0x1fb8 ? 5 :
@@ -415,7 +414,7 @@ sint32_t sc_tolower(const sint32_t c)
 	return c;
 }
 
-sint32_t sc_toupper(const sint32_t c)
+int32_t sc_toupper(const int32_t c)
 {
 	const int j = c < 0x199? 0 : c < 0x1dd? 1 : c < 0x260? 2 :
 		      c < 0x377? 3 : c < 0x3e1? 4 : c < 0x1ea1? 5 :
@@ -595,7 +594,7 @@ sint32_t sc_toupper(const sint32_t c)
 	return c;
 }
 
-sint32_t sc_tolower_tr(const sint32_t c)
+int32_t sc_tolower_tr(const int32_t c)
 {
 	RE(c, 0x49, 0x131); /* 'I' to dotless 'i' */
 	RE(c, 0x130, 0x69); /* 'I' with dot to 'i' */
@@ -604,7 +603,7 @@ sint32_t sc_tolower_tr(const sint32_t c)
 	return sc_tolower(c);
 }
 
-sint32_t sc_toupper_tr(const sint32_t c)
+int32_t sc_toupper_tr(const int32_t c)
 {
 	RE(c,0x131, 0x49);
 	RE(c,0x69, 0x130);
@@ -617,7 +616,7 @@ sint32_t sc_toupper_tr(const sint32_t c)
  * 7-bit parallel case conversions (using the Paul Hsieh technique)
  */
 size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
-		       unsigned *o, sint32_t (*ssc_toX)(const sint32_t))
+		       unsigned *o, int32_t (*ssc_toX)(const int32_t))
 {
 	/* 1) Alignment check.
 	 * 2) The parallel optimization works only for the generic case,
@@ -631,15 +630,15 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 	const int op_mod = ssc_toX == sc_tolower? 1 : 0;
 	union s_u32 m1;
 	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
-	const suint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
-	const suint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
+	const uint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
+	const uint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
 	if ((off & 3) == 0) {	/* aligned input */
 		const size_t szm4 = max & (size_t)(~3);
 		for (; off < szm4; off += 4) {
-			const suint32_t *c32 = (const suint32_t *)(s + off);
-			const suint32_t a = *c32;
+			const uint32_t *c32 = (const uint32_t *)(s + off);
+			const uint32_t a = *c32;
 			if ((a & m1.a32) == 0) {
-				suint32_t b = (msk1 & a) + msk4;
+				uint32_t b = (msk1 & a) + msk4;
 				b = (msk1 & b) + msk2;
 				b = ((b & ~a) >> 2) & msk3;
 				if (op_mod)

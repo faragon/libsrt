@@ -9,7 +9,7 @@ extern "C" {
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  *
  * Designed to be used by libraries or wrapped by some abstraction (e.g.
  * sstring), not as general-purpose direct usage.
@@ -58,16 +58,16 @@ enum SSUTF8 {
 
 size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off);
 size_t sc_utf8_count_chars(const char *s, const size_t s_size);
-size_t sc_wc_to_utf8_size(const sint32_t c);
+size_t sc_wc_to_utf8_size(const int32_t c);
 size_t sc_wc_to_utf8(const int c, char *s, const size_t off, const size_t max_off);
 size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off, int *unicode_out, int *encoding_errors);
 size_t sc_unicode_count_to_utf8_size(const char *, const size_t off, const size_t max_off, const size_t unicode_count, size_t *actual_unicode_count);
-ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off, const size_t s_size, sint32_t (*ssc_toX)(const sint32_t));
-sint32_t sc_tolower(const sint32_t c);
-sint32_t sc_toupper(const sint32_t c);
-sint32_t sc_tolower_tr(const sint32_t c);
-sint32_t sc_toupper_tr(const sint32_t c);
-size_t sc_parallel_toX(const char *s, size_t off, const size_t max, unsigned *o, sint32_t (*ssc_toX)(const sint32_t));
+ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off, const size_t s_size, int32_t (*ssc_toX)(const int32_t));
+int32_t sc_tolower(const int32_t c);
+int32_t sc_toupper(const int32_t c);
+int32_t sc_tolower_tr(const int32_t c);
+int32_t sc_toupper_tr(const int32_t c);
+size_t sc_parallel_toX(const char *s, size_t off, const size_t max, unsigned *o, int32_t (*ssc_toX)(const int32_t));
 
 #ifdef __cplusplus
 }      /* extern "C" { */

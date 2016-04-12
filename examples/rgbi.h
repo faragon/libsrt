@@ -3,7 +3,7 @@
  *
  * RGB bitmap description. Example for libsrt.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #ifndef RGBI_H
@@ -54,19 +54,19 @@ S_INLINE unsigned rgbi_pack4(const unsigned char *rgba)
 	return S_LD_LE_U32(rgba);
 }
 
-S_INLINE suint64_t rgbi_pack6(const unsigned char *rgb)
+S_INLINE uint64_t rgbi_pack6(const unsigned char *rgb)
 {
-	return S_LD_LE_U32(rgb) | ((suint64_t)S_LD_LE_U16(rgb + 4)) << 32;
+	return S_LD_LE_U32(rgb) | ((uint64_t)S_LD_LE_U16(rgb + 4)) << 32;
 }
 
-S_INLINE suint64_t rgbi_pack8(const unsigned char *rgba)
+S_INLINE uint64_t rgbi_pack8(const unsigned char *rgba)
 {
-	return S_LD_LE_U32(rgba) | ((suint64_t)S_LD_LE_U32(rgba + 4)) << 32;
+	return S_LD_LE_U32(rgba) | ((uint64_t)S_LD_LE_U32(rgba + 4)) << 32;
 }
 
 /* TODO: check if the compiler is able to optimize this properly */
 S_INLINE
-suint64_t rgbi_get(const char *buf, size_t x, size_t y, size_t rs, size_t ps)
+uint64_t rgbi_get(const char *buf, size_t x, size_t y, size_t rs, size_t ps)
 {
 	const unsigned char *b = (const unsigned char *)buf;
 	switch (ps) {

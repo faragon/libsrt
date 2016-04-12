@@ -3,7 +3,7 @@
  *
  * Buffer encoding/decoding
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "senc.h"
@@ -208,36 +208,44 @@ static void slzw_bio_write(sbio_t *bio, size_t c, size_t cbits,
 	}
 }
 
+#if S_BPWORD <= 4
+	#define S_RLE_LOAD(a) S_LD_U32(a)
+	typedef uint32_t rle_load_t;
+#else
+	#define S_RLE_LOAD(a) S_LD_U64(a)
+	typedef uint64_t rle_load_t;
+#endif
+
 static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 		       size_t min_run, size_t max_run, size_t *run_elem_size,
 		       sbool_t lzw_mode)
 {
 	RETURN_IF(i + min_run >= ss, 0);
-	const suint32_t *p0 = (const suint32_t *)(s + i),
-			*p3 = (const suint32_t *)(s + i + 3);
-	suint32_t p00 = S_LD_U32(p0), p01 = S_LD_U32(p0 + 1),
+	const uint32_t *p0 = (const uint32_t *)(s + i),
+			*p3 = (const uint32_t *)(s + i + 3);
+	uint32_t p00 = S_LD_U32(p0), p01 = S_LD_U32(p0 + 1),
 		  p30 = S_LD_U32(p3 + 0);
 	size_t run_length = 0, eq4 = p00 == p01,
 	       eq3 = !eq4 && p00 == p30;
 	for (; eq4 || eq3;) {
 		size_t j, ss2;
 		if (eq4) {
-			ss2 = S_MIN(ss, max_run) - sizeof(wide_cmp_t);
-			wide_cmp_t u0 = S_LD_UW(s + i),
-				   v0 = S_LD_UW(s + i + 1);
-			j = i + sizeof(suint32_t) * 2;
+			ss2 = S_MIN(ss, max_run) - sizeof(rle_load_t);
+			rle_load_t u0 = S_RLE_LOAD(s + i),
+				   v0 = S_RLE_LOAD(s + i + 1);
+			j = i + sizeof(uint32_t) * 2;
 			if (u0 == v0) {
 				j &= (size_t)S_ALIGNMASK;
 				*run_elem_size = 1;
 			} else {
 				*run_elem_size = 4;
 			}
-			for (; j < ss2 ; j += sizeof(wide_cmp_t))
-				if (u0 != S_LD_UW(s + j))
+			for (; j < ss2 ; j += sizeof(rle_load_t))
+				if (u0 != S_RLE_LOAD(s + j))
 					break;
 		} else {
-			ss2 = S_MIN(ss, max_run) - sizeof(suint32_t);
-			suint32_t p31 = S_LD_U32(p3 + 1),
+			ss2 = S_MIN(ss, max_run) - sizeof(uint32_t);
+			uint32_t p31 = S_LD_U32(p3 + 1),
 				  p32 = S_LD_U32(p3 + 2),
 				  p02 = S_LD_U32(p0 + 2);
 			if (p01 != p31 || p02 != p32)
@@ -921,7 +929,7 @@ static size_t senc_rle_flush(const unsigned char *s, const size_t i,
 			o[oi++] = (unsigned char)(SRLE_OP_ST_SHORT | d);
 		} else {
 			o[oi++] = SRLE_OP_ST;
-			S_ST_U32(o + oi, S_HTON_U32((suint32_t)d));
+			S_ST_U32(o + oi, S_HTON_U32((uint32_t)d));
 			oi += 4;
 		}
 		memcpy(o + oi, s + i_done, d);
@@ -935,7 +943,7 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 	RETURN_IF(!s || !o || !ss, 0);
 	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size;
 	for (; i < ss;) {
-		run_length = srle_run(s, i, ss, 10, (suint32_t)-1,
+		run_length = srle_run(s, i, ss, 10, (uint32_t)-1,
 				      &run_elem_size, S_FALSE);
 		if (!run_length) {
 			i++;
@@ -971,7 +979,7 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 				o[oi++] = SRLE_OP_RLE4;
 			else
 				o[oi++] = SRLE_OP_RLE3;
-			S_ST_U32(o + oi, S_HTON_U32((suint32_t)run_length));
+			S_ST_U32(o + oi, S_HTON_U32((uint32_t)run_length));
 			oi += 4;
 		}
 		o[oi++] = s[i];
@@ -1038,7 +1046,7 @@ size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 			} else  {
 				if (op_sz == 4) {
 					cnt *= 4;
-					suint32_t v = S_LD_U32(s + i);
+					uint32_t v = S_LD_U32(s + i);
 					s_memset32(o + oi, v, cnt);
 					i += 4;
 				} else {

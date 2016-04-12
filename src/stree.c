@@ -12,7 +12,7 @@
  *   suitable for memory-mapped storage when using nodes without references
  *   (e.g. key and value being integers, or constant-size containers).
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "stree.h"
@@ -399,7 +399,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		}
 		if (done)
 			break;
-		const sint_t cmp = t->f.cmp(w[c].n, n);
+		const int64_t cmp = t->f.cmp(w[c].n, n);
 		if (!cmp) {
 			if (rw_f)
 				rw_f(t, w[c].n, n);
@@ -443,7 +443,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	/* Search loop */
 	for (;;) {
 		/* Compare node key with given target */
-		const sint_t cmp = t->f.cmp(w[c].n, n);
+		const int64_t cmp = t->f.cmp(w[c].n, n);
 		const enum STNDir d = cmp < 0 ? ST_Right : ST_Left;
 		if (!cmp) {
 			S_ASSERT(found.n == NULL);

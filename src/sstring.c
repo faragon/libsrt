@@ -3,7 +3,7 @@
  *
  * String handling.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
 
 #include "schar.h"
@@ -127,8 +127,8 @@ static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_t_sz);
  * (equivalent to work with Turkish locale when doing case conversions)
  */
 
-static sint32_t (*fsc_tolower)(const sint32_t c) = sc_tolower;
-static sint32_t (*fsc_toupper)(const sint32_t c) = sc_toupper;
+static int32_t (*fsc_tolower)(const int32_t c) = sc_tolower;
+static int32_t (*fsc_toupper)(const int32_t c) = sc_toupper;
 static struct sd_conf ssf = {	ss_get_max_size,
 				ss_reset,
 				ss_reconfig,
@@ -338,11 +338,11 @@ static size_t ss_utf8_to_wc(const char *s, const size_t off,
 	return csize;
 }
 
-static ss_t *aux_toint(ss_t **s, const sbool_t cat, const sint_t num)
+static ss_t *aux_toint(ss_t **s, const sbool_t cat, const int64_t num)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	char btmp[128], *p = btmp + sizeof(btmp) - 1;
-	sint_t n = num < 0 ? -num : num;
+	int64_t n = num < 0 ? -num : num;
 	do {
 		*p-- = '0' + n % 10;
 		n /= 10;
@@ -363,7 +363,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const sint_t num)
 }
 
 static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
-			 sint32_t (*towX)(sint32_t))
+			 int32_t (*towX)(int32_t))
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
@@ -1082,7 +1082,7 @@ ss_t *ss_dup_wn(const wchar_t *src, const size_t src_size)
 	return ss_cpy_wn(&s, src, src_size);
 }
 
-ss_t *ss_dup_int(const sint_t num)
+ss_t *ss_dup_int(const int64_t num)
 {
 	ss_t *s = NULL;
 	return ss_cpy_int(&s, num);
@@ -1291,7 +1291,7 @@ ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-ss_t *ss_cpy_int(ss_t **s, const sint_t num)
+ss_t *ss_cpy_int(ss_t **s, const int64_t num)
 {
 	return aux_toint(s, S_FALSE, num);
 }
@@ -1544,7 +1544,7 @@ ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-ss_t *ss_cat_int(ss_t **s, const sint_t num)
+ss_t *ss_cat_int(ss_t **s, const int64_t num)
 {
 	return aux_toint(s, S_TRUE, num);
 }
