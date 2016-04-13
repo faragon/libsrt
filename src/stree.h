@@ -79,7 +79,7 @@ struct STraverseParams
 };
 
 typedef int (*st_traverse)(struct STraverseParams *p);
-typedef int (*st_rewrite_t)(const st_t *t, stn_t *node, const stn_t *new_data);
+typedef void (*st_rewrite_t)(const st_t *t, stn_t *node, const stn_t *new_data);
 
 /*
 * Constants

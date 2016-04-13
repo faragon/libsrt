@@ -2140,7 +2140,7 @@ static int test_st_insert_del()
 	int res = 0;
 	const struct MyNode1 *nr;
 	int i = 0;
-	const size_t tree_elems = 90;
+	const int tree_elems = 90;
 	const int cbase = ' ';
 	for (;;) {
 		/* Case 1: add in order, delete in order */
@@ -2398,6 +2398,31 @@ static int test_sm_si_insert()
 }
 
 static int test_sm_ss_insert()
+{
+	return 0; /* TODO */
+}
+
+static int test_sm_sp_insert()
+{
+	return 0; /* TODO */
+}
+
+static int test_sm_ii32_inc()
+{
+	return 0; /* TODO */
+}
+
+static int test_sm_uu32_inc()
+{
+	return 0; /* TODO */
+}
+
+static int test_sm_ii_inc()
+{
+	return 0; /* TODO */
+}
+
+static int test_sm_si_inc()
 {
 	return 0; /* TODO */
 }

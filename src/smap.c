@@ -34,24 +34,24 @@ static int cmp_s(const struct SMapSx *a, const struct SMapSx *b)
 	return ss_cmp(a->k, b->k);
 }
 
-static int rw_inc_SM_I32I32(const st_t *t, stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_I32I32(const st_t *t, stn_t *node, const stn_t *new_data)
 {
-	return ((struct SMapii *)node)->v += ((struct SMapii *)new_data)->v;
+	((struct SMapii *)node)->v += ((struct SMapii *)new_data)->v;
 }
 
-static int rw_inc_SM_U32U32(const st_t *t, stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_U32U32(const st_t *t, stn_t *node, const stn_t *new_data)
 {
-	return ((struct SMapuu *)node)->v += ((struct SMapuu *)new_data)->v;
+	((struct SMapuu *)node)->v += ((struct SMapuu *)new_data)->v;
 }
 
-static int rw_inc_SM_IntInt(const st_t *t, stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_IntInt(const st_t *t, stn_t *node, const stn_t *new_data)
 {
-	return ((struct SMapII *)node)->v += ((struct SMapII *)new_data)->v;
+	((struct SMapII *)node)->v += ((struct SMapII *)new_data)->v;
 }
 
-static int rw_inc_SM_StrInt(const st_t *t, stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_StrInt(const st_t *t, stn_t *node, const stn_t *new_data)
 {
-	return ((struct SMapSI *)node)->v += ((struct SMapSI *)new_data)->v;
+	((struct SMapSI *)node)->v += ((struct SMapSI *)new_data)->v;
 }
 
 static void aux_is_delete(void *node)

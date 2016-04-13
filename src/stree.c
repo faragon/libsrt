@@ -633,7 +633,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	const size_t ts = get_size(t);
 	RETURN_IF(!ts, S_FALSE);
 	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
-	size_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
+	ssize_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
 	/*
 	 * DF path length takes twice the logarithm of the number of nodes,
 	 * so it will fit always in the stack (e.g. 2^63 nodes would require

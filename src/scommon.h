@@ -313,7 +313,7 @@ S_INLINE void s_st_u64(void *a, uint64_t v)
 	S_ST_X(a, uint64_t, v);
 }
 
-S_INLINE void s_st_szt(void *a, uint32_t v)
+S_INLINE void s_st_szt(void *a, size_t v)
 {
 	S_ST_X(a, size_t, v);
 }

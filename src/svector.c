@@ -103,11 +103,11 @@ SV_LDx(svldu64, const uint64_t, uint64_t)
 
 typedef int64_t *(*T_SVLDX)(const void *, int64_t *, const size_t);
 
-static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
-						svldi16, (T_SVLDX)svldu16,
-						svldi32, (T_SVLDX)svldu32,
-						svldi64, (T_SVLDX)svldu64
-					};
+static T_SVLDX svldx_f[SV_LAST_INT + 1] = { svldi8, (T_SVLDX)svldu8,
+					    svldi16, (T_SVLDX)svldu16,
+					    svldi32, (T_SVLDX)svldu32,
+					    svldi64, (T_SVLDX)svldu64
+					  };
 
 /*
  * Internal functions
@@ -115,7 +115,8 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = {	svldi8, (T_SVLDX)svldu8,
 
 #define BUILD_CMP_I(FN, T)				\
 	static int FN(const void *a, const void *b) {	\
-		return *((T *)a) - *((T *)b);		\
+		int64_t r = *((T *)a) - *((T *)b);	\
+		return r < 0 ? -1 : r > 0 ? 1 : 0;	\
 	}
 
 #define BUILD_CMP_U(FN, T)				\
