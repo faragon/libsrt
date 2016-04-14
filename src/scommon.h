@@ -35,8 +35,6 @@ extern "C" {
 #include <string.h>
 #include <stdlib.h>
 #include <locale.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>

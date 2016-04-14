@@ -72,7 +72,8 @@ int main(int argc, const char **argv)
 	size_t in_size = 0;
 	struct RGB_Info ri;
 	ss_t *iobuf = NULL, *rgb_buf = NULL;
-	int exit_code = 1, fin = -1, fout = -1;
+	int exit_code = 1;
+	FILE *fin = NULL, *fout = NULL;
 	const char *exit_msg = "not enough parameters";
 	int filter = F_None;
 	#define IMGC_XTEST(test, m, c)	\
@@ -91,7 +92,7 @@ int main(int argc, const char **argv)
 		IMGC_XTEST(t_in == IMG_error || t_out == IMG_error,
 			   "invalid parameters", t_in == IMG_error ? 2 : 3);
 
-		fin = open(argv[1], O_RDONLY);
+		fin = fopen(argv[1], "rb");
 		iobuf = ss_dup_read(fin, MAX_FILE_SIZE);
 		in_size = ss_size(iobuf);
 		IMGC_XTEST(!in_size, "input read error", 4);
@@ -104,8 +105,7 @@ int main(int argc, const char **argv)
 		size_t enc_bytes = rgb2type(&iobuf, t_out, rgb_buf, &ri, filter);
 		IMGC_XTEST(!enc_bytes, "output file encoding error", 6);
 
-		fout = open(argv[2], O_CREAT | O_TRUNC | O_WRONLY | O_BINARY,
-			    0644);
+		fout = fopen(argv[2], "wb+");
 		ssize_t written = ro ? 0 :
 				       ss_write(fout, iobuf, 0, ss_size(iobuf));
 		IMGC_XTEST(!ro && (written < 0 ||
@@ -124,10 +124,10 @@ int main(int argc, const char **argv)
 		break;
 	}
 	ss_free(&iobuf, &rgb_buf);
-	if (fin >= 0)
-		close(fin);
-	if (fout >= 0)
-		close(fout);
+	if (fin)
+		fclose(fin);
+	if (fout)
+		fclose(fout);
 	return exit_code ? exit_with_error(argv, exit_msg, exit_code) : 0;
 }
 

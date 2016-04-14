@@ -285,7 +285,7 @@ ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap);
 ss_t *ss_dup_char(const int c);
 
 /* #API: |Duplicate from reading from file handle|file handle; read max size (in bytes)|output result|O(n)|1;2| */
-ss_t *ss_dup_read(const int handle, const size_t max_bytes);
+ss_t *ss_dup_read(FILE *handle, const size_t max_bytes);
 
 /*
  * Assignment
@@ -409,7 +409,7 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 ss_t *ss_cpy_char(ss_t **s, const int c);
 
 /* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
-ss_t *ss_cpy_read(ss_t **s, const int handle, const size_t max_bytes);
+ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*
  * Append
@@ -536,7 +536,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 ss_t *ss_cat_char(ss_t **s, const int c);
 
 /* #API: |Cat data read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
-ss_t *ss_cat_read(ss_t **s, const int handle, const size_t max_bytes);
+ss_t *ss_cat_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*
  * Transformation
@@ -726,10 +726,10 @@ int ss_popchar(ss_t **s);
  */
 
 /* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
-ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes);
+ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n)|0;1| */
-ssize_t ss_write(const int handle, const ss_t *s, const size_t offset, const size_t bytes);
+ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset, const size_t bytes);
 
 /*
  * Hashing

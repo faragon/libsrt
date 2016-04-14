@@ -840,10 +840,10 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 	return *s;
 }
 
-static ssize_t aux_read(ss_t **s, const sbool_t cat, const int handle,
+static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *handle,
 			const size_t max_bytes)
 {
-	ssize_t l = -1, l0;
+	ssize_t l = 0;
 	if (handle >= 0 && max_bytes > 0) {
 		size_t ss = sd_get_size(*s),
 			    off = cat ? ss : 0,
@@ -854,9 +854,11 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, const int handle,
 			buf_size = off + def_buf < max_off ? def_buf :
 							     max_off - off;
 			if (ss_reserve(s, off + buf_size) >= off + buf_size) {
+				if (feof(handle))
+					break;
 				char *sc = get_str(*s);
-				l0 = read(handle, sc + off, buf_size);
-				if (l0 > 0) {
+				size_t l0 = fread(sc + off, 1, buf_size, handle);
+				if (l0 > 0 && !ferror(handle)) {
 					off += l0;
 					ss_set_size(*s, off);
 					set_unicode_size_cached(*s, S_FALSE);
@@ -1177,7 +1179,7 @@ ss_t *ss_dup_char(const int c)
 	return ss_cpy_char(&s, c);
 }
 
-ss_t *ss_dup_read(const int handle, const size_t max_bytes)
+ss_t *ss_dup_read(FILE *handle, const size_t max_bytes)
 {
 	ss_t *s = NULL;
 	return ss_cpy_read(&s, handle, max_bytes);
@@ -1386,7 +1388,7 @@ ss_t *ss_cpy_char(ss_t **s, const int c)
 	return *s;
 }
 
-ss_t *ss_cpy_read(ss_t **s, const int handle, const size_t max_bytes)
+ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes)
 {
 	aux_read(s, S_FALSE, handle, max_bytes);
 	return *s;
@@ -1641,7 +1643,7 @@ ss_t *ss_cat_char(ss_t **s, const int c)
 	return ss_cat_wn(s, src, 1);
 }
 
-ss_t *ss_cat_read(ss_t **s, const int handle, const size_t max_bytes)
+ss_t *ss_cat_read(ss_t **s, FILE *handle, const size_t max_bytes)
 {
 	aux_read(s, S_TRUE, handle, max_bytes);
 	return *s;
@@ -2050,17 +2052,18 @@ int ss_popchar(ss_t **s)
  * I/O
  */
 
-ssize_t ss_read(ss_t **s, const int handle, const size_t max_bytes)
+ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes)
 {
 	return aux_read(s, S_FALSE, handle, max_bytes);
 }
 
-ssize_t ss_write(const int handle, const ss_t *s, const size_t offset,
+ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset,
 		 const size_t bytes)
 {
 	size_t ss = s ? ss_size(s) : 0,
 	       wr_size = handle >= 0 && offset >= ss ? 0 : S_MIN(ss - offset, bytes);
-	return wr_size > 0 ? write(handle, get_str_r(s), wr_size) : -1;
+	size_t ws = fwrite(get_str_r(s), 1, wr_size, handle);
+	return ws > 0 && !ferror(handle) ? ws : -1;
 }
 
 /*

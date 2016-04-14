@@ -524,14 +524,15 @@ static int test_ss_dup_read(const char *pattern)
 	int res = 1;
 	const size_t pattern_size = strlen(pattern);
 	ss_t *s = NULL;
-	int f = open(STEST_FILE, O_RDWR | O_CREAT | O_TRUNC | O_BINARY, 0777);
-	if (f >= 0) {
-		ssize_t write_size = write(f, pattern, pattern_size);
-		res = write_size < 0 || write_size != (ssize_t)pattern_size ?
-		      2 : lseek(f, 0, SEEK_SET) != 0 ? 4 :
+	FILE *f = fopen(STEST_FILE, "wb+");
+	if (f) {
+		size_t write_size = fwrite(pattern, 1, pattern_size, f);
+		res = !write_size || ferror(f) ||
+		      write_size != (ssize_t)pattern_size ? 2 :
+		      fseek(f, 0, SEEK_SET) != 0 ? 4 :
 		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
 		      strcmp(ss_to_c(s), pattern) ? 16 : 0;
-		close(f);
+		fclose(f);
 		unlink(STEST_FILE);
 	}
 	ss_free(&s);

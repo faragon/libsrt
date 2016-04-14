@@ -67,7 +67,7 @@ int main(int argc, const char **argv)
 	int i;
 	ssize_t l;
 	for (;;) {
-		l = read(0, buf, sizeof(buf));
+		l = fread(buf, 1, sizeof(buf), stdin);
 		l = (l / csize) * csize;
 		if (l <= 0)
 			break;

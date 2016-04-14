@@ -108,8 +108,8 @@ int main(int argc, const char **argv)
 	}
 	for (;;) {
 		if (is) {
-			l = read(0, buf + off, IBUF_SIZE);
-			if (l <= 0 && off == 0)
+			l = fread(buf + off, 1, IBUF_SIZE, stdin);
+			if (!l && off == 0 || ferror(stdin))
 				goto done;
 			l += off;
 			li += (size_t)l;
@@ -167,8 +167,8 @@ int main(int argc, const char **argv)
 			switch (mode) {
 			case SENC_lzw:
 			case SENC_rle:
-				l = read(0, buf, IBUF_SIZE);
-				if (l <= 0)
+				l = fread(buf, 1, IBUF_SIZE, stdin);
+				if (!l || ferror(stdin))
 					goto done;
 				li += (size_t)l;
 				lo2 = mode == SENC_lzw ?
@@ -181,8 +181,8 @@ int main(int argc, const char **argv)
 				break;
 			case SDEC_lzw:
 			case SDEC_rle:
-				l = read(0, &l32, 4);
-				if (l <= 0)
+				l = fread(&l32, 1, 4, stdin);
+				if (!l || ferror(stdin))
 					goto done;
 				if (l != 4) {
 					exit_code = 2;
@@ -196,8 +196,8 @@ int main(int argc, const char **argv)
 					exit_code = 3;
 					goto done;
 				}
-				l = read(0, buf, l32);
-				if ((unsigned)l != l32) {
+				l = fread(buf, 1, l32, stdin);
+				if ((unsigned)l != l32 || ferror(stdin)) {
 					fprintf(stderr, "Read error\n");
 					exit_code = 4;
 					goto done;
@@ -212,8 +212,8 @@ int main(int argc, const char **argv)
 				goto done;
 			}
 		}
-		l = write(1, bufo, lo2);
-		if (l <= 0) {
+		l = fwrite(bufo, 1, lo2, stdout);
+		if (!l || ferror(stdout)) {
 			fprintf(stderr, "Write error (%i)\n", (int)l);
 			exit_code = 6;
 			goto done;
