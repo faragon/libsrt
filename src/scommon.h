@@ -18,14 +18,12 @@ extern "C" {
 	#include <crtdefs.h>
 	#include <BaseTsd.h>
 	#include <malloc.h>
-	#include <io.h>
 	/* MS VC don't support UTF-8 in sprintf, not even using _setmbcp(65001)
 	 * and "multi-byte character set" compile mode.
 	 */
 	#define S_NOT_UTF8_SPRINTF
 #else
 	#include <sys/types.h>
-	#include <unistd.h>
 #endif
 #if !defined(__FreeBSD__) && !defined(_MSC_VER)
 	#include <alloca.h>
@@ -34,7 +32,6 @@ extern "C" {
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include <locale.h>
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>

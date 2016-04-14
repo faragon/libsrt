@@ -9,6 +9,13 @@
  */
  
 #include "../src/libsrt.h"
+#include <locale.h>
+
+#ifdef _MSC_VER
+#include <io.h>
+#else
+#include <unistd.h>
+#endif
 
 /*
  * Unit testing helpers
