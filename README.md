@@ -234,7 +234,7 @@ In the mid-term I could add the results to this README.md in the same way as e.g
 License
 ===
 
-Copyright (c) 2015, F. Aragon. All rights reserved.
+Copyright (c) 2015-2016, F. Aragon. All rights reserved.
 Released under the The BSD 3-Clause License (see the doc/LICENSE file included).
 
 Contact

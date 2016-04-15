@@ -1,5 +1,5 @@
-#ifndef SUTF8_H
-#define SUTF8_H
+#ifndef SCHAR_H
+#define SCHAR_H
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -72,4 +72,4 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max, unsigned *o,
 #ifdef __cplusplus
 }      /* extern "C" { */
 #endif
-#endif	/* SUTF8_H */
+#endif	/* SCHAR_H */
