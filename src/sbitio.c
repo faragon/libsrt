@@ -3,7 +3,7 @@
  *
  * Bit I/O on memory buffers.
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  *
  */
 
@@ -18,21 +18,32 @@ void sbio_write_init(sbio_t *bio, unsigned char *b)
 void sbio_write(sbio_t *bio, size_t c, size_t cbits)
 {
 	unsigned char *b = bio->bw;
-	if (bio->acc) {
-		size_t xbits = 8 - bio->acc;
-		b[bio->off++] |= (c << bio->acc);
+	size_t xbits = 8 - bio->acc;
+	if (!bio->acc)
+		b[bio->off] = c << bio->acc;
+	else
+		b[bio->off] |= (c << bio->acc);
+	if (cbits >= xbits) {
+		bio->off++;
 		c >>= xbits;
 		cbits -= xbits;
+		size_t copy_size = cbits / 8;
+		for (; copy_size > 0;) {
+			b[bio->off++] = (unsigned char)c;
+			c >>= 8;
+			copy_size--;
+		}
+		if (cbits % 8) {
+			b[bio->off] = (unsigned char)c;
+			bio->acc = (cbits % 8);
+		}
+		else {
+			bio->acc = 0;
+		}
 	}
-	size_t copy_size = cbits / 8;
-	for (; copy_size > 0;) {
-		b[bio->off++] = (unsigned char)c;
-		c >>= 8;
-		copy_size --;
+	else {
+		bio->acc += cbits;
 	}
-	bio->acc = cbits % 8;
-	if (bio->acc)
-		b[bio->off] = (unsigned char)c;
 }
 
 size_t sbio_write_close(sbio_t *bio)
