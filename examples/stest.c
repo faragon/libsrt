@@ -11,12 +11,6 @@
 #include "../src/libsrt.h"
 #include <locale.h>
 
-#ifdef _MSC_VER
-#include <io.h>
-#else
-#include <unistd.h>
-#endif
-
 /*
  * Unit testing helpers
  */
@@ -540,7 +534,7 @@ static int test_ss_dup_read(const char *pattern)
 		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
 		      strcmp(ss_to_c(s), pattern) ? 16 : 0;
 		fclose(f);
-		unlink(STEST_FILE);
+		remove(STEST_FILE);
 	}
 	ss_free(&s);
 	return res;
