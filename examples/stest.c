@@ -2640,7 +2640,35 @@ static int test_alignment()
 
 static int test_sbitio()
 {
-	return 0; /* TODO */
+	unsigned char tmp[512];
+	memset(tmp, -1, sizeof(tmp));
+	/*
+	 * Write to serial buffer
+	 */
+	sbio_t bio;
+	sbio_write_init(&bio, tmp);
+	/* Write 0xa as 1 bit x 4 */
+	sbio_write(&bio, 0, 1);
+	sbio_write(&bio, 1, 1);
+	sbio_write(&bio, 0, 1);
+	sbio_write(&bio, 1, 1);
+	/* Write 5 as 4 bits at once */
+	sbio_write(&bio, 5, 4);
+	/* Write 0x1234 as 8 bits x 2 */
+	sbio_write(&bio, 0x12, 8);
+	sbio_write(&bio, 0x34, 8);
+	/* Write 0x5678 as 16 bits at once */
+	sbio_write(&bio, 0x5678, 16);
+	sbio_write_close(&bio);
+	/*
+	 * Read from serial buffer
+	 */
+	sbio_read_init(&bio, tmp);
+	size_t r32 = sbio_read(&bio, 32);
+	size_t r8 = sbio_read(&bio, 8);
+	int res = r32 != 0x7834125A ? 1 : r8 != 0x56 ? 2 :
+		  sbio_off(&bio) != 5 ? 4 : 0;
+	return res;
 }
 
 /*
