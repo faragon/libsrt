@@ -43,6 +43,15 @@
 struct AA { int a, b; };
 static const struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
 
+#define NO_CMPF ,NULL
+#define X_CMPF
+#define AA_CMPF ,AA_cmp
+
+static int AA_cmp(const void *a, const void *b) {
+	int64_t r = ((struct AA *)a)->a - ((struct AA *)b)->a;
+	return r < 0 ? -1 : r > 0 ? 1 : 0;
+}
+
 /*
  * Tests generated from templates
  */
@@ -1306,9 +1315,6 @@ static int test_sv_alloca()
 			sv_capacity(v) >= 2) ? 0 : 2<<(ntest*3);	\
 	sv_free(&v);
 
-#define NO_CMPF ,NULL
-#define X_CMPF
-
 static int test_sv_grow()
 {
 	int res = 0;
@@ -1908,6 +1914,35 @@ static int test_sv_resize()
 		       X_CMPF, r, s);
 	#undef SVIAT
 	#undef SVUAT
+	return res;
+}
+
+#define TEST_SV_SORT(v, ntest, alloc, push, type, CMPF, a, b, c)	 \
+	sv_t *v = alloc(type, 0 CMPF);					 \
+	push(&v, c); push(&v, b); push(&v, a); push(&v, a); push(&v, b); \
+	push(&v, c); push(&v, c); push(&v, b); push(&v, a);		 \
+	sv_sort(&v);							 \
+	int v##i, v##r = 0;						 \
+	for (v##i = 1; v##i < 9 && v##r <= 0; v##i++)			 \
+		v##r = sv_cmp(v, v##i - 1, v##i);			 \
+	res |= !v ? 1 << (ntest * 3) :					 \
+		    v##r <= 0 ? 0 : 2 << (ntest * 3);			 \
+	sv_free(&v);
+
+static int test_sv_sort()
+{
+	int res = 0;
+	const int r = 12, s = 34, t = -1;
+	TEST_SV_SORT(z, 0, sv_alloc, sv_push,
+		sizeof(struct AA), AA_CMPF, &a1, &a2, &a1);
+	TEST_SV_SORT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s, t);
+	TEST_SV_SORT(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, r, s, t);
+	TEST_SV_SORT(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, r, s, t);
+	TEST_SV_SORT(e, 4, sv_alloc_t, sv_push_u, SV_U16, X_CMPF, r, s, t);
+	TEST_SV_SORT(f, 5, sv_alloc_t, sv_push_i, SV_I32, X_CMPF, r, s, t);
+	TEST_SV_SORT(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, r, s, t);
+	TEST_SV_SORT(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, r, s, t);
+	TEST_SV_SORT(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, r, s, t);
 	return res;
 }
 
@@ -3012,6 +3047,7 @@ int main()
 	STEST_ASSERT(test_sv_cat_resize());
 	STEST_ASSERT(test_sv_erase());
 	STEST_ASSERT(test_sv_resize());
+	STEST_ASSERT(test_sv_sort());
 	STEST_ASSERT(test_sv_find());
 	STEST_ASSERT(test_sv_push_pop_set());
 	STEST_ASSERT(test_sv_push_pop_set_i());
