@@ -109,7 +109,7 @@ int main(int argc, const char **argv)
 	for (;;) {
 		if (is) {
 			l = fread(buf + off, 1, IBUF_SIZE, stdin);
-			if (!l && off == 0 || ferror(stdin))
+			if ((!l && off == 0) || ferror(stdin))
 				goto done;
 			l += off;
 			li += (size_t)l;
