@@ -129,10 +129,10 @@ BUILD_CMP_I(__sv_cmp_i8, char)
 BUILD_CMP_I(__sv_cmp_i16, short)
 BUILD_CMP_I(__sv_cmp_i32, int)
 BUILD_CMP_I(__sv_cmp_i64, int64_t)
-BUILD_CMP_I(__sv_cmp_u8, unsigned char)
-BUILD_CMP_I(__sv_cmp_u16, unsigned short)
-BUILD_CMP_I(__sv_cmp_u32, unsigned int)
-BUILD_CMP_I(__sv_cmp_u64, uint64_t)
+BUILD_CMP_U(__sv_cmp_u8, unsigned char)
+BUILD_CMP_U(__sv_cmp_u16, unsigned short)
+BUILD_CMP_U(__sv_cmp_u32, unsigned int)
+BUILD_CMP_U(__sv_cmp_u64, uint64_t)
 
 static size_t get_size(const sv_t *v)
 {
@@ -568,6 +568,16 @@ int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2,
 		   *v2p = ptr_to_elem_r(v2, v2off);
 	int r = memcmp(v1p, v2p, cmp_bytes);
 	return r || cmp_len == n ? r : sv1 > sv2 ? 1 : -1;
+}
+
+int sv_cmp(const sv_t *v, const size_t a_off, const size_t b_off)
+{
+	ASSERT_RETURN_IF(!v, 0);
+	const size_t vs = get_size(v);
+	RETURN_IF(a_off >= vs && b_off >= vs, 0);
+	RETURN_IF(a_off >= vs, 1);
+	RETURN_IF(b_off >= vs, -1);
+	return v->cmpf(ptr_to_elem_r(v, a_off), ptr_to_elem_r(v, b_off));
 }
 
 /*

@@ -204,7 +204,7 @@ sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 /* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_resize(sv_t **v, const size_t n);
 
-/* #API: |Sort vector|input/output vector|O(n log n) (relies on libc qsort implementation)|0;1| */
+/* #API: |Sort vector|input/output vector|O(n log n) (relies on libc qsort implementation)|1;2| */
 sv_t *sv_sort(sv_t **v);
 
 /*
@@ -224,8 +224,11 @@ size_t sv_find_u(const sv_t *v, const size_t off, const uint64_t target);
  * Compare
  */
 
-/* #API: |Compare two vectors|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|1;2| */
+/* #API: |Compare two vectors [TODO: this may be removed, as it is unnecesary complex]|vector #1; vector #1 offset start; vector #2; vector #2 start; compare size|0: equals; < 0 if a < b; > 0 if a > b|O(n)|1;2| */
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2, const size_t v2off, const size_t n);
+
+/* #API: |Compare two elements from same vector|vector; element 'a' offset; element :b' offset|0: equals; < 0 if a < b; > 0 if a > b|O(n)|1;2| */
+int sv_cmp(const sv_t *v, const size_t a_off, const size_t b_off);
 
 /*
  * Vector "at": element access to given position
