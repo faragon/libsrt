@@ -20,7 +20,7 @@ void sbio_write(sbio_t *bio, size_t c, size_t cbits)
 	unsigned char *b = bio->bw;
 	size_t xbits = 8 - bio->acc;
 	if (!bio->acc)
-		b[bio->off] = c << bio->acc;
+		b[bio->off] = (unsigned char)(c << bio->acc);
 	else
 		b[bio->off] |= (c << bio->acc);
 	if (cbits >= xbits) {

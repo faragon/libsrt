@@ -1205,8 +1205,8 @@ ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	ASSERT_RETURN_IF((!src || !offs), ss_clear(s)); /* BEHAVIOR: empty */
 	const size_t elems = sv_size(offs) / 2;
 	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
-	const size_t off = (size_t)sv_u_at(offs, nth * 2);
-	const size_t size = (size_t)sv_u_at(offs, nth * 2 + 1);
+	const size_t off = (size_t)sv_at_u(offs, nth * 2);
+	const size_t size = (size_t)sv_at_u(offs, nth * 2 + 1);
 	return ss_cpy_substr(s, src, off, size);
 }
 
@@ -1441,8 +1441,8 @@ ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
 	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
 	size_t src_off = get_str_off(src), src_size;
 	if (nth < elems) {
-		src_off += (size_t)sv_u_at(offs, nth * 2);
-		src_size = (size_t)sv_u_at(offs, nth * 2 + 1);
+		src_off += (size_t)sv_at_u(offs, nth * 2);
+		src_size = (size_t)sv_at_u(offs, nth * 2 + 1);
 	} else {
 		src_size = sd_get_size(src);
 	}
@@ -1910,13 +1910,13 @@ size_t ss_nth_size(const sv_t *offsets, const size_t nth)
 {
 	RETURN_IF(!offsets, 0);
 	const size_t elems = sv_size(offsets) / 2;
-	return nth < elems ? (size_t)sv_u_at(offsets, nth * 2 + 1) : 0;
+	return nth < elems ? (size_t)sv_at_u(offsets, nth * 2 + 1) : 0;
 }
 
 size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
 {
 	RETURN_IF(!offsets, 0);
-	return (size_t)sv_u_at(offsets, nth * 2);
+	return (size_t)sv_at_u(offsets, nth * 2);
 }
 
 /*

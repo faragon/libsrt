@@ -41,7 +41,17 @@
  */
 
 struct AA { int a, b; };
-static const struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
+static struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
+static struct AA av1[3] = { { 1, 2 }, { 3, 4 }, { 5, 6 } };
+
+uint8_t u8v[3] = { 1, 2, 3 };
+uint16_t u16v[3] = { 1, 2, 3 };
+uint32_t u32v[3] = { 1, 2, 3 };
+uint64_t u64v[3] = { 1, 2, 3 };
+int8_t i8v[3] = { 1, 2, 3 };
+int16_t i16v[3] = { 1, 2, 3 };
+int32_t i32v[3] = { 1, 2, 3 };
+int64_t i64v[3] = { 1, 2, 3 };
 
 #define NO_CMPF ,NULL
 #define X_CMPF
@@ -60,25 +70,25 @@ static int AA_cmp(const void *a, const void *b) {
  * Following test template covers two cases: non-aliased (sa to sb) and
  * aliased (sa to sa)
  */
-#define MK_TEST_SS_DUP_CODEC(suffix)						\
-	static int test_ss_dup_##suffix(const char *a, const char *b) {		\
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);		\
-		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
-			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
-		ss_free(&sa, &sb);						\
-		return res;							\
+#define MK_TEST_SS_DUP_CODEC(suffix)					      \
+	static int test_ss_dup_##suffix(const char *a, const char *b) {	      \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);	      \
+		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
+		ss_free(&sa, &sb);					      \
+		return res;						      \
 	}
 
-#define MK_TEST_SS_CPY_CODEC(suffix)						\
-	static int test_ss_cpy_##suffix(const char *a, const char *b) {		\
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");	\
-		ss_cpy_##suffix(&sb, sa);					\
-		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |	\
-			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |			\
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);			\
-		ss_free(&sa, &sb);						\
-		return res;							\
+#define MK_TEST_SS_CPY_CODEC(suffix)					      \
+	static int test_ss_cpy_##suffix(const char *a, const char *b) {	      \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");    \
+		ss_cpy_##suffix(&sb, sa);				      \
+		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
+		ss_free(&sa, &sb);					      \
+		return res;						      \
 	}
 
 #define MK_TEST_SS_CAT_CODEC(suffix)					  \
@@ -629,7 +639,8 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 				(ss_len(a) == strlen(expected_utf8) ? 0 : 4);
 	char tmp[512];
 	sprintf(tmp, "%ls%ls", in, in);
-	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
+	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ?
+									  0 : 8;
 	ss_free(&a);
 	return res;
 }
@@ -1318,7 +1329,8 @@ static int test_sv_alloca()
 static int test_sv_grow()
 {
 	int res = 0;
-	TEST_SV_GROW(a, &a1, 0, sv_alloc, sizeof(struct AA), NO_CMPF, 1, sv_push);
+	TEST_SV_GROW(a, &a1, 0, sv_alloc, sizeof(struct AA), NO_CMPF, 1,
+								sv_push);
 	TEST_SV_GROW(b, 123, 1, sv_alloc_t, SV_U8, X_CMPF, 1, sv_push_u);
 	TEST_SV_GROW(c, 123, 2, sv_alloc_t, SV_I8, X_CMPF, 1, sv_push_i);
 	TEST_SV_GROW(d, 123, 3, sv_alloc_t, SV_U16, X_CMPF, 1, sv_push_u);
@@ -1366,14 +1378,22 @@ static int test_sv_shrink()
 	int res = 0;
 	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push,
 			      sizeof(struct AA), NO_CMPF, &a1, 100);
-	TEST_SV_SHRINK_TO_FIT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(e, 4, sv_alloc_t, sv_push_u, SV_U16, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(f, 5, sv_alloc_t, sv_push_i, SV_I32, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, 123, 100);
-	TEST_SV_SHRINK_TO_FIT(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, 123, 100);
+	TEST_SV_SHRINK_TO_FIT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, 123,
+									  100);
+	TEST_SV_SHRINK_TO_FIT(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, 123,
+									  100);
+	TEST_SV_SHRINK_TO_FIT(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, 123,
+									   100);
+	TEST_SV_SHRINK_TO_FIT(e, 4, sv_alloc_t, sv_push_u, SV_U16, X_CMPF, 123,
+									   100);
+	TEST_SV_SHRINK_TO_FIT(f, 5, sv_alloc_t, sv_push_i, SV_I32, X_CMPF, 123,
+									   100);
+	TEST_SV_SHRINK_TO_FIT(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, 123,
+									   100);
+	TEST_SV_SHRINK_TO_FIT(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, 123,
+									   100);
+	TEST_SV_SHRINK_TO_FIT(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, 123,
+									   100);
 	return res;
 }
 
@@ -1525,8 +1545,8 @@ static int test_sv_dup()
 		    ((const struct AA *)sv_pop(z))->a ==
 					((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), NO_CMPF, &a1);
-	#define SVIAT(v) sv_i_at(v, 0) == val
-	#define SVUAT(v) sv_u_at(v, 0) == (unsigned)val
+	#define SVIAT(v) sv_at_i(v, 0) == val
+	#define SVUAT(v) sv_at_u(v, 0) == (unsigned)val
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
 	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_DUP(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8,
@@ -1568,8 +1588,8 @@ static int test_sv_dup_erase()
 	    ((const struct AA *)sv_at(z2, 0))->a ==
 				((const struct AA *)sv_at(z2, 1))->a,
 	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
-	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
+	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
+	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
 	TEST_SV_DUP_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF,
 			  r, s);
 	TEST_SV_DUP_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF,
@@ -1665,8 +1685,8 @@ static int test_sv_cpy_erase()
 	    ((const struct AA *)sv_at(z2, 0))->a ==
 				((const struct AA *)sv_at(z2, 1))->a,
 	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 1)
-	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 1)
+	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
+	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
 	TEST_SV_CPY_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF,
 			  r, s);
 	TEST_SV_CPY_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF,
@@ -1736,8 +1756,8 @@ static int test_sv_cat()
 		    ((const struct AA *)sv_pop(z))->a ==
 					((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), NO_CMPF, &a1);
-	#define SVIAT(v) sv_i_at(v, 3) == w
-	#define SVUAT(v) sv_u_at(v, 3) == (unsigned)w
+	#define SVIAT(v) sv_at_i(v, 3) == w
+	#define SVUAT(v) sv_at_u(v, 3) == (unsigned)w
 	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
 	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8,
@@ -1782,8 +1802,8 @@ static int test_sv_cat_erase()
 	    ((const struct AA *)sv_at(z2, 0))->a ==
 				((const struct AA *)sv_at(z2, 2))->a,
 	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_i_at(v##2, 0) == sv_i_at(v##2, 2)
-	#define SVUAT(v) sv_u_at(v##2, 0) == sv_u_at(v##2, 2)
+	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 2)
+	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 2)
 	TEST_SV_CAT_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
 			  X_CMPF, r, s);
 	TEST_SV_CAT_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
@@ -1853,8 +1873,8 @@ static int test_sv_erase()
 	    ((const struct AA *)sv_at(z, 0))->a ==
 		    ((const struct AA *)sv_at(z, 1))->a,
 	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_i_at(v, 0) == sv_i_at(v, 1)
-	#define SVUAT(v) sv_u_at(v, 0) == sv_u_at(v, 1)
+	#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
+	#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
 	TEST_SV_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
 		      X_CMPF, r, s);
 	TEST_SV_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
@@ -1894,8 +1914,8 @@ static int test_sv_resize()
 	    ((const struct AA *)sv_at(z, 0))->a ==
 		    ((const struct AA *)sv_at(z, 1))->a,
 	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_i_at(v, 0) == sv_i_at(v, 1)
-	#define SVUAT(v) sv_u_at(v, 0) == sv_u_at(v, 1)
+	#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
+	#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
 	TEST_SV_RESIZE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
 		       X_CMPF, r, s);
 	TEST_SV_RESIZE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
@@ -2048,10 +2068,10 @@ static int test_sv_push_pop_set_i()
 			sv_set_i(&a, 1000, -1);
 			sv_set_i(&b, 0, -2);
 			sv_set_i(&b, as - 1, -1);
-			res |= sv_i_at(a, 0) == -2 ? 0 : -1;
-			res |= sv_i_at(a, 1000) == -1 ? 0 : -1;
-			res |= sv_i_at(b, 0) == -2 ? 0 : -1;
-			res |= sv_i_at(b, as - 1) == -1 ? 0 : -1;
+			res |= sv_at_i(a, 0) == -2 ? 0 : -1;
+			res |= sv_at_i(a, 1000) == -1 ? 0 : -1;
+			res |= sv_at_i(b, 0) == -2 ? 0 : -1;
+			res |= sv_at_i(b, as - 1) == -1 ? 0 : -1;
 		} while (0);
 		sv_free(&a);
 	}
@@ -2060,7 +2080,8 @@ static int test_sv_push_pop_set_i()
 
 static int test_sv_push_pop_set_u()
 {
-	uint64_t init[] = { (uint64_t)-1, (uint64_t)-1, (uint64_t)-1, (uint64_t)-1 },
+	uint64_t init[] = { (uint64_t)-1, (uint64_t)-1, (uint64_t)-1,
+			    (uint64_t)-1 },
 		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
 	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
 	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
@@ -2080,10 +2101,35 @@ static int test_sv_push_pop_set_u()
 	return res;
 }
 
+#define TEST_SV_PUSH_RAW(v, ntest, alloc, type, CMPF, T, vbuf, ve)	\
+	sv_t *v = alloc(type, 0 CMPF);					\
+	sv_push_raw(&v, vbuf, ve);					\
+	T *v##b = (T *)sv_get_buffer_r(v);				\
+	int v##i, v##r = 0;						\
+	for (v##i = 0; v##i < ve && v##r == 0; v##i++)			\
+		v##r = vbuf[v##i] == v##b[v##i] ? 0 : 1;		\
+	res |= !v ? 1 << (ntest * 3) :					\
+		    v##r <= 0 ? 0 : 2 << (ntest * 3);			\
+	sv_free(&v);
+
 static int test_sv_push_raw()
 {
 	/* TODO */
-	return 0;
+	int res = 0;
+#if 0
+	const int r = 12, s = 34, t = -1;
+	TEST_SV_PUSH_RAW(z, 0, sv_alloc, sizeof(struct AA), NO_CMPF, struct AA,
+									av1, 3);
+	TEST_SV_PUSH_RAW(b, 1, sv_alloc_t, SV_I8, X_CMPF, int8_t, i8v, 3);
+	TEST_SV_PUSH_RAW(c, 2, sv_alloc_t, SV_U8, X_CMPF, uint8_t, u8v, 3);
+	TEST_SV_PUSH_RAW(d, 3, sv_alloc_t, SV_I16, X_CMPF, int16_t, i16v, 3);
+	TEST_SV_PUSH_RAW(e, 4, sv_alloc_t, SV_U16, X_CMPF, uint16_t, u16v, 3);
+	TEST_SV_PUSH_RAW(f, 5, sv_alloc_t, SV_I32, X_CMPF, int32_t, i32v, 3);
+	TEST_SV_PUSH_RAW(g, 6, sv_alloc_t, SV_U32, X_CMPF, uint32_t, u32v, 3);
+	TEST_SV_PUSH_RAW(h, 7, sv_alloc_t, SV_I64, X_CMPF, int64_t, i64v, 3);
+	TEST_SV_PUSH_RAW(i, 8, sv_alloc_t, SV_U64, X_CMPF, uint64_t, u64v, 3);
+#endif
+	return res;
 }
 
 struct MyNode1
@@ -2506,8 +2552,8 @@ static int test_sm_sort_to_vectors()
 		for (j = test_elems; j > 0 && !res; j--) {
 			sm_sort_to_vectors(m, &kv2, &vv2);
 			for (i = 0; i < j/*test_elems*/; i++) {
-				int k = (int)sv_i_at(kv2, (size_t)i);
-				int v = (int)sv_i_at(vv2, (size_t)i);
+				int k = (int)sv_at_i(kv2, (size_t)i);
+				int v = (int)sv_at_i(vv2, (size_t)i);
 				if (k != (i + 1) || v != -(i + 1)) {
 					res |= 4;
 					break;

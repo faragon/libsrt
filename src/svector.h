@@ -238,10 +238,10 @@ int sv_cmp(const sv_t *v, const size_t a_off, const size_t b_off);
 const void *sv_at(const sv_t *v, const size_t index);
 
 /* #API: |Vector random access (integer)|vector; location|Element value|O(1)|1;2| */
-int64_t sv_i_at(const sv_t *v, const size_t index);
+int64_t sv_at_i(const sv_t *v, const size_t index);
 
 /* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|1;2| */
-uint64_t sv_u_at(const sv_t *v, const size_t index);
+uint64_t sv_at_u(const sv_t *v, const size_t index);
 
 /*
  * Vector "set": set element value at given position
@@ -260,7 +260,7 @@ sbool_t sv_set_u(sv_t **v, const size_t index, uint64_t value);
  * Vector "push": add element in the last position
  */
 
-/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|0;1| */
+/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(n)|1;2| */
 sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n);
 
 /*

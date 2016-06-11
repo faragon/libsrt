@@ -771,7 +771,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 		size_t i = 0;
 		size_t le = sv_size(curr);
 		for (i = 0; i < le; i++) {
-			stndx_t n = (stndx_t)sv_u_at(curr, i);
+			stndx_t n = (stndx_t)sv_at_u(curr, i);
 			const stn_t *node = get_node_r(t, n);
 			if (f) {
 				tp.c = n;

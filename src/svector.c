@@ -602,12 +602,12 @@ const void *sv_at(const sv_t *v, const size_t index)
 	int64_t tmp;						\
 	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, index));
 
-int64_t sv_i_at(const sv_t *v, const size_t index)
+int64_t sv_at_i(const sv_t *v, const size_t index)
 {
 	SV_IU_AT(int64_t, SV_DEFAULT_SIGNED_VAL);
 }
 
-uint64_t sv_u_at(const sv_t *v, const size_t index)
+uint64_t sv_at_u(const sv_t *v, const size_t index)
 {
 	SV_IU_AT(uint64_t, SV_DEFAULT_UNSIGNED_VAL);
 }
