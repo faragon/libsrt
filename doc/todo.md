@@ -5,21 +5,17 @@ Short-term
 ---
 
 * Security: check size_t overflow on every function (e.g. off + size -> overflow)
-* List C library dependencies
-* Tests using stack space
-* Add tests covering expansion between small/medium/full strings
-* Renaming
- * sv_u_at/sv_i_at to sv_at_u/sv_i_at
-* Write some examples
 * Tests
+ * all tests using both stack and heap space
  * add grow from NULL tests
- * add tests for every operation related to unicode caching.
- * check case unicode size (add tests: e.g. erasing with overflow, etc.)
+ * add tests for every operation related to Unicode caching.
+ * add tests covering expansion between small/medium/full strings
+ * check case Unicode size (add tests: e.g. erasing with overflow, etc.)
  * aliasing: stack, lower/middle/upper case checks, etc.
  * add checks for all corner cases (!)
  * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
 
-Mid/long-term
+Long-term
 ---
 
 * Dynamic disk/RAM (mmap) allocators
@@ -30,12 +26,12 @@ Mid/long-term
  * Sort, st_shl and st_shr (shifting elements on a vector, without real data shift)
 * Map enhancements
  * Apply function to map: for all, for range, etc.
- * Add a (k=\*, void) new types to smap (e.g for cases of existance check)
+ * Add a (k=\*, void) new types to smap (e.g for cases of existence check)
 * Tree enhancements
  * Make last-inserted nodes cache, in order to speed-up delete.
  * Iterator: In addition to the callback, add an iterator for traversal.
  * min, max, range query
- * Compare, substract, add.
+ * Compare, subtract, add.
 * String enhancements
  * Store string search hash at string end (mark it with flag)
  * Search multiple targets on string keeping with O(m * n) worst search time (not O(n^2), but cheap one-pass)
