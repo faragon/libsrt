@@ -40,6 +40,9 @@
  * Test common data structures
  */
 
+#define TEST_AA(s, t) (s.a == t.a && s.b == t.b)
+#define TEST_INT(s, t) (s == t)
+
 struct AA { int a, b; };
 static struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
 static struct AA av1[3] = { { 1, 2 }, { 3, 4 }, { 5, 6 } };
@@ -2101,34 +2104,39 @@ static int test_sv_push_pop_set_u()
 	return res;
 }
 
-#define TEST_SV_PUSH_RAW(v, ntest, alloc, type, CMPF, T, vbuf, ve)	\
+#define TEST_SV_PUSH_RAW(v, ntest, alloc, type, CMPF, T, TEST, vbuf, ve)\
 	sv_t *v = alloc(type, 0 CMPF);					\
 	sv_push_raw(&v, vbuf, ve);					\
 	T *v##b = (T *)sv_get_buffer_r(v);				\
 	int v##i, v##r = 0;						\
 	for (v##i = 0; v##i < ve && v##r == 0; v##i++)			\
-		v##r = vbuf[v##i] == v##b[v##i] ? 0 : 1;		\
+		v##r = TEST(vbuf[v##i], v##b[v##i]) ? 0 : 1;		\
 	res |= !v ? 1 << (ntest * 3) :					\
 		    v##r <= 0 ? 0 : 2 << (ntest * 3);			\
 	sv_free(&v);
 
 static int test_sv_push_raw()
 {
-	/* TODO */
 	int res = 0;
-#if 0
 	const int r = 12, s = 34, t = -1;
 	TEST_SV_PUSH_RAW(z, 0, sv_alloc, sizeof(struct AA), NO_CMPF, struct AA,
-									av1, 3);
-	TEST_SV_PUSH_RAW(b, 1, sv_alloc_t, SV_I8, X_CMPF, int8_t, i8v, 3);
-	TEST_SV_PUSH_RAW(c, 2, sv_alloc_t, SV_U8, X_CMPF, uint8_t, u8v, 3);
-	TEST_SV_PUSH_RAW(d, 3, sv_alloc_t, SV_I16, X_CMPF, int16_t, i16v, 3);
-	TEST_SV_PUSH_RAW(e, 4, sv_alloc_t, SV_U16, X_CMPF, uint16_t, u16v, 3);
-	TEST_SV_PUSH_RAW(f, 5, sv_alloc_t, SV_I32, X_CMPF, int32_t, i32v, 3);
-	TEST_SV_PUSH_RAW(g, 6, sv_alloc_t, SV_U32, X_CMPF, uint32_t, u32v, 3);
-	TEST_SV_PUSH_RAW(h, 7, sv_alloc_t, SV_I64, X_CMPF, int64_t, i64v, 3);
-	TEST_SV_PUSH_RAW(i, 8, sv_alloc_t, SV_U64, X_CMPF, uint64_t, u64v, 3);
-#endif
+			 TEST_AA, av1, 3);
+	TEST_SV_PUSH_RAW(b, 1, sv_alloc_t, SV_I8, X_CMPF, int8_t,
+			 TEST_INT, i8v, 3);
+	TEST_SV_PUSH_RAW(c, 2, sv_alloc_t, SV_U8, X_CMPF, uint8_t,
+			 TEST_INT, u8v, 3);
+	TEST_SV_PUSH_RAW(d, 3, sv_alloc_t, SV_I16, X_CMPF, int16_t,
+			 TEST_INT, i16v, 3);
+	TEST_SV_PUSH_RAW(e, 4, sv_alloc_t, SV_U16, X_CMPF, uint16_t,
+			 TEST_INT, u16v, 3);
+	TEST_SV_PUSH_RAW(f, 5, sv_alloc_t, SV_I32, X_CMPF, int32_t,
+			 TEST_INT, i32v, 3);
+	TEST_SV_PUSH_RAW(g, 6, sv_alloc_t, SV_U32, X_CMPF, uint32_t,
+			 TEST_INT, u32v, 3);
+	TEST_SV_PUSH_RAW(h, 7, sv_alloc_t, SV_I64, X_CMPF, int64_t,
+			 TEST_INT, i64v, 3);
+	TEST_SV_PUSH_RAW(i, 8, sv_alloc_t, SV_U64, X_CMPF, uint64_t,
+			 TEST_INT, u64v, 3);
 	return res;
 }
 
