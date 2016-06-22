@@ -3037,7 +3037,7 @@ int main()
 				      "where are you? where are we?"));
 	STEST_ASSERT(test_ss_to_c(""));
 	STEST_ASSERT(test_ss_to_c("hello"));
-#if !defined(S_NOT_U8_SPRINTF)
+#if !defined(S_NOT_UTF8_SPRINTF)
 	if (unicode_support)
 		STEST_ASSERT(test_ss_to_w("hello" U8_C_N_TILDE_D1));
 #endif
