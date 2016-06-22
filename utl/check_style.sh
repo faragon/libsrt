@@ -18,7 +18,7 @@ if (( $(grep 'switch (' $* | grep -v { | wc -l) > 0 )) ; then
 	exit 2
 fi
 
-if (( $(cat $* | wc -l) != $(cat -s $* | wc -l) )) ; then
+if (( $(cat $* | wc -l) != $(cat $* | sed '/^$/N;/^\n$/D' | wc -l) )) ; then
 	echo -n "[consecutive blank lines] "
 	exit 2
 fi
