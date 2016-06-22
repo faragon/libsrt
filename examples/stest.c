@@ -1301,22 +1301,22 @@ static int test_ss_csum32()
 	return res;
 }
 
-static int test_sc_utf8_to_wc(const char *U8_char,
+static int test_sc_utf8_to_wc(const char *utf8_char,
 			      const int unicode32_expected)
 {
 	int uc_out = 0;
-	const size_t char_size = sc_utf8_to_wc(U8_char, 0, 6,
+	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6,
 						&uc_out, NULL);
 	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
 }
 
 static int test_sc_wc_to_utf8(const int unicode32,
-			      const char *U8_char_expected)
+			      const char *utf8_char_expected)
 {
 	char utf8[6];
 	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);
 	return !char_size ? 1 :
-			(!memcmp(utf8, U8_char_expected, char_size) ? 0 : 2);
+			(!memcmp(utf8, utf8_char_expected, char_size) ? 0 : 2);
 }
 
 static int test_ss_null()
