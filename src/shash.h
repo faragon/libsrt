@@ -9,7 +9,7 @@ extern "C" {
  *
  * Buffer hashing
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  *
  * Features:
  *
@@ -20,7 +20,7 @@ extern "C" {
 #include "scommon.h"
 
 
-/* #notAPI: |Simple hash: 32 bit hash from adding chunks ("fair" enough for hash routing, but not for generic hash tables)|buffer;buffer size (in bytes)|32-bit hash|O(n)|0;1| */
+/* #notAPI: |Simple hash: 32 bit hash from xor-ing 32-bit chunks ("fair" enough for hash routing, but not for generic hash tables)|buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
 unsigned sh_csum32(const void *buf, const size_t buf_size);
 
 #ifdef __cplusplus

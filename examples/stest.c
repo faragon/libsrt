@@ -1,13 +1,11 @@
 /*
  * stest.c
  *
- * Tests (this will be splitted/simplified, currently is a way of
- * detecting if something gets broken; it will be converted into
- * a proper API validation).
+ * libsrt API tests
  *
  * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
  */
- 
+
 #include "../src/libsrt.h"
 #include <locale.h>
 
@@ -34,7 +32,18 @@
 	STEST_ASSERT_BASE(a, ;)
 #endif
 
-#define STEST_FILE	"test.dat"
+#define STEST_FILE		"test.dat"
+#define U8_C_N_TILDE_D1		"\xc3\x91"
+#define U8_S_N_TILDE_F1		"\xc3\xb1"
+#define U8_S_I_DOTLESS_131	"\xc4\xb1" /* Turkish small I without dot */
+#define U8_C_I_DOTTED_130	"\xc4\xb0" /* Turkish capital I with dot */
+#define U8_C_G_BREVE_11E	"\xc4\x9e"
+#define U8_S_G_BREVE_11F	"\xc4\x9f"
+#define U8_C_S_CEDILLA_15E	"\xc5\x9e"
+#define U8_S_S_CEDILLA_15F	"\xc5\x9f"
+#define U8_CENT_00A2		"\xc2\xa2"
+#define U8_EURO_20AC		"\xe2\x82\xac"
+#define U8_HAN_24B62		"\xf0\xa4\xad\xa2"
 
 /*
  * Test common data structures
@@ -204,10 +213,10 @@ static int test_ss_reserve(const size_t max_size)
 
 static int test_ss_resize_x()
 {
-	const char *i0 = "\xc3\x91" "1234567890";
-	const char *i1 = "\xc3\x91" "1234567890__";
-	const char *i2 = "\xc3\x91" "12";
-	const char *i3 = "\xc3\x91" "123";
+	const char *i0 = U8_C_N_TILDE_D1 "1234567890";
+	const char *i1 = U8_C_N_TILDE_D1 "1234567890__";
+	const char *i2 = U8_C_N_TILDE_D1 "12";
+	const char *i3 = U8_C_N_TILDE_D1 "123";
 	ss_t *a = ss_dup_c(i0), *b = ss_dup(a);
 	int res = a && b ? 0 : 1;
 	res |= res ? 0: ((ss_resize(&a, 14, '_') &&
@@ -447,7 +456,8 @@ static int test_ss_dup_erase(const char *in, const size_t off,
 
 static int test_ss_dup_erase_u()
 {
-	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"), *b = ss_dup_erase_u(a, 2, 3);
+	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
+	     *b = ss_dup_erase_u(a, 2, 3);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
@@ -478,12 +488,13 @@ static int test_ss_dup_resize()
 
 static int test_ss_dup_resize_u()
 {
-	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_resize_u(a, 11, 'z'),
+	ss_t *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"),
+	     *b = ss_dup_resize_u(a, 11, 'z'),
 	     *c = ss_dup_resize_u(a, 3, 'z');
 	int res = (!a || !b) ?
 		1 :
-		(!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
-		(!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
+		(!strcmp(ss_to_c(b), U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
+		(!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -547,7 +558,7 @@ static int test_ss_dup_read(const char *pattern)
 	int res = 1;
 	const size_t pattern_size = strlen(pattern);
 	ss_t *s = NULL;
-	FILE *f = fopen(STEST_FILE, "wb+");
+	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
 	if (f) {
 		size_t write_size = fwrite(pattern, 1, pattern_size, f);
 		res = !write_size || ferror(f) ||
@@ -691,7 +702,7 @@ static int test_ss_cpy_erase(const char *in, const size_t off,
 
 static int test_ss_cpy_erase_u()
 {
-	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"),
+	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
 	     *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase_u(&b, a, 2, 3);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
@@ -724,13 +735,16 @@ static int test_ss_cpy_resize()
 
 static int test_ss_cpy_resize_u()
 {
-	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_c("garbage i!&/()="),
+	ss_t *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"),
+	     *b = ss_dup_c("garbage i!&/()="),
 	     *c = ss_dup_c("garbage i!&/()=");
 	ss_cpy_resize_u(&b, a, 11, 'z');
 	ss_cpy_resize_u(&c, a, 3, 'z');
 	int res = (!a || !b) ? 1 :
-			(!strcmp(ss_to_c(b), "\xc3\xb1" "hellozzzzz") ? 0 : 2) |
-			(!strcmp(ss_to_c(c), "\xc3\xb1" "he") ? 0 : 4);
+			(!strcmp(ss_to_c(b),
+				 U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
+			(!strcmp(ss_to_c(c),
+				 U8_S_N_TILDE_F1 "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -857,9 +871,9 @@ static int test_ss_cat_substr()
 static int test_ss_cat_substr_u()
 {
 	/* like the above, but replacing the 'e' with a Chinese character */
-	ss_t *a = ss_dup_c("how ar" "\xf0\xa4\xad\xa2" " you"),
-	     *b = ss_dup_c(" "), *c = ss_dup_c("ar" "\xf0\xa4\xad\xa2" " you"),
-	     *d = ss_dup_c("ar" "\xf0\xa4\xad\xa2" " ");
+	ss_t *a = ss_dup_c("how ar" U8_HAN_24B62 " you"),
+	     *b = ss_dup_c(" "), *c = ss_dup_c("ar" U8_HAN_24B62 " you"),
+	     *d = ss_dup_c("ar" U8_HAN_24B62 " ");
 	int res = (!a || !b) ? 1 : 0;
 	res |= res ? 0 : (ss_cat_substr_u(&d, a, 8, 3) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
@@ -960,7 +974,7 @@ static int test_ss_cat_erase(const char *prefix, const char *in,
 
 static int test_ss_cat_erase_u()
 {
-	ss_t *a = ss_dup_c("hel" "\xc3\xb1" "lo"), *b = ss_dup_c("x");
+	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"), *b = ss_dup_c("x");
 	ss_cat_erase_u(&b, a, 2, 3);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
 	ss_free(&a, &b);
@@ -985,15 +999,16 @@ static int test_ss_cat_resize()
 	     *c = ss_dup_c("x");
 	ss_cat_resize(&b, a, 10, 'z');
 	ss_cat_resize(&c, a, 2, 'z');
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
+	int res = (!a || !b) ? 1 :
+		  (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2) |
+		  (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
 
 static int test_ss_cat_resize_u()
 {
-	ss_t *a = ss_dup_c("\xc3\xb1" "hello"), *b = ss_dup_c("x"),
+	ss_t *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"), *b = ss_dup_c("x"),
 	     *c = ss_dup_c("x");
 	ss_cat_resize_u(&b, a, 11, 'z');
 	ss_cat_resize_u(&c, a, 3, 'z');
@@ -1246,7 +1261,7 @@ static int test_ss_putchar()
 
 static int test_ss_popchar()
 {
-	ss_t *a = ss_dup_c("12" "\xc3\x91" "a");
+	ss_t *a = ss_dup_c("12" U8_C_N_TILDE_D1 "a");
 	int res = !a ? 1 : (ss_popchar(&a) == 'a' ? 0 : 2) |
 			   (ss_popchar(&a) == 0xd1 ? 0 : 4) |
 			   (ss_popchar(&a) == '2' ? 0 : 8) |
@@ -1256,32 +1271,52 @@ static int test_ss_popchar()
 	return res;
 }
 
-static int test_ss_read()
+static int test_ss_read_write()
 {
-	return 0; /* TODO */
+	int res = 1;	 /* Error: can not open file */
+	remove(STEST_FILE);
+	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
+	if (f) {
+		const char *a = "once upon a time";
+		size_t la = strlen(a);
+		ss_t *sa = ss_dup_c(a), *sb = NULL;
+		res =	ss_size(sa) != la ? 2 :
+			ss_write(f, sa, 0, S_NPOS) != la ? 3 :
+			fseek(f, 0, SEEK_SET) != 0 ? 4 :
+			ss_read(&sb, f, 4000) != la ? 5 :
+			strcmp(ss_to_c(sa), ss_to_c(sb)) != 0 ? 6 : 0;
+		ss_free(&sa, &sb);
+		fclose(f);
+		remove(STEST_FILE);
+	}
+	return res;
 }
 
 static int test_ss_csum32()
 {
-	return 0; /* TODO */
+	const char *a = "\xa0\xb0\xc0\xd0\x0d\x0c\x0b\x0a";
+	ss_t *sa = ss_dup_c(a);
+	int res = S_HTON_U32(ss_csum32(sa, S_NPOS)) != 0xadbccbda ? 1 : 0;
+	ss_free(&sa);
+	return res;
 }
 
-static int test_sc_utf8_to_wc(const char *utf8_char,
+static int test_sc_utf8_to_wc(const char *U8_char,
 			      const int unicode32_expected)
 {
 	int uc_out = 0;
-	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6,
+	const size_t char_size = sc_utf8_to_wc(U8_char, 0, 6,
 						&uc_out, NULL);
 	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
 }
 
 static int test_sc_wc_to_utf8(const int unicode32,
-			      const char *utf8_char_expected)
+			      const char *U8_char_expected)
 {
 	char utf8[6];
 	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);
 	return !char_size ? 1 :
-			(!memcmp(utf8, utf8_char_expected, char_size) ? 0 : 2);
+			(!memcmp(utf8, U8_char_expected, char_size) ? 0 : 2);
 }
 
 static int test_ss_null()
@@ -2821,20 +2856,20 @@ int main()
 	STEST_ASSERT(test_ss_erase_u("abcde", 2, 10000, "ab"));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 5, ""));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 10000, ""));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 1, 2,
-				     "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1,
-				     "\xc3\x91" "a"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "a" "\xc3\x91", 2, 1000,
-				     "\xc3\x91" "a"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 1, 2,
-				     "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1,
-				     "\xc3\x91" "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 2, 1000,
-				     "\xc3\x91" "\xc3\x91"));
-	STEST_ASSERT(test_ss_erase_u("\xc3\x91" "\xc3\x91" "a", 0, 1,
-				     "\xc3\x91" "a"));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 1,
+				     2, U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 2,
+				     1, U8_C_N_TILDE_D1 "a"));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 2,
+				     1000, U8_C_N_TILDE_D1 "a"));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 1,
+				     2, U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 2,
+				     1, U8_C_N_TILDE_D1 U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 2,
+				     1000, U8_C_N_TILDE_D1 U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 0,
+				     1, U8_C_N_TILDE_D1 "a"));
 	STEST_ASSERT(test_ss_free(0));
 	STEST_ASSERT(test_ss_free(16));
 	STEST_ASSERT(test_ss_len("hello", 5));
@@ -2906,7 +2941,7 @@ int main()
 					   "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_dup_char('a', "a"));
 	if (sizeof(wchar_t) > 2)
-		STEST_ASSERT(test_ss_dup_char(0x24b62, "\xf0\xa4\xad\xa2"));
+		STEST_ASSERT(test_ss_dup_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_dup_read("abc"));
 	STEST_ASSERT(test_ss_dup_read("a\nb\tc\rd\te\ff"));
 	STEST_ASSERT(test_ss_cpy(""));
@@ -2940,7 +2975,7 @@ int main()
 	       			    "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_cpy_char('a', "a"));
 	if (sizeof(wchar_t) > 2)
-		STEST_ASSERT(test_ss_cpy_char(0x24b62, "\xf0\xa4\xad\xa2"));
+		STEST_ASSERT(test_ss_cpy_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_cat("hello", "all"));
 	STEST_ASSERT(test_ss_cat_sub());
 	STEST_ASSERT(test_ss_cat_substr());
@@ -2973,18 +3008,22 @@ int main()
 	STEST_ASSERT(test_ss_toupper("aBcDeFgHiJkLmNoPqRsTuVwXyZ",
 				     "ABCDEFGHIJKLMNOPQRSTUVWXYZ"));
 #if !defined(S_MINIMAL_BUILD)
-	STEST_ASSERT(test_ss_tolower("\xc3\x91", "\xc3\xb1"));
-	STEST_ASSERT(test_ss_toupper("\xc3\xb1", "\xc3\x91"));
+	STEST_ASSERT(test_ss_tolower(U8_C_N_TILDE_D1, U8_S_N_TILDE_F1));
+	STEST_ASSERT(test_ss_toupper(U8_S_N_TILDE_F1, U8_C_N_TILDE_D1));
 	STEST_ASSERT(!ss_set_turkish_mode(1));
-	STEST_ASSERT(test_ss_tolower("I", "\xc4\xb1")); /* 0x49 -> 0x131 */
-	STEST_ASSERT(test_ss_tolower("III", "\xc4\xb1" "\xc4\xb1" "\xc4\xb1"));
-	STEST_ASSERT(test_ss_toupper("\xc4\xb1", "I"));
-	STEST_ASSERT(test_ss_tolower("\xc4\xb0", "i")); /* 0x130 -> 0x69 */
-	STEST_ASSERT(test_ss_toupper("i", "\xc4\xb0"));
-	STEST_ASSERT(test_ss_tolower("\xc4\x9e", "\xc4\x9f")); /* 0x11e 0x11f */
-	STEST_ASSERT(test_ss_toupper("\xc4\x9f", "\xc4\x9e"));
-	STEST_ASSERT(test_ss_tolower("\xc5\x9e", "\xc5\x9f")); /* 0x15e 0x15f */
-	STEST_ASSERT(test_ss_toupper("\xc5\x9f", "\xc5\x9e"));
+	STEST_ASSERT(test_ss_tolower("I", U8_S_I_DOTLESS_131));
+	STEST_ASSERT(test_ss_tolower("III", U8_S_I_DOTLESS_131 \
+					    U8_S_I_DOTLESS_131 \
+					    U8_S_I_DOTLESS_131));
+	STEST_ASSERT(test_ss_toupper(U8_S_I_DOTLESS_131, "I"));
+	STEST_ASSERT(test_ss_tolower(U8_C_I_DOTTED_130, "i"));
+	STEST_ASSERT(test_ss_toupper("i", U8_C_I_DOTTED_130));
+	STEST_ASSERT(test_ss_tolower(U8_C_G_BREVE_11E, U8_S_G_BREVE_11F));
+	STEST_ASSERT(test_ss_toupper(U8_S_G_BREVE_11F, U8_C_G_BREVE_11E));
+	STEST_ASSERT(test_ss_tolower(U8_C_S_CEDILLA_15E,
+				     U8_S_S_CEDILLA_15F));
+	STEST_ASSERT(test_ss_toupper(U8_S_S_CEDILLA_15F,
+				     U8_C_S_CEDILLA_15E));
 	STEST_ASSERT(!ss_set_turkish_mode(0));
 #endif
 	STEST_ASSERT(test_ss_clear(""));
@@ -2998,9 +3037,9 @@ int main()
 				      "where are you? where are we?"));
 	STEST_ASSERT(test_ss_to_c(""));
 	STEST_ASSERT(test_ss_to_c("hello"));
-#if !defined(S_NOT_UTF8_SPRINTF)
+#if !defined(S_NOT_U8_SPRINTF)
 	if (unicode_support)
-		STEST_ASSERT(test_ss_to_w("hello\xc3\x91"));
+		STEST_ASSERT(test_ss_to_w("hello" U8_C_N_TILDE_D1));
 #endif
 	STEST_ASSERT(test_ss_find("full text", "text", 5));
 	STEST_ASSERT(test_ss_find("full text", "hello", S_NPOS));
@@ -3034,14 +3073,13 @@ int main()
 	STEST_ASSERT(test_ss_putchar());
 	STEST_ASSERT(test_ss_cpy_read());
 	STEST_ASSERT(test_ss_cat_read());
-	STEST_ASSERT(test_ss_read());
+	STEST_ASSERT(test_ss_read_write());
 	STEST_ASSERT(test_ss_csum32());
 	STEST_ASSERT(test_ss_null());
-	/*                          $       cent        euro
-	 *		       chinese             N~          n~         */
-	const char *utf8[] = { "a", "\x24", "\xc2\xa2", "\xe2\x82\xac",
-			       "\xf0\xa4\xad\xa2", "\xc3\x91", "\xc3\xb1" };
-	const int32_t uc[] = { 'a', 0x24, 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
+	const char *utf8[] = { "a", "$", U8_CENT_00A2, U8_EURO_20AC,
+			       U8_HAN_24B62, U8_C_N_TILDE_D1,
+			       U8_S_N_TILDE_F1 };
+	const int32_t uc[] = { 'a', '$', 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
 	unsigned i = 0;
 	for (; i < sizeof(utf8) / sizeof(utf8[0]); i++) {
 		STEST_ASSERT(test_sc_utf8_to_wc(utf8[i], uc[i]));

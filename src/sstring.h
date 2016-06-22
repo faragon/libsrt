@@ -725,17 +725,17 @@ int ss_popchar(ss_t **s);
  * I/O
  */
 
-/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
+/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
 ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
-/* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n)|0;1| */
+/* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n)|1;2| */
 ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset, const size_t bytes);
 
 /*
  * Hashing
  */
 
-/* #API: |Simple hash: 32-bit checksum|string; 0: compare all string, 1 <= n < N compare first N elements|32-bit hash|O(n)|0;1| */
+/* #API: |Simple hash: 32-bit checksum|string; 0: compare all string, 1 <= n < N compare first N elements|32-bit hash|O(n)|1;2| */
 unsigned ss_csum32(const ss_t *s, const size_t n);
 
 /*

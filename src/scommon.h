@@ -445,10 +445,9 @@ S_INLINE void s_st_le_u32(void *a, unsigned int v)
 
 #ifdef _MSC_VER 
 #define snprintf sprintf_s
+#define S_FOPEN_BINARY_RW_TRUNC "wb+"
 #else
-#ifndef O_BINARY
-#define O_BINARY 0
-#endif
+#define S_FOPEN_BINARY_RW_TRUNC "w+"
 #endif
 
 /*
