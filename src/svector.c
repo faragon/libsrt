@@ -86,10 +86,9 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
  */
 
 #define SV_LDx(f, TL, TO)						\
-	static TO *f(const void *ld, TO *out, const size_t index)	\
+	static TO f(const void *ld, const size_t index)			\
 	{								\
-		*out = ((TL *)ld)[index];				\
-		return out;						\
+		return (TO)(((TL *)ld)[index]);				\
 	}
 
 SV_LDx(svldi8, const signed char, int64_t)
@@ -101,7 +100,7 @@ SV_LDx(svldu32, const uint32_t, uint64_t)
 SV_LDx(svldi64, const int64_t, int64_t)
 SV_LDx(svldu64, const uint64_t, uint64_t)
 
-typedef int64_t *(*T_SVLDX)(const void *, int64_t *, const size_t);
+typedef int64_t (*T_SVLDX)(const void *, const size_t);
 
 static T_SVLDX svldx_f[SV_LAST_INT + 1] = { svldi8, (T_SVLDX)svldu8,
 					    svldi16, (T_SVLDX)svldu16,
@@ -599,8 +598,7 @@ const void *sv_at(const sv_t *v, const size_t index)
 	const size_t size = get_size(v);			\
 	RETURN_IF(index >= size, def_val);			\
 	const void *p = __sv_get_buffer_r(v);			\
-	int64_t tmp;						\
-	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, index));
+	return (T)(svldx_f[(int)v->sv_type](p, index));
 
 int64_t sv_at_i(const sv_t *v, const size_t index)
 {
@@ -744,8 +742,7 @@ sbool_t sv_push_u(sv_t **v, const uint64_t c)
 
 #define SV_POP_IU(T)						\
 	SV_AT_INT_CHECK(v);					\
-	int64_t tmp;						\
-	return *(T *)(svldx_f[(int)v->sv_type](p, &tmp, 0));
+	return (T)(svldx_f[(int)v->sv_type](p,  0));
 
 void *sv_pop(sv_t *v)
 {
