@@ -88,11 +88,11 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
 #define SV_LDx(f, TL, TO)						\
 	static TO *f(const void *ld, TO *out, const size_t index)	\
 	{								\
-		 *out = ((TL *)ld)[index];				\
+		*out = ((TL *)ld)[index];				\
 		return out;						\
 	}
 
-SV_LDx(svldi8, const char, int64_t)
+SV_LDx(svldi8, const signed char, int64_t)
 SV_LDx(svldu8, const unsigned char, uint64_t)
 SV_LDx(svldi16, const short, int64_t)
 SV_LDx(svldu16, const unsigned short, uint64_t)
@@ -125,7 +125,7 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = { svldi8, (T_SVLDX)svldu8,
 		return a2 < b2 ? -1 : a2 == b2 ? 0 : 1;	\
 	}
 
-BUILD_CMP_I(__sv_cmp_i8, char)
+BUILD_CMP_I(__sv_cmp_i8, signed char)
 BUILD_CMP_I(__sv_cmp_i16, short)
 BUILD_CMP_I(__sv_cmp_i32, int)
 BUILD_CMP_I(__sv_cmp_i64, int64_t)
