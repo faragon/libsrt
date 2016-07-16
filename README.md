@@ -223,14 +223,12 @@ Test-covered platforms
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | EdgeOS v1.6.0 (Linux Vyatta-based using Debian 7 "Wheezy" packages) | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
 
-If you want automated continuous integration coverage for some specific platform, I can do it for you (for free) if you provide the following:
+Coming soon:
 
-- Access to the remote machine via ssh (or rsh) from the Internet
-- An user account called "libsrt"
-- Email client (for sending the errors)
-- Required packages: make (GNU make), compilers you want to support (e.g. gcc, clang, etc.), and Valgrind (if available)
-
-In the mid-term I could add the results to this README.md in the same way as e.g. Travis CI results, avoiding the need of sending emails.
+| ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
+| --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
+| ARM v7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
+| MIPS32 (mips24k) | 32 | big | yes | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
 
 License
 ===
