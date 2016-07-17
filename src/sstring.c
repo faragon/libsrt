@@ -822,7 +822,7 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 			const size_t max_bytes)
 {
 	ssize_t l = 0;
-	if (h >= 0 && max_bytes > 0) {
+	if (h && max_bytes > 0) {
 		size_t ss = ss_size(*s),
 			    off = cat ? ss : 0,
 			    max_off = off + max_bytes,
