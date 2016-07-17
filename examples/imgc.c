@@ -1,13 +1,13 @@
 /*
  * imgc.c
  *
- * Image encoding/decoding/filtering/statistics example using libsrt
- *
- * Observations:
- * - In order to have PNG and JPEG support: make imgc HAS_JPG=1 HAS_PNG=1
+ * Image processing example using libsrt
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
+ *
+ * Observations:
+ * - In order to have PNG and JPEG support: make imgc HAS_JPG=1 HAS_PNG=1
  */
 
 #include "../src/libsrt.h"

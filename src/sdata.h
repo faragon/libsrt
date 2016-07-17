@@ -9,12 +9,12 @@ extern "C" {
  *
  * Dynamic size data handling.
  *
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
+ *
  * Observations:
  * - This is not intended for direct use, but as base for 
  *   other types (ss_t, sv_t, st_t, sm_t, etc.)
- *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "scommon.h"

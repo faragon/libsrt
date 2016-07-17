@@ -1,16 +1,16 @@
 /*
  * table.c
  *
- * Table import/export between CSV/HTML/JSON formats
+ * Table import/export between CSV/HTML/JSON formats example using libsrt
+ *
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  *
  * CSV (partial): http://tools.ietf.org/html/rfc4180
  *
  * Observations:
  * - Not optimized
  * - Not tested in depth
- *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "../src/libsrt.h"
