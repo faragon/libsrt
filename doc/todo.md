@@ -5,6 +5,7 @@ Short-term
 ---
 
 * Security: check size_t overflow on every function (e.g. off + size -> overflow)
+* Add doc: xx_empty(), and other already implemented functions
 * Tests
  * all tests using both stack and heap space
  * add grow from NULL tests

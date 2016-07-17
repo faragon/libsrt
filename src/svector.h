@@ -9,18 +9,11 @@ extern "C" {
  *
  * Vector handling.
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */ 
 
 #include "sdata.h"
-
-/*
- * Macros
- */
-
-#define SDV_HEADER_SIZE sizeof(struct SVector)
-#define SV_SIZE_TO_ALLOC_SIZE(elems, elem_size) \
-	(SDV_HEADER_SIZE + elem_size * elems)
 
 /*
  * Structures
@@ -45,16 +38,16 @@ typedef int (*sv_cmp_t)(const void *a, const void *b);
 
 struct SVector
 {
-	struct SData_Full df;
-	char sv_type;
-	size_t elem_size;
-	sv_cmp_t cmpf;
-	size_t aux, aux2;	 /* Used by derived types */
+	struct SDataFull d;
+	union {
+		sv_cmp_t cmpf;	/* compare function */
+		uintptr_t cnt;	/* counter (for derivative types, e.g. sb_t) */
+	} vx;
 };
 
 typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
 
-#define EMPTY_SV { EMPTY_SData_Full(sizeof(struct SVector)), SV_U8, 0, 0, 0, 0 }
+#define EMPTY_SV { EMPTY_SData(sizeof(sv_t)), NULL }
 
 /*
  * Variable argument functions
@@ -81,17 +74,18 @@ sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 #API: |Allocate generic vector (stack)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2|
 sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve, const sv_cmp_t f)
 */
-#define sv_alloca(elem_size, num_elems, cmp_f)				\
-	sv_alloc_raw(							\
-		SV_GEN, elem_size, S_TRUE,				\
-		alloca(SV_SIZE_TO_ALLOC_SIZE(num_elems,	elem_size)),	\
-		SV_SIZE_TO_ALLOC_SIZE(num_elems, elem_size), cmp_f)
-#define sv_alloca_t(type, num_elems)					      \
-	sv_alloc_raw(							      \
-		type, sv_elem_size(type), S_TRUE,			      \
-		alloca(SV_SIZE_TO_ALLOC_SIZE(num_elems, sv_elem_size(type))), \
-		SV_SIZE_TO_ALLOC_SIZE(num_elems, sv_elem_size(type)), NULL)
-sv_t *sv_alloc_raw(const enum eSV_Type t, const size_t elem_size, const sbool_t ext_buf, void *buffer, const size_t buffer_size, const sv_cmp_t f);
+#define sv_alloca(elem_size, max_size, cmp_f)				      \
+	sv_alloc_raw(SV_GEN, S_TRUE,					      \
+		     alloca(sd_alloc_size(sizeof(sv_t), elem_size, max_size,  \
+					  S_FALSE)),			      \
+		     elem_size, max_size, cmp_f)
+#define sv_alloca_t(type, max_size)					      \
+	sv_alloc_raw(type, S_TRUE,					      \
+		     alloca(sd_alloc_size(sizeof(sv_t), sv_elem_size(type),   \
+			    max_size, S_FALSE)),			      \
+		     sv_elem_size(type), max_size, NULL)
+
+sv_t *sv_alloc_raw(const enum eSV_Type t, const sbool_t ext_buf, void *buffer, const size_t elem_size, const size_t max_size, const sv_cmp_t f);
 
 /* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2| */
 sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve, const sv_cmp_t f);
@@ -99,7 +93,7 @@ sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve, c
 /* #API: |Allocate typed vector (heap)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2| */
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve);
 
-SD_BUILDPROTS(sv)
+SD_BUILDFUNCS_FULL(sv)
 
 /*
 #API: |Free one or more vectors (heap)|vector;more vectors (optional)|-|O(1)|1;2|
@@ -140,17 +134,19 @@ size_t sv_len_left(const sv_t *v);
 /* #API: |Explicit set length (intended for external I/O raw acccess)|vector;new length|S_TRUE: OK, S_FALSE: out of range|O(1)|1;2| */
 sbool_t sv_set_len(sv_t *v, const size_t elems);
 
-/* #API: |Get string buffer read-only access|string|pointer to the insternal buffer (raw data)|O(1)|1;2| */
+/* #API: |Get string buffer read-only access|string|pointer to the insternal buffer (raw data)|O(1)|1;2|
 void *sv_get_buffer(sv_t *v);
 
-/* #API: |Get string buffer access|string|pointer to the insternal buffer (raw data)|O(1)|1;2| */
+   #API: |Get string buffer access|string|pointer to the insternal buffer (raw data)|O(1)|1;2|
 const void *sv_get_buffer_r(const sv_t *v);
+*/
 
 /* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)|1;2| */
 size_t sv_get_buffer_size(const sv_t *v);
 
+
 /* #API: |Get vector type element size|vector type|Element size (bytes)|O(1)|1;2| */
-size_t sv_elem_size(const enum eSV_Type t);
+uint8_t sv_elem_size(const enum eSV_Type t);
 
 /*
  * Allocation from other sources: "dup"
@@ -291,21 +287,6 @@ uint64_t sv_pop_u(sv_t *v);
 /*
  * Functions intended for helping compiler optimization
  */
-
-S_INLINE size_t __sv_get_max_size(const sv_t *v)
-{
-	return (v->df.alloc_size - SDV_HEADER_SIZE) / v->elem_size;
-}
-
-S_INLINE const void *__sv_get_buffer_r(const sv_t *v)
-{
-	return (const void *)(((const char *)v) + SDV_HEADER_SIZE);
-}
-
-S_INLINE void *__sv_get_buffer(sv_t *v)
-{
-	return (void *)(((char *)v) + SDV_HEADER_SIZE);
-}
 
 #ifdef __cplusplus
 }      /* extern "C" { */

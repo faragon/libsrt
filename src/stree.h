@@ -9,7 +9,8 @@ extern "C" {
  *
  * Self-balancing sorted binary tree.
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  *
  * Features:
  * - See documentation for API reference.
@@ -21,32 +22,13 @@ extern "C" {
  * Structures and types
  */
 
-#ifdef S_TREE_HUGE /* Up to 2^63 - 1 nodes */
-	#define ST_NODE_BITS 63
-	#define ST_NIL	((((uint64_t)1)<<ST_NODE_BITS) - 1)
-	typedef uint64_t stndx_t;
-#else /* Up to 2^31 - 1 nodes */
-	#if S_BPWORD >=4 
-		#define ST_NODE_BITS 31
-		#define ST_NIL	((((uint32_t)1)<<ST_NODE_BITS) - 1)
-	#else
-		#define ST_NODE_BITS (S_BPWORD * 8 - 1)
-		#define ST_NIL	((((unsigned)1)<<ST_NODE_BITS) - 1)
-	#endif
-	typedef uint32_t stndx_t;
-#endif
+#define ST_NODE_BITS 31
+#define ST_NIL	((((uint32_t)1)<<ST_NODE_BITS) - 1)
+
+typedef uint32_t stndx_t;
 
 typedef int (*st_cmp_t)(const void *tree_node, const void *new_node);
 typedef void(*stn_callback_t)(void *tree_node);
-
-struct STConf
-{
-	size_t type;
-	size_t node_size;
-	st_cmp_t cmp;
-	int64_t iaux1, iaux2;
-	const void *paux1, *paux2;
-};
 
 struct S_Node
 {
@@ -57,16 +39,15 @@ struct S_Node
 	stndx_t r;
 };
 
-typedef struct S_Tree st_t;
-
 struct S_Tree
 {
-	struct SData_Full df;		/* Resize handling */
+	struct SDataFull d;
 	stndx_t root;
-	struct STConf f;		/* Generic data functions */
+	st_cmp_t cmp_f;
 };
 
 typedef struct S_Node stn_t;
+typedef struct S_Tree st_t;
 
 struct STraverseParams
 {
@@ -84,38 +65,32 @@ typedef void (*st_rewrite_t)(const st_t *t, stn_t *node, const stn_t *new_data);
 /*
 * Constants
 */
-
+/*
 #define EMPTY_STC { 0, 0, 0, 0, 0, 0, 0 }
 #define EMPTY_ST { EMPTY_SData_Full(sizeof(st_t)), 0, EMPTY_STC }
-#define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
-
-/*
-* Macros
 */
-
-#define SDT_HEADER_SIZE sizeof(struct S_Tree)
-#define ST_SIZE_TO_ALLOC_SIZE(elems, elem_size) \
-	(SDT_HEADER_SIZE + elem_size * elems)
+#define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
 
 /*
  * Functions
  */
 
 /*
-#API: |Allocate tree (stack)|tree configuration;space preallocated to store n elements|allocated tree|O(1)|0;1|
-sv_t *st_alloca(const struct STConf *f, const size_t initial_reserve)
+#API: |Allocate tree (stack)|node compare function; node size; space preallocated to store n elements|allocated tree|O(1)|0;1|
+sv_t *st_alloca(st_cmp_t cmp_f, const size_t elem_size, const size_t max_size)
 */
-#define st_alloca(f, num_elems)				 		  \
-	st_alloc_raw(f, S_TRUE,						  \
-		     alloca(ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size)), \
-		     ST_SIZE_TO_ALLOC_SIZE(num_elems, elem_size))
-st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
-		   void *buffer, const size_t buffer_size);
+#define st_alloca(cmp_f, elem_size, max_size)				       \
+	st_alloc_raw(cmp_f, S_TRUE,					       \
+		     alloca(sd_alloc_size(sizeof(st_t), elem_size, max_size)), \
+		     elem_size, max_size)
 
-/* #API: |Allocate tree (heap)|tree configuration;space preallocated to store n elements|allocated tree|O(1)|1;2| */
-st_t *st_alloc(const struct STConf *f, const size_t initial_reserve);
+st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf,
+		   void *buffer, const size_t elem_size, const size_t max_size);
 
-SD_BUILDPROTS(st)
+/* #API: |Allocate tree (heap)|compare function;element size;space preallocated to store n elements|allocated tree|O(1)|1;2| */
+st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size);
+
+SD_BUILDFUNCS_FULL(st)
 
 /*
 #API: |Free one or more trees (heap)|tree;more trees (optional)|-|O(1)|1;2|
@@ -182,12 +157,6 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context);
 /*
  * Other
  */
-
-/* #API: |Allocated space|tree|current allocated space (tree elements)|O(1)|0;1| */
-S_INLINE size_t st_capacity(const st_t *t)
-{
-        return t ? (t->df.alloc_size - SDT_HEADER_SIZE) / t->f.node_size : 0;
-}
 
 /* #API: |Tree check (debug purposes)|tree|S_TREE: OK, S_FALSE: breaks RB tree rules|O(n)|1;2| */
 sbool_t st_assert(const st_t *t);

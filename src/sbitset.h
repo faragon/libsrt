@@ -9,7 +9,8 @@ extern "C" {
  *
  * Bit set/array/vector handling.
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  *
  * Features:
  * - Fast: over 300 million bit set per second on i5-3330 @3GHz
@@ -31,18 +32,16 @@ extern "C" {
 
 typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 			/* (bitset is implemented using a vector)  */
-			/* sv_t aux: bytes in use, aux2: pop count */
 
 /*
  * Allocation
  */
 
 #define SB_BITS2BYTES(n)	((n + 7) / 8)
-#define sb_alloc(n)		sv_alloc_t(SV_U8, SB_BITS2BYTES(n))
-#define sb_alloca(n)		sv_alloca_t(SV_U8, SB_BITS2BYTES(n))
+#define sb_alloc(n)		sv_alloc(1, SB_BITS2BYTES(n), NULL)
+#define sb_alloca(n)		sv_alloca(1, SB_BITS2BYTES(n), NULL)
 #define sb_shrink(b)		sv_shrink(b)
 #define sb_dup(b)		sv_dup(b)
-#define sb_reset(b)		sv_reset(b)
 #define sb_free			sv_free
 
 /*
@@ -71,7 +70,8 @@ sb_t *sb_dup(const sb_t *src)
 sb_t *sb_reset(sb_t *b)
 {
 	RETURN_IF(!b, 0);
-	b->aux2 = b->aux = 0;
+	sv_set_size(b, 0);
+	b->vx.cnt = 0;
 	return b;
 }
 
@@ -79,7 +79,7 @@ sb_t *sb_reset(sb_t *b)
 
 S_INLINE size_t sb_popcount(const sb_t *b)
 {
-	return b ? b->aux2 : 0;
+	return b ? b->vx.cnt : 0;
 }
 
 /*
@@ -93,8 +93,8 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 	S_ASSERT(b);
 	RETURN_IF(!b, 0);
 	const size_t pos = nth / 8, mask = 1 << (nth % 8);
-	RETURN_IF(pos >= b->aux, 0);
-	const unsigned char *buf = (const unsigned char *)__sv_get_buffer_r(b);
+	RETURN_IF(pos >= sv_size(b), 0);
+	const unsigned char *buf = (const unsigned char *)sv_get_buffer_r(b);
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
@@ -114,21 +114,21 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 				return;
 			}
 		}
-		if (pinc > (*b)->aux) {
+		if (pinc > sv_size(*b)) {
 			if (sv_reserve(b, pinc) < pinc) {
 				S_ERROR("not enough memory");
 				return;
 			}
+			size_t ss = sv_size(*b);
+			buf = (unsigned char *)sv_get_buffer(*b);
+			memset(buf + ss, 0, pinc - ss);
 			sv_set_size(*b, pinc);
-			buf = (unsigned char *)__sv_get_buffer(*b);
-			memset(buf + (*b)->aux, 0, pinc - (*b)->aux);
-			(*b)->aux = pinc;
 		} else {
-			buf = (unsigned char *)__sv_get_buffer(*b);
+			buf = (unsigned char *)sv_get_buffer(*b);
 		}
 		if ((buf[pos] & mask) == 0) {
 			buf[pos] |= mask;
-			(*b)->aux2++;
+			(*b)->vx.cnt++;
 		}
 	}
 }
@@ -140,12 +140,12 @@ S_INLINE void sb_clear(sb_t **b, const size_t nth)
 	S_ASSERT(!b);
 	if (b && *b) {
 		const size_t pos = nth / 8;
-		if (pos < (*b)->aux) {
-			unsigned char *buf = (unsigned char *)__sv_get_buffer(*b);
+		if (pos < sv_size(*b)) {
+			unsigned char *buf = (unsigned char *)sv_get_buffer(*b);
 			size_t mask = 1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;
-				(*b)->aux2--;
+				(*b)->vx.cnt--;
 			}
 		}
 		/* else: implicitly considered as set to 0 */

@@ -9,7 +9,8 @@ extern "C" {
  *
  * Map handling
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "stree.h"
@@ -56,22 +57,37 @@ typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
 #API: |Allocate map (stack)|map type; initial reserve|map|O(1)|1;2|
 sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
 */
-#define sm_alloca(type, num_elems)					\
-	sm_alloc_raw(							\
-	type, S_TRUE,							\
-	alloca(ST_SIZE_TO_ALLOC_SIZE(num_elems, sm_elem_size(type))),	\
-	ST_SIZE_TO_ALLOC_SIZE(num_elems, sm_elem_size(type)))
-sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, const size_t buffer_size);
+#define sm_alloca(type, max_size)						\
+	sm_alloc_raw(type, S_TRUE,						\
+		     alloca(sd_alloc_size(sizeof(sm_t), sm_elem_size(type),	\
+					  max_size, S_FALSE)),			\
+		     sm_elem_size(type), max_size)
+
+sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, const size_t elem_size, const size_t max_size);
 
 /* #API: |Allocate map (heap)|map type; initial reserve|map|O(1)|1;2| */
 sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_reserve);
 
-
-/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|0;1| */
+/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|0;1|
 sm_t *sm_shrink(sm_t **s);
+*/
 
 /* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|0;1| */
-size_t sm_elem_size(const enum eSM_Type t);
+S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
+{
+	switch (t) {
+	case SM_I32I32:	return sizeof(struct SMapii);
+	case SM_U32U32:	return sizeof(struct SMapuu);
+	case SM_IntInt:	return sizeof(struct SMapII);
+	case SM_IntStr:	return sizeof(struct SMapIS);
+	case SM_IntPtr: return sizeof(struct SMapIP);
+	case SM_StrInt:	return sizeof(struct SMapSI);
+	case SM_StrStr:	return sizeof(struct SMapSS);
+	case SM_StrPtr: return sizeof(struct SMapSP);
+	default: break;
+	}
+	return 0;
+}
 
 /* #API: |Duplicate map|input map|output map|O(n)|0;1| */
 sm_t *sm_dup(const sm_t *src);
@@ -79,15 +95,14 @@ sm_t *sm_dup(const sm_t *src);
 /* #API: |Reset/clean map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings|0;1| */
 sbool_t sm_reset(sm_t *m);
 
-/* #API: |Set map integer and string defaults|map; integer default; string default|-|O(1)|0;1| */
-void sm_set_defaults(sm_t *m, const int64_t i_def_v, const ss_t *s_def_v);
-
 /*
 #API: |Free one or more maps (heap)|map; more maps (optional)|-|O(1) for simple maps, O(n) for maps having nodes with strings|0;1|
 void sm_free(sm_t **m, ...)
 */
 #define sm_free(...) sm_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
 void sm_free_aux(const size_t nargs, sm_t **s, ...);
+
+SD_BUILDFUNCS_FULL_ST(sm)	/* TODO: ADD DOCUMENTATION */
 
 /*
  * Copy
@@ -100,8 +115,9 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src);
  * Accessors
  */
 
-/* #API: |Get map size|map|Map number of elements|O(1)|1;2| */
+/* #API: |Get map size|map|Map number of elements|O(1)|1;2|
 size_t sm_size(const sm_t *m);
+*/
 
 /*
  * Random access
@@ -210,16 +226,6 @@ ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
-
-/*
- * Other
- */
-
-/* #API: |Allocated space|map|current allocated space (map elements)|O(1)|0;1| */
-S_INLINE size_t sm_capacity(const sm_t *m)
-{
-	return st_capacity((const st_t *)m);
-}
 
 #ifdef __cplusplus
 } /* extern "C" { */

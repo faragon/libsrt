@@ -6,7 +6,8 @@
  * Observations:
  * - In order to have PNG and JPEG support: make imgc HAS_JPG=1 HAS_PNG=1
  *
- * Copyright (c) 2015 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "../src/libsrt.h"
@@ -274,7 +275,7 @@ sbool_t valid_rgbi_for_ppm(const struct RGB_Info *ri)
 static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 {
 	RETURN_IF(!ppm || !ri, 0);
-	const char *p = ss_to_c((ss_t *)ppm);
+	const char *p = ss_get_buffer_r(ppm);
 	size_t ps = ss_size(ppm);
 	ri->chn = p[1] == '5' ? 1 : p[1] == '6' ? 3 : 0;
 	RETURN_IF(ps < 16 || p[0] != 'P' || !ri->chn, 0);

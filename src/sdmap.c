@@ -3,7 +3,8 @@
  *
  * Distributed map handling (same-process clustering)
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */ 
 
 #include "sdmap.h"
@@ -122,7 +123,7 @@ sdm_t *sdm_dup(const sdm_t *src)
 	const sm_t **maps = sdm_submaps_r(src);
 	ASSERT_RETURN_IF(!maps, NULL);
 	ASSERT_RETURN_IF(!maps[0], NULL);
-	enum eSM_Type t = (enum eSM_Type)maps[0]->f.type;
+	enum eSM_Type t = (enum eSM_Type)maps[0]->d.sub_type;
 	ASSERT_RETURN_IF(t >= SM_TotalTypes, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
 	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);

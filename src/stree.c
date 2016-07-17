@@ -12,7 +12,8 @@
  *   suitable for memory-mapped storage when using nodes without references
  *   (e.g. key and value being integers, or constant-size containers).
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "stree.h"
@@ -33,7 +34,6 @@
  * Static functions forward declaration
  */
 
-static size_t get_max_size(const st_t *v);
 static st_t *st_check(st_t **v);
 
 /*
@@ -48,24 +48,6 @@ enum STNDir
 	ST_Right = 1
 };
 
-static st_t st_void0 = EMPTY_ST;
-static st_t *st_void = (st_t *)&st_void0;
-static struct sd_conf stf = {   (size_t (*)(const sd_t *))get_max_size,
-				NULL,
-				NULL,
-				NULL,
-				(sd_t *(*)(const sd_t *))st_dup,
-				(sd_t *(*)(sd_t **))st_check,
-				(sd_t *)&st_void0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				sizeof(struct S_Tree),
-				offsetof(struct S_Tree, f.node_size),
-				};
-
 /*
  * Internal data structures
  */
@@ -79,20 +61,17 @@ struct NodeContext
 /*
  * Internal functions
  */
-#define ST_NO_PREFIX
-#define ST_GET_NODE(t, id, Tprefix)					\
-	RETURN_IF(node_id == ST_NIL, NULL);				\
-	return (Tprefix stn_t *)((Tprefix char *)t + SDT_HEADER_SIZE +	\
-				 t->f.node_size * node_id);
 
 static stn_t *get_node(st_t *t, const stndx_t node_id)
 {
-	ST_GET_NODE(t, id, ST_NO_PREFIX);
+	RETURN_IF(node_id == ST_NIL, NULL);
+	return (stn_t *)st_elem_addr(t, node_id);
 }
 
 static const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
 {
-	ST_GET_NODE(t, id, const);
+	RETURN_IF(node_id == ST_NIL, NULL);
+	return (const stn_t *)st_elem_addr_r(t, node_id);
 }
 
 static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
@@ -111,11 +90,6 @@ static stndx_t get_lr(const stn_t *n, const enum STNDir d)
 	return d == ST_Left ? n->x.l : n->r;
 }
 
-static size_t get_max_size(const st_t *t)
-{
-	return st_capacity(t);
-}
-
 static st_t *st_check(st_t **t)
 {
 	return t ? *t : NULL;
@@ -129,34 +103,24 @@ static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
 	stn_t *cn = get_node(t, t->root);
 	for (; cn && cn->x.l != son->x && cn->r != son->x;)
 		cn = get_node(t, get_lr(cn,
-					t->f.cmp(cn, son->n) < 0 ?
+					t->cmp_f(cn, son->n) < 0 ?
 						ST_Right : ST_Left));
 	*d = cn && cn->x.l == son->x ? ST_Left : ST_Right;
 	return cn;
 }
 
-static size_t get_size(const st_t *t)
-{
-	return ((const struct SData_Full *)t)->size; /* faster than sd_get_size */
-}
-
-static void set_size(st_t *t, const size_t size)
-{
-	((struct SData_Full *)t)->size = size; /* faster than sd_set_size */
-}
-
 static void update_node_data(const st_t *t, stn_t *tgt, const stn_t *src)
 {
-	const size_t header_size = sizeof(stn_t);
-	const size_t copy_size = t->f.node_size - header_size;
-	char *tgtp = (char *)tgt + header_size;
-	const char *srcp = (const char *)src + header_size;
+	const size_t node_header_size = sizeof(stn_t);
+	const size_t copy_size = t->d.elem_size - node_header_size;
+	char *tgtp = (char *)tgt + node_header_size;
+	const char *srcp = (const char *)src + node_header_size;
 	memcpy(tgtp, srcp, copy_size);
 }
 
 static void copy_node(const st_t *t, stn_t *tgt, const stn_t *src)
 {
-	memcpy(tgt, src, t->f.node_size);
+	memcpy(tgt, src, t->d.elem_size);
 }
 
 static void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
@@ -255,8 +219,8 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 #endif
 		return 0;
 	}
-	if (n->x.l != ST_NIL && t->f.cmp(get_node_r(t, n->x.l), n) >= 0 &&
-	    n->r != ST_NIL && t->f.cmp(get_node_r(t, n->r), n) <= 0) {
+	if (n->x.l != ST_NIL && t->cmp_f(get_node_r(t, n->x.l), n) >= 0 &&
+	    n->r != ST_NIL && t->cmp_f(get_node_r(t, n->r), n) <= 0) {
 #ifdef DEBUG_stree
 		fprintf(stderr, "st_assert: tree structure violation\n");
 #endif
@@ -278,24 +242,23 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
  * Allocation
  */
 
-st_t *st_alloc_raw(const struct STConf *f, const sbool_t ext_buf,
-		   void *buffer, const size_t buffer_size)
+st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
+		   const size_t elem_size, const size_t max_size)
 {
-	RETURN_IF(!f || !f->node_size || !buffer, st_void);
+	RETURN_IF(!cmp_f || !elem_size || !buffer, (st_t *)sd_void);
 	st_t *t = (st_t *)buffer;
-	sd_reset((sd_t *)t, S_TRUE, buffer_size, ext_buf);
-	memcpy(&t->f, f, sizeof(t->f));
+	sd_reset((sd_t *)t, sizeof(st_t), elem_size, max_size, ext_buf, S_FALSE);
+	t->cmp_f = cmp_f;
 	t->root = 0;
 	return t;
 }
 
-st_t *st_alloc(const struct STConf *f, const size_t initial_reserve)
+st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
 {
-	size_t alloc_size = SDT_HEADER_SIZE + f->node_size * initial_reserve;
-	return st_alloc_raw(f, S_FALSE, __sd_malloc(alloc_size), alloc_size);
+	size_t alloc_size = sd_alloc_size(sizeof(st_t), elem_size, init_size, S_FALSE);
+	return st_alloc_raw(cmp_f, S_FALSE, __sd_malloc(alloc_size), elem_size,
+			    init_size);
 }
-
-SD_BUILDFUNCS(st)
 
 /*
  * Operations
@@ -304,15 +267,9 @@ SD_BUILDFUNCS(st)
 st_t *st_dup(const st_t *t)
 {
 	ASSERT_RETURN_IF(!t, NULL);
-	const size_t t_size = get_size(t);
-	st_t *t2 = st_alloc(&t->f, t_size);
-	ASSERT_RETURN_IF(!t2, NULL);
-	/*
-	 * Alloc size will be restored after the memcpy:
-	 */
-	const size_t t2_alloc_size = sd_get_alloc_size((const sd_t *)t);
-	memcpy(t2, t, SDT_HEADER_SIZE + t_size * t->f.node_size);
-	sd_set_alloc_size((sd_t *)t2, t2_alloc_size);
+	st_t *t2 = st_alloc(t->cmp_f, t->d.elem_size, t->d.size);
+	ASSERT_RETURN_IF(!t2, NULL); /* FIXME: non-safe; TODO: add void const */
+	memcpy(t2, t, t->d.header_size + t->d.size * t->d.elem_size);
 	return t2;
 }
 
@@ -325,7 +282,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
 	st_t *t = *tt;
-	const size_t ts = get_size(t);
+	const size_t ts = st_size(t);
 	ASSERT_RETURN_IF(ts >= ST_NIL, S_FALSE);
 	/*
 	 * Trivial case: insert node into empty tree
@@ -334,7 +291,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		stn_t *node = get_node(t, 0);
 		new_node(t, node, n, S_FALSE);
 		t->root = 0;
-		set_size(t, 1);
+		st_set_size(t, 1);
 		return S_TRUE;
 	}
 	/*
@@ -347,9 +304,9 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	auxn.r = t->root;
 	struct NodeContext w[CW_SIZE] = {
 		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
-		{ ST_NIL, &auxn },   /* cppp: cn parent parent parent node */
-		{ ST_NIL, NULL },   /* cpp: cn parent parent node */
-		{ ST_NIL, NULL } }; /* cp: cn parent node */
+		{ ST_NIL, &auxn },	/* cppp: cn parent parent parent node */
+		{ ST_NIL, NULL },	/* cpp: cn parent parent node */
+		{ ST_NIL, NULL } };	/* cp: cn parent node */
 	size_t c = 0;
 	enum STNDir ld = ST_Left;	/* last walk direction */
 	enum STNDir d = ST_Left;	/* current walk direction */
@@ -372,7 +329,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 			/* Ensure root is black: */
 			set_red(t, t->root, S_FALSE);
 			/* Increase tree size: */
-			set_size(t, ts + 1);
+			st_set_size(t, ts + 1);
 			done = S_TRUE;
 		} else {
 			/* Two red sons? -> red parent + black sons */
@@ -399,7 +356,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		}
 		if (done)
 			break;
-		const int64_t cmp = t->f.cmp(w[c].n, n);
+		const int64_t cmp = t->cmp_f(w[c].n, n);
 		if (!cmp) {
 			if (rw_f)
 				rw_f(t, w[c].n, n);
@@ -422,7 +379,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 {
 	ASSERT_RETURN_IF(!t || !n, S_FALSE);
 	/* Check empty tree: */
-	const size_t ts0 = get_size(t);
+	const size_t ts0 = st_size(t);
 	RETURN_IF(ts0 == 0 || ts0 >= ST_NIL, S_FALSE);
 	stndx_t ts = (stndx_t)ts0;
 	/*
@@ -443,14 +400,14 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	/* Search loop */
 	for (;;) {
 		/* Compare node key with given target */
-		const int64_t cmp = t->f.cmp(w[c].n, n);
+		const int64_t cmp = t->cmp_f(w[c].n, n);
 		const enum STNDir d = cmp < 0 ? ST_Right : ST_Left;
 		if (!cmp) {
 			S_ASSERT(found.n == NULL);
 			if (ts == 1) { /* Trivial case: one node */
 				if (callback)
 					callback((void *)w[c].n);
-				set_size(t, 0);
+				st_set_size(t, 0);
 				return S_TRUE;
 			}
 			found = w[c];
@@ -571,7 +528,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				S_ASSERT(S_FALSE);
 			}
 		}
-		set_size(t, ts - 1);
+		st_set_size(t, ts - 1);
 	}
 	/* Set root node as black */
 	set_red(t, t->root, S_FALSE);
@@ -583,7 +540,7 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 	const stn_t *cn = get_node_r(t, t->root);
 	int r;
 	for (;;)
-		if (!(r = t->f.cmp(cn, n)) ||
+		if (!(r = t->cmp_f(cn, n)) ||
 		    !(cn = get_node_r(t, get_lr(cn, r < 0 ? ST_Right :
 							    ST_Left))))
 			break;
@@ -630,7 +587,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			 const enum eTMode m)
 {
 	ASSERT_RETURN_IF(!t, -1);
-	const size_t ts = get_size(t);
+	const size_t ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
 	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
 	ssize_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
@@ -756,7 +713,7 @@ ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context)
 ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 {
 	ASSERT_RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
-	const size_t ts = get_size(t);
+	const size_t ts = st_size(t);
 	RETURN_IF(!ts, 0);	/* empty */
 	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
 	sv_t *curr = sv_alloc_t(SV_U32, ts/2),
@@ -798,8 +755,8 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 sbool_t st_assert(const st_t *t)
 {
 	ASSERT_RETURN_IF(!t, S_FALSE);
-	ASSERT_RETURN_IF(t->df.size == 1 && is_red(t, t->root), S_FALSE);
-	RETURN_IF(t->df.size == 1, S_TRUE);
+	ASSERT_RETURN_IF(t->d.size == 1 && is_red(t, t->root), S_FALSE);
+	RETURN_IF(t->d.size == 1, S_TRUE);
 	return st_assert_aux(t, t->root) ? S_TRUE : S_FALSE;
 }
 

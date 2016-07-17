@@ -9,7 +9,8 @@ extern "C" {
  *
  * String handling.
  *
- * Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
 #include "scommon.h"
@@ -17,52 +18,38 @@ extern "C" {
 #include "svector.h"
 
 /*
- * Constants
- */
-
-#define SS_METAINFO_SMALL	sizeof(struct SSTR_Small)
-#define SS_METAINFO_FULL	sizeof(struct SSTR_Full)
-#define SS_RANGE_SMALL		(S_ALLOC_SMALL - SS_METAINFO_SMALL)
-#define SS_RANGE_FULL		(S_ALLOC_FULL - SS_METAINFO_FULL)
-
-/*
- * Macros (not user-serviceable)
- */
-
-#define SD_SIZE_TO_ALLOC_SIZE(size, small_range_max, mt_small, mt_full) \
-	(size + (size <= small_range_max ? mt_small : mt_full))
-#define SS_SIZE_TO_ALLOC_SIZE(s_size)					\
-	SD_SIZE_TO_ALLOC_SIZE(s_size, SS_RANGE_SMALL,			\
-			      SS_METAINFO_SMALL, SS_METAINFO_FULL)
-
-/*
  * String base structure
+ *
+ * Observations:
+ * - The small string container is implemented using struct SDataSmall,
+ *   defined in sdata.h. The compatibility is possible because both
+ *   struct SDataSmall and struct SDataFull share the header, where
+ *   is defined if using the smaller container or the full one.
+ * - Usage of struct SDataFlags type-specific elements:
+ *	flag1: Unicode size is cached
+ *	flag2: string has UTF-8 encoding errors (e.g. after some operation)
  */
 
-struct SSTR_Small
+struct SString
 {
-	struct SData_Small ds;
-	unsigned char unicode_size_l;
-	/* string buffer is 4-byte aligned */
-	char str[1]; /* +1: '\0' */
-};
-
-struct  SSTR_Full
-{
-	struct SData_Full df;
+	struct SDataFull d;
 	size_t unicode_size;
-	/* string buffer is "sizeof(size_t)"-byte aligned */
-	char str[1]; /* +1: '\0' */
 };
 
-#define EMPTY_SS \
-	{ { { 0, 1, 0, 0, 1, 1, 1, 0 }, 0, SS_METAINFO_SMALL }, 0, { 0 } }
+#define SS_RANGE	(sizeof(size_t) - sizeof(ss_t))
+#define EMPTY_SS	{ EMPTY_SDataFull, 0 }
 
 /*
  * Types
  */
 
-typedef struct SData ss_t; /* "Hidden" structure (accessors are provided) */
+typedef struct SString ss_t; /* "Hidden" structure (accessors are provided) */
+
+/*
+ * Aux
+ */
+
+extern ss_t *ss_void;
 
 /*
  * Variable argument functions
@@ -88,7 +75,10 @@ typedef struct SData ss_t; /* "Hidden" structure (accessors are provided) */
  * Generated from template
  */
 
-SD_BUILDPROTS(ss)
+SD_BUILDFUNCS_DYN(ss)
+
+size_t ss_grow(ss_t **c, const size_t extra_elems);
+size_t ss_reserve(ss_t **c, const size_t max_elems);
 
 /*
 #API: |Free one or more strings (heap)|string;more strings (optional)|-|O(1)|1;2|
@@ -111,6 +101,12 @@ void ss_set_size(ss_t *c, const size_t s)
 
 #API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|1;2|
 size_t ss_len(const ss_t *c)
+
+#API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1|
+char *ss_get_buffer(ss_t *s);
+
+#API: |Get string buffer access (read-only)|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| 
+const char *ss_get_buffer_r(const ss_t *s);
 */
 
 /*
@@ -122,12 +118,14 @@ ss_t *ss_alloc(const size_t initial_heap_reserve);
 
 /*
 #API: |Allocate string (stack)|space preallocated to store n elements|allocated string|O(1)|1;2|
-ss_t *ss_alloca(const size_t initial_reserve)
+ss_t *ss_alloca(const size_t max_size)
  */
-#define	ss_alloca(stack_reserve)					    \
-	ss_alloc_into_ext_buf(alloca(SS_SIZE_TO_ALLOC_SIZE(stack_reserve)), \
-			      SS_SIZE_TO_ALLOC_SIZE(stack_reserve))
-ss_t *ss_alloc_into_ext_buf(void *buffer, const size_t buffer_size);
+#define	ss_alloca(max_size)						\
+	ss_alloc_into_ext_buf(alloca(sd_alloc_size(sizeof(ss_t), 1,	\
+						   max_size, S_TRUE)),	\
+			      max_size)
+
+ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
 
 /*
  * Accessors
@@ -151,17 +149,12 @@ size_t ss_max(const ss_t *s);
 /* #API: |Explicit set length (intended for external I/O raw acccess)|string;new length|-|O(1)|0;1| */
 void ss_set_len(ss_t *s, const size_t bytes_in_use);
 
-/* #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
-char *ss_get_buffer(ss_t *s);
-
-/* #API: |Get string buffer access (read-only)|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| */
-const char *ss_get_buffer_r(const ss_t *s);
-
 /* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;1| */
 size_t ss_real_off(const ss_t *s, const size_t off);
 
-/* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| */
+/* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| 
 sbool_t ss_alloc_errors(const ss_t *s);
+*/
 
 /* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| */
 sbool_t ss_encoding_errors(const ss_t *s);
@@ -631,7 +624,7 @@ ss_t *ss_rtrim(ss_t **s);
  */
 
 /* #API: |Give a C-compatible zero-ended string reference (byte/UTF-8 mode)|input string|Zero-ended C compatible string reference (UTF-8)|O(1)|1;2| */
-const char *ss_to_c(ss_t *s);
+const char *ss_to_c(ss_t **s);
 
 /* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)|1;2| */
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
@@ -741,9 +734,6 @@ unsigned ss_csum32(const ss_t *s, const size_t n);
 /*
  * Aux
  */
-
-/* #API: |Empty string reference|-|output string reference|O(1)|0;1| */
-const ss_t *ss_empty(void);
 
 #ifdef S_DEBUG
 extern size_t dbg_cnt_alloc_calls;	/* alloc or realloc calls */

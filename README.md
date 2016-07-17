@@ -120,8 +120,8 @@ String-specific advantages (ss_t)
  * Avoid re-scan (e.g. commands with offset for random access)
  * Transformation operations are supported in all dup/cpy/cat functions, in order to both increase expressiveness and avoid unnecessary copies (e.g. tolower, erase, replace, etc.). E.g. you can both convert to lower a string in the same container, or copy/concatenate to another container.
 * Space-optimized
- * 5 byte overhead for strings below 507 bytes (4 bytes for the data structure, and one reserved for \0 ending)
- * (sizeof(size\_t) * 4 + 1) byte overhead for strings longer than 506 bytes (e.g. 17 bytes for a 32-bit CPU, 33 for 64-bit)
+ * Using just 4 byte overhead for strings with size <= 255 bytes
+ * Using sizeof(size\_t) * 5 byte overhead for strings with size >= 256 bytes (e.g. 20 bytes for a 32-bit CPU, 40 for 64-bit)
  * Data structure has no pointers, i.e. just one allocation is required for building a string. Or zero, if using the stack.
  * No additional memory allocation for search.
  * Extra memory allocation may be required for: UTF-8 uppercase/lowercase and replace.
@@ -234,7 +234,7 @@ License
 ===
 
 Copyright (c) 2015-2016, F. Aragon. All rights reserved.
-Released under the The BSD 3-Clause License (see the doc/LICENSE file included).
+Released under the BSD 3-Clause License (see the doc/LICENSE file included).
 
 Contact
 ===

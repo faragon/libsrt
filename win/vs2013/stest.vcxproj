@@ -163,6 +163,7 @@
     <ClCompile Include="..\..\src\sbitio.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\sbitset.h" />
     <ClInclude Include="..\..\src\scommon.h" />
     <ClInclude Include="..\..\src\sdata.h" />
     <ClInclude Include="..\..\src\sdbg.h" />
@@ -180,4 +181,3 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
-
