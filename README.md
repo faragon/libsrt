@@ -228,7 +228,7 @@ Coming soon:
 | ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
 | --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
 | ARM v7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
-| MIPS32 (mips24k) | 32 | big | yes | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
+| MIPS32 (mips24k) | 32 | big | no | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
 
 License
 ===
