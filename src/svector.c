@@ -464,8 +464,7 @@ sv_t *sv_sort(sv_t **v)
 
 size_t sv_find(const sv_t *v, const size_t off, const void *target)
 {
-	RETURN_IF(!v || v->d.sub_type < SV_I8 || v->d.sub_type > SV_GEN,
-		  S_NPOS);
+	RETURN_IF(!v || v->d.sub_type > SV_GEN, S_NPOS);
 	size_t pos = S_NPOS;
 	const size_t size = sv_size(v);
 	const void *p = sv_get_buffer_r(v);
@@ -479,8 +478,7 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 }
 
 #define SV_FIND_iu(v, off, target)					\
-	RETURN_IF(!v || v->d.sub_type < SV_I8 ||			\
-		  v->d.sub_type > SV_U64, S_NPOS);			\
+	RETURN_IF(!v || v->d.sub_type > SV_U64, S_NPOS);		\
 	char i8; unsigned char u8; short i16; unsigned short u16;	\
 	int i32; unsigned u32; int64_t i64; uint64_t u64;		\
 	void *src;							\

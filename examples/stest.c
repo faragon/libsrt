@@ -566,7 +566,8 @@ static int test_ss_dup_read(const char *pattern)
 		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
 		      strcmp(ss_to_c(&s), pattern) ? 16 : 0;
 		fclose(f);
-		remove(STEST_FILE);
+		if (remove(STEST_FILE) != 0)
+			res |= 32;
 	}
 	ss_free(&s);
 	return res;
