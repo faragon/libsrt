@@ -1287,7 +1287,8 @@ static int test_ss_read_write()
 			strcmp(ss_to_c(&sa), ss_to_c(&sb)) != 0 ? 6 : 0;
 		ss_free(&sa, &sb);
 		fclose(f);
-		remove(STEST_FILE);
+		if (remove(STEST_FILE) != 0)
+			res |= 32;
 	}
 	return res;
 }
@@ -3187,8 +3188,7 @@ int main()
 		(unsigned)sizeof(struct SDataSmall));
 	fprintf(stderr, "sizeof(ss_t): %u (full mode)\n",
 		(unsigned)sizeof(ss_t));
-        fprintf(stderr, "max ss_t string length: " FMT_ZU "\n",
-		(unsigned)SS_RANGE);
+        fprintf(stderr, "max ss_t string length: " FMT_ZU "\n", SS_RANGE);
 	fprintf(stderr, "sizeof(sb_t): %u\n", (unsigned)sizeof(sb_t));
 	fprintf(stderr, "sizeof(sv_t): %u\n", (unsigned)sizeof(sv_t));
 	fprintf(stderr, "sizeof(st_t): %u\n", (unsigned)sizeof(st_t));

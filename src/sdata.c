@@ -119,7 +119,7 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 	const size_t curr_max_size = sdx_max_size(*d);
 	if (curr_max_size < max_size) {
 		if ((*d)->f.ext_buffer) {
-			S_ERROR("out of memore on fixed-size "
+			S_ERROR("out of memory on fixed-size "
 				"allocated space");
 			sd_set_alloc_errors(*d);
 			return curr_max_size;
