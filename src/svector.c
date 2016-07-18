@@ -136,15 +136,17 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 static void sv_copy_elems(sv_t *v, const size_t v_off, const sv_t *src,
 		     	  const size_t src_off, const size_t n)
 {
-	s_copy_elems(sv_get_buffer(v), v_off, sv_get_buffer_r(src),
-		     src_off, n, v->d.elem_size);
+	if (v)
+		s_copy_elems(sv_get_buffer(v), v_off, sv_get_buffer_r(src),
+			     src_off, n, v->d.elem_size);
 }
 
 static void sv_move_elems(sv_t *v, const size_t v_off, const sv_t *src,
 		     	  const size_t src_off, const size_t n)
 {
-	s_move_elems(sv_get_buffer(v), v_off, sv_get_buffer_r(src),
-		     src_off, n, v->d.elem_size);
+	if (v && src)
+		s_move_elems(sv_get_buffer(v), v_off, sv_get_buffer_r(src),
+			     src_off, n, v->d.elem_size);
 }
 
 static sv_t *sv_check(sv_t **v)
@@ -328,33 +330,6 @@ sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve,
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 {
 	return sv_alloc_base(t, sv_elem_size(t), initial_num_elems_reserve, 0);
-}
-
-/*
- * Accessors
- */
-
-size_t sv_capacity(const sv_t *v)
-{
-	return !v || !v->d.elem_size ? 0 : sv_max_size(v);
-}
-
-size_t sv_len_left(const sv_t *v)
-{
-	return !v || !v->d.elem_size ? 0 : sv_max_size(v) - sv_len(v);
-}
-
-sbool_t sv_set_len(sv_t *v, const size_t elems)
-{
-	const size_t max_size = sv_max_size(v);
-	const sbool_t resize_ok = elems <= max_size ? S_TRUE : S_FALSE;
-	sv_set_size(v, S_MIN(elems, max_size));
-	return resize_ok;
-}
-
-size_t sv_get_buffer_size(const sv_t *v)
-{
-	return v ? sv_len(v) * v->d.elem_size : 0;
 }
 
 /*

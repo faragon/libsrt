@@ -1489,26 +1489,14 @@ static int test_sv_capacity()
 	return res;
 }
 
-static int test_sv_len_left()
+static int test_sv_capacity_left()
 {
 	const size_t init_alloc = 10;
 	sv_t *a = sv_alloc_t(SV_I8, init_alloc);
 	int res = !a ? 1 : (sv_capacity(a) - sv_len(a) == init_alloc ? 0 : 2) |
-			   (sv_len_left(a) == init_alloc ? 0 : 4) |
+			   (sv_capacity_left(a) == init_alloc ? 0 : 4) |
 			   (sv_push_i(&a, 1) ? 0 : 8) |
-			   (sv_len_left(a) == (init_alloc - 1) ? 0 : 16);
-	sv_free(&a);
-	return res;
-}
-
-static int test_sv_set_len()
-{
-	const size_t init_alloc = 10;
-	sv_t *a = sv_alloc_t(SV_I8, init_alloc);
-	int res = !a ? 1 : (sv_len(a) == 0 ? 0 : 2) |
-			   (!sv_set_len(a, init_alloc + 1) ? 0 : 4) |
-			   (sv_set_len(a, init_alloc) ? 0 : 8) |
-			   (sv_len_left(a) == 0 ? 0 : 16);
+			   (sv_capacity_left(a) == (init_alloc - 1) ? 0 : 16);
 	sv_free(&a);
 	return res;
 }
@@ -3115,8 +3103,7 @@ int main()
 	STEST_ASSERT(test_sv_shrink());
 	STEST_ASSERT(test_sv_len());
 	STEST_ASSERT(test_sv_capacity());
-	STEST_ASSERT(test_sv_len_left());
-	STEST_ASSERT(test_sv_set_len());
+	STEST_ASSERT(test_sv_capacity_left());
 	STEST_ASSERT(test_sv_get_buffer());
 	STEST_ASSERT(test_sv_elem_size());
 	STEST_ASSERT(test_sv_dup());

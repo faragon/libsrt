@@ -82,31 +82,43 @@ size_t ss_reserve(ss_t **c, const size_t max_elems);
 
 /*
 #API: |Free one or more strings (heap)|string;more strings (optional)|-|O(1)|1;2|
-void ss_free(ss_t **c, ...)
+void ss_free(ss_t **s, ...)
 
 #API: |Reserve space for extra elements (relative to current string size)|string;number of extra elements|extra size allocated|O(1)|1;2|
-size_t ss_grow(ss_t **c, const size_t extra_elems)
+size_t ss_grow(ss_t **s, const size_t extra_elems)
 
 #API: |Reserve space for at least N bytes (absolute reserve)|string;absolute element reserve|reserved elements|O(1)|1;2|
-size_t ss_reserve(ss_t **c, const size_t max_elems)
+size_t ss_reserve(ss_t **s, const size_t max_elems)
 
 #API: |Free unused space|string|same string (optional usage)|O(1)|1;2|
-ss_t *ss_shrink(ss_t **c)
+ss_t *ss_shrink(ss_t **s)
 
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|0;1|
-size_t ss_size(const ss_t *c)
+size_t ss_size(const ss_t *s)
 
 #API: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|0;1|
-void ss_set_size(ss_t *c, const size_t s)
+void ss_set_size(ss_t *s, const size_t s)
 
 #API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|1;2|
-size_t ss_len(const ss_t *c)
+size_t ss_len(const ss_t *s)
+
+#API: |Get allocated space|vector|current allocated space (in bytes)|O(1)|0;1|
+size_t ss_capacity(const ss_t *s);
+
+#API: |Get preallocated space left|string|allocated space left (in bytes)|O(1)|0;1|
+size_t ss_capacity_left(const ss_t *s);
+
+#API: |Tells if a string is empty (zero elements)|string|S_TRUE: empty string; S_FALSE: not empty|O(1)|0;1|
+sbool_t ss_empty(const ss_t *s)
 
 #API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1|
 char *ss_get_buffer(ss_t *s);
 
-#API: |Get string buffer access (read-only)|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1| 
+#API: |Get string buffer access (read-only)|string|pointer to the internal string buffer (UTF-8 or raw data)|O(1)|0;1| 
 const char *ss_get_buffer_r(const ss_t *s);
+
+#API: |Get string buffer size|string|Number of bytes in use for storing all string characters|O(1)|0;1|
+size_t ss_get_buffer_size(const ss_t *v);
 */
 
 /*
@@ -137,17 +149,8 @@ int ss_at(const ss_t *s, size_t off);
 /* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed|1;2| */
 size_t ss_len_u(ss_t *s);
 
-/* #API: |Allocated space|string|current allocated space (bytes)|O(1)|1;2| */
-size_t ss_capacity(const ss_t *s);
-
-/* #API: |Preallocated space left|string|allocated space left|O(1)|1;2| */
-size_t ss_len_left(const ss_t *s);
-
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
 size_t ss_max(const ss_t *s);
-
-/* #API: |Explicit set length (intended for external I/O raw acccess)|string;new length|-|O(1)|0;1| */
-void ss_set_len(ss_t *s, const size_t bytes_in_use);
 
 /* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;1| */
 size_t ss_real_off(const ss_t *s, const size_t off);

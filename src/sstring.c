@@ -682,6 +682,7 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 			ss_set_size(*s, out_size);
 		}
 	}
+	set_unicode_size_cached(*s, S_FALSE); /* BEHAVIOR: size cache lost */
 	return *s;
 }
 
@@ -953,33 +954,9 @@ size_t ss_len_u(ss_t *s)
 	return cached_uc_size;
 }
 
-size_t ss_capacity(const ss_t *s)
-{
-	S_ASSERT(s);
-	return s ? ss_max_size(s) : 0;
-}
-
-size_t ss_len_left(const ss_t *s)
-{
-	ASSERT_RETURN_IF(!s, 0);
-	const size_t size = ss_size(s),
-		     max_size = ss_max_size(s);
-	S_ASSERT(s && max_size > size);
-	return (s && max_size > size) ? max_size - size : 0;
-}
-
 size_t ss_max(const ss_t *s)
 {
 	return !s ? 0 : s->d.f.ext_buffer ? ss_max_size(s) : SS_RANGE;
-}
-
-void ss_set_len(ss_t *s, const size_t new_len)
-{
-	if (s) {
-		const size_t max_size = ss_max_size(s);
-		ss_set_size(s, S_MIN(new_len, max_size));
-		set_unicode_size_cached(s, S_FALSE); /* BEHAVIOR: cache lost */
-	}
 }
 
 size_t ss_real_off(const ss_t *s, const size_t off)

@@ -13,7 +13,7 @@ extern "C" {
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  *
  * Observations:
- * - This is not intended for direct use, but as base for 
+ * - This is not intended for direct use, but as base for
  *   other types (ss_t, sv_t, st_t, sm_t, etc.)
  */
 
@@ -55,14 +55,15 @@ extern "C" {
 	S_INLINE void pfix##_set_size(pfix##_t *c, const size_t s) {	       \
 		stpfix##_set_size((sd_t *)c, s);			       \
 	}								       \
-	S_INLINE size_t pfix##_len(const pfix##_t *c) {			       \
-		return stpfix##_size((const sd_t *)c);			       \
-	}								       \
 	S_INLINE size_t pfix##_max_size(const pfix##_t *c) {		       \
 		return stpfix##_max_size((const sd_t *)c);		       \
 	}								       \
 	S_INLINE char *pfix##_get_buffer(pfix##_t *c) {			       \
 		return stpfix##_get_buffer((sd_t *)c);			       \
+	}								       \
+	S_INLINE size_t pfix##_get_buffer_size(const pfix##_t *c) {	       \
+		return stpfix##_size((const sd_t *)c) *			       \
+		       stpfix##_elem_size((const sd_t *)c);		       \
 	}								       \
 	S_INLINE const char *pfix##_get_buffer_r(const pfix##_t *c) {	       \
 		return stpfix##_get_buffer_r((const sd_t *)c);		       \
@@ -71,9 +72,19 @@ extern "C" {
 		return stpfix##_elem_addr((sd_t *)c, pos);		       \
 	}								       \
 	S_INLINE const void *pfix##_elem_addr_r(const pfix##_t *c,	       \
-					  const size_t pos) {		       \
+						const size_t pos) {	       \
 		return stpfix##_elem_addr_r((const sd_t *)c, pos);	       \
-	}
+	}								       \
+	S_INLINE size_t pfix##_capacity(const pfix##_t *c) {		       \
+		return stpfix##_max_size((const sd_t *)c);		       \
+	}								       \
+	S_INLINE size_t pfix##_capacity_left(const pfix##_t *c) {	       \
+		return stpfix##_max_size((const sd_t *)c) -		       \
+		       stpfix##_size((const sd_t *)c);			       \
+	}								       \
+	S_INLINE size_t pfix##_len(const pfix##_t *c) {			       \
+		return stpfix##_size((const sd_t *)c);			       \
+	}								       \
 
 #define SD_BUILDFUNCS_DYN_ST(pfix)					       \
 	SD_BUILDFUNCS_ST(pfix, sdx)					       \
@@ -340,6 +351,12 @@ S_INLINE const void *sd_elem_addr_r(const sd_t *d, const size_t pos)
 					      d->elem_size * pos);
 }
 
+S_INLINE size_t sd_elem_size(const sd_t *d)
+{
+	RETURN_IF(!d, 0);
+	return d->elem_size;
+}
+
 S_INLINE uint8_t sdx_szt_to_u8_sat(size_t v)
 {
 	return v <= 255 ? (uint8_t)v : 255;
@@ -423,22 +440,21 @@ S_INLINE const void *sdx_elem_addr_r(const sd_t *d, const size_t pos)
 		sizeof(struct SDataSmall) + pos);	/* BEHAVIOR */
 }
 
-
-S_INLINE uint8_t sdx_header_size(sd_t *d)
+S_INLINE uint8_t sdx_header_size(const sd_t *d)
 {
 	RETURN_IF(!d, 0);
 	RETURN_IF(sdx_full_st(d), d->header_size);
 	return sizeof(struct SDataSmall); /* Implicit value */
 }
 
-S_INLINE size_t sdx_elem_size(sd_t *d)
+S_INLINE size_t sdx_elem_size(const sd_t *d)
 {
 	RETURN_IF(!d, 0);
 	RETURN_IF(sdx_full_st(d), d->elem_size);
 	return 1; /* Implicit value */
 }
 
-/* Checks for structure container switch is required
+/* Checks if structure container switch is required
  * -1: full to small
  * 0: no changes
  * 1: small to full
@@ -482,4 +498,3 @@ sd_t *sd_shrink(sd_t **d);
 }      /* extern "C" { */
 #endif
 #endif	/* SDATA_H */
-

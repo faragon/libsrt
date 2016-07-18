@@ -96,6 +96,9 @@ sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve);
 SD_BUILDFUNCS_FULL(sv)
 
 /*
+#API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|
+sv_t *sv_alloca(const size_t initial_reserve)
+
 #API: |Free one or more vectors (heap)|vector;more vectors (optional)|-|O(1)|1;2|
 void sv_free(sv_t **c, ...)
 
@@ -117,33 +120,28 @@ void sv_set_size(sv_t *c, const size_t s)
 #API: |Equivalent to sv_size|vector|Number of vector elements|O(1)|1;2|
 size_t sv_len(const sv_t *c)
 
-#API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|
-sv_t *sv_alloca(const size_t initial_reserve)
+#API: |Allocated space|vector|current allocated space (vector elements)|O(1)|0;1|
+size_t sv_capacity(const sv_t *v);
+
+#API: |Preallocated space left|vector|allocated space left|O(1)|0;1|
+size_t sv_capacity_left(const sv_t *v);
+
+#API: |Tells if a vector is empty (zero elements)|vector|S_TRUE: empty vector; S_FALSE: not empty|O(1)|0;1|
+sbool_t sv_empty(const sv_t *v)
+
+#API: |Get vector buffer access|string|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+char *sv_get_buffer(sv_t *v);
+
+#API: |Get vector buffer access (read-only)|string|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+const char *sv_get_buffer_r(const sv_t *v);
+
+#API: |Get vector buffer size|vector|Number of bytes in use for storing all vector elements|O(1)|0;1|
+size_t sv_get_buffer_size(const sv_t *v);
 */
 
 /*
  * Accessors
  */
-
-/* #API: |Allocated space|vector|current allocated space (vector elements)|O(1)|1;2| */
-size_t sv_capacity(const sv_t *v);
-
-/* #API: |Preallocated space left|vector|allocated space left|O(1)|1;2| */
-size_t sv_len_left(const sv_t *v);
-
-/* #API: |Explicit set length (intended for external I/O raw acccess)|vector;new length|S_TRUE: OK, S_FALSE: out of range|O(1)|1;2| */
-sbool_t sv_set_len(sv_t *v, const size_t elems);
-
-/* #API: |Get string buffer read-only access|string|pointer to the insternal buffer (raw data)|O(1)|1;2|
-void *sv_get_buffer(sv_t *v);
-
-   #API: |Get string buffer access|string|pointer to the insternal buffer (raw data)|O(1)|1;2|
-const void *sv_get_buffer_r(const sv_t *v);
-*/
-
-/* #API: |Get buffer size|vector|Number of bytes in use for current vector elements|O(1)|1;2| */
-size_t sv_get_buffer_size(const sv_t *v);
-
 
 /* #API: |Get vector type element size|vector type|Element size (bytes)|O(1)|1;2| */
 uint8_t sv_elem_size(const enum eSV_Type t);

@@ -104,7 +104,7 @@ if (($TMUX & 1)) ; then
 		if type ${TEST_CC[$i]} >/dev/null 2>&1 >/dev/null ; then
 			for ((j = 0 ; j < ${#INNER_LOOP_FLAGS[@]}; j++)) ; do
 				CMD="$MAKE -j $MJOBS CC=${TEST_CC[$i]} ${TEST_FLAGS[$i]}"
-				CMD="$CMD${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
+				CMD="$CMD ${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
 				$MAKE clean >/dev/null 2>&1
 				echo -n "Test #$i.$j: [$CMD] ..."
 				if $CMD >/dev/null 2>&1 ; then

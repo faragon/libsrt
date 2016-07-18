@@ -475,12 +475,12 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 				p = ss_findr_cn(rb, o, z, JS_ARR, JS_ARR_S);
 				q = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
 				if (q < p) {
-					s = ss;
+					/*s = ss;*/
 					done = S_TRUE;
 					break;
 				}
 				if (p == S_NPOS) {
-					s = ss; /* buffer empty */
+					/*s = ss;*/ /* buffer empty */
 					break;
 				}
 				if (nfield || nrow){
@@ -493,13 +493,13 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 			case JSSearchOpen:
 				p = ss_findr_cn(rb, o, z, JS_OPEN, JS_OPEN_S);
 				if (p == S_NPOS) {
-					s = ss; /* buffer empty */
+					/*s = ss;*/ /* buffer empty */
 					break;
 				}
 				o = p + JS_OPEN_S;
 				p = ss_findr_cn(rb, o, z, JS_ARR, JS_ARR_S);
 				if (p == S_NPOS) {
-					s = ss; /* buffer empty */
+					/*s = ss;*/ /* buffer empty */
 					break;
 				}
 				st = JSSearchRow;
