@@ -25,10 +25,10 @@ enum eSM_Type
 {
 	SM_I32I32,
 	SM_U32U32,
-        SM_IntInt,
-        SM_IntStr,
+	SM_IntInt,
+	SM_IntStr,
 	SM_IntPtr,
-        SM_StrInt,
+	SM_StrInt,
 	SM_StrStr,
 	SM_StrPtr,
 	SM_TotalTypes
@@ -102,7 +102,30 @@ void sm_free(sm_t **m, ...)
 #define sm_free(...) sm_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
 void sm_free_aux(const size_t nargs, sm_t **s, ...);
 
-SD_BUILDFUNCS_FULL_ST(sm)	/* TODO: ADD DOCUMENTATION */
+SD_BUILDFUNCS_FULL_ST(sm)
+
+/*
+#API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|0;1|
+size_t sm_grow(sm_t **m, const size_t extra_elems)
+
+#API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|0;1|
+size_t sm_reserve(sm_t **m, const size_t max_elems)
+
+#API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|0;1|
+sm_t *sm_shrink(sm_t **m);
+
+#API: |Get map size|map|Map number of elements|O(1)|0;1|
+size_t sm_size(const sm_t *m);
+
+#API: |Allocated space|map|current allocated space (vector elements)|O(1)|0;1|
+size_t sm_capacity(const sm_t *m);
+
+#API: |Preallocated space left|map|allocated space left|O(1)|0;1|
+size_t sm_capacity_left(const sm_t *m);
+
+#API: |Tells if a map is empty (zero elements)|map|S_TRUE: empty vector; S_FALSE: not empty|O(1)|0;1|
+sbool_t sm_empty(const sm_t *m)
+*/
 
 /*
  * Copy
@@ -110,14 +133,6 @@ SD_BUILDFUNCS_FULL_ST(sm)	/* TODO: ADD DOCUMENTATION */
 
 /* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|0;1| */
 sm_t *sm_cpy(sm_t **m, const sm_t *src);
-
-/*
- * Accessors
- */
-
-/* #API: |Get map size|map|Map number of elements|O(1)|1;2|
-size_t sm_size(const sm_t *m);
-*/
 
 /*
  * Random access

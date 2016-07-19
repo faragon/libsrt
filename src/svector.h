@@ -114,7 +114,7 @@ sv_t *sv_shrink(sv_t **c)
 #API: |Get vector size|vector|vector number of elements|O(1)|1;2|
 size_t sv_size(const sv_t *c)
 
-#API: |Set vector size (number of vector elements)|vector;set vector number of elements|-|O(1)|1;2|
+#NOTAPI: |Set vector size (number of vector elements)|vector;set vector number of elements|-|O(1)|1;2|
 void sv_set_size(sv_t *c, const size_t s)
 
 #API: |Equivalent to sv_size|vector|Number of vector elements|O(1)|1;2|
@@ -129,10 +129,10 @@ size_t sv_capacity_left(const sv_t *v);
 #API: |Tells if a vector is empty (zero elements)|vector|S_TRUE: empty vector; S_FALSE: not empty|O(1)|0;1|
 sbool_t sv_empty(const sv_t *v)
 
-#API: |Get vector buffer access|string|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+#API: |Get vector buffer access|vector|pointer to the internal vector buffer (raw data)|O(1)|0;1|
 char *sv_get_buffer(sv_t *v);
 
-#API: |Get vector buffer access (read-only)|string|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+#API: |Get vector buffer access (read-only)|vector|pointer to the internal vector buffer (raw data)|O(1)|0;1|
 const char *sv_get_buffer_r(const sv_t *v);
 
 #API: |Get vector buffer size|vector|Number of bytes in use for storing all vector elements|O(1)|0;1|
