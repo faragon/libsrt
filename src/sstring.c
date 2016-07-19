@@ -832,6 +832,10 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 		for (; off < max_off;) {
 			buf_size = off + def_buf < max_off ? def_buf :
 							     max_off - off;
+			if (cat && (*s)->d.f.ext_buffer) {
+				size_t cap = ss_capacity_left(*s);
+				buf_size = S_MIN(buf_size, cap);
+			}
 			if (ss_reserve(s, off + buf_size) >= off + buf_size) {
 				if (feof(h))
 					break;

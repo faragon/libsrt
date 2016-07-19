@@ -404,7 +404,7 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 /* #API: |Overwrite string with a string with just one character|output string; input character|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_char(ss_t **s, const int c);
 
-/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
+/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
 ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*
@@ -531,7 +531,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 /* #API: |Concatenate string with a string with just one character|output string; input character|output string reference (optional usage)|O(1)|1;2| */
 ss_t *ss_cat_char(ss_t **s, const int c);
 
-/* #API: |Cat data read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|0;1| */
+/* #API: |Cat data read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
 ss_t *ss_cat_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*

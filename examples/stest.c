@@ -811,7 +811,31 @@ static int test_ss_cpy_char(const int32_t in, const char *expected)
 
 static int test_ss_cpy_read()
 {
-	return 0; /* TODO */
+	int res = 1;
+	const size_t max_buf = 512;
+	ss_t *ah = NULL;
+	ss_t *as = ss_alloca(max_buf);
+	ss_cpy(&as, ah);
+	const char *pattern = "hello world";
+	const size_t pattern_size = strlen(pattern);
+	ss_t *s = NULL;
+	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
+	if (f) {
+		size_t write_size = fwrite(pattern, 1, pattern_size, f);
+		res = !write_size || ferror(f) ||
+			write_size != (ssize_t)pattern_size ? 2 :
+			fseek(f, 0, SEEK_SET) != 0 ? 4 :
+			!ss_cpy_read(&ah, f, max_buf) ? 8 :
+			fseek(f, 0, SEEK_SET) != 0 ? 16 :
+			!ss_cpy_read(&as, f, max_buf) ? 32 :
+			strcmp(ss_to_c(&ah), pattern) ? 64 :
+			strcmp(ss_to_c(&as), pattern) ? 128 : 0;
+		fclose(f);
+		if (remove(STEST_FILE) != 0)
+			res |= 256;
+	}
+	ss_free(&ah);
+	return res;
 }
 
 static int test_ss_cat(const char *a, const char *b)
@@ -1077,7 +1101,32 @@ static int test_ss_cat_char()
 
 static int test_ss_cat_read()
 {
-	return 0; /* TODO */
+	int res = 1;
+	const size_t max_buf = 512;
+	ss_t *ah = ss_dup_c("hello ");
+	ss_t *as = ss_alloca(max_buf);
+	ss_cpy(&as, ah);
+	const char *pattern = "hello world";
+	const char *suffix = "world";
+	const size_t suffix_size = strlen(suffix);
+	ss_t *s = NULL;
+	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
+	if (f) {
+		size_t write_size = fwrite(suffix, 1, suffix_size, f);
+		res = !write_size || ferror(f) ||
+			write_size != (ssize_t)suffix_size ? 2 :
+			fseek(f, 0, SEEK_SET) != 0 ? 4 :
+			!ss_cat_read(&ah, f, max_buf) ? 8 :
+			fseek(f, 0, SEEK_SET) != 0 ? 16 :
+			!ss_cat_read(&as, f, max_buf) ? 32 :
+			strcmp(ss_to_c(&ah), pattern) ? 64 :
+			strcmp(ss_to_c(&as), pattern) ? 128 : 0;
+		fclose(f);
+		if (remove(STEST_FILE) != 0)
+			res |= 256;
+	}
+	ss_free(&ah);
+	return res;
 }
 
 static int test_ss_tolower(const char *a, const char *b)
@@ -2579,7 +2628,7 @@ static int test_sm_sort_to_vectors()
 		 */
 		for (j = test_elems; j > 0 && !res; j--) {
 			sm_sort_to_vectors(m, &kv2, &vv2);
-			for (i = 0; i < j/*test_elems*/; i++) {
+			for (i = 0; i < j; i++) {
 				int k = (int)sv_at_i(kv2, (size_t)i);
 				int v = (int)sv_at_i(vv2, (size_t)i);
 				if (k != (i + 1) || v != -(i + 1)) {
@@ -2607,7 +2656,7 @@ static int test_sm_sort_to_vectors()
 
 static int test_sm_double_rotation()
 {
-	const size_t test_elems = 15;/* 18;*/
+	const size_t test_elems = 15;
 	sm_t *m = sm_alloc(SM_I32I32, test_elems);
 	sv_t *kv = NULL, *vv = NULL;
 	sv_t *kv2 = NULL, *vv2 = NULL;
@@ -2662,16 +2711,14 @@ static int test_sm_double_rotation()
 				res = 5;
 				break;
 			}
-			if (!st_assert((st_t *)m))
-			{
+			if (!st_assert((st_t *)m)) {
 				res = 50;
 				break;
 			}
 		}
 		if (res)
 			break;
-		if (!st_assert((st_t *)m))
-		{
+		if (!st_assert((st_t *)m)) {
 			res = 100;
 			break;
 		}
