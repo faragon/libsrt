@@ -1583,7 +1583,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 ss_t *ss_cat_char(ss_t **s, const int c)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	const wchar_t src[1] = { c };
+	const wchar_t src[1] = { (wchar_t)c };
 	return ss_cat_wn(s, src, 1);
 }
 
