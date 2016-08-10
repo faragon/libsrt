@@ -220,7 +220,7 @@ Test-covered platforms
 | ARM v5 (Feroceon) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++ | none | manual |
 | ARM v6 (ARM11) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | ARM v7-A (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
-| ARM v8-A (Cortex A53) | 64 | little | yes | Debian 8.5 "Jessie" | gcc, g++, tcc, clang, clang++ | Valgrind, clang | manual |
+| ARM v8-A (Cortex A53) | 64 | little | yes | Debian 8.5 "Jessie" | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | EdgeOS v1.6.0 (Linux Vyatta-based using Debian 7 "Wheezy" packages) | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
 
