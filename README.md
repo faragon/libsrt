@@ -216,19 +216,21 @@ Test-covered platforms
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
-| ARM v5 (ARM926EJ-S) | 32 | little | no | Arch Linux | gcc, g++, clang, clang++ | none | manual |
-| ARM v5 (Feroceon) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++ | none | manual |
-| ARM v6 (ARM11) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
-| ARM v7-A (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
-| ARM v8-A (Cortex A53) | 64 | little | yes | Debian 8.5 "Jessie" | gcc, g++, clang, clang++ | Valgrind, clang | manual |
+| ARMv5 (ARM926EJ-S) | 32 | little | no | Arch Linux | gcc, g++, clang, clang++ | none | manual |
+| ARMv5 (Feroceon) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++ | none | manual |
+| ARMv6 (ARM1176JZF-S) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
+| ARMv7-A (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
+| ARMv8-A (Cortex A53) | 64 | little | yes | Debian 8.5 "Jessie" | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | EdgeOS v1.6.0 (Linux Vyatta-based using Debian 7 "Wheezy" packages) | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
 
-Coming soon:
+Coming soon (systems that require some changes in the test, e.g. because RAM/ROM constraints, etc.):
 
 | ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
 | --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
-| ARM v7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
+| ARMv6-M (Cortex M0) | 32 | little | no | none | gcc | none | manual |
+| ARMv7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
+| MIPS32 r2, MIPS16e M4K (PIC32-EMZ64) | 32 | little | no | none | gcc | none | manual |
 | MIPS32 (mips24k) | 32 | big | no | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
 
 License
