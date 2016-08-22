@@ -164,6 +164,7 @@ Tree-specific advantages (st_t)
 * O(log(n)) node insert/delete/search (much faster than hash-map worst case, which is O(n) when rehashing is required).
 * O(n) sorted node enumeration (amortized O(n log(n))). Tree traversal provided cases: preorder, inorder, postorder.
 * O(n) unsorted node enumeration (faster than the sorted case)
+* O(n) copy: as fast as a memcpy(), instead of O(n * log(n)) of naive implementation. Rationale: because the Red Black Tree is implemented within a vector, using indexes for nodes, it can be copied directly, without requiring enumerating nodes on the source tree and doing N insertions in the new tree.
 
 Tree-specific disadvantages/limitations
 ===
@@ -183,6 +184,7 @@ Map-specific advantages (sm_t)
 * O(log n) insert, search, delete
 * O(n) sorted enumeration (amortized O(n log n))
 * O(n) unsorted enumeration (faster than the sorted case)
+* O(n) copy: tree structure is copied as fast as a memcpy(). For map types involving strings, additional allocation is used for duplicating strings.
 
 Map-specific disadvantages/limitations
 ===
@@ -198,7 +200,6 @@ Distributed map (sdm_t)
 * Use this instead of simpler map (sm_t), if:
  * On-chip horizontal scaling: e.g. one thread taking care of one submap. E.g. sdm_t of 8 sub-maps for 8 threads.
  * Intended unfair routing instead of "fair" hashing (distribute elements to all subtress at same pace), you can tune the routing hash for applying specific criteria so some elements go to smaller or bigger trees, for faster retrieval (e.g. range, length, priority, group, class, etc.).
- * Tree speed-up: less interesting case, because of memory subsystem can make it not as effective as how it looks theoretically, but nice as experiment. E.g. even using just one thread, using 1000 subtrees would reduce tree height of a one 10^9 node tree to the equivalent of the height of a 10^6 tree (up to 50% speed-up -1.5x faster- just because of the arrangement). Using 10^6 subtrees would speed-up tree search 200% (3x faster).
 
 Distributed map specific disadvantages/limitations
 ===

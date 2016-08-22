@@ -248,29 +248,40 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	if (!*m)
 		*m = sm_alloc(t, ss);
 	RETURN_IF(!*m || st_max_size(*m) < ss, NULL); /* BEHAVIOR */
+	/*
+	 * Bulk tree copy: tree structure can be copied as is, because of
+	 * of using indexes instead of pointers.
+	 */
+	memcpy(*m, src, src_buf_size);
+	/*
+	 * Copy elements using external dynamic memory (string data)
+	 */
 	switch (t) {
-	/*
-	 * Fast copy: compact structure (without strings)
-	 */
+	case SM_IntStr:
+		for (i = 0; i < ss; i++) {
+			struct SMapIS *ms = (struct SMapIS *)sm_enum_r(src, i);
+			struct SMapIS *mt = (struct SMapIS *)sm_enum_r(*m, i);
+			mt->v = ss_dup(ms->v);
+		}
+		break;
+	case SM_StrInt:
+	case SM_StrPtr:
+		for (i = 0; i < ss; i++) {
+			struct SMapSx *ms = (struct SMapSx *)sm_enum_r(src, i);
+			struct SMapSx *mt = (struct SMapSx *)sm_enum_r(*m, i);
+			mt->k = ss_dup(ms->k);
+		}
+		break;
+	case SM_StrStr:
+		for (i = 0; i < ss; i++) {
+			struct SMapSS *ms = (struct SMapSS *)sm_enum_r(src, i);
+			struct SMapSS *mt = (struct SMapSS *)sm_enum_r(*m, i);
+			mt->x.k = ss_dup(ms->x.k);
+			mt->v = ss_dup(ms->v);
+		}
+		break;
 	case SM_I32I32: case SM_U32U32: case SM_IntInt: case SM_IntPtr:
-		memcpy(*m, src, src_buf_size);
-		break;
-	/*
-	 * Slow map copy for types having strings as key or value:
-	 */
-#define case_SM_CPY_InsertLoop(SM_xy, ST, INSERTF)			\
-	case SM_xy:							\
-		for (i = 0; i < ss; i++) {				\
-			const ST *s = (const ST *)sm_enum_r(*m, i);	\
-			INSERTF(m, s->x.k, s->v);			\
-		}							\
-		break;
-	case_SM_CPY_InsertLoop(SM_IntStr, struct SMapIS, sm_is_insert);
-	case_SM_CPY_InsertLoop(SM_StrInt, struct SMapSI, sm_si_insert);
-	case_SM_CPY_InsertLoop(SM_StrStr, struct SMapSS, sm_ss_insert);
-	case_SM_CPY_InsertLoop(SM_StrPtr, struct SMapSP, sm_sp_insert);
-#undef case_SM_CPY_InsertLoop
-	default:
+	default: /* no additional action required */
 		break;
 	}
 	return *m;
