@@ -231,7 +231,7 @@ Coming soon (systems that require some changes in the test, e.g. because RAM/ROM
 | --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
 | ARMv6-M (Cortex M0) | 32 | little | no | none | gcc | none | manual |
 | ARMv7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
-| MIPS32 r2, MIPS16e M4K (PIC32-EMZ64) | 32 | little | no | none | gcc | none | manual |
+| MIPS32 r2, MIPS16e M14K (PIC32-EMZ64) | 32 | little | no | none | gcc | none | manual |
 | MIPS32 (mips24k) | 32 | big | no | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
 
 License
