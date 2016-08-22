@@ -198,7 +198,8 @@ void sm_free_aux(const size_t nargs, sm_t **m, ...)
 
 sm_t *sm_dup(const sm_t *src)
 {
-	return st_dup(src);
+	sm_t *m = NULL;
+	return sm_cpy(&m, src);
 }
 
 sbool_t sm_reset(sm_t *m)
