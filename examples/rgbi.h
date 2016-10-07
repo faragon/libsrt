@@ -47,7 +47,7 @@ S_INLINE unsigned short rgbi_pack2(const unsigned char *p)
 
 S_INLINE unsigned rgbi_pack3(const unsigned char *rgb)
 {
-	return rgbi_pack2(rgb) | rgb[2] << 8;
+	return rgbi_pack2(rgb) | ((unsigned)rgb[2] & 0xff) << 8;
 }
 
 S_INLINE unsigned rgbi_pack4(const unsigned char *rgba)
