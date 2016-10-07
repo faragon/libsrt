@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, tree, map, and distributed map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as *all* functions are predictable in both space and time.
+libsrt is a C library that provides string, vector, tree, map, and distributed map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (except functions doing synchronous file I/O).
 
 Key points:
 
@@ -60,16 +60,15 @@ Generic advantages
  * Coverage, profiling, and memory leak/overflow/uninitialized checks (Valgrind, GNU gprof -not fully automated into the build, yet-).
 
 * Compatibility
- * C99 and C++ compatible
- * CPU-independent: endian-agnostic, aligned memory accesses.
+ * C99 (and later) compatible
+ * C++11 (and later) compatible
+ * CPU-independent: endian-agnostic, aligned memory accesses
  * POSIX builds (Linux, BSD's) require GNU Make (e.g. on FreeBSD use 'gmake' instead of 'make')
- * E.g. GCC C and C++ (C99, C++/C++11), TCC, CLANG C and C++, MS VS 2013 C and C++ compilers. Visual Studio 2013 "project" is provided just for running the test.
-
 
 Generic disadvantages/limitations
 ===
 
-* Double pointer usage: because of using just one allocation, operations require to address a double pointer, so in the case of reallocation the source pointer could be changed. A trivial solution for avoiding mistakes is to use the same variable for a given element, or using double pointers.
+* Double pointer usage: because of using just one allocation, wrte operations require to address a double pointer, so in the case of reallocation the source pointer could be changed.
 
 * Without the resizing heuristic one-by-one increment would be slow, as it makes to copy data content (with the heuristic the cost it is not only amortized, but much cheaper than allocating things one-by-one).
 
@@ -83,24 +82,7 @@ Generic disadvantages/limitations
  * Format functions (\*printf) rely on system C library, so be aware if you write multi-platform software before using compiler-specific extensions or targetting different C standards).
  * Allow mixed code and variable declaration.
 
-* Focused to reduce verbosity:
- * ss\_cat(&t, s1, ..., sN);
- * ss\_cat(&t, s1, s2, ss\_printf(&s3, "%i", cnt), ..., sN);
- * ss\_free(&s1, &s2, ..., &sN);
- * Expressive code without explicit memory handling.
-
-* Focused to reduce and/or avoid errors, e.g.
- * If a string operation fails, the string is kept in the last successful state (e.g. ss\_cat(&a, b, huge\_string, other))
- * String operations always return valid strings, e.g.
-		This is OK:
-	  		ss_t *s = NULL;
-			ss_cpy_c(&s, "a");
-		Same behavior as:
-			ss_t *s = ss_dup_c("a");
- * ss\_free(&s1, ..., &sN);  (no manual set to NULL is required)
-
-
-String-specific advantages (ss_t)
+String-specific advantages (ss\_t)
 ===
 
 * Unicode support
@@ -133,14 +115,28 @@ String-specific advantages (ss_t)
  * "Wide char" and "C style" strings R/W interoperability support.
  * I/O helpers: buffer read, reserve space for async write
  * Aliasing suport, e.g. ss\_cat(&a, a) is valid
+* Focus on reducing verbosity:
+ * ss\_cat(&t, s1, ..., sN);
+ * ss\_cat(&t, s1, s2, ss\_printf(&s3, "%i", cnt), ..., sN);
+ * ss\_free(&s1, &s2, ..., &sN);
+ * Expressive code without explicit memory handling
+* Focus on reducing errors, e.g.
+ * If a string operation fails, the string is kept in the last successful state (e.g. ss\_cat(&a, b, huge\_string, other))
+ * String operations always return valid strings, e.g.
+		This is OK:
+			ss\_t *s = NULL;
+			ss_cpy_c(&s, "a");
+		Same behavior as:
+			ss\_t *s = ss_dup_c("a");
+ * ss\_free(&s1, ..., &sN);  (no manual set to NULL is required)
 
 String-specific disadvantages/limitations
 ===
 
 * No reference counting support. Rationale: simplicity.
-* ss_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
+* ss\_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
 
-Vector-specific advantages (sv_t)
+Vector-specific advantages (sv\_t)
 ===
 
 * Variable-length concatenation and push functions.
@@ -153,7 +149,7 @@ Vector-specific disadvantages/limitations
 
 * No insert function. Rationale: insert is slow (O(n)). Could be added, if someone asks for it.
 
-Tree-specific advantages (st_t)
+Tree-specific advantages (st\_t)
 ===
 
 * Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require at least 3x more memory -see doc/benchmarks.md-).
@@ -172,10 +168,10 @@ Tree-specific disadvantages/limitations
 * There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
 * Fix
 
-Map-specific advantages (sm_t)
+Map-specific advantages (sm\_t)
 ===
 
-* Abstraction over the tree implementation (st_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
+* Abstraction over the tree implementation (st\_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
 * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
 * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
 * O(1) for allocation
@@ -191,22 +187,22 @@ Map-specific disadvantages/limitations
 
 * Because of being implemented as a tree, it is slower than a hash-map, on average. However, in total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
 
-Distributed map (sdm_t)
+Distributed map (sdm\_t)
 ===
 
-* Abstraction over sm_t (st_t): same types, same memory usage, same time complexity.
-* Operation: routing via hash table + N maps (sm_t)
+* Abstraction over sm\_t (st\_t): same types, same memory usage, same time complexity.
+* Operation: routing via hash table + N maps (sm\_t)
 * Horizontal scaling: cheap in-process clustering (e.g. lock-free multithreading on N submaps)
-* Use this instead of simpler map (sm_t), if:
- * On-chip horizontal scaling: e.g. one thread taking care of one submap. E.g. sdm_t of 8 sub-maps for 8 threads.
+* Use this instead of simpler map (sm\_t), if:
+ * On-chip horizontal scaling: e.g. one thread taking care of one submap. E.g. sdm\_t of 8 sub-maps for 8 threads.
  * Intended unfair routing instead of "fair" hashing (distribute elements to all subtress at same pace), you can tune the routing hash for applying specific criteria so some elements go to smaller or bigger trees, for faster retrieval (e.g. range, length, priority, group, class, etc.).
 
 Distributed map specific disadvantages/limitations
 ===
 
-* Limitations because of using N sm_t elements:
+* Limitations because of using N sm\_t elements:
  * Uses N + 1 memory regions, and not linear memory addressing.
- * Can not be allocated in the stack. If you need stack allocation, use the simpler map (sm_t).
+ * Can not be allocated in the stack. If you need stack allocation, use the simpler map (sm\_t).
 * Global sort to vector and enumeration is not supported. For achieving that, user has to address individual to submaps.
 
 Test-covered platforms
