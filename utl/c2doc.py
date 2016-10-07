@@ -30,7 +30,8 @@
 #			3 reviewed: clean, secure (security risk checked)
 #			4 reviewed: clean, secure, state of the art (speed and space)
 #
-# Copyright (c) 2015 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+# the BSD 3-Clause License (see the doc/LICENSE file included).
 #
 
 import sys
@@ -81,7 +82,6 @@ def fmt_quality(q) :
 		"reviewed, with quality issues" if q == 1 else \
 		"reviewed, clean (-Wall, style, speed)" if q == 2 else "?")
 
-
 def fundoc2html( doc ) :
 	fun_name = doc[0][0]
 	fun_desc = doc[0][1]
@@ -120,17 +120,28 @@ def fundoc2html( doc ) :
 	return  proto + params + '<br>'
 
 def doc2html( doc, title ) :
-	i = 0
-	out = '<!doctype html><html><body><h3>' + title + '</h3><br>';
-	# Index:
-	for i in range(0, len(doc) - 1) :
-		out += '<a href="#' + doc[i][0][0] + '">' + doc[i][0][0] + '</a><br>';
-	out += '<br><br>'
-	# Functions:
-	for i in range(0, len(doc) - 1) :
-		out += fundoc2html( doc[i] ) + '\n'
-	out += '</body></html>\n'
-	return out
+	if len(doc) > 0 :
+		# Sort functions by name:
+		doc.sort(key = lambda x: (x[0][0]))
+		# Index:
+		cols = 6
+		rows = len(doc) // cols + (1 if len(doc) % cols != 0 else 0)
+		out = '<!doctype html><html><body><h3>' + title + '</h3><br>';
+		out += '<table>'
+		for i in range(0, rows) :
+			out += '<tr>'
+			for j in range(0, cols) :
+				ndx = j * rows + i
+				if ndx < len(doc) :
+					fname = doc[ndx][0][0]
+					out += '<th align="left">&nbsp;<a href="#' + fname  + '">' + fname + '</a>&nbsp;</th>'
+			out += '</tr>'
+		out += '</table><br><br>'
+		# Functions:
+		for i in range(0, len(doc)) :
+			out += fundoc2html( doc[i] ) + '\n'
+		out += '</body></html>\n'
+		return out
 
 # main
 
