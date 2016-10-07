@@ -25,7 +25,7 @@ unsigned sh_csum32(const void *buf, const size_t buf_size)
 		acc ^= S_LD_U32(p); /* allow unaligned access */
 	if (p < p_top) { /* fill last element with zeros */
 		unsigned tail = 0;
-		memcpy(&tail, p, p_top - p);
+		memcpy(&tail, p, (size_t)(p_top - p));
 		acc ^= tail;
 	}
 	return acc;
