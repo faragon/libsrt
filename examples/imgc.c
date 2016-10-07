@@ -205,7 +205,8 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 	const size_t ts = ss_size(tga);
 	RETURN_IF(ts < TGA_RGBHDR || !valid_tga(t), 0);
 	set_rgbi(ri, S_LD_LE_U16(t + TGA_W), S_LD_LE_U16(t + TGA_H),
-		 t[TGA_BPP], t[TGA_TYPE] == TGA_RAW_GRAY ? 1 : t[TGA_BPP]/8);
+		 (size_t)t[TGA_BPP], t[TGA_TYPE] == TGA_RAW_GRAY ? 1 :
+							(size_t)t[TGA_BPP]/8);
 	RETURN_IF(!valid_rgbi(ri), 0);
 	size_t rgb_bytes = ri->row_size * ri->height;
 	RETURN_IF(ts < rgb_bytes + TGA_RGBHDR, 0);
@@ -219,7 +220,7 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 				     ss_get_buffer(*rgb));
 	} else {
 		ss_set_size(*rgb, 0);
-		ssize_t i = (ssize_t)(ri->height - 1) * ri->row_size;
+		ssize_t i = (ssize_t)((ri->height - 1) * ri->row_size);
 		for (; i >= 0; i -= ri->row_size)
 			if (ri->chn == 1)
 				ss_cat_cn(rgb, t + TGA_RGBHDR + i,
@@ -244,9 +245,9 @@ static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 	h[TGA_ID] = TGA_NO_X_INFO;
 	h[TGA_CMAP] = TGA_NO_CMAP;
 	h[TGA_TYPE] = ri->chn == 1 ? TGA_RAW_GRAY : TGA_RAW_RGB;
-	S_ST_LE_U16(h + TGA_W, ri->width);
-	S_ST_LE_U16(h + TGA_H, ri->height);
-	h[TGA_BPP] = ri->bpp;
+	S_ST_LE_U16(h + TGA_W, (uint16_t)ri->width);
+	S_ST_LE_U16(h + TGA_H, (uint16_t)ri->height);
+	h[TGA_BPP] = (char)ri->bpp;
 	h[TGA_DESC] = TGA_TOP_LEFT;
 	ss_cpy_cn(tga, h, TGA_RGBHDR);
 	if (ri->chn == 1)
@@ -264,7 +265,7 @@ static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 
 #define PPM_NFIELDS 3
 
-sbool_t valid_rgbi_for_ppm(const struct RGB_Info *ri)
+static sbool_t valid_rgbi_for_ppm(const struct RGB_Info *ri)
 {
 	RETURN_IF(!valid_rgbi(ri), S_FALSE);
 	RETURN_IF(ri->chn == 3 && ri->bpp != 24 && ri->bpp != 48, S_FALSE);
@@ -280,7 +281,7 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 	ri->chn = p[1] == '5' ? 1 : p[1] == '6' ? 3 : 0;
 	RETURN_IF(ps < 16 || p[0] != 'P' || !ri->chn, 0);
 	size_t off = 2, nf = 0, nl, nl2, i = 0;
-	int f[PPM_NFIELDS];
+	size_t f[PPM_NFIELDS];
 	for (; i != S_NPOS && nf < PPM_NFIELDS && off < ps; off = nl + 1) {
 		nl = ss_findc(ppm, off, '\n');
 		if (nl == S_NPOS)
@@ -291,7 +292,7 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 			i = ss_findrbm(ppm, i, nl2, 0x30, 0xc0); /* digits */
 			if (i == S_NPOS)
 				break;
-			f[nf++] = atoi(p + i);
+			f[nf++] = (size_t)atoi(p + i);
 			if (nf == PPM_NFIELDS)
 				break;
 			i = ss_findrb(ppm, i + 1, nl2);
@@ -678,15 +679,15 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 
 #endif /* #ifdef HAS_JPG */	/* JPG codec end */
 
-#define RGB_COUNT_LOOP(i, p, ss, ps, bs, cmx, out)		\
-	sb_reset(bs);						\
-	for (i = 0; i < ss && sb_popcount(bs) < cmx; i += ps) {	\
-		unsigned c = (unsigned char)p[i];		\
-		if (ps > 1) c |= (unsigned char)p[i + 1] << 8;	\
-		if (ps > 2) c |= (unsigned char)p[i + 2] << 16;	\
-		if (ps > 3) c |= (unsigned char)p[i + 3] << 24;	\
-		sb_set(&bs, c);					\
-	}							\
+#define RGB_COUNT_LOOP(i, p, ss, ps, bs, cmx, out)			\
+	sb_reset(bs);							\
+	for (i = 0; i < ss && sb_popcount(bs) < cmx; i += ps) {		\
+		unsigned c = (unsigned)p[i] & 0xff;			\
+		if (ps > 1) c |= ((unsigned)p[i + 1] & 0xff) << 8;	\
+		if (ps > 2) c |= ((unsigned)p[i + 2] & 0xff) << 16;	\
+		if (ps > 3) c |= ((unsigned)p[i + 3] & 0xff) << 24;	\
+		sb_set(&bs, c);						\
+	}								\
 	out = sb_popcount(bs);
 
 #define RGBC_COUNT_LOOP(i, p, ss, ps, bs, off, out)			\
@@ -698,10 +699,10 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 
 #define RGBC2_COUNT_LOOP(i, p, ss, ps, bs, off, out) {			\
 	sb_reset(bs);							\
-	int off2 = (off + 1) % 3;					\
+	size_t off2 = (off + 1) % 3;					\
 	for (i = 0; i < ss && sb_popcount(bs) < 1 << 16; i += ps) {	\
-		unsigned c = (unsigned char)p[i + off] |		\
-			     (unsigned char)p[i + off2] << 8;		\
+		unsigned c = ((unsigned)p[i + off] & 0xff) |		\
+			     ((unsigned)p[i + off2] & 0xff) << 8;	\
 		sb_set(&bs, c);						\
 	}								\
 	out = sb_popcount(bs); }
@@ -712,9 +713,10 @@ static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 		const size_t ss = ss_size(rgb), ps = ri->bpp / 8;
 		size_t cmax = ri->bpp == 32 ? 0xffffffff :
 					      0xffffffff &
-					      ((1 << ri->bpp) - 1),
-		       uqp = 0, i;
-		const char *p = ss_get_buffer_r(rgb);
+					      ((1 << ri->bpp) - 1);
+		size_t i, uqp = 0;
+		const char *p0 = ss_get_buffer_r(rgb);
+		const unsigned char *p = (const unsigned char *)p0;
 		sb_t *bs = sb_alloc(0);
 		sb_eval(&bs, cmax);
 		switch (ps) {
@@ -726,8 +728,8 @@ static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 			break;
 		}
 		unsigned pixels = (unsigned)(ri->width * ri->height);
-		unsigned l = (uqp * 100) / pixels,
-			 r = ((uqp * 10000) / pixels) % 100;
+		unsigned l = (unsigned)((uqp * 100) / pixels),
+			 r = (unsigned)(((uqp * 10000) / pixels) % 100);
 		printf("%ix%i %i bpp, %i chn; %u px; %u unique px"
 		       " (%u.%u%%)", (int)ri->width, (int)ri->height,
 		       (int)ri->bpp, (int)ri->chn, pixels,
