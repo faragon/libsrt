@@ -56,7 +56,8 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 	const char *s = ss_get_buffer_r(rgb);		\
 	char *t = ss_get_buffer(*dpcm);			\
 	const short *sw = (const short *)s;		\
-	short *tw = (short *)t, *pw = (short *)p;	\
+	short *tw = (short *)t;				\
+	const short *pw = (const short *)p;
 
 #define HDALG_LOOP(ps, i, s, t, p, OP, T)				\
 	rs = rs;							\
