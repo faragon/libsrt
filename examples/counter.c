@@ -65,12 +65,11 @@ int main(int argc, const char **argv)
 	sm_t *m = sm_alloc(SM_U32U32, 0);
 #endif
 	unsigned char buf[3 * 4 * 128];
-	int i;
-	ssize_t l;
+	size_t i, l;
 	for (;;) {
 		l = fread(buf, 1, sizeof(buf), stdin);
-		l = (l / csize) * csize;
-		if (l <= 0)
+		l = (l / (size_t)csize) * (size_t)csize;
+		if (!l)
 			break;
 		#define CNTLOOP(inc, val)			\
 			for (i = 0; i < l; i += inc) {		\
