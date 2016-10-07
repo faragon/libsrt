@@ -98,6 +98,10 @@ Generic data structures
  * https://github.com/dvdhrm/libshl
 * libscl (not reviewed yet)
  * http://sourceforge.net/projects/libscl/
+* Compact libc implementations
+ * musl: https://www.musl-libc.org/
+ * uClibc: https://uclibc.org/
+ * diet libc: https://www.fefe.de/dietlibc/
 * The Art of Computer Programming (Donald Knuth): not used for this, but it is always a nice mention.
 
 Strings
