@@ -88,11 +88,10 @@ int main(int argc, const char **argv)
 	if (mode == SENC_none)
 		return syntax_error(argv, 2);
 	unsigned l32;
-	size_t li = 0, lo = 0, lo2;
+	size_t j, l, li = 0, lo = 0, lo2, off = 0;
 	size_t is; /* input elem size */
 	unsigned char buf[XBUF_SIZE], bufo[XBUF_SIZE], esc;
 	int exit_code = 0;
-	ssize_t j, l, off = 0;
 	switch (mode) {
 	case SENC_b64: is = 3; break;
 	case SDEC_b64: is = 4; break;
@@ -110,10 +109,10 @@ int main(int argc, const char **argv)
 	for (;;) {
 		if (is) {
 			l = fread(buf + off, 1, IBUF_SIZE, stdin);
-			if ((!l && off == 0) || ferror(stdin))
+			if ((!l && !off) || ferror(stdin))
 				goto done;
 			l += off;
-			li += (size_t)l;
+			li += l;
 			switch (mode) {
 			case SENC_b64:
 				lo2 = senc_b64(buf, (size_t)l, bufo);
@@ -146,19 +145,23 @@ int main(int argc, const char **argv)
 				esc = mode == SDEC_xml ? '&' :
 				      mode == SDEC_json ? '\\' : '%';
 				if (l > ESC_MAX_SIZE)
-					for (j = l - ESC_MAX_SIZE + 1; j < l; j++)
+					for (j = (size_t)(l - ESC_MAX_SIZE + 1);
+					     j < l; j++)
 						if (buf[j] == esc && buf[j - 1] != esc) {
-							off = l - j;
+							off = (size_t)(l - j);
 							break;
 						}
-				l -= off;
+				if (l > off)
+					l -= off;
+				else
+					l = 0;
 				lo2 = mode == SDEC_xml ?
-					sdec_esc_xml(buf, (size_t)l, bufo) :
+					sdec_esc_xml(buf, l, bufo) :
 				      mode == SDEC_json ?
-					sdec_esc_json(buf, (size_t)l, bufo) :
-					sdec_esc_url(buf, (size_t)l, bufo);
+					sdec_esc_json(buf, l, bufo) :
+					sdec_esc_url(buf, l, bufo);
 				if (off > 0)
-					memcpy(buf, buf + (size_t)l, (size_t)off);
+					memcpy(buf, buf + l, off);
 				break;
 			default:
 				exit_code = 1;
@@ -173,8 +176,8 @@ int main(int argc, const char **argv)
 					goto done;
 				li += (size_t)l;
 				lo2 = mode == SENC_lzw ?
-					senc_lzw(buf, (size_t)l, bufo + 4) :
-					senc_rle(buf, (size_t)l, bufo + 4);
+					senc_lzw(buf, l, bufo + 4) :
+					senc_rle(buf, l, bufo + 4);
 				l32 = (unsigned)lo2;
 				l32 = S_HTON_U32(l32);
 				S_ST_U32(bufo, l32);
@@ -205,8 +208,8 @@ int main(int argc, const char **argv)
 				}
 				li += (size_t)l;
 				lo2 = mode == SDEC_lzw ?
-					sdec_lzw(buf, (size_t)l, bufo) :
-					sdec_rle(buf, (size_t)l, bufo);
+					sdec_lzw(buf, l, bufo) :
+					sdec_rle(buf, l, bufo);
 				break;
 			default:
 				exit_code = 5;
