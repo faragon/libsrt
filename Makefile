@@ -135,7 +135,7 @@ else
 	endif
 	ifeq ($(PEDANTIC), 1)
 		ifeq ($(GNUC), 1)
-			CFLAGS += -Wall -Wextra -Werror
+			CFLAGS += -Wall -Wextra # -Werror
 		endif
 		ifeq ($(CLANG), 1)
 			CFLAGS += -Weverything
