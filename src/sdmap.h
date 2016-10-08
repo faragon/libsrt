@@ -51,8 +51,8 @@ sbool_t sdm_reset(sdm_t *m);
 #API: |Free one or more distributed maps|map; more distributed maps (optional)|-|O(1) for simple dmaps, O(n) for dmaps having nodes with strings|1;2|
 void sdm_free(sdm_t **dm, ...)
 */
-#define sdm_free(...) sdm_free_aux(S_NARGS_SDMPW(__VA_ARGS__), __VA_ARGS__)
-void sdm_free_aux(const size_t nargs, sdm_t **s, ...);
+#define sdm_free(...) sdm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+void sdm_free_aux(sdm_t **s, ...);
 
 /*
  * Routing

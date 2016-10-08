@@ -19,28 +19,28 @@
 	((2 * (1 + (unsigned char)p[i - 1])) + (unsigned char)q[i])
 #define S_FPREPARECSUM(CSUMF, i) \
 	((target += CSUMF(t, t, i)), current += CSUMF(s, s, i))
-#define S_FWINDOW_MOVE(CSUMF, s, i)	\
+#define S_FWINDOW_MOVE(CSUMF, s, i)			\
 	(CSUMF(s, s, i) - CSUMF(s, s, 1 + i - ts))
 #define S_FSEARCH(CSUMF)				\
 	(((current += S_FWINDOW_MOVE(CSUMF, s, 0)),	\
 	 s++, current) == target)
-#define S_FCSUM_RETURN_CHECK		\
-	if (!memcmp(s - ts, t, ts))	\
-		return s - s0 - ts
-#define S_FCSUM_RETURN_CHECK_W_ALGORITHM_SWITCH			\
-	if (!csum_collision_off) {					\
-		csum_collision_off = s - s0 - off;			\
-		csum_collision_count = 1;				\
-	} else {							\
-		if ((size_t)(s - s0) - csum_collision_off > ts * 10) {	\
-			csum_collision_off = s - s0; /* reset */	\
-			csum_collision_count = 1;			\
-		} else {						\
-			if (++csum_collision_count > (2 + ts/2)) {	\
-				return ss_find_csum_slow(s0, s - s0,	\
-							 ss, t, ts);	\
-			}						\
-		}							\
+#define S_FCSUM_RETURN_CHECK			\
+	if (!memcmp(s - ts, t, ts))		\
+		return (size_t)((size_t)(s - s0) - ts)
+#define S_FCSUM_RETURN_CHECK_W_ALGORITHM_SWITCH				   \
+	if (!csum_collision_off) {					   \
+		csum_collision_off = (size_t)((size_t)(s - s0) - off);	   \
+		csum_collision_count = 1;				   \
+	} else {							   \
+		if ((size_t)(s - s0) - csum_collision_off > ts * 10) {	   \
+			csum_collision_off = (size_t)(s - s0); /* reset */ \
+			csum_collision_count = 1;			   \
+		} else {						   \
+			if (++csum_collision_count > (2 + ts/2)) {	   \
+				return ss_find_csum_slow(s0,		   \
+					(size_t)(s - s0), ss, t, ts);	   \
+			}						   \
+		}							   \
 	}
 #ifdef S_ENABLE_FIND_CSUM_FAST_TO_SLOW_ALGORITHM_SWITCH
 #define S_FIND_CSUM_ALG_SWITCH_SETUP	\
@@ -71,7 +71,7 @@
 #ifdef S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
 #define S_FIND_CSUM_PIPELINE2(alg)		\
 	for (; (i + 4) < ts; i += 4) {		\
-		S_FPREPARECSUM(alg, i);	\
+		S_FPREPARECSUM(alg, i);		\
 		S_FPREPARECSUM(alg, i + 1);	\
 		S_FPREPARECSUM(alg, i + 2);	\
 		S_FPREPARECSUM(alg, i + 3);	\
@@ -79,12 +79,12 @@
 #else
 #define S_FIND_CSUM_PIPELINE2(alg)
 #endif
-#define S_FIND_CSUM_PIPELINE3(alg)			\
-	for (; i < ts; i++) {				\
-		S_FPREPARECSUM(alg, i);		\
-	}						\
-	if (current == target && !memcmp(s, t, ts))	\
-		return s - s0; /* found: prefix */	\
+#define S_FIND_CSUM_PIPELINE3(alg)				\
+	for (; i < ts; i++) {					\
+		S_FPREPARECSUM(alg, i);				\
+	}							\
+	if (current == target && !memcmp(s, t, ts))		\
+		return (size_t)(s - s0); /* found: prefix */	\
 	s += ts;
 
 /*
@@ -168,6 +168,7 @@ size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
 size_t ss_find_bf(const char *s0, const size_t off, const size_t ss,
 		  const char *t, const size_t ts)
 {
+	RETURN_IF(!ss, S_NPOS);
 	const char t0 = t[0],
 		  *s = s0 + off, *s_top = s0 + ss - ts,
 		  *t_top = t + ts,
@@ -179,7 +180,7 @@ size_t ss_find_bf(const char *s0, const size_t off, const size_t ss,
 		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
 		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
 		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0))))) {
-			s = (const char *)memchr(s, t0, s_top - s + 1);
+			s = (const char *)memchr(s, t0, (size_t)(s_top - s) + 1);
 			if (!s)
 				return S_NPOS;
 			s++;
@@ -198,7 +199,7 @@ size_t ss_find_bf(const char *s0, const size_t off, const size_t ss,
 				goto ss_find_next;
 		for (; ta < t_top && *sa == *ta; sa++, ta++);
 		if (ta == t_top)
-			return s - s0 - 1;
+			return (size_t)(s - s0 - 1);
 ss_find_next:;
 	}
 	return S_NPOS;

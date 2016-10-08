@@ -26,7 +26,7 @@
 
 #define S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
 
-#ifdef S_MINIMAL_BUILD
+#ifdef S_MINIMAL
 #undef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
 #endif
 
@@ -211,7 +211,7 @@ ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
  * Minimal build removes Unicode tolower/toupper support
  */
 
-#ifdef S_MINIMAL_BUILD
+#ifdef S_MINIMAL
 
 int32_t sc_tolower(const int32_t c)
 {
@@ -233,11 +233,8 @@ int32_t sc_toupper_tr(const int32_t c)
 	return sc_toupper(c);
 }
 
-size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
-		       unsigned *o, int32_t (*ssc_toX)(const int32_t))
-{
-	return off;
-}
+/* just do nothing, so the slower fallback is executed */
+#define sc_parallel_toX(s, off, max, o, callback) off
 
 #else
 
@@ -617,42 +614,28 @@ int32_t sc_toupper_tr(const int32_t c)
  * 7-bit parallel case conversions (using the Paul Hsieh technique)
  */
 size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
-		       unsigned *o, int32_t (*ssc_toX)(const int32_t))
+		       char *o, int32_t (*ssc_toX)(const int32_t))
 {
-	/* 1) Alignment check.
-	 * 2) The parallel optimization works only for the generic case,
-	 * so if non generic mode is detected, e.g. if being in Turkish mode,
-	 * the function will return (caller will continue with the
-	 * precise (and slower) conversion).
-	 */
-	if (((size_t)(o) & 3) != 0 || ((size_t)(s) & 3) != 0 ||
-	    (ssc_toX != sc_tolower && ssc_toX != sc_toupper))
-		return off;
 	const int op_mod = ssc_toX == sc_tolower? 1 : 0;
 	union s_u32 m1;
 	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
 	const uint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
 	const uint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
-	if ((off & 3) == 0) {	/* aligned input */
-		const size_t szm4 = max & (size_t)(~3);
-		for (; off < szm4; off += 4) {
-			const uint32_t *c32 = (const uint32_t *)(s + off);
-			const uint32_t a = *c32;
-			if ((a & m1.a32) == 0) {
-				uint32_t b = (msk1 & a) + msk4;
-				b = (msk1 & b) + msk2;
-				b = ((b & ~a) >> 2) & msk3;
-				if (op_mod)
-					*o++ = a + b;
-				else
-					*o++ = a - b;
-			} else { /* Not 7-bit ASCII */
-				break;
-			}
+	const size_t szm4 = max & (size_t)(~3);
+	for (; off < szm4; off += 4) {
+		const uint32_t a = S_LD_U32(s + off);
+		if ((a & m1.a32) == 0) {
+			uint32_t b = (msk1 & a) + msk4;
+			b = (msk1 & b) + msk2;
+			b = ((b & ~a) >> 2) & msk3;
+			S_ST_U32(o, op_mod ? a + b : a - b);
+			o += 4;
+		} else { /* Not 7-bit ASCII */
+			break;
 		}
 	}
 	return off;
 }
 
-#endif /* S_MINIMAL_BUILD */
+#endif /* S_MINIMAL */
 

@@ -44,11 +44,11 @@ TEST_CC[10]="clang++"
 TEST_CC[11]="clang++"
 TEST_CC[12]="arm-linux-gnueabi-gcc"
 TEST_CC[13]="arm-linux-gnueabi-gcc"
-TEST_FLAGS[0]=""
+TEST_FLAGS[0]="C99=1 PEDANTIC=1"
 TEST_FLAGS[1]="PROFILING=1"
 TEST_FLAGS[2]="C99=0"
 TEST_FLAGS[3]="C99=0 $FORCE32T"
-TEST_FLAGS[4]="C99=0"
+TEST_FLAGS[4]="C99=1 PEDANTIC=1"
 TEST_FLAGS[5]="C99=0 $FORCE32T"
 TEST_FLAGS[6]="C99=1"
 TEST_FLAGS[7]=""
@@ -74,8 +74,8 @@ TEST_DO_UT[12]="stest"
 TEST_DO_UT[13]="stest"
 INNER_LOOP_FLAGS[0]=""
 INNER_LOOP_FLAGS[1]="DEBUG=1"
-INNER_LOOP_FLAGS[2]="MINIMAL_BUILD=1"
-INNER_LOOP_FLAGS[3]="MINIMAL_BUILD=1 DEBUG=1"
+INNER_LOOP_FLAGS[2]="MINIMAL=1"
+INNER_LOOP_FLAGS[3]="MINIMAL=1 DEBUG=1"
 ERRORS=0
 NPROCS=0
 MJOBS=1
@@ -145,7 +145,7 @@ fi
 if (($TMUX & 4)) && type scan-build >/dev/null 2>&1 ; then
 	echo -n "Clang static analyzer..."
 	$MAKE clean
-	if scan-build $MAKE CC=clang 2>&1 >clang_analysis.txt ; then
+	if scan-build -v $MAKE CC=clang 2>&1 >clang_analysis.txt ; then
 		echo " OK"
 	else	echo " ERROR"
 		ERRORS=$((ERRORS + 1))

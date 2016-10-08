@@ -54,9 +54,9 @@ typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
  */
 
 #ifdef S_USE_VA_ARGS
-#define sv_free(...) sv_free_aux(S_NARGS_SVPW(__VA_ARGS__), __VA_ARGS__)
-#define sv_cat(v, ...) sv_cat_aux(v, S_NARGS_SVR(__VA_ARGS__), __VA_ARGS__)
-#define sv_push(v, ...) sv_push_aux(v, S_NARGS_R(__VA_ARGS__), __VA_ARGS__)
+#define sv_free(...) sv_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define sv_cat(v, ...) sv_cat_aux(v, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define sv_push(v, ...) sv_push_aux(v, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #else
 #define sv_free(...)
 #define sv_cat(v, ...) NULL
@@ -120,22 +120,22 @@ void sv_set_size(sv_t *c, const size_t s)
 #API: |Equivalent to sv_size|vector|Number of vector elements|O(1)|1;2|
 size_t sv_len(const sv_t *c)
 
-#API: |Allocated space|vector|current allocated space (vector elements)|O(1)|0;1|
+#API: |Allocated space|vector|current allocated space (vector elements)|O(1)|1;2|
 size_t sv_capacity(const sv_t *v);
 
-#API: |Preallocated space left|vector|allocated space left|O(1)|0;1|
+#API: |Preallocated space left|vector|allocated space left|O(1)|1;2|
 size_t sv_capacity_left(const sv_t *v);
 
-#API: |Tells if a vector is empty (zero elements)|vector|S_TRUE: empty vector; S_FALSE: not empty|O(1)|0;1|
+#API: |Tells if a vector is empty (zero elements)|vector|S_TRUE: empty vector; S_FALSE: not empty|O(1)|1;2|
 sbool_t sv_empty(const sv_t *v)
 
-#API: |Get vector buffer access|vector|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+#API: |Get vector buffer access|vector|pointer to the internal vector buffer (raw data)|O(1)|1;2|
 char *sv_get_buffer(sv_t *v);
 
-#API: |Get vector buffer access (read-only)|vector|pointer to the internal vector buffer (raw data)|O(1)|0;1|
+#API: |Get vector buffer access (read-only)|vector|pointer to the internal vector buffer (raw data)|O(1)|1;2|
 const char *sv_get_buffer_r(const sv_t *v);
 
-#API: |Get vector buffer size|vector|Number of bytes in use for storing all vector elements|O(1)|0;1|
+#API: |Get vector buffer size|vector|Number of bytes in use for storing all vector elements|O(1)|1;2|
 size_t sv_get_buffer_size(const sv_t *v);
 */
 
@@ -180,7 +180,7 @@ sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n);
 #API: |Concatenate vectors to vector|vector; first vector to be concatenated; optional: N additional vectors to be concatenated|output vector reference (optional usage)|O(n)|1;2|
 sv_t *sv_cat(sv_t **v, const sv_t *v1, ...)
 */
-sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...);
+sv_t *sv_cat_aux(sv_t **v, const sv_t *v1, ...);
 
 /* #API: |Concatenate vector with erase operation|output vector; input vector; input vector offset for erase start; erase element count|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_cat_erase(sv_t **v, const sv_t *src, const size_t off, const size_t n);
@@ -198,7 +198,7 @@ sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 /* #API: |Resize vector|input/output vector; new size|output vector reference (optional usage)|O(n)|1;2| */
 sv_t *sv_resize(sv_t **v, const size_t n);
 
-/* #API: |Sort vector|input/output vector|O(n log n) (relies on libc qsort implementation)|1;2| */
+/* #API: |Sort vector|input/output vector|output vector reference (optional usage)|relies on libc "qsort" implementation, e.g. glibc implements introsort (O(n log n)), musl does smoothsort (O(n log n)), etc.|1;2| */
 sv_t *sv_sort(sv_t **v);
 
 /*
@@ -261,7 +261,7 @@ sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n);
 #API: |Push/add multiple elements (generic data)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2|
 sbool_t sv_push(sv_t **v, const void *c1, ...)
 */
-size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...);
+size_t sv_push_aux(sv_t **v, const void *c1, ...);
 
 /* #API: |Push/add element (integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
 sbool_t sv_push_i(sv_t **v, const int64_t c);

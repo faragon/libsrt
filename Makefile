@@ -20,8 +20,14 @@
 
 # Makefile parameters
 
+ifdef ADD_CFLAGS
+	CFLAGS += $(ADD_CFLAGS)
+endif
 ifndef C99
 	C99 = 0
+endif
+ifdef C89
+	C90 = $(C89)
 endif
 ifndef C11
 	C11 = 0
@@ -41,8 +47,11 @@ endif
 ifndef PEDANTIC
 	PEDANTIC = 0
 endif
-ifndef MINIMAL_BUILD
-	MINIMAL_BUILD = 0
+ifndef MINIMAL
+	MINIMAL = 0
+endif
+ifdef MINIMAL_BUILD
+	MINIMAL = $(MINIMAL_BUILD)
 endif
 ifndef FORCE32
 	FORCE32 = 0
@@ -118,13 +127,15 @@ else
 			ifeq ($(C99), 1)
 				CFLAGS += -std=c99
 			else
-				CFLAGS += -std=c89
+				ifeq ($(C90), 1)
+					CFLAGS += -std=c89
+				endif
 			endif
 		endif
 	endif
 	ifeq ($(PEDANTIC), 1)
 		ifeq ($(GNUC), 1)
-			CFLAGS += -Wall -Wextra
+			CFLAGS += -Wall -Wextra -Werror
 		endif
 		ifeq ($(CLANG), 1)
 			CFLAGS += -Weverything
@@ -137,9 +148,12 @@ else
 endif
 ifeq ($(DEBUG), 1)
 	CFLAGS += -O0 -ggdb -DS_DEBUG
+	ifeq ($(MINIMAL), 1)
+		CFLAGS += -DS_MINIMAL
+	endif
 else
-	ifeq ($(MINIMAL_BUILD), 1)
-		CFLAGS += -Os -DS_MINIMAL_BUILD
+	ifeq ($(MINIMAL), 1)
+		CFLAGS += -Os -DS_MINIMAL
 	else
 		CFLAGS += -O2
 	endif

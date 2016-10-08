@@ -68,11 +68,11 @@ sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer, c
 /* #API: |Allocate map (heap)|map type; initial reserve|map|O(1)|1;2| */
 sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_reserve);
 
-/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|0;1|
+/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
 sm_t *sm_shrink(sm_t **s);
 */
 
-/* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|0;1| */
+/* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|1;2| */
 S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
 {
 	switch (t) {
@@ -89,18 +89,18 @@ S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
 	return 0;
 }
 
-/* #API: |Duplicate map|input map|output map|O(n)|0;1| */
+/* #API: |Duplicate map|input map|output map|O(n)|1;2| */
 sm_t *sm_dup(const sm_t *src);
 
 /* #API: |Reset/clean map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings|0;1| */
 sbool_t sm_reset(sm_t *m);
 
 /*
-#API: |Free one or more maps (heap)|map; more maps (optional)|-|O(1) for simple maps, O(n) for maps having nodes with strings|0;1|
+#API: |Free one or more maps (heap)|map; more maps (optional)|-|O(1) for simple maps, O(n) for maps having nodes with strings|1;2|
 void sm_free(sm_t **m, ...)
 */
-#define sm_free(...) sm_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
-void sm_free_aux(const size_t nargs, sm_t **s, ...);
+#define sm_free(...) sm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+void sm_free_aux(sm_t **s, ...);
 
 SD_BUILDFUNCS_FULL_ST(sm)
 
@@ -111,19 +111,19 @@ size_t sm_grow(sm_t **m, const size_t extra_elems)
 #API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|0;1|
 size_t sm_reserve(sm_t **m, const size_t max_elems)
 
-#API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|0;1|
+#API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
 sm_t *sm_shrink(sm_t **m);
 
-#API: |Get map size|map|Map number of elements|O(1)|0;1|
+#API: |Get map size|map|Map number of elements|O(1)|1;2|
 size_t sm_size(const sm_t *m);
 
-#API: |Allocated space|map|current allocated space (vector elements)|O(1)|0;1|
+#API: |Allocated space|map|current allocated space (vector elements)|O(1)|1;2|
 size_t sm_capacity(const sm_t *m);
 
-#API: |Preallocated space left|map|allocated space left|O(1)|0;1|
+#API: |Preallocated space left|map|allocated space left|O(1)|1;2|
 size_t sm_capacity_left(const sm_t *m);
 
-#API: |Tells if a map is empty (zero elements)|map|S_TRUE: empty vector; S_FALSE: not empty|O(1)|0;1|
+#API: |Tells if a map is empty (zero elements)|map|S_TRUE: empty vector; S_FALSE: not empty|O(1)|1;2|
 sbool_t sm_empty(const sm_t *m)
 */
 
@@ -150,16 +150,16 @@ int64_t sm_ii_at(const sm_t *m, const int64_t k);
 /* #API: |Access to integer-string map|map; integer key|string|O(log n)|1;2| */
 const ss_t *sm_is_at(const sm_t *m, const int64_t k);
 
-/* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|0;1| */
+/* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|1;2| */
 const void *sm_ip_at(const sm_t *m, const int64_t k);
 
-/* #API: |Access to string-integer map|map; string key|integer|O(log n)|0;1| */
+/* #API: |Access to string-integer map|map; string key|integer|O(log n)|1;2| */
 int64_t sm_si_at(const sm_t *m, const ss_t *k);
 
-/* #API: |Access to string-string map|map; string key|string|O(log n)|0;1| */
+/* #API: |Access to string-string map|map; string key|string|O(log n)|1;2| */
 const ss_t *sm_ss_at(const sm_t *m, const ss_t *k);
 
-/* #API: |Access to string-pointer map|map; string key|pointer|O(log n)|0;1| */
+/* #API: |Access to string-pointer map|map; string key|pointer|O(log n)|1;2| */
 const void *sm_sp_at(const sm_t *m, const ss_t *k);
 
 /*
@@ -188,19 +188,19 @@ sbool_t sm_uu32_insert(sm_t **m, const uint32_t k, const uint32_t v);
 /* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_ii_insert(sm_t **m, const int64_t k, const int64_t v);
 
-/* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_is_insert(sm_t **m, const int64_t k, const ss_t *v);
 
-/* #API: |Insert into int-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into int-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_ip_insert(sm_t **m, const int64_t k, const void *v);
 
-/* #API: |Insert into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_si_insert(sm_t **m, const ss_t *k, const int64_t v);
 
-/* #API: |Insert into string-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into string-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
 
-/* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
 
 /* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */

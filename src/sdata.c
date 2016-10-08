@@ -22,11 +22,17 @@
  * elements are over SD_GROW_CACHE_MIN_ELEMS, increase the allocation in 100%.
  */
 
+#ifdef S_MINIMAL
+#define SD_GROW_CACHE_MIN_ELEMS	  16
+#define SD_GROW_PCT_CACHED	   5
+#define SD_GROW_PCT_NONCACHED	  10
+#else
 #define SD_GROW_CACHE_MIN_ELEMS	4096
 #define SD_GROW_PCT_CACHED	  25
 #define SD_GROW_PCT_NONCACHED	  50
+#endif
 
-sd_t sd_void0 = EMPTY_SDataFull;
+static sd_t sd_void0 = EMPTY_SDataFull;
 sd_t *sd_void = &sd_void0;
 
 /*
@@ -38,7 +44,7 @@ sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size,
 {
 	size_t alloc_size = sd_alloc_size(header_size, elem_size,
 					  initial_reserve, dyn_st);
-	sd_t *d = (sd_t *)__sd_malloc(alloc_size);
+	sd_t *d = (sd_t *)s_malloc(alloc_size);
 	if (d) {
 		sd_reset(d, header_size, elem_size, initial_reserve, S_FALSE,
 			 dyn_st);
@@ -64,19 +70,21 @@ void sd_free(sd_t **d)
 {
 	if (d && *d) {
 		if (!(*d)->f.ext_buffer)
-			free(*d);
+			s_free(*d);
 		*d = NULL;
 	}
 }
 
-void sd_free_va(const size_t elems, sd_t **first, va_list ap)
+void sd_free_va(sd_t **first, va_list ap)
 {
-	sd_free(first);
-	if (elems == 1)
-		return;
-	size_t i = 1;
-        for (; i < elems; i++)
-                sd_free((sd_t **)va_arg(ap, sd_t **));
+	sd_t **next = first;
+	while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
+		if (next) {
+			sd_free((sd_t **)next);
+			*next = NULL;
+		}
+		next = (sd_t **)va_arg(ap, sd_t **);
+	}
 }
 
 void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size,
@@ -146,7 +154,7 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 		size_t elem_size = sdx_elem_size(*d);
 		size_t as = sd_alloc_size(full_header_size,
 						elem_size, max_size, is_dyn);
-		sd_t *d_next = (sd_t *)__sd_realloc(*d, as);
+		sd_t *d_next = (sd_t *)s_realloc(*d, as);
 		if (!d_next) {
 			S_ERROR("sd_reserve: not enough memory");
 			sd_set_alloc_errors(*d);
@@ -192,7 +200,7 @@ sd_t *sd_shrink(sd_t **d)
 		size_t as = sd_alloc_size((*d)->header_size,
 					  (*d)->elem_size, new_max_size,
 					  S_FALSE);
-		sd_t *d_next = (sd_t *)__sd_realloc(*d, as);
+		sd_t *d_next = (sd_t *)s_realloc(*d, as);
 		if (d_next) {
 			*d = d_next;
 			(*d)->max_size = new_max_size;

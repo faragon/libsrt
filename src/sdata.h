@@ -101,10 +101,10 @@ extern "C" {
 	}								       \
 
 #define SD_FREE_AUX(pfix)						       \
-	S_INLINE void pfix##_free_aux(const size_t nargs, pfix##_t **c, ...) { \
+	S_INLINE void pfix##_free_aux(pfix##_t **c, ...) {		       \
 		va_list ap;						       \
 		va_start(ap, c);					       \
-		sd_free_va(nargs, (sd_t **)c, ap);			       \
+		sd_free_va((sd_t **)c, ap);				       \
 		va_end(ap);						       \
 	}
 
@@ -115,55 +115,6 @@ extern "C" {
 #define SD_BUILDFUNCS_FULL(pfix)					       \
 	SD_BUILDFUNCS_FULL_ST(pfix)					       \
 	SD_FREE_AUX(pfix)
-
-/*
- * Artificial memory allocation limits (tests/debug)
- */
-
-#if defined(SD_MAX_MALLOC_SIZE) && !defined(SD_DEBUG_ALLOC)
-static void *__sd_malloc(size_t size)
-{
-	return size <= SD_MAX_MALLOC_SIZE ? malloc(size) : NULL;
-}
-static void *__sd_calloc(size_t nmemb, size_t size)
-{
-	return size <= SD_MAX_MALLOC_SIZE ? calloc(nmemb, size) : NULL;
-}
-static void *__sd_realloc(void *ptr, size_t size)
-{
-	return size <= SD_MAX_MALLOC_SIZE ? realloc(ptr, size) : NULL;
-}
-#elif defined(SD_DEBUG_ALLOC)
-#ifndef SD_MAX_MALLOC_SIZE
-#define SD_MAX_MALLOC_SIZE ((size_t)-1)
-#endif
-static void *__sd_alloc_check(void *p, size_t size, char *from_label)
-{
-	fprintf(stderr, "[libsrt %s @%s] alloc size: " FMT_ZU "\n",
-		(p ? "OK" : "ERROR"), from_label, size);
-	return p;
-}
-static void *__sd_malloc(size_t size)
-{
-	void *p = size <= SD_MAX_MALLOC_SIZE ? malloc(size) : NULL;
-	return __sd_alloc_check(p, size, "malloc");
-}
-static void *__sd_calloc(size_t nmemb, size_t size)
-{
-	void *p = size <= SD_MAX_MALLOC_SIZE ? calloc(nmemb, size) : NULL;
-	return __sd_alloc_check(p, nmemb * size, "calloc");
-}
-static void *__sd_realloc(void *ptr, size_t size)
-{
-	void *p = size <= SD_MAX_MALLOC_SIZE ? realloc(ptr, size) : NULL;
-	return __sd_alloc_check(p, size, "realloc");
-}
-#else
-#define __sd_malloc malloc
-#define __sd_calloc calloc
-#define __sd_realloc realloc
-#endif
-#define __sd_free free
 
 /*
  * Data structures and types
@@ -250,9 +201,9 @@ struct SDataFull /* 16-byte structure for 32-bit compiler, 32-byte for 64-bit */
 	struct SDataFlags f;
 
 	/*
-	* Header size: struct SData size plus additional header from type
-	* build on top of it.
-	*/
+	 * Header size: struct SData size plus additional header from type
+	 * build on top of it.
+	 */
 	uint8_t header_size;
 
 	/*
@@ -390,7 +341,7 @@ S_INLINE size_t sdx_size(const sd_t *d)
 	RETURN_IF(!d, 0);
 	if (sdx_full_st(d))
 		return sd_size(d);
-	return ((struct SDataSmall *)d)->size;
+	return ((const struct SDataSmall *)d)->size;
 }
 
 S_INLINE void sdx_set_size(sd_t *d, const size_t size)
@@ -409,7 +360,7 @@ S_INLINE size_t sdx_max_size(const sd_t *d)
 	RETURN_IF(!d, 0);
 	if (sdx_full_st(d))
 		return sd_max_size(d);
-	return ((struct SDataSmall *)d)->max_size;
+	return ((const struct SDataSmall *)d)->max_size;
 }
 
 S_INLINE char *sdx_get_buffer(sd_t *d)
@@ -487,7 +438,7 @@ void sd_set_alloc_size(sd_t *d, const size_t alloc_size);
 sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const sbool_t dyn_st);
 sd_t *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const uint8_t header_size, const size_t elem_size, const sbool_t dyn_st);
 void sd_free(sd_t **d);
-void sd_free_va(const size_t elems, sd_t **first, va_list ap);
+void sd_free_va(sd_t **first, va_list ap);
 void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size, const size_t max_size, const sbool_t ext_buf, const sbool_t dyn_st);
 size_t sd_grow(sd_t **d, const size_t extra_size);
 size_t sd_reserve(sd_t **d, size_t max_size);

@@ -35,7 +35,7 @@
 static size_t sdm_default_i_hash(const sdm_t *dm, const int64_t k)
 {
 	S_ASSERT(dm && dm->nmaps);
-	return dm ? (size_t)(k % dm->nmaps) : (size_t)0;
+	return dm ? (size_t)k % dm->nmaps : (size_t)0;
 }
 
 static size_t sdm_default_s_hash(const sdm_t *dm, const ss_t *k)
@@ -62,7 +62,7 @@ sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps,
 {
 	ASSERT_RETURN_IF(nsubmaps < 1, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
-	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);
+	sdm_t *dm = (sdm_t *)s_malloc(alloc_size);
 	ASSERT_RETURN_IF(!dm, NULL);
 	memset(dm, 0, alloc_size);
 	size_t i = 0, nelems = (initial_reserve / nsubmaps) + 1;
@@ -73,11 +73,11 @@ sdm_t *sdm_alloc(const enum eSM_Type t, const size_t nsubmaps,
 	if (i != nsubmaps) { /* Handle allocation error */
 		for (i = 0; i < nsubmaps; i++) {
 			if (dm->maps[i])
-				free(dm->maps[i]);
+				s_free(dm->maps[i]);
 			else
 				break;
 		}
-		free(dm);
+		s_free(dm);
 		dm = NULL;
 	} else {
 		/* Set routing defaults */
@@ -91,21 +91,20 @@ static void sdm_free_aux1(sdm_t **dm)
 {
 	if (dm && *dm) {
 		SDM_FUN_PPDMAP(dm, sm_free);
-		free(*dm);
+		s_free(*dm);
 		*dm = NULL;
 	}
 }
 
-void sdm_free_aux(const size_t nargs, sdm_t **dm, ...)
+void sdm_free_aux(sdm_t **dm, ...)
 {
 	va_list ap;
 	va_start(ap, dm);
-	if (dm)
-		sdm_free_aux1(dm);
-	if (nargs > 1) {
-		size_t i = 1;
-		for (; i < nargs; i++)
-			sdm_free_aux1(va_arg(ap, sdm_t **));
+	sdm_t **next = dm;
+	while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
+		if (next)
+			sdm_free_aux1(next);
+		next = (sdm_t **)va_arg(ap, sdm_t **);
 	}
 	va_end(ap);
 }
@@ -120,17 +119,14 @@ sdm_t *sdm_dup(const sdm_t *src)
 	ASSERT_RETURN_IF(!src, NULL);
 	size_t nsubmaps = sdm_size(src);
 	ASSERT_RETURN_IF(!nsubmaps, NULL);
-	const sm_t **maps = sdm_submaps_r(src);
-	ASSERT_RETURN_IF(!maps, NULL);
-	ASSERT_RETURN_IF(!maps[0], NULL);
-	enum eSM_Type t = (enum eSM_Type)maps[0]->d.sub_type;
+	enum eSM_Type t = (enum eSM_Type)src->maps[0]->d.sub_type;
 	ASSERT_RETURN_IF(t >= SM_TotalTypes, NULL);
 	size_t alloc_size = sizeof(sdm_t) + sizeof(sm_t *) * (nsubmaps - 1);
-	sdm_t *dm = (sdm_t *)__sd_malloc(alloc_size);
+	sdm_t *dm = (sdm_t *)s_malloc(alloc_size);
 	ASSERT_RETURN_IF(!dm, NULL);
 	size_t i = 0;
 	for (; i < nsubmaps; i++ ) {
-		if (!(dm->maps[i] = sm_dup(maps[i])))
+		if (!(dm->maps[i] = sm_dup(src->maps[i])))
 			break; /* Allocation error */
 	}
 	if (i != nsubmaps) { /* Handle allocation error */
@@ -140,7 +136,7 @@ sdm_t *sdm_dup(const sdm_t *src)
 			else
 				break;
 		}
-		free(dm);
+		s_free(dm);
 		dm = NULL;
 	}
 	return dm;

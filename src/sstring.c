@@ -23,7 +23,7 @@
  */
 
 #define S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
-#ifdef S_MINIMAL_BUILD
+#ifdef S_MINIMAL
 #undef S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
 #endif
 
@@ -47,17 +47,24 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 
 #define SS_CCAT_STACK 128
 
-#define SS_COPYCAT_AUX(s, cat, TYPE, nargs, s1, STRLEN, SS_CAT_XN)	\
+#define SS_COPYCAT_AUX(s, cat, TYPE, s1, STRLEN, SS_CAT_XN)		\
 	for (; s1;) {							\
 		va_list ap;						\
 		size_t *sizes,						\
 		        pstack[SS_CCAT_STACK],				\
 		       *pheap = NULL;					\
-		TYPE *s_next;						\
+		TYPE *next = s1;					\
+		size_t nargs = 0;					\
+		va_start(ap, s1);					\
+		while (!s_varg_tail_ptr_tag(next)) { /* last el. tag */	\
+			next = (TYPE *)va_arg(ap, TYPE *);		\
+			nargs++;					\
+		}							\
+		va_end(ap);						\
 		if (nargs <= SS_CCAT_STACK) {				\
 			sizes = pstack;					\
 		} else {						\
-			pheap = (size_t *)__sd_malloc(sizeof(size_t) *	\
+			pheap = (size_t *)s_malloc(sizeof(size_t) *	\
 						      nargs);		\
 			if (!pheap) {					\
 				ss_set_alloc_errors(*s);		\
@@ -70,9 +77,9 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 		va_start(ap, s1);					\
 		size_t i;						\
 		for (i = 1; i < nargs; i++) {				\
-			s_next = va_arg(ap, TYPE *);			\
-			if (s_next) {					\
-				sizes[i] = STRLEN(s_next);		\
+			next = va_arg(ap, TYPE *);			\
+			if (next) {					\
+				sizes[i] = STRLEN(next);		\
 				extra_size += sizes[i];			\
 			}						\
 		}							\
@@ -84,10 +91,10 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 			SS_CAT_XN(s, s1, sizes[0]);			\
 			va_start(ap, s1);				\
 			for (i = 1; i < nargs; i++) {			\
-				s_next = va_arg(ap, TYPE *);		\
-				if (!s_next)				\
+				next = va_arg(ap, TYPE *);		\
+				if (!next)				\
 					continue;			\
-				SS_CAT_XN(s, s_next, sizes[i]);		\
+				SS_CAT_XN(s, next, sizes[i]);		\
 			}						\
 			va_end(ap);					\
 		} else {						\
@@ -95,7 +102,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 				ss_set_alloc_errors(*s);		\
 		}							\
 		if (pheap)						\
-			free(pheap);					\
+			s_free(pheap);					\
 		break;							\
 	}
 
@@ -112,7 +119,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 * Constants
 */
 
-ss_t ss_void0 = EMPTY_SS;
+static ss_t ss_void0 = EMPTY_SS;
 ss_t *ss_void = (ss_t *)&ss_void0; /* empty string w/ alloc error set */
 
 /*
@@ -120,7 +127,6 @@ ss_t *ss_void = (ss_t *)&ss_void0; /* empty string w/ alloc error set */
  */
 
 static ss_t *ss_reset(ss_t *s);
-static void ss_reconfig(ss_t *s, size_t new_alloc_size, const size_t new_t_sz);
 
 /*
  * Global variables (used only for Turkish mode)
@@ -159,7 +165,7 @@ static void set_encoding_errors(ss_t *s, const sbool_t has_errors)
 S_INLINE size_t get_unicode_size(const ss_t *s)
 {
 	return !s ? 0 : sdx_full_st(&s->d) ? s->unicode_size :
-					     ((struct SDataSmall *)s)->aux;
+					    ((const struct SDataSmall *)s)->aux;
 }
 
 S_INLINE size_t get_str_off(const ss_t *s)
@@ -171,11 +177,6 @@ S_INLINE size_t get_str_off(const ss_t *s)
 S_INLINE void inc_size(ss_t *s, const size_t inc_size)
 {
 	ss_set_size(s, ss_size(s) + inc_size);
-}
-
-S_INLINE void set_alloc_size(ss_t *s, const size_t alloc_size)
-{
-	sd_set_alloc_size((sd_t *)s, alloc_size);
 }
 
 static void set_unicode_size(ss_t *s, const size_t unicode_size)
@@ -268,7 +269,7 @@ static ss_t *ss_cat_cn_raw(ss_t **s, const char *src, const size_t src_off,
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src && src_size > 0) {
 		const size_t off = *s ? ss_size(*s) : 0;
-		if (ss_grow(s, src_size)) {
+		if (ss_grow(s, src_size) && *s) {
 			memmove(ss_get_buffer(*s) + off, src + src_off,
 				src_size);
 			inc_size(*s, src_size);
@@ -330,7 +331,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const int64_t num)
 		     at = (cat && *s) ? ss_size(*s) : 0;
 	SS_OVERFLOW_CHECK(s, at, digits);
 	const size_t out_size = at + digits;
-        if (ss_reserve(s, out_size) >= out_size) {
+        if (ss_reserve(s, out_size) >= out_size && *s) {
 		memcpy(ss_get_buffer(*s) + at, btmp + off, digits);
 		ss_set_size(*s, out_size);
 		inc_unicode_size(*s, digits);
@@ -402,8 +403,11 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 	      u8[SSU8_MAX_SIZE];
 	for (; i < ss;) {
 #ifdef S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
-		unsigned *pou = (unsigned *)po;
-		const size_t i2 = sc_parallel_toX(ps, i, ss, pou, towX);
+		/*
+		 * Alignment is handled into sc_parallel_toX(),
+		 * so the cast to 32-bit container is not a problem.
+		 */
+		const size_t i2 = sc_parallel_toX(ps, i, ss, po, towX);
 		if (i != i2) {
 			po += (i2 - i);
 			i = i2;
@@ -502,7 +506,7 @@ static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 		set_unicode_size_cached(*s, S_FALSE);
 	} else { /* copy or cat */
 		const size_t out_size = at + off + copy_size;
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *po = ss_get_buffer(*s);
 			memcpy(po + at, ss_get_buffer_r(src), off);
 			memcpy(po + at + off,
@@ -539,7 +543,7 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 	} else { /* copy/cat */
 		const size_t at = (cat && *s) ? ss_size(*s) : 0;
 		out_size += at;
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *po = ss_get_buffer(*s);
 			memcpy(po + at, ss_get_buffer_r(src), head_size);
 			memcpy(po + at + head_size,
@@ -575,11 +579,12 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 	const size_t at = (cat && *s) ? ss_size(*s) : 0;
 	const char *p0 = ss_get_buffer_r(src),
 		   *p2 = ss_get_buffer_r(s2);
+	RETURN_IF(!p0, ss_check(s)); /* BEHAVIOR: empty s1 */
 	const size_t l1 = ss_size(s1), l2 = ss_size(s2);
 	size_t i = off, l = ss_size(src);
 	ss_t *out = NULL;
 	ssize_t size_delta = l2 > l1 ? (ssize_t)(l2 - l1) :
-				       -(ssize_t)(l1 - l2);
+				      -(ssize_t)(l1 - l2);
 	sbool_t aliasing = S_FALSE;
 	size_t out_size = at + l;
 	char *o, *o0;
@@ -615,6 +620,7 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		}
 		o0 = o = ss_get_buffer(*s);
 	}
+	RETURN_IF(!o, ss_check(s));
 	typedef void (*memcpy_t)(void *, const void *, size_t);
 	memcpy_t f_cpy;
 	if (aliasing) {
@@ -638,7 +644,8 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		f_cpy(o, p0 + i, i_next - i);
 		o += (i_next - i);
 		/* replace: */
-		f_cpy(o, p2, l2);
+		if (p2)
+			f_cpy(o, p2, l2);
 		o += l2;
 		i = i_next + l1;
 		/* prepare next search: */
@@ -664,7 +671,7 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 		     out_size = at + n;  /* BEHAVIOR: n overflow TODO */
 	const sbool_t aliasing = *s == src;
 	if (src_size < n) { /* fill */
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *o = ss_get_buffer(*s);
 			if (!aliasing) {
 				const char *p = ss_get_buffer_r(src);
@@ -673,16 +680,19 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 			memset(o + at + src_size, fill_byte,
 				n - src_size);
 			ss_set_size(*s, out_size);
-		}
+			set_unicode_size_cached(*s, S_FALSE);
+			/* BEHAVIOR: size cache lost */
+		} /* else: BEHAVIOR: not enough memory */
 	} else { /* else: cut (implicit) */
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			if (!aliasing)
 				memcpy(ss_get_buffer(*s) + at,
 				       ss_get_buffer_r(src), n);
 			ss_set_size(*s, out_size);
-		}
+			set_unicode_size_cached(*s, S_FALSE);
+			/* BEHAVIOR: size cache lost */
+		} /* else: BEHAVIOR: not enough memory */
 	}
-	set_unicode_size_cached(*s, S_FALSE); /* BEHAVIOR: size cache lost */
 	return *s;
 }
 
@@ -726,13 +736,13 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 		const size_t out_size = at + head_size;
 		S_ASSERT(u_chars == actual_unicode_count);
 		if (!aliasing) { /* copy or cat */
-			if (ss_reserve(s, out_size) >= out_size) {
+			if (ss_reserve(s, out_size) >= out_size && *s) {
 				if (!cat && !aliasing) /* copy */
 					ss_clear(s);
 				memcpy(ss_get_buffer(*s) + at, ps, head_size);
 				inc_unicode_size(*s, actual_unicode_count);
 				inc_size(*s, head_size);
-			}
+			} /* else: BEHAVIOR */
 		} else { /* cut */
 			ss_set_size(*s, head_size);
 			set_unicode_size(*s, actual_unicode_count);
@@ -765,7 +775,7 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 		}
 		const size_t out_size = at + ss - i,
 			     src_usize = get_unicode_size(src);
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *pt = ss_get_buffer(*s);
 			if (!aliasing) /* copy or cat: shift data */
 				memcpy(pt + at, ps + i, ss - i);
@@ -774,7 +784,7 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 					memmove(pt, ps + i, ss - i);
 			ss_set_size(*s, at + ss - i);
 			set_unicode_size(*s, cat_usize + src_usize - i);
-		}
+		} /* else: BEHAVIOR */
 	} else {
 		if (cat)
 			ss_check(s);
@@ -803,13 +813,13 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 			     out_size = at + copy_size,
 			     cat_usize = cat ? get_unicode_size(*s) : 0,
 			     src_usize = *s ? get_unicode_size(*s) : 0;
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *pt = ss_get_buffer(*s);
 			if (!aliasing)
 				 memcpy(pt + at, ps, copy_size);
 			ss_set_size(*s, out_size);
 			set_unicode_size(*s, cat_usize + src_usize - nspaces);
-		}
+		} /* else: BEHAVIOR */
 	} else {
 		if (cat)
 			ss_check(s);
@@ -846,7 +856,8 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 					off += l0;
 					ss_set_size(*s, off);
 					set_unicode_size_cached(*s, S_FALSE);
-					l = l < 0 ? l0 : l + l0;
+					l = l < 0 ? (ssize_t)l0 :
+						    l + (ssize_t)l0;
 				} else {
 					break;
 				}
@@ -1215,10 +1226,10 @@ ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 	return ss_check(s);
 }
 
-ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
+ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	SS_COPYCAT_AUX(s, S_FALSE, const char, nargs, s1, strlen, ss_cat_cn);
+	SS_COPYCAT_AUX(s, S_FALSE, const char, s1, strlen, ss_cat_cn);
 	return ss_check(s);
 }
 
@@ -1230,10 +1241,10 @@ ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 	return ss_cat_wn(s, src, src_size);
 }
 
-ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
+ss_t *ss_cpy_w_aux(ss_t **s, const wchar_t *s1, ...)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	SS_COPYCAT_AUX(s, S_FALSE, const wchar_t, nargs, s1, wcslen, ss_cat_wn);
+	SS_COPYCAT_AUX(s, S_FALSE, const wchar_t, s1, wcslen, ss_cat_wn);
 	return ss_check(s);
 }
 
@@ -1342,33 +1353,34 @@ ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes)
  * Concatenate/append from given source/s: a = ss_cat*
  */
 
-ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...)
+ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (s1 && ss_size(s1) > 0) {
 		va_list ap;
-		size_t extra_size = ss_size(s1);
-		const ss_t *s_next, *s0 = *s;
-		const size_t ss0 = *s ? ss_size(s0) : 0,
-			     uss0 = s0 ? get_unicode_size(s0) : 0;
+		size_t extra_size = 0, nargs = 0;
+		const ss_t *next = s1, *s0 = *s;
+
 		va_start(ap, s1);
-		size_t i = 1;
-		for (; i < nargs; i++) {
-			s_next = va_arg(ap, const ss_t *);
-			if (s_next)
-				extra_size += ss_size(s_next);
+		while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
+			if (next)
+				extra_size += ss_size(next);
+			next = va_arg(ap, const ss_t *);
+			nargs++;
 		}
 		va_end(ap);
+		const size_t ss0 = *s ? ss_size(s0) : 0,
+			     uss0 = s0 ? get_unicode_size(s0) : 0;
 		if (ss_grow(s, extra_size)) {
 			ss_cat_aliasing(s, s0, ss0, uss0, s1);
 			if (nargs == 1)
 				return *s;
 			va_start(ap, s1);
-			for (i = 1; i < nargs; i++) {
-				s_next = va_arg(ap, const ss_t *);
-				if (s_next)
-					ss_cat_aliasing(s, s0, ss0, uss0,
-							s_next);
+			size_t i = 1;
+			for (; i < nargs; i++) {
+				next = va_arg(ap, const ss_t *);
+				if (next)
+					ss_cat_aliasing(s, s0, ss0, uss0, next);
 			}
 			va_end(ap);
 		}
@@ -1457,17 +1469,17 @@ ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 	return ss_cat_cn_raw(s, src, 0, src_size, 0);
 }
 
-ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...)
+ss_t *ss_cat_c_aux(ss_t **s, const char *s1, ...)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	SS_COPYCAT_AUX(s, S_TRUE, const char, nargs, s1, strlen, ss_cat_cn);
+	SS_COPYCAT_AUX(s, S_TRUE, const char, s1, strlen, ss_cat_cn);
 	return ss_check(s);
 }
 
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	if (src && ss_grow(s, src_size * SSU8_MAX_SIZE)) {
+	if (src && ss_grow(s, src_size * SSU8_MAX_SIZE) && *s) {
 		char utf8[SSU8_MAX_SIZE];
 		size_t i = 0,
 		       char_count = 0;
@@ -1483,10 +1495,10 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 	return ss_check(s);
 }
 
-ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...)
+ss_t *ss_cat_w_aux(ss_t **s, const wchar_t *s1, ...)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	SS_COPYCAT_AUX(s, S_TRUE, const wchar_t, nargs, s1, wcslen, ss_cat_wn);
+	SS_COPYCAT_AUX(s, S_TRUE, const wchar_t, s1, wcslen, ss_cat_wn);
 	return ss_check(s);
 }
 
@@ -1786,7 +1798,7 @@ size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
 }
 
 size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off,
-		  const char incl_mask, const unsigned char excl_mask)
+		  const unsigned char incl_mask, const unsigned char excl_mask)
 {
 	SS_FINDRX_AUX((*p & incl_mask) == incl_mask &&
 		      (*p & excl_mask & ~incl_mask) == 0);
@@ -2006,11 +2018,11 @@ ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes)
 ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset,
 		 const size_t bytes)
 {
+	RETURN_IF(!handle, -1);
 	size_t ss = s ? ss_size(s) : 0,
-	       wr_size = handle >= 0 && offset >= ss ? 0 :
-						S_MIN(ss - offset, bytes);
+	       wr_size = handle && offset >= ss ? 0 : S_MIN(ss - offset, bytes);
 	size_t ws = fwrite(ss_get_buffer_r(s), 1, wr_size, handle);
-	return ws > 0 && !ferror(handle) ? ws : -1;
+	return ws > 0 && !ferror(handle) ? (ssize_t)ws : -1;
 }
 
 /*

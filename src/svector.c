@@ -88,16 +88,16 @@ static T_SVLDX svldx_f[SV_LAST_INT + 1] = { svldi8, (T_SVLDX)svldu8,
  * Internal functions
  */
 
-#define BUILD_CMP_I(FN, T)				\
-	static int FN(const void *a, const void *b) {	\
-		int64_t r = *((T *)a) - *((T *)b);	\
-		return r < 0 ? -1 : r > 0 ? 1 : 0;	\
+#define BUILD_CMP_I(FN, T)					\
+	static int FN(const void *a, const void *b) {		\
+		int64_t r = *((const T *)a) - *((const T *)b);	\
+		return r < 0 ? -1 : r > 0 ? 1 : 0;		\
 	}
 
-#define BUILD_CMP_U(FN, T)				\
-	static int FN(const void *a, const void *b) {	\
-		T a2 = *((T *)a), b2 = *((T *)b);	\
-		return a2 < b2 ? -1 : a2 == b2 ? 0 : 1;	\
+#define BUILD_CMP_U(FN, T)					\
+	static int FN(const void *a, const void *b) {		\
+		T a2 = *((const T *)a), b2 = *((const T *)b);	\
+		return a2 < b2 ? -1 : a2 == b2 ? 0 : 1;		\
 	}
 
 BUILD_CMP_I(__sv_cmp_i8, signed char)
@@ -129,7 +129,7 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 {
 	const size_t alloc_size = sd_alloc_size(sizeof(sv_t), elem_size,
 						init_size, S_FALSE);
-	return sv_alloc_raw(t, S_FALSE, __sd_malloc(alloc_size),
+	return sv_alloc_raw(t, S_FALSE, s_malloc(alloc_size),
 			    elem_size, init_size, f);
 }
 
@@ -226,14 +226,6 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		return cat ? sv_check(v) : sv_clear(v);
 	}
 	return *v;
-}
-
-static size_t aux_grow(sv_t **v, const sv_t *src, const size_t extra_elems)
-{
-	ASSERT_RETURN_IF(!v, 0);
-	ASSERT_RETURN_IF(!*v || *v == sv_void, aux_reserve(v, src,
-							   extra_elems));
-	return sv_grow(v, extra_elems);
 }
 
 static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
@@ -377,28 +369,23 @@ sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n)
  * Append
  */
 
-sv_t *sv_cat_aux(sv_t **v, const size_t nargs, const sv_t *v1, ...)
+sv_t *sv_cat_aux(sv_t **v, const sv_t *v1, ...)
 {
 	ASSERT_RETURN_IF(!v, sv_void);
 	const sv_t *v0 = *v;
 	const size_t v0s = v0 ? sv_size(v0) : 0;
-	if (aux_grow(v, v1, nargs)) {
-		const sv_t *v1a = v1 == v0 ? *v : v1;
-		const size_t v1as = v1 == v0 ? v0s : sv_len(v1);
-		if (nargs == 1)
-			return aux_cat(v, S_TRUE, v1a, v1as);
-		size_t i = 1;
-		va_list ap;
-		va_start(ap, v1);
-		aux_cat(v, S_TRUE, v1a, v1as);
-		for (; i < nargs; i++) {
-			const sv_t *vnext = va_arg(ap, const sv_t *);
-			const sv_t *vnexta = vnext == v0 ? *v : vnext;
-			const size_t vns = vnext == v0 ? v0s : sv_len(vnext);
-			aux_cat(v, S_TRUE, vnexta, vns);
-		}
-		va_end(ap);
-	}
+        va_list ap;
+        va_start(ap, v1);
+        const sv_t *next = v1;
+        while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
+                if (next) { /* cat next with aliasing check */
+			const sv_t *nexta = next == v0 ? *v : next;
+			const size_t nexta_s = next == v0 ? v0s : sv_len(next);
+			aux_cat(v, S_TRUE, nexta, nexta_s);
+                }
+                next = (sv_t *)va_arg(ap, sv_t *);
+        }
+        va_end(ap);
 	return sv_check(v);
 }
 
@@ -618,23 +605,19 @@ sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 	return S_TRUE;
 }
 
-size_t sv_push_aux(sv_t **v, const size_t nargs, const void *c1, ...)
+size_t sv_push_aux(sv_t **v, const void *c1, ...)
 {
-	RETURN_IF(!v || !*v || !nargs, S_FALSE);
+	RETURN_IF(!v || !*v, S_FALSE);
 	size_t op_cnt = 0;
-	va_list ap;
-	if (sv_grow(v, nargs) == 0)
-		return op_cnt;
-	op_cnt += (sv_push_raw(v, c1, 1) ? 1 : 0);
-	if (nargs == 1) /* just one elem: avoid loop */	
-		return op_cnt;
-	va_start(ap, c1);
-	size_t i = 1;
-	for (; i < nargs; i++) {
-		const void *next = (const void *)va_arg(ap, const void *);
-		op_cnt += (sv_push_raw(v, next, 1) ? 1 : 0);
-	}
-	va_end(ap);
+        va_list ap;
+        va_start(ap, c1);
+        const void *next = c1;
+        while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
+                if (next && sv_push_raw(v, next, 1))
+			op_cnt++;
+                next = (void *)va_arg(ap, void *);
+        }
+        va_end(ap);
 	return op_cnt;
 }
 

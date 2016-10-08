@@ -94,7 +94,7 @@ static const unsigned char h2n[64] = {
 
 #define SLZW_ENC_RESET(node_lutref, lut_stack_in_use,	\
 		       node_stack_in_use, next_code, curr_code_len) {	\
-		memset(node_lutref, 0, 256 * sizeof(node_lutref[0]));	\
+		memset(node_lutref, 0, 257 * sizeof(node_lutref[0]));	\
 		lut_stack_in_use = 1;					\
 		node_stack_in_use = 256;				\
 		curr_code_len = SLZW_ROOT_NODE_BITS + 1;		\
@@ -145,7 +145,7 @@ static size_t senc_hex_aux(const unsigned char *s, const size_t ss,
 	return out_size;
 }
 
-static void slzw_setseq256s8(unsigned *p)
+static void slzw_setseq256s8(uint32_t *p)
 {
 	unsigned j, acc = S_HTON_U32(0x00010203);
 	for (j = 0; j < 256 / 4; j++) {
@@ -222,9 +222,10 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 		       sbool_t lzw_mode)
 {
 	RETURN_IF(i + min_run >= ss, 0);
-	const uint32_t *p0 = (const uint32_t *)(s + i),
-			*p3 = (const uint32_t *)(s + i + 3);
-	uint32_t p00 = S_LD_U32(p0), p01 = S_LD_U32(p0 + 1),
+	const size_t es = sizeof(uint32_t);
+	const uint8_t *p0 = s + i,
+		      *p3 = s + (i + 3);
+	uint32_t p00 = S_LD_U32(p0), p01 = S_LD_U32(p0 + es),
 		  p30 = S_LD_U32(p3 + 0);
 	size_t run_length = 0, eq4 = p00 == p01,
 	       eq3 = !eq4 && p00 == p30;
@@ -246,9 +247,9 @@ static size_t srle_run(const unsigned char *s, size_t i, size_t ss,
 					break;
 		} else {
 			ss2 = S_MIN(ss, max_run) - sizeof(uint32_t);
-			uint32_t p31 = S_LD_U32(p3 + 1),
-				  p32 = S_LD_U32(p3 + 2),
-				  p02 = S_LD_U32(p0 + 2);
+			uint32_t p31 = S_LD_U32(p3 + es),
+				  p32 = S_LD_U32(p3 + 2 * es),
+				  p02 = S_LD_U32(p0 + 2 * es);
 			if (p01 != p31 || p02 != p32)
 				break;
 			j = i + 3 * 4;
@@ -352,8 +353,8 @@ size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 	ASSERT_RETURN_IF(!ssd2, 0);
 	size_t i = 0, j = 0;
 	#define SDEC_HEX_L(n, m)	\
-		o[j + n] = ((hex2nibble(s[i + m]) << 4) | \
-			    hex2nibble(s[i + m + 1]));
+		o[j + n] = (unsigned char)(hex2nibble(s[i + m]) << 4) | \
+			   hex2nibble(s[i + m + 1]);
 	for (; i < ssd4; i += 4, j += 2) {
 		SDEC_HEX_L(0, 0);
 		SDEC_HEX_L(1, 2);
@@ -579,7 +580,7 @@ size_t sdec_esc_url(const unsigned char *s, const size_t ss, unsigned char *o)
 	size_t i = 0, j = 0;
 	for (; i < ss; j++) {
 		if (s[i] == '%' && i + 3 <= ss) {
-			o[j] = (hex2nibble(s[i + 1]) << 4) |
+			o[j] = (unsigned char)(hex2nibble(s[i + 1]) << 4) |
 				hex2nibble(s[i + 2]);
 			i += 3;
 			continue;
@@ -821,8 +822,9 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	size_t oi = 0, normal_count = 0, esc_count = 0, last_code,
 	       curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
 	slzw_ndx_t parents[SLZW_CODE_LIMIT];
-	unsigned char xbyte[SLZW_CODE_LIMIT], pattern[SLZW_CODE_LIMIT],
-		      lastwc = 0;
+	unsigned char pattern[SLZW_CODE_LIMIT], lastwc = 0;
+	union {	uint8_t g8[SLZW_CODE_LIMIT + 1];
+		uint32_t g32[(SLZW_CODE_LIMIT + 7) / 4]; } xbyte;
 	/*
 	 * Init read buffer
 	 */
@@ -830,7 +832,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	/*
 	 * Initialize root node
 	 */
-	slzw_setseq256s8((unsigned *)xbyte);
+	slzw_setseq256s8(xbyte.g32);
 	SLZW_DEC_RESET(curr_code_len, last_code, next_inc_code, parents);
 	/*
 	 * Code expand loop
@@ -841,7 +843,7 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					 &esc_count);
 		if (new_code < SLZW_OP_START || new_code > SLZW_OP_END) {
 			if (last_code == SLZW_CODE_LIMIT) {
-				o[oi++] = lastwc = xbyte[new_code];
+				o[oi++] = lastwc = xbyte.g8[new_code];
 				last_code = new_code;
 				continue;
 			}
@@ -853,11 +855,11 @@ size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 				code = new_code;
 			}
 			for (; code >= SLZW_FIRST;) {
-				pattern[pattern_off--] = xbyte[code];
+				pattern[pattern_off--] = xbyte.g8[code];
 				code = (size_t)parents[code];
 			}
-			pattern[pattern_off--] = lastwc = xbyte[next_inc_code] =
-								xbyte[code];
+			pattern[pattern_off--] = lastwc = xbyte.g8[next_inc_code] =
+								xbyte.g8[code];
 			parents[next_inc_code] = (slzw_ndx_t)last_code;
 			if (next_inc_code < SLZW_MAX_CODE)
 				next_inc_code++;

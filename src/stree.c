@@ -31,12 +31,6 @@
 	}
 
 /*
- * Static functions forward declaration
- */
-
-static st_t *st_check(st_t **v);
-
-/*
  * Constants
  */
 
@@ -88,11 +82,6 @@ static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 static stndx_t get_lr(const stn_t *n, const enum STNDir d)
 {
 	return d == ST_Left ? n->x.l : n->r;
-}
-
-static st_t *st_check(st_t **t)
-{
-	return t ? *t : NULL;
 }
 
 static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
@@ -256,7 +245,7 @@ st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
 st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
 {
 	size_t alloc_size = sd_alloc_size(sizeof(st_t), elem_size, init_size, S_FALSE);
-	return st_alloc_raw(cmp_f, S_FALSE, __sd_malloc(alloc_size), elem_size,
+	return st_alloc_raw(cmp_f, S_FALSE, s_malloc(alloc_size), elem_size,
 			    init_size);
 }
 
@@ -359,7 +348,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		const int64_t cmp = t->cmp_f(w[c].n, n);
 		if (!cmp) {
 			if (rw_f)
-				rw_f(t, w[c].n, n);
+				rw_f(w[c].n, n);
 			else
 				update_node_data(t, w[c].n, n);
 			break;
@@ -590,7 +579,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	const size_t ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
 	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
-	ssize_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
+	size_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
 	/*
 	 * DF path length takes twice the logarithm of the number of nodes,
 	 * so it will fit always in the stack (e.g. 2^63 nodes would require
@@ -616,7 +605,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		 * would mean that there is some bug in the insert/delete
 		 * rebalanzing code.
 		 */
-		S_ASSERT(tp.max_level < rbt_max_depth);
+		S_ASSERT(tp.max_level < (ssize_t)rbt_max_depth);
 		/* State:
 		 * 0: start scan
 		 * 1: scannning left subtree

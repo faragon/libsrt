@@ -56,12 +56,12 @@ extern ss_t *ss_void;
  */
 
 #ifdef S_USE_VA_ARGS
-#define ss_free(...) ss_free_aux(S_NARGS_SPW(__VA_ARGS__), __VA_ARGS__)
-#define ss_cpy_c(s, ...) ss_cpy_c_aux(s, S_NARGS_CR(__VA_ARGS__), __VA_ARGS__)
-#define ss_cpy_w(s, ...) ss_cpy_w_aux(s, S_NARGS_WR(__VA_ARGS__), __VA_ARGS__)
-#define ss_cat(s, ...) ss_cat_aux(s, S_NARGS_SR(__VA_ARGS__), __VA_ARGS__)
-#define ss_cat_c(s, ...) ss_cat_c_aux(s, S_NARGS_CR(__VA_ARGS__), __VA_ARGS__)
-#define ss_cat_w(s, ...) ss_cat_w_aux(s, S_NARGS_WR(__VA_ARGS__), __VA_ARGS__)
+#define ss_free(...) ss_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define ss_cpy_c(s, ...) ss_cpy_c_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define ss_cpy_w(s, ...) ss_cpy_w_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat(s, ...) ss_cat_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat_c(s, ...) ss_cat_c_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat_w(s, ...) ss_cat_w_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #else
 #define ss_free(...)
 #define ss_cpy_c(s, ...) return NULL;
@@ -93,7 +93,7 @@ size_t ss_reserve(ss_t **s, const size_t max_elems)
 #API: |Free unused space|string|same string (optional usage)|O(1)|1;2|
 ss_t *ss_shrink(ss_t **s)
 
-#API: |Get string size|string|string bytes used in UTF8 format|O(1)|0;1|
+#API: |Get string size|string|string bytes used in UTF8 format|O(1)|1;2|
 size_t ss_size(const ss_t *s)
 
 #API: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|0;1|
@@ -102,22 +102,22 @@ void ss_set_size(ss_t *s, const size_t s)
 #API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|1;2|
 size_t ss_len(const ss_t *s)
 
-#API: |Get allocated space|vector|current allocated space (in bytes)|O(1)|0;1|
+#API: |Get allocated space|vector|current allocated space (in bytes)|O(1)|1;2|
 size_t ss_capacity(const ss_t *s);
 
-#API: |Get preallocated space left|string|allocated space left (in bytes)|O(1)|0;1|
+#API: |Get preallocated space left|string|allocated space left (in bytes)|O(1)|1;2|
 size_t ss_capacity_left(const ss_t *s);
 
-#API: |Tells if a string is empty (zero elements)|string|S_TRUE: empty string; S_FALSE: not empty|O(1)|0;1|
+#API: |Tells if a string is empty (zero elements)|string|S_TRUE: empty string; S_FALSE: not empty|O(1)|1;2|
 sbool_t ss_empty(const ss_t *s)
 
-#API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|0;1|
+#API: |Get string buffer access|string|pointer to the insternal string buffer (UTF-8 or raw data)|O(1)|1;2|
 char *ss_get_buffer(ss_t *s);
 
-#API: |Get string buffer access (read-only)|string|pointer to the internal string buffer (UTF-8 or raw data)|O(1)|0;1| 
+#API: |Get string buffer access (read-only)|string|pointer to the internal string buffer (UTF-8 or raw data)|O(1)|1;2|
 const char *ss_get_buffer_r(const ss_t *s);
 
-#API: |Get string buffer size|string|Number of bytes in use for storing all string characters|O(1)|0;1|
+#API: |Get string buffer size|string|Number of bytes in use for storing all string characters|O(1)|1;2|
 size_t ss_get_buffer_size(const ss_t *v);
 */
 
@@ -143,7 +143,7 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
  * Accessors
  */
 
-/* #API: |Random access to byte|string; offset (bytes)|0..255: byte retrieved ok; < 0: out of range|O(1)|0;12| */
+/* #API: |Random access to byte|string; offset (bytes)|0..255: byte retrieved ok; < 0: out of range|O(1)|1;2| */
 int ss_at(const ss_t *s, size_t off);
 
 /* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed|1;2| */
@@ -306,7 +306,7 @@ ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size);
 #API: |Overwrite string with multiple C string copy (strict aliasing is assumed)|output string; input strings (one or more C strings)|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cpy_c(ss_t **s, ...)
 */
-ss_t *ss_cpy_c_aux(ss_t **s, const size_t nargs, const char *s1, ...);
+ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...);
 
 /* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|0;1| */
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size);
@@ -393,7 +393,7 @@ ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src);
 #API: |Overwrite string with multiple C "wide char" Unicode string copy (strict aliasing is assumed)|output string; input strings (one or more C "wide char" strings)|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cpy_w(ss_t **s, ...)
 */
-ss_t *ss_cpy_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...);
+ss_t *ss_cpy_w_aux(ss_t **s, const wchar_t *s1, ...);
 
 /* #API: |Overwrite string with printf operation|output string; printf output size (bytes); printf format; printf parameters|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...);
@@ -415,7 +415,7 @@ ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes);
 #API: |Concatenate to string one or more strings|output string; input string; optional input strings|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cat(ss_t **s, const ss_t *s1, ...)
 */
-ss_t *ss_cat_aux(ss_t **s, const size_t nargs, const ss_t *s1, ...);
+ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...);
 
 /* #API: |Concatenate substring token|output string; input string; substring offsets;select nth substring|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offsets, const size_t nth);
@@ -433,13 +433,13 @@ ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size);
 #API: |Concatenate multiple C strings (byte/UTF-8 mode)|output string; input string; optional input strings|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cat_c(ss_t **s, const char *s1, ...)
 */
-ss_t *ss_cat_c_aux(ss_t **s, const size_t nargs, const char *s1, ...);
+ss_t *ss_cat_c_aux(ss_t **s, const char *s1, ...);
 
 /*
 #API: |Concatenate multiple "wide char" C strings (Unicode character mode)|output string; input "wide char" C string; optional input "wide char" C strings|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cat_w(ss_t **s, const char *s1, ...)
 */
-ss_t *ss_cat_w_aux(ss_t **s, const size_t nargs, const wchar_t *s1, ...);
+ss_t *ss_cat_w_aux(ss_t **s, const wchar_t *s1, ...);
 
 /* #API: |Concatenate "wide char" C substring (Unicode character mode)|output string; input "wide char" C string; input string size (characters)|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size);
@@ -589,7 +589,7 @@ ss_t *ss_dec_esc_dquote(ss_t **s, const ss_t *src);
 /* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|0;1| */
 ss_t *ss_dec_esc_squote(ss_t **s, const ss_t *src);
 
-/* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|0;1| */
+/* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|1;2| */
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode);
 
 /* #API: |Clear string|output string|output string reference (optional usage)|O(n)|1;2| */
@@ -661,7 +661,7 @@ size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off);
 
 /* #API: |Find byte(s) via mask into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
-size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const char incl_mask, const unsigned char excl_mask);
+size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const unsigned char incl_mask, const unsigned char excl_mask);
 
 /* #API: |Find character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
 size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c);

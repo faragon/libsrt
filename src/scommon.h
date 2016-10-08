@@ -26,7 +26,12 @@ extern "C" {
 #else
 	#include <sys/types.h>
 #endif
-#if !defined(__FreeBSD__) && !defined(_MSC_VER)
+
+#ifdef S_MINIMAL /* microcontroller-related */
+	#define S_NOT_UTF8_SPRINTF
+#endif
+
+#if !defined(BSD4_3) && !defined(BSD4_4) && !defined(__FreeBSD__) && !defined(_MSC_VER)
 	#include <alloca.h>
 #endif
 #include <stddef.h>
@@ -52,8 +57,8 @@ extern "C" {
  * Context
  */
 
-#if __STDC_VERSION__ >= 199901L || __cplusplus >= 19971L || \
-    defined(_MSC_VER) && _MSC_VER >= 1800
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L || \
+    __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800
 	#define S_C99_SUPPORT
 #endif
 
@@ -74,7 +79,7 @@ extern "C" {
 	#define S_INLINE static
 #endif
 
-#if __STDC_VERSION__ < 199901L && !defined(_MSC_VER) && !defined(__cplusplus)
+#if !defined(S_C99_SUPPORT) && !defined(_MSC_VER) && !defined(__cplusplus)
 	int snprintf(char *str, size_t size, const char *format, ...);
 	int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
@@ -105,38 +110,27 @@ extern "C" {
 #define S_ALIGNMASK (~S_UALIGNMASK)
 
 /*
- * Variable argument helpers
+ * Macros
  */
 
-#ifdef S_USE_VA_ARGS /* purposes: 1) count parameters, 2) parameter syntax check */
-	/* void *, char *, wchar_t * */
-	#define S_NARGS_W(...) (sizeof((void * []){__VA_ARGS__})/sizeof(void *))
-	#define S_NARGS_R(...) (sizeof((const void * []){__VA_ARGS__})/sizeof(const void *))
-	#define S_NARGS_CW(...) (sizeof((char * []){__VA_ARGS__})/sizeof(char *))
-	#define S_NARGS_CR(...) (sizeof((const char * []){__VA_ARGS__})/sizeof(const char *))
-	#define S_NARGS_WW(...) (sizeof((wchar_t * []){__VA_ARGS__})/sizeof(wchar_t *))
-	#define S_NARGS_WR(...) (sizeof((const wchar_t * []){__VA_ARGS__})/sizeof(const wchar_t *))
-	/* ss_t * */
-	#define S_NARGS_SW(...) (sizeof((ss_t * []){__VA_ARGS__})/sizeof(ss_t *))
-	#define S_NARGS_SR(...) (sizeof((const ss_t * []){__VA_ARGS__})/sizeof(const ss_t *))
-	#define S_NARGS_SPW(...) (sizeof((ss_t ** []){__VA_ARGS__})/sizeof(ss_t **))
-	#define S_NARGS_SPR(...) (sizeof((const ss_t ** []){__VA_ARGS__})/sizeof(const ss_t **))
-	/* sv_t * */
-	#define S_NARGS_SVW(...) (sizeof((sv_t * []){__VA_ARGS__})/sizeof(sv_t *))
-	#define S_NARGS_SVR(...) (sizeof((const sv_t * []){__VA_ARGS__})/sizeof(const sv_t *))
-	#define S_NARGS_SVPW(...) (sizeof((sv_t ** []){__VA_ARGS__})/sizeof(sv_t **))
-	#define S_NARGS_SVPR(...) (sizeof((const sv_t ** []){__VA_ARGS__})/sizeof(const sv_t **))
-	/* st_t * */
-	#define S_NARGS_STW(...) (sizeof((st_t * []){__VA_ARGS__})/sizeof(st_t *))
-	#define S_NARGS_STR(...) (sizeof((const st_t * []){__VA_ARGS__})/sizeof(const st_t *))
-	#define S_NARGS_STPW(...) (sizeof((st_t ** []){__VA_ARGS__})/sizeof(st_t **))
-	#define S_NARGS_STPR(...) (sizeof((const st_t ** []){__VA_ARGS__})/sizeof(const st_t **))
-	/* sdm_t */
-	#define S_NARGS_SDMW(...) (sizeof((sdm_t * []){__VA_ARGS__})/sizeof(sdm_t *))
-	#define S_NARGS_SDMR(...) (sizeof((const sdm_t * []){__VA_ARGS__})/sizeof(const sdm_t *))
-	#define S_NARGS_SDMPW(...) (sizeof((sdm_t ** []){__VA_ARGS__})/sizeof(sdm_t **))
-	#define S_NARGS_SDMPR(...) (sizeof((const sdm_t ** []){__VA_ARGS__})/sizeof(const sdm_t **))
+#define S_MIN(a, b) ((a) < (b) ? (a) : (b))
+#define S_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define S_MIN3(a, b, c) S_MIN(S_MIN(a, b), (c))
+#define S_ROL32(a, c) ((a) << (c) | (a) >> (32 - (c)))
+#define S_ROR32(a, c) ((a) >> (c) | (a) << (32 - (c)))
+#define S_NBIT(n) (1 << n)
+#define S_NBITMASK(n) (S_NBIT(n) - 1)
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
+#define S_BSWAP32(a) __builtin_bswap32(a)
+#else
+#define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
 #endif
+#define RETURN_IF(a, v) if (a) return (v); else {}
+#define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
+
+/*
+ * Types
+ */
 
 #ifdef _MSC_VER
 	#if S_BPWORD == 8
@@ -163,29 +157,6 @@ extern "C" {
 	#define FMTSZ_T ssize_t
 	#define FMTSSZ_T size_t
 #endif
-
-/*
- * Macros
- */
-
-#define S_MIN(a, b) ((a) < (b) ? (a) : (b))
-#define S_MAX(a, b) ((a) > (b) ? (a) : (b))
-#define S_MIN3(a, b, c) S_MIN(S_MIN(a, b), (c))
-#define S_ROL32(a, c) ((a) << (c) | (a) >> (32 - (c)))
-#define S_ROR32(a, c) ((a) >> (c) | (a) << (32 - (c)))
-#define S_NBIT(n) (1 << n)
-#define S_NBITMASK(n) (S_NBIT(n) - 1)
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
-#define S_BSWAP32(a) __builtin_bswap32(a)
-#else
-#define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
-#endif
-#define RETURN_IF(a, v) if (a) return (v); else ;
-#define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
-
-/*
- * Types
- */
 
 #if defined(_MSC_VER)
 	typedef SSIZE_T ssize_t;
@@ -214,6 +185,19 @@ union s_u32 {
 	unsigned char b[4];
 };
 
+/* Integer compare functions */
+
+#define BUILD_SINT_CMPF(fn, T)				\
+        S_INLINE int fn(T a, T b) {              	\
+                return a > b ? 1 : a < b ? -1 : 0;	\
+        }
+
+BUILD_SINT_CMPF(scmp_int32, int32_t)
+BUILD_SINT_CMPF(scmp_uint32, uint32_t)
+BUILD_SINT_CMPF(scmp_int64, int64_t)
+BUILD_SINT_CMPF(scmp_uint64, uint64_t)
+BUILD_SINT_CMPF(scmp_ptr, const void *)
+
 /*
  * Constants
  */
@@ -232,6 +216,100 @@ union s_u32 {
 #define SINT64_MIN	((int64_t)0x8000000000000000)
 #define SUINT64_MAX	((uint64_t)-1)
 #define SUINT64_MIN	0
+
+/*
+ * Variable argument helpers
+ */
+
+#define S_INVALID_PTR_VARG_TAIL	((const void *)-1)
+
+S_INLINE sbool_t s_varg_tail_ptr_tag(const void *p)
+{
+	return p == S_INVALID_PTR_VARG_TAIL ? S_TRUE : S_FALSE;
+}
+
+/*
+ * Heap allocation
+ */
+
+#ifndef S_MALLOC
+	#define _s_malloc malloc
+#endif
+#ifndef S_CALLOC
+	#define _s_calloc calloc
+#endif
+#ifndef S_REALLOC
+	#define _s_realloc realloc
+#endif
+#ifndef S_FREE
+	#define _s_free free
+#endif
+
+/*
+ * Artificial memory allocation limits (tests/debug)
+ */
+
+#if defined(S_MAX_MALLOC_SIZE) && !defined(S_DEBUG_ALLOC)
+
+S_INLINE void *s_malloc(size_t size)
+{
+	return size <= S_MAX_MALLOC_SIZE ? _s_malloc(size) : NULL;
+}
+
+S_INLINE void *s_calloc(size_t nmemb, size_t size)
+{
+	return size <= S_MAX_MALLOC_SIZE ? _s_calloc(nmemb, size) : NULL;
+}
+
+S_INLINE void *s_realloc(void *ptr, size_t size)
+{
+	return size <= S_MAX_MALLOC_SIZE ? _s_realloc(ptr, size) : NULL;
+}
+
+#elif defined(S_DEBUG_ALLOC)
+
+#ifndef S_MAX_MALLOC_SIZE
+#define S_MAX_MALLOC_SIZE ((size_t)-1)
+#endif
+
+S_INLINE void *s_alloc_check(void *p, size_t size, char *from_label)
+{
+	fprintf(stderr, "[libsrt %s @%s] alloc size: " FMT_ZU "\n",
+		(p ? "OK" : "ERROR"), from_label, size);
+	return p;
+}
+
+S_INLINE void *s_malloc(size_t size)
+{
+	void *p = size <= S_MAX_MALLOC_SIZE ? _s_malloc(size) : NULL;
+	return s_alloc_check(p, size, "malloc");
+}
+
+S_INLINE void *s_calloc(size_t nmemb, size_t size)
+{
+	void *p = size <= S_MAX_MALLOC_SIZE ? _s_calloc(nmemb, size) : NULL;
+	return s_alloc_check(p, nmemb * size, "calloc");
+}
+
+S_INLINE void *s_realloc(void *ptr, size_t size)
+{
+	void *p = size <= S_MAX_MALLOC_SIZE ? _s_realloc(ptr, size) : NULL;
+	return s_alloc_check(p, size, "realloc");
+}
+
+S_INLINE void s_free(void *ptr)
+{
+	_s_free(ptr);
+}
+
+#else
+
+#define s_malloc _s_malloc
+#define s_calloc _s_calloc
+#define s_realloc _s_realloc
+#define s_free _s_free
+
+#endif
 
 /*
  * Low-level stuff
@@ -427,11 +505,11 @@ S_INLINE void s_st_le_u32(void *a, unsigned int v)
 #endif
 #ifdef S_DEBUG
 	#define S_ASSERT(a)						    \
-		!(a) &&							    \
-		fprintf(stderr, "S_ASSERT[function: %s, line: %i]: '%s'\n", \
-		__FUNCTION__, __LINE__, #a)
-	#define S_ERROR(msg) \
-		fprintf(stderr, "%s: %s\n", __FUNCTION__, msg)
+		if (!(a))						    \
+			fprintf(stderr, "S_ASSERT[file: %s (%i)]: '%s'\n",  \
+			__FILE__, __LINE__, #a)
+	#define S_ERROR(msg)						    \
+		fprintf(stderr, "%s (%i): %s\n", __FILE__, __LINE__, msg)
 	#define S_PROFILE_ALLOC_CALL dbg_cnt_alloc_calls++
 	extern size_t dbg_cnt_alloc_calls;      /* alloc or realloc calls */
 #else

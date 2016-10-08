@@ -68,7 +68,7 @@ int32_t sc_tolower(const int32_t c);
 int32_t sc_toupper(const int32_t c);
 int32_t sc_tolower_tr(const int32_t c);
 int32_t sc_toupper_tr(const int32_t c);
-size_t sc_parallel_toX(const char *s, size_t off, const size_t max, unsigned *o, int32_t (*ssc_toX)(const int32_t));
+size_t sc_parallel_toX(const char *s, size_t off, const size_t max, char *o, int32_t (*ssc_toX)(const int32_t));
 
 #ifdef __cplusplus
 }      /* extern "C" { */

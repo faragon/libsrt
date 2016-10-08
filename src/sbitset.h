@@ -37,7 +37,7 @@ typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
  * Allocation
  */
 
-#define SB_BITS2BYTES(n)	((n + 7) / 8)
+#define SB_BITS2BYTES(n)	(1 + n / 8)
 #define sb_alloc(n)		sv_alloc(1, SB_BITS2BYTES(n), NULL)
 #define sb_alloca(n)		sv_alloca(1, SB_BITS2BYTES(n), NULL)
 #define sb_shrink(b)		sv_shrink(b)
@@ -67,7 +67,7 @@ sb_t *sb_dup(const sb_t *src)
  */
 
 /* #API: |Reset bitset|bitset|output bitset|O(1)|1;2| */
-sb_t *sb_reset(sb_t *b)
+S_INLINE sb_t *sb_reset(sb_t *b)
 {
 	RETURN_IF(!b, 0);
 	sv_set_size(b, 0);
@@ -86,13 +86,13 @@ S_INLINE size_t sb_popcount(const sb_t *b)
  * Operations
  */
 
-/* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)|0;1| */
+/* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)|1;2| */
 
 S_INLINE int sb_test(const sb_t *b, const size_t nth)
 {
 	S_ASSERT(b);
 	RETURN_IF(!b, 0);
-	const size_t pos = nth / 8, mask = 1 << (nth % 8);
+	const size_t pos = nth / 8, mask = (size_t)1 << (nth % 8);
 	RETURN_IF(pos >= sv_size(b), 0);
 	const unsigned char *buf = (const unsigned char *)sv_get_buffer_r(b);
 	return (buf[pos] & mask) ? 1 : 0;
@@ -105,7 +105,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 	S_ASSERT(b);
 	if (b) {
 		unsigned char *buf;
-		const size_t pos = nth / 8, mask = 1 << (nth % 8),
+		const size_t pos = nth / 8, mask = (size_t)1 << (nth % 8),
 			     pinc = pos + 1;
 		if (!(*b)) { /* BEHAVIOR: if NULL, assume heap allocation */
 			*b = sb_alloc(nth);
@@ -115,7 +115,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 			}
 		}
 		if (pinc > sv_size(*b)) {
-			if (sv_reserve(b, pinc) < pinc) {
+			if (sv_reserve(b, pinc) < pinc || !*b) {
 				S_ERROR("not enough memory");
 				return;
 			}
@@ -142,7 +142,7 @@ S_INLINE void sb_clear(sb_t **b, const size_t nth)
 		const size_t pos = nth / 8;
 		if (pos < sv_size(*b)) {
 			unsigned char *buf = (unsigned char *)sv_get_buffer(*b);
-			size_t mask = 1 << (nth % 8);
+			size_t mask = (size_t)1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;
 				(*b)->vx.cnt--;

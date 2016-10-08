@@ -22,8 +22,9 @@ extern "C" {
  * Structures and types
  */
 
-#define ST_NODE_BITS 31
-#define ST_NIL	((((uint32_t)1)<<ST_NODE_BITS) - 1)
+#define ST_NODE_BITS	31
+#define ST_NIL		((((uint32_t)1)<<ST_NODE_BITS) - 1)
+#define ST_NDX_MAX	(ST_NIL - 1)
 
 typedef uint32_t stndx_t;
 
@@ -60,7 +61,7 @@ struct STraverseParams
 };
 
 typedef int (*st_traverse)(struct STraverseParams *p);
-typedef void (*st_rewrite_t)(const st_t *t, stn_t *node, const stn_t *new_data);
+typedef void (*st_rewrite_t)(stn_t *node, const stn_t *new_data);
 
 /*
 * Constants
@@ -115,7 +116,7 @@ void st_set_size(st_t *c, const size_t s)
 size_t st_len(const st_t *c)
 */
 
-#define st_free(...) st_free_aux(S_NARGS_STPW(__VA_ARGS__), __VA_ARGS__)
+#define st_free(...) st_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 
 /*
  * Operations
