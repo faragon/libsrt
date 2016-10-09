@@ -92,7 +92,7 @@ S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
 /* #API: |Duplicate map|input map|output map|O(n)|1;2| */
 sm_t *sm_dup(const sm_t *src);
 
-/* #API: |Reset/clean map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings|0;1| */
+/* #API: |Reset/clean map (keeping map type)|map|S_TRUE: OK, S_FALSE: invalid map|O(1) for simple maps, O(n) for maps having nodes with strings|0;2| */
 sbool_t sm_reset(sm_t *m);
 
 /*
@@ -105,10 +105,10 @@ void sm_free_aux(sm_t **s, ...);
 SD_BUILDFUNCS_FULL_ST(sm)
 
 /*
-#API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|0;1|
+#API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|0;2|
 size_t sm_grow(sm_t **m, const size_t extra_elems)
 
-#API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|0;1|
+#API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|0;2|
 size_t sm_reserve(sm_t **m, const size_t max_elems)
 
 #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
@@ -131,7 +131,7 @@ sbool_t sm_empty(const sm_t *m)
  * Copy
  */
 
-/* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|0;1| */
+/* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|0;2| */
 sm_t *sm_cpy(sm_t **m, const sm_t *src);
 
 /*
@@ -203,39 +203,39 @@ sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
 /* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
 
-/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
 sbool_t sm_ii32_inc(sm_t **m, const int32_t k, const int32_t v);
 
-/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
 sbool_t sm_uu32_inc(sm_t **m, const uint32_t k, const uint32_t v);
 
-/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
 sbool_t sm_ii_inc(sm_t **m, const int64_t k, const int64_t v);
 
-/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
+/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
 sbool_t sm_si_inc(sm_t **m, const ss_t *k, const int64_t v);
 
 /*
  * Delete
  */
 
-/* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
+/* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
 sbool_t sm_i_delete(sm_t *m, const int64_t k);
 
-/* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
+/* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
 sbool_t sm_s_delete(sm_t *m, const ss_t *k);
 
 /*
  * Enumeration / export data
  */
 
-/* #API: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;1| */
+/* #API: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
 stn_t *sm_enum(sm_t *m, const stndx_t i);
 
-/* #API: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;1| */
+/* #API: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
 const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
 
-/* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n)|0;1| */
+/* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n)|0;2| */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */

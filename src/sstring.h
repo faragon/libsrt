@@ -96,7 +96,7 @@ ss_t *ss_shrink(ss_t **s)
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|1;2|
 size_t ss_size(const ss_t *s)
 
-#API: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|0;1|
+#API: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|0;2|
 void ss_set_size(ss_t *s, const size_t s)
 
 #API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|1;2|
@@ -152,17 +152,17 @@ size_t ss_len_u(ss_t *s);
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
 size_t ss_max(const ss_t *s);
 
-/* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;1| */
+/* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;2| */
 size_t ss_real_off(const ss_t *s, const size_t off);
 
-/* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| 
+/* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;2|
 sbool_t ss_alloc_errors(const ss_t *s);
 */
 
-/* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;1| */
+/* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;2| */
 sbool_t ss_encoding_errors(const ss_t *s);
 
-/* #API: |Clear allocation/encoding error flags|string|-|O(1)|0;1| */
+/* #API: |Clear allocation/encoding error flags|string|-|O(1)|0;2| */
 void ss_clear_errors(ss_t *s);
 
 /*
@@ -308,7 +308,7 @@ ss_t *ss_cpy_c(ss_t **s, ...)
 */
 ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...);
 
-/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Overwrite string with integer to string copy|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */
@@ -544,49 +544,49 @@ ss_t *ss_tolower(ss_t **s);
 /* #API: |Convert string to uppercase|output string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_toupper(ss_t **s);
 
-/* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert/escape for XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_esc_url(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert/escape escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_esc_dquote(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Convert/escape escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_enc_esc_squote(ss_t **s, const ss_t *src);
 
-/* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Unescape from XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_esc_url(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape "" as "|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Unescape "" as "|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_esc_dquote(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|0;1| */
+/* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|0;2| */
 ss_t *ss_dec_esc_squote(ss_t **s, const ss_t *src);
 
 /* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|1;2| */
@@ -639,37 +639,37 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
 /* #API: |Find substring into string|input string; search offset start; target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt);
 
-/* #API: |Find blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findb(const ss_t *s, const size_t off);
 
-/* #API: |Find byte(s) via mask into string|input string; search offset start; target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find byte(s) via mask into string|input string; search offset start; target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findbm(const ss_t *s, const size_t off, unsigned char incl_mask, const unsigned char excl_mask);
 
-/* #API: |Find character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findc(const ss_t *s, const size_t off, const int c);
 
-/* #API: |Find non-blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find non-blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findnb(const ss_t *s, const size_t off);
 
-/* #API: |Find n bytes|input string; search offset start; target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find n bytes|input string; search offset start; target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_find_cn(const ss_t *s, const size_t off, const char *t, const size_t ts);
 
 /* #API: |Find substring into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_t *tgt);
 
-/* #API: |Find blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off);
 
-/* #API: |Find byte(s) via mask into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find byte(s) via mask into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target byte include mask; target byte exclude mask|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findrbm(const ss_t *s, const size_t off, const size_t max_off, const unsigned char incl_mask, const unsigned char excl_mask);
 
-/* #API: |Find character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const int c);
 
-/* #API: |Find non-blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find non-blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off);
 
-/* #API: |Find n bytes|input string; search offset start; max offset (S_NPOS for end of string); target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;1| */
+/* #API: |Find n bytes|input string; search offset start; max offset (S_NPOS for end of string); target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off, const char *t, const size_t ts);
 
 /* #API: |Split/tokenize: break string by separators|output offset structure;input string; separator|Number of elements|O(n)|1;2| */

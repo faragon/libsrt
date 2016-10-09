@@ -54,7 +54,7 @@ sb_t *sb_alloc(const size_t initial_num_elems_reserve)
 #API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;2|
 sb_t *sb_free(sb_t **b, ...)
 
-#API: |Free unused space|bitset|same bitset (optional usage)|O(1)|0;1|
+#API: |Free unused space|bitset|same bitset (optional usage)|O(1)|0;2|
 sb_t *sb_shrink(sb_t **c)
 
 #API: |Duplicate bitset|bitset|output bitset|O(n)|1;2|
@@ -133,7 +133,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 	}
 }
 
-/* #API: |Set nth bit to 0|bitset; bit offset||O(1)|0;1| */
+/* #API: |Set nth bit to 0|bitset; bit offset||O(1)|0;2| */
 
 S_INLINE void sb_clear(sb_t **b, const size_t nth)
 {
