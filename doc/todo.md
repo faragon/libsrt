@@ -6,11 +6,6 @@ Short-term
 
 * Security: check size\_t overflow on every function (e.g. off + size -> overflow)
 * Tests
- * sb_clear, sb_shrink
- * sdm_dup, sdm_reset, sdm_set_routing, sdm_s_route, sdm_shrink
- * sm_reset, sm_grow, sm_reserve, sm_cpy, sm_ii32_inc, sm_uu32_inc, sm_ii_inc, sm_si_inc, sm_i_delete, sm_s_delete, sm_enum, sm_enum_r, sm_inorder_enum
- * ss_set_size, ss_real_off, ss_alloc_errors, ss_encoding_errors, ss_clear_errors, ss_cpy_wn, ss_enc_b64, ss_enc_hex, ss_enc_HEX, ss_enc_esc_json, ss_enc_esc_xml, ss_enc_esc_url, ss_enc_esc_dquote, ss_enc_esc_squote, ss_dec_b64, ss_dec_hex, ss_dec_esc_json, ss_dec_esc_xml, ss_dec_esc_url, ss_dec_esc_dquote, ss_dec_esc_squote, ss_findb, ss_findbm, ss_findc, ss_findnb, ss_find_cn, ss_findr, ss_findrb, ss_findrbm, ss_findrc, ss_findrnb, ss_findr_cn
- * st_alloca, st_grow, st_reserve, st_shrink, st_size, st_set_size, st_len, st_dup, st_enum, st_enum_r
  * all tests using both stack and heap space
  * add grow from NULL tests
  * add tests for every operation related to Unicode caching.
