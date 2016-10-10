@@ -173,10 +173,22 @@ static int test_sb(size_t nelems)
 		  sb_popcount(a) != 2 ? 1 :
 		  !sb_test(a, 0) || !sb_test(b, 0) ||
 		  !sb_test(da, 0) || !sb_test(db, 0) ? 2 : 0;
+	/* clear 'a', 'b', 'da' all at once */
+	sb_reset(a);
+	sb_reset(b);
 	sb_reset(da);
-	sb_reset(db);
-	res |= sb_popcount(da) || sb_popcount(db) ? 4 :
-	       sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
+	/* clear 'db' one manually */
+	sb_clear(&db, 0);
+	sb_clear(&db, nelems - 1);
+	res |= sb_popcount(a) || sb_popcount(b) || sb_popcount(da) ||
+	       sb_popcount(db) ? 4 : sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
+	res |= sb_capacity(da) < nelems || sb_capacity(db) < nelems ? 16 : 0;
+	sb_shrink(&a);
+	sb_shrink(&b);
+	sb_shrink(&da);
+	sb_shrink(&db);
+	res |= sb_capacity(a) < nelems ? 32 : 0; /* stack is not shrinkable */
+	res |= sb_capacity(b) || sb_capacity(da) || sb_capacity(db) ? 64 : 0;
 	sb_free(&b, &da, &db);
 	return res;
 }

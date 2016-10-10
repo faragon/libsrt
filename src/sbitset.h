@@ -7,7 +7,12 @@ extern "C" {
 /*
  * sbitset.h
  *
- * Bit set/array/vector handling.
+ * #SHORTDOC bit set (bit array)
+ *
+ * #DOC Functions allowing bit random access storage and bit counting.
+ * #DOC Bit counting is optimized so, instead of per-call 'poppulation count',
+ * #DOC it takes O(1) for the computation, as a record of bit set/clear is
+ * #DOC kept.
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
@@ -40,7 +45,6 @@ typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
 #define SB_BITS2BYTES(n)	(1 + n / 8)
 #define sb_alloc(n)		sv_alloc(1, SB_BITS2BYTES(n), NULL)
 #define sb_alloca(n)		sv_alloca(1, SB_BITS2BYTES(n), NULL)
-#define sb_shrink(b)		sv_shrink(b)
 #define sb_dup(b)		sv_dup(b)
 #define sb_free			sv_free
 
@@ -53,9 +57,6 @@ sb_t *sb_alloc(const size_t initial_num_elems_reserve)
 
 #API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;2|
 sb_t *sb_free(sb_t **b, ...)
-
-#API: |Free unused space|bitset|same bitset (optional usage)|O(1)|0;2|
-sb_t *sb_shrink(sb_t **c)
 
 #API: |Duplicate bitset|bitset|output bitset|O(n)|1;2|
 sb_t *sb_dup(const sb_t *src)
@@ -133,7 +134,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 	}
 }
 
-/* #API: |Set nth bit to 0|bitset; bit offset||O(1)|0;2| */
+/* #API: |Set nth bit to 0|bitset; bit offset||O(1)|1;2| */
 
 S_INLINE void sb_clear(sb_t **b, const size_t nth)
 {
@@ -163,6 +164,27 @@ S_INLINE void sb_eval(sb_t **b, const size_t nth)
 		if (!prev)
 			sb_clear(b, nth);
 	}
+}
+
+/* #API: |Preallocated space left (number of 1 bit elements)|bitset|allocated space left (unit: bits)|O(1)|1;2| */
+S_INLINE size_t sb_capacity(const sb_t *b)
+{
+	return 8 * sv_capacity(b);
+}
+
+/* #API: |Ensure space for N 1-bit elements|bitset;absolute element reserve (unit: bits)|reserved elements|O(1)|1;2| */
+S_INLINE size_t sb_reserve(sb_t **b, const size_t max_elems)
+{
+	return sv_reserve(b, 1 + max_elems / 8) * 8;
+}
+
+/* #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|1;2| */
+sb_t *sb_shrink(sb_t **b)
+{
+	RETURN_IF(!b || !*b, NULL); /* BEHAVIOR */ /* TODO: null bitset */
+	if (!sb_popcount(*b))
+		sv_set_size(*b, 0);
+	return sv_shrink(b);
 }
 
 #ifdef __cplusplus
