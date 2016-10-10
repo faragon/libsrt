@@ -13,7 +13,7 @@ extern "C" {
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  *
  * Designed to be used by libraries or wrapped by some abstraction (e.g.
- * sstring), not as general-purpose direct usage.
+ * ss_t/libsrt), not as general-purpose direct usage.
  *
  * Features:
  *
