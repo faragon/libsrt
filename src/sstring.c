@@ -974,7 +974,7 @@ size_t ss_max(const ss_t *s)
 	return !s ? 0 : s->d.f.ext_buffer ? ss_max_size(s) : SS_RANGE;
 }
 
-size_t ss_real_off(const ss_t *s, const size_t off)
+S_INLINE size_t ss_real_off(const ss_t *s, const size_t off)
 {
 	return off == S_NPOS ? ss_size(s) : off;
 }

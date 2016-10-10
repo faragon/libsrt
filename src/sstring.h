@@ -7,7 +7,15 @@ extern "C" {
 /*
  * sstring.h
  *
- * String handling.
+ * #SHORTDOC string handling
+ *
+ * #DOC Provided functions allow efficient operations on strings. Internal
+ * #DOC string format is binary, supporting arbitrary data. Operations
+ * #DOC on strings that involve format, e.g. string length, is
+ * #DOC interpreted as UTF-8. Strings below 256 bytes take just 4 bytes for
+ * #DOC internal structure, and 5 * sizeof(size_t) for bigger strings.
+ * #DOC Unicode-size is cached between operations, when possible, so
+ * #DOC in those cases UTF-8 string length computation would be O(1).
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
@@ -96,7 +104,7 @@ ss_t *ss_shrink(ss_t **s)
 #API: |Get string size|string|string bytes used in UTF8 format|O(1)|1;2|
 size_t ss_size(const ss_t *s)
 
-#API: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|0;2|
+#NOTAPI: |Set string size (bytes used in UTF8 format)|string;new size|-|O(1)|1;2|
 void ss_set_size(ss_t *s, const size_t s)
 
 #API: |Equivalent to ss_size|string|Number of bytes (UTF-8 string length)|O(1)|1;2|
@@ -152,8 +160,9 @@ size_t ss_len_u(ss_t *s);
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
 size_t ss_max(const ss_t *s);
 
-/* #API: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|0;2| */
+/* #NOTAPI: |Normalize offset: cut offset if bigger than string size|string; offset|Normalized offset (range: 0..string size)|O(1)|1;2|
 size_t ss_real_off(const ss_t *s, const size_t off);
+*/
 
 /* #API: |Check if string had allocation errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;2|
 sbool_t ss_alloc_errors(const ss_t *s);
@@ -280,7 +289,7 @@ ss_t *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap);
 /* #API: |Duplicate string from character|Unicode character|output result|O(1)|1;2| */
 ss_t *ss_dup_char(const int c);
 
-/* #API: |Duplicate from reading from file handle|file handle; read max size (in bytes)|output result|O(n)|1;2| */
+/* #API: |Duplicate from reading from file handle|file handle; read max size (in bytes)|output result|O(n): WARNING: involves external file I/O|1;2| */
 ss_t *ss_dup_read(FILE *handle, const size_t max_bytes);
 
 /*
@@ -404,7 +413,7 @@ ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 /* #API: |Overwrite string with a string with just one character|output string; input character|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_char(ss_t **s, const int c);
 
-/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
+/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n): WARNING: involves external file I/O|1;2| */
 ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*
@@ -531,7 +540,7 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 /* #API: |Concatenate string with a string with just one character|output string; input character|output string reference (optional usage)|O(1)|1;2| */
 ss_t *ss_cat_char(ss_t **s, const int c);
 
-/* #API: |Cat data read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
+/* #API: |Cat data read from file handle|output string; file handle; read max size (in bytes)|output result|O(n): WARNING: involves external file I/O|1;2| */
 ss_t *ss_cat_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
 /*
@@ -544,49 +553,49 @@ ss_t *ss_tolower(ss_t **s);
 /* #API: |Convert string to uppercase|output string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_toupper(ss_t **s);
 
-/* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert to hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert/escape for XML encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert/escape for URL encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_url(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert/escape escaping " as ""|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_dquote(ss_t **s, const ss_t *src);
 
-/* #API: |Convert/escape escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Convert/escape escaping ' as ''|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_squote(ss_t **s, const ss_t *src);
 
-/* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Decode from base64|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
 
-/* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_json(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from XML encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Unescape from XML encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_xml(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Unescape from URL encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_url(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape "" as "|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Unescape "" as "|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_dquote(ss_t **s, const ss_t *src);
 
-/* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Unescape '' as '|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_squote(ss_t **s, const ss_t *src);
 
 /* #API: |Set Turkish mode locale (related to case conversion)|S_TRUE: enable turkish mode, S_FALSE: disable|S_TRUE: conversion functions OK, S_FALSE: error (missing functions)|O(1)|1;2| */
@@ -721,10 +730,10 @@ int ss_popchar(ss_t **s);
  * I/O
  */
 
-/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n)|1;2| */
+/* #API: |Read from file handle|output string; file handle; read max size (in bytes)|output result|O(n): WARNING: involves external file I/O|1;2| */
 ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes);
 
-/* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n)|1;2| */
+/* #API: |Write to file|output file; string; string offset; bytes to write|written bytes < 0: error|O(n): WARNING: involves external file I/O|1;2| */
 ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset, const size_t bytes);
 
 /*
