@@ -71,23 +71,23 @@ def atoi(a) :
         return 0
 
 def fmt_coverage(c) :
-	return	"[" + str(c) + "/2] " + \
-		("basic (Coverity, clang analyzer)" if c == 0 else \
-		"test covered (test + Valgrind)" if c == 1 else \
-		"proof covered" if c == 2 else "?")
+	return	'[' + str(c) + '/2] ' + \
+		('basic (Coverity, clang analyzer)' if c == 0 else \
+		'test covered (test + Valgrind)' if c == 1 else \
+		'proof covered' if c == 2 else '?')
 
 def fmt_quality(q) :
-	return	"[" + str(q) + "/4] " + \
-		("not reviewed" if q == 0 else \
-		"reviewed, with quality issues" if q == 1 else \
-		"reviewed, clean (-Wall, style, speed)" if q == 2 else "?")
+	return	'[' + str(q) + '/4] ' + \
+		('not reviewed' if q == 0 else \
+		'reviewed, with quality issues' if q == 1 else \
+		'reviewed, clean (-Wall, style, speed)' if q == 2 else '?')
 
 def fundoc2html( doc ) :
 	fun_name = doc[0][0]
 	fun_desc = doc[0][1]
 	fun_params = doc[1][0]
 	fun_params_desc = doc[1][1]
-	fun_ret = doc[2][0].replace("static ", "")
+	fun_ret = doc[2][0].replace('static ', '')
 	fun_ret_desc = doc[2][1]
 	fun_o = doc[3][0] if len(doc) > 3 and len(doc[3]) >= 1 else ''
 	fun_os = doc[3][1] if len(doc) > 3 and len(doc[3]) >= 2 else ''
@@ -119,14 +119,16 @@ def fundoc2html( doc ) :
 	params += '</ul><br>'
 	return  proto + params + '<br>'
 
-def doc2html( doc, title ) :
+def doc2html( doc, title, header, overview ) :
 	if len(doc) > 0 :
 		# Sort functions by name:
 		doc.sort(key = lambda x: (x[0][0]))
 		# Index:
 		cols = 6
 		rows = len(doc) // cols + (1 if len(doc) % cols != 0 else 0)
-		out = '<!doctype html><html><body><h3>' + title + '</h3><br>';
+		ctitle = header + ": " + title if len(header) > 0 else title
+		out = '<!doctype html><html><title>' + ctitle + '</title><body><h3>' + ctitle + '</h3><br>'
+		out += overview + '<br><br>'
 		out += '<table>'
 		for i in range(0, rows) :
 			out += '<tr>'
@@ -142,6 +144,30 @@ def doc2html( doc, title ) :
 			out += fundoc2html( doc[i] ) + '\n'
 		out += '</body></html>\n'
 		return out
+
+def getparagraphs( lines, tgt, max_para ) :
+	out = ''
+	para = 0
+	for i in range(0, len(lines)) :
+		off = lines[i].find(tgt)
+		if off >= 0 :
+			next_chunk = lines[i][off + len(tgt):]
+			if len(next_chunk) <= 1 :
+				para = para + 1
+				next_chunk = '<br>'
+				if para >= max_para :
+					break
+			out += next_chunk
+	return out
+
+def getinclude( lines ) :
+	return getparagraphs( lines, '#INCLUDE', 1 )
+
+def gettitle( lines ) :
+	return getparagraphs( lines, '#SHORTDOC', 1 )
+
+def getoverview ( lines ) :
+	return getparagraphs( lines, '#DOC', 100 )
 
 # main
 
@@ -169,7 +195,12 @@ while i < num_lines :
 	if (len(fun) > 0 ) :
 		doc.append(mkdoc(api, fun.replace('S_INLINE ', '')))
 
-title = sys.argv[1] if len(sys.argv) > 1 else ''
+header = ''
+title = gettitle(lines)
+overview = getoverview(lines)
 
-print ( doc2html( doc, title ) )
+if len(header) == 0 :
+	header = sys.argv[1] if len(sys.argv) > 1 else ''
+
+print ( doc2html( doc, title, header, overview ) )
 
