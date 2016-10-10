@@ -34,8 +34,8 @@ fi
 
 echo "<!DOCTYPE html><html><meta http-equiv=\"Content-Type\" content=\"text/"\
      "html; charset=latin1\"><title>libsrt</title><body><h3><a"\
-     "href="https://github.com/faragon/libsrt">libsrt</a> documentation<br><br>"\
-     > "$INDEX"
+     "href="https://github.com/faragon/libsrt">libsrt</a> documentation<br>"
+     "<br>" > "$INDEX"
 README_PATH=README
 if [ ! -f "$README_PATH"* ] ; then
 	if [ -f "../$README_PATH"* ] ; then
