@@ -7,7 +7,11 @@ extern "C" {
 /*
  * sdmap.h
  *
- * Distributed map handling (same-process clustering)
+ * #SHORTDOC distributed map (same-process map clustering/slicing)
+ *
+ * #DOC Following functions allow map partition, so e.g. you could divide
+ * #DOC a logical big map into N instances, while operating against the
+ * #DOC logical map like simple map.
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
