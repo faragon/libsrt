@@ -7,7 +7,20 @@ extern "C" {
 /*
  * smap.h
  *
- * Map handling
+ * #SHORTDOC map handling (key-value storage)
+ *
+ * #DOC Map functions handle key-value storage, whici is implemented as a
+ * #DOC Red-Black tree (O(n log n) maximum complexity for insert/read/delete).
+ * #DOC
+ * #DOC Supported key/value modes:
+ * #DOC SM_I32I32: 32-bit integer key, 32-bit integer value
+ * #DOC SM_U32U32: 32-bit unsigned int key, 32-bit unsigned int value
+ * #DOC SM_IntInt: 64-bit int key, 64-bit int value
+ * #DOC SM_IntStr: 64-bit int key, string value
+ * #DOC SM_IntPtr: 64-bit int key, pointer value
+ * #DOC SM_StrInt: 64-bit string key, 64-bit int value
+ * #DOC SM_StrStr: string key, string value
+ * #DOC SM_StrPtr: string key, pointer value
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
@@ -235,7 +248,7 @@ stn_t *sm_enum(sm_t *m, const stndx_t i);
 /* #API: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
 const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
 
-/* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n)|0;2| */
+/* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
 
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
