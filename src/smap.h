@@ -12,14 +12,23 @@ extern "C" {
  * #DOC Map functions handle key-value storage, whici is implemented as a
  * #DOC Red-Black tree (O(n log n) maximum complexity for insert/read/delete).
  * #DOC
+ * #DOC
  * #DOC Supported key/value modes:
+ * #DOC
  * #DOC SM_I32I32: 32-bit integer key, 32-bit integer value
+ * #DOC
  * #DOC SM_U32U32: 32-bit unsigned int key, 32-bit unsigned int value
+ * #DOC
  * #DOC SM_IntInt: 64-bit int key, 64-bit int value
+ * #DOC
  * #DOC SM_IntStr: 64-bit int key, string value
+ * #DOC
  * #DOC SM_IntPtr: 64-bit int key, pointer value
+ * #DOC
  * #DOC SM_StrInt: 64-bit string key, 64-bit int value
+ * #DOC
  * #DOC SM_StrStr: string key, string value
+ * #DOC
  * #DOC SM_StrPtr: string key, pointer value
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
