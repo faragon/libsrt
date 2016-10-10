@@ -7,7 +7,10 @@ extern "C" {
 /*
  * svector.h
  *
- * Vector handling.
+ * #SHORTDOC vector handling
+ *
+ * #DOC Vector handling functions for managing integer data and
+ * #DOC generic data.
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
@@ -100,25 +103,25 @@ SD_BUILDFUNCS_FULL(sv)
 sv_t *sv_alloca(const size_t initial_reserve)
 
 #API: |Free one or more vectors (heap)|vector;more vectors (optional)|-|O(1)|1;2|
-void sv_free(sv_t **c, ...)
+void sv_free(sv_t **v, ...)
 
 #API: |Ensure space for extra elements|vector;number of extra eelements|extra size allocated|O(1)|1;2|
-size_t sv_grow(sv_t **c, const size_t extra_elems)
+size_t sv_grow(sv_t **v, const size_t extra_elems)
 
 #API: |Ensure space for elements|vector;absolute element reserve|reserved elements|O(1)|1;2|
-size_t sv_reserve(sv_t **c, const size_t max_elems)
+size_t sv_reserve(sv_t **v, const size_t max_elems)
 
 #API: |Free unused space|vector|same vector (optional usage)|O(1)|1;2|
-sv_t *sv_shrink(sv_t **c)
+sv_t *sv_shrink(sv_t **v)
 
 #API: |Get vector size|vector|vector number of elements|O(1)|1;2|
-size_t sv_size(const sv_t *c)
+size_t sv_size(const sv_t *v)
 
 #NOTAPI: |Set vector size (number of vector elements)|vector;set vector number of elements|-|O(1)|1;2|
-void sv_set_size(sv_t *c, const size_t s)
+void sv_set_size(sv_t *v, const size_t s)
 
 #API: |Equivalent to sv_size|vector|Number of vector elements|O(1)|1;2|
-size_t sv_len(const sv_t *c)
+size_t sv_len(const sv_t *v)
 
 #API: |Allocated space|vector|current allocated space (vector elements)|O(1)|1;2|
 size_t sv_capacity(const sv_t *v);
