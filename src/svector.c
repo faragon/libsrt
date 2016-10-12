@@ -8,7 +8,7 @@
  */ 
 
 #include "svector.h"
-#include "aux/scommon.h"
+#include "saux/scommon.h"
 
 #ifndef SV_DEFAULT_SIGNED_VAL
 #define SV_DEFAULT_SIGNED_VAL 0

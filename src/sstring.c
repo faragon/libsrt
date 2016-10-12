@@ -8,11 +8,11 @@
  */
 
 #include "sstring.h"
-#include "aux/schar.h"
-#include "aux/scommon.h"
-#include "aux/senc.h"
-#include "aux/shash.h"
-#include "aux/ssearch.h"
+#include "saux/schar.h"
+#include "saux/scommon.h"
+#include "saux/senc.h"
+#include "saux/shash.h"
+#include "saux/ssearch.h"
 
 /*
  * Togglable optimizations

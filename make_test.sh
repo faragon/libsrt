@@ -165,7 +165,7 @@ fi
 
 if (($TMUX & 16)) ; then
 	echo "Checking style..."
-	ls -1  src/*c src/aux/*c examples/*c examples/*h Makefile \
+	ls -1  src/*c src/saux/*c examples/*c examples/*h Makefile \
 		*\.sh utl/*\.sh | while read line ; do
 		if ! utl/check_style.sh "$line" ; then
 			echo "$line... ERROR"

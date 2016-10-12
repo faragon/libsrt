@@ -22,8 +22,8 @@ extern "C" {
  */
 
 #include "svector.h"
-#include "aux/scommon.h"
-#include "aux/sdata.h"
+#include "saux/scommon.h"
+#include "saux/sdata.h"
 
 /*
  * String base structure
@@ -743,7 +743,7 @@ ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset, const size_t 
 /* #API: |String CRC-32 checksum|string|32-bit hash|O(n)|1;2| */
 unsigned ss_crc32(const ss_t *s);
 
-/* #API: |CRC-32 checksum for substring|string, CRC resulting from previous chained CRC calls (use 0 for the first call), start offset, end offset|32-bit hash|O(n)|1;2| */
+/* #API: |CRC-32 checksum for substring|string; CRC resulting from previous chained CRC calls (use 0 for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
 unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2);
 
 /*

@@ -38,7 +38,7 @@ extern "C" {
 
 #include "sstring.h"
 #include "svector.h"
-#include "aux/stree.h"
+#include "saux/stree.h"
 
 /*
  * Structures

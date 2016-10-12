@@ -8,8 +8,8 @@
  */
 
 #include "../src/libsrt.h"
-#include "../src/aux/sbitio.h"
-#include "../src/aux/schar.h"
+#include "../src/saux/sbitio.h"
+#include "../src/saux/schar.h"
 #include <locale.h>
 
 /*

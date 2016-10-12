@@ -8,7 +8,7 @@
  */
 
 #include "../src/libsrt.h"
-#include "../src/aux/senc.h"
+#include "../src/saux/senc.h"
 
 enum EncMode
 {

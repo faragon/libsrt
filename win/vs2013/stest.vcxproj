@@ -148,29 +148,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\aux\sbitio.c" />
-    <ClCompile Include="..\..\src\aux\schar.c" />
-    <ClCompile Include="..\..\src\aux\sdata.c" />
-    <ClCompile Include="..\..\src\aux\sdbg.c" />
-    <ClCompile Include="..\..\src\aux\senc.c" />
-    <ClCompile Include="..\..\src\aux\shash.c" />
-    <ClCompile Include="..\..\src\aux\ssearch.c" />
-    <ClCompile Include="..\..\src\aux\stree.c" />
+    <ClCompile Include="..\..\src\saux\sbitio.c" />
+    <ClCompile Include="..\..\src\saux\schar.c" />
+    <ClCompile Include="..\..\src\saux\sdata.c" />
+    <ClCompile Include="..\..\src\saux\sdbg.c" />
+    <ClCompile Include="..\..\src\saux\senc.c" />
+    <ClCompile Include="..\..\src\saux\shash.c" />
+    <ClCompile Include="..\..\src\saux\ssearch.c" />
+    <ClCompile Include="..\..\src\saux\stree.c" />
     <ClCompile Include="..\..\src\smap.c" />
     <ClCompile Include="..\..\src\sstring.c" />
     <ClCompile Include="..\..\src\svector.c" />
     <ClCompile Include="..\..\examples\stest.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\aux\sbitio.h" />
-    <ClInclude Include="..\..\src\aux\schar.h" />
-    <ClInclude Include="..\..\src\aux\scommon.h" />
-    <ClInclude Include="..\..\src\aux\sdata.h" />
-    <ClInclude Include="..\..\src\aux\sdbg.h" />
-    <ClInclude Include="..\..\src\aux\senc.h" />
-    <ClInclude Include="..\..\src\aux\shash.h" />
-    <ClInclude Include="..\..\src\aux\ssearch.h" />
-    <ClInclude Include="..\..\src\aux\stree.h" />
+    <ClCompile Include="..\..\src\saux\sbitio.h" />
+    <ClInclude Include="..\..\src\saux\schar.h" />
+    <ClInclude Include="..\..\src\saux\scommon.h" />
+    <ClInclude Include="..\..\src\saux\sdata.h" />
+    <ClInclude Include="..\..\src\saux\sdbg.h" />
+    <ClInclude Include="..\..\src\saux\senc.h" />
+    <ClInclude Include="..\..\src\saux\shash.h" />
+    <ClInclude Include="..\..\src\saux\ssearch.h" />
+    <ClInclude Include="..\..\src\saux\stree.h" />
     <ClInclude Include="..\..\src\sbitset.h" />
     <ClInclude Include="..\..\src\smap.h" />
     <ClInclude Include="..\..\src\sstring.h" />

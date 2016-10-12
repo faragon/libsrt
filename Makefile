@@ -220,7 +220,7 @@ endif
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
 
-VPATH   = src:src/aux:examples
+VPATH   = src:src/saux:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c \
 	  smap.c shash.c sbitio.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
