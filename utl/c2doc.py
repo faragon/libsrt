@@ -158,7 +158,9 @@ def getparagraphs( lines, tgt, max_para ) :
 				if para >= max_para :
 					break
 			out += next_chunk
-	return out
+
+	return str.replace(out, '\t',
+			   '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')
 
 def getinclude( lines ) :
 	return getparagraphs( lines, '#INCLUDE', 1 )

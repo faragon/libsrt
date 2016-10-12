@@ -148,33 +148,32 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\sdata.c" />
-    <ClCompile Include="..\..\src\sdbg.c" />
-    <ClCompile Include="..\..\src\sdmap.c" />
-    <ClCompile Include="..\..\src\senc.c" />
-    <ClCompile Include="..\..\src\shash.c" />
+    <ClCompile Include="..\..\src\aux\sbitio.c" />
+    <ClCompile Include="..\..\src\aux\schar.c" />
+    <ClCompile Include="..\..\src\aux\sdata.c" />
+    <ClCompile Include="..\..\src\aux\sdbg.c" />
+    <ClCompile Include="..\..\src\aux\senc.c" />
+    <ClCompile Include="..\..\src\aux\shash.c" />
+    <ClCompile Include="..\..\src\aux\ssearch.c" />
+    <ClCompile Include="..\..\src\aux\stree.c" />
     <ClCompile Include="..\..\src\smap.c" />
-    <ClCompile Include="..\..\src\ssearch.c" />
     <ClCompile Include="..\..\src\sstring.c" />
-    <ClCompile Include="..\..\examples\stest.c" />
-    <ClCompile Include="..\..\src\stree.c" />
-    <ClCompile Include="..\..\src\schar.c" />
     <ClCompile Include="..\..\src\svector.c" />
-    <ClCompile Include="..\..\src\sbitio.c" />
+    <ClCompile Include="..\..\examples\stest.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\aux\sbitio.h" />
+    <ClInclude Include="..\..\src\aux\schar.h" />
+    <ClInclude Include="..\..\src\aux\scommon.h" />
+    <ClInclude Include="..\..\src\aux\sdata.h" />
+    <ClInclude Include="..\..\src\aux\sdbg.h" />
+    <ClInclude Include="..\..\src\aux\senc.h" />
+    <ClInclude Include="..\..\src\aux\shash.h" />
+    <ClInclude Include="..\..\src\aux\ssearch.h" />
+    <ClInclude Include="..\..\src\aux\stree.h" />
     <ClInclude Include="..\..\src\sbitset.h" />
-    <ClInclude Include="..\..\src\scommon.h" />
-    <ClInclude Include="..\..\src\sdata.h" />
-    <ClInclude Include="..\..\src\sdbg.h" />
-    <ClInclude Include="..\..\src\sdmap.h" />
-    <ClInclude Include="..\..\src\senc.h" />
-    <ClInclude Include="..\..\src\shash.h" />
     <ClInclude Include="..\..\src\smap.h" />
-    <ClInclude Include="..\..\src\ssearch.h" />
     <ClInclude Include="..\..\src\sstring.h" />
-    <ClInclude Include="..\..\src\stree.h" />
-    <ClInclude Include="..\..\src\schar.h" />
     <ClInclude Include="..\..\src\svector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -18,7 +18,7 @@
 
 #include "stree.h"
 #include "scommon.h"
-#include "svector.h"
+#include "../svector.h"
 
 /*
  * Helper macros

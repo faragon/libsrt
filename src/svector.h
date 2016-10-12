@@ -16,7 +16,7 @@ extern "C" {
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */ 
 
-#include "sdata.h"
+#include "aux/sdata.h"
 
 /*
  * Structures

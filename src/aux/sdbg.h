@@ -16,10 +16,10 @@ extern "C" {
  * - This is intended for debugging.
  */
 
-#include "sstring.h"
-#include "svector.h"
+#include "../sstring.h"
+#include "../svector.h"
+#include "../smap.h"
 #include "stree.h"
-#include "smap.h"
 
 typedef ss_t *(*ss_cat_stn)(ss_t **s, const stn_t *n, const stndx_t id);
 

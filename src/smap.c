@@ -8,7 +8,7 @@
  */ 
 
 #include "smap.h"
-#include "scommon.h"
+#include "aux/scommon.h"
 
 /*
  * Internal functions

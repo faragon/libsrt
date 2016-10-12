@@ -8,7 +8,6 @@
  */ 
 
 #include "sdbg.h"
-#include "sstring.h"
 
 const char *sv_type_to_label(const enum eSV_Type t)
 {

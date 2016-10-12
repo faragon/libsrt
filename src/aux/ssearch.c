@@ -75,7 +75,7 @@
 		S_FPREPARECSUM(alg, i + 1);	\
 		S_FPREPARECSUM(alg, i + 2);	\
 		S_FPREPARECSUM(alg, i + 3);	\
-	} 
+	}
 #else
 #define S_FIND_CSUM_PIPELINE2(alg)
 #endif

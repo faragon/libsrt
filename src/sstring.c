@@ -7,12 +7,12 @@
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
-#include "schar.h"
 #include "sstring.h"
-#include "ssearch.h"
-#include "scommon.h"
-#include "senc.h"
-#include "shash.h"
+#include "aux/schar.h"
+#include "aux/scommon.h"
+#include "aux/senc.h"
+#include "aux/shash.h"
+#include "aux/ssearch.h"
 
 /*
  * Togglable optimizations
@@ -2029,10 +2029,17 @@ ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset,
  * Hashing
  */
 
-unsigned ss_csum32(const ss_t *s, const size_t n)
+unsigned ss_crc32(const ss_t *s)
 {
-	RETURN_IF(!s, 0);
-	const size_t ss = ss_size(s), cmpsz = n ? S_MIN(ss, n) : ss;
-	return sh_csum32(ss_get_buffer_r(s), cmpsz);
+	return ss_crc32r(s, 0, 0, S_NPOS);
+}
+
+unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2)
+{
+	RETURN_IF(!s || off1 >= off2, 0);
+	size_t ss = ss_size(s);
+	RETURN_IF(off1 >= ss, 0);
+	size_t offx = off2 == S_NPOS ? ss : off2;
+	return sh_crc32(crc, ss_get_buffer_r(s) + off1, offx - off1);
 }
 

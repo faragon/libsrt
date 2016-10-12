@@ -8,6 +8,8 @@
  */
 
 #include "../src/libsrt.h"
+#include "../src/aux/sbitio.h"
+#include "../src/aux/schar.h"
 #include <locale.h>
 
 /*
@@ -1392,9 +1394,10 @@ static int test_ss_read_write()
 
 static int test_ss_csum32()
 {
-	const char *a = "\xa0\xb0\xc0\xd0\x0d\x0c\x0b\x0a";
+	const char *a = "hola";
+	uint32_t a_crc32 = 0x6fa0f988;
 	ss_t *sa = ss_dup_c(a);
-	int res = S_HTON_U32(ss_csum32(sa, S_NPOS)) != 0xadbccbda ? 1 : 0;
+	int res = ss_crc32(sa) != a_crc32 ? 1 : 0;
 	ss_free(&sa);
 	return res;
 }
@@ -2812,25 +2815,6 @@ static int test_sm_double_rotation()
 	return res;
 }
 
-static int test_sdm_alloc()
-{
-	sdm_t *dm = sdm_alloc(SM_IntInt, 4, 1);
-	RETURN_IF(!dm, 1);
-	sm_t **submaps = sdm_submaps(dm);
-	int64_t c = 0;
-	size_t nelems = SDM_TEST_NELEMS;
-	for (; c < (int64_t)nelems; c++) {
-		const size_t route = sdm_i_route(dm, c);
-		sm_ii_insert(&submaps[route], c, c);
-	}
-	size_t sdmsz = sdm_size(dm);
-	size_t nelems_check = 0;
-	for (c = 0; c < (int64_t)sdmsz; c++)
-		nelems_check += sm_size(submaps[c]);
-	sdm_free(&dm);
-	return nelems == nelems_check ? 0 : 2;
-}
-
 static int test_endianess()
 {
 	int res = 0;
@@ -3295,14 +3279,9 @@ int main()
 	STEST_ASSERT(test_alignment());
 	STEST_ASSERT(test_sbitio());
 	/*
-	 * Distributed map
-	 */
-	STEST_ASSERT(test_sdm_alloc());
-	/*
 	 * Report
 	 */
 #ifdef S_DEBUG
-	fprintf(stderr, "sizeof(sd_t): %u\n", (unsigned)sizeof(sd_t));
 	fprintf(stderr, "sizeof(ss_t): %u (small mode)\n",
 		(unsigned)sizeof(struct SDataSmall));
 	fprintf(stderr, "sizeof(ss_t): %u (full mode)\n",
@@ -3310,9 +3289,7 @@ int main()
         fprintf(stderr, "max ss_t string length: " FMT_ZU "\n", SS_RANGE);
 	fprintf(stderr, "sizeof(sb_t): %u\n", (unsigned)sizeof(sb_t));
 	fprintf(stderr, "sizeof(sv_t): %u\n", (unsigned)sizeof(sv_t));
-	fprintf(stderr, "sizeof(st_t): %u\n", (unsigned)sizeof(st_t));
 	fprintf(stderr, "sizeof(sm_t): %u\n", (unsigned)sizeof(sm_t));
-	fprintf(stderr, "sizeof(sdm_t): %u\n", (unsigned)sizeof(sdm_t));
 	fprintf(stderr, "Errors: %i\n", ss_errors);
 #endif
 	return STEST_END;

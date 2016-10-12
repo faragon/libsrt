@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, tree, map, and distributed map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (except functions doing synchronous file I/O).
+libsrt is a C library that provides string, vector, bit set, and map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
@@ -28,14 +28,14 @@ Generic advantages
  * Use strings in a similar way to higher level languages.
 
 * Space-optimized
- * Dynamic one-block linear addressing space (all types, but the distributed map type which uses N+1 areas).
+ * Dynamic one-block linear addressing space.
  * Internal structures use indexes instead of pointers (i.e. similar memory usage in both 32 and 64 bit mode).
  * More information: doc/benchmarks.md
 
 * Time-optimized
  * Buffer direct access
  * Preallocation hints (reducing memory allocation calls)
- * Heap and stack memory allocation support (s\*\_alloca)
+ * Heap and stack memory allocation support
  * More information: doc/benchmarks.md
 
 * Predictable (suitable for hard and soft real-time)
@@ -186,24 +186,6 @@ Map-specific disadvantages/limitations
 ===
 
 * Because of being implemented as a tree, it is slower than a hash-map, on average. However, in total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
-
-Distributed map (sdm\_t)
-===
-
-* Abstraction over sm\_t (st\_t): same types, same memory usage, same time complexity.
-* Operation: routing via hash table + N maps (sm\_t)
-* Horizontal scaling: cheap in-process clustering (e.g. lock-free multithreading on N submaps)
-* Use this instead of simpler map (sm\_t), if:
- * On-chip horizontal scaling: e.g. one thread taking care of one submap. E.g. sdm\_t of 8 sub-maps for 8 threads.
- * Intended unfair routing instead of "fair" hashing (distribute elements to all subtress at same pace), you can tune the routing hash for applying specific criteria so some elements go to smaller or bigger trees, for faster retrieval (e.g. range, length, priority, group, class, etc.).
-
-Distributed map specific disadvantages/limitations
-===
-
-* Limitations because of using N sm\_t elements:
- * Uses N + 1 memory regions, and not linear memory addressing.
- * Can not be allocated in the stack. If you need stack allocation, use the simpler map (sm\_t).
-* Global sort to vector and enumeration is not supported. For achieving that, user has to address individual to submaps.
 
 Test-covered platforms
 ===
