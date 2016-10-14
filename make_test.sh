@@ -76,6 +76,8 @@ INNER_LOOP_FLAGS[0]=""
 INNER_LOOP_FLAGS[1]="DEBUG=1"
 INNER_LOOP_FLAGS[2]="MINIMAL=1"
 INNER_LOOP_FLAGS[3]="MINIMAL=1 DEBUG=1"
+VALGRIND_LOOP_FLAGS[0]="DEBUG=1"
+VALGRIND_LOOP_FLAGS[1]="MINIMAL=1 DEBUG=1"
 ERRORS=0
 NPROCS=0
 MJOBS=1
@@ -123,23 +125,27 @@ VAL_ERR_TAG="ERROR SUMMARY:"
 VAL_ERR_FILE=valgrind.errors
 
 if (($TMUX & 2)) && type valgrind >/dev/null 2>&1 ; then
-	echo -n "Valgrind test..."
-	if $MAKE clean >/dev/null 2>&1 &&				  \
-	   $MAKE -j $MJOBS DEBUG=1 >/dev/null 2>&1 &&			  \
-	   valgrind --track-origins=yes --tool=memcheck --leak-check=yes  \
-		    --show-reachable=yes --num-callers=20 --track-fds=yes \
-		    ./stest >/dev/null 2>$VAL_ERR_FILE ; then
-		VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILE" | awk -F \
-			   'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
-		if (( $VAL_ERRS > 0 )) ; then
-			ERRORS=$((ERRORS + $VAL_ERRS))
-			echo " ERROR"
-		else
-			echo " OK"
+	for ((j = 0 ; j < ${#VALGRIND_LOOP_FLAGS[@]}; j++)) ; do
+		MAKEFLAGS=${VALGRIND_LOOP_FLAGS[$j]}
+		echo -n "Valgrind test ($MAKEFLAGS)..."
+		VAL_ERR_FILEx=$VAL_ERR_FILE".$j"
+		if $MAKE clean >/dev/null 2>&1 &&				  \
+		   $MAKE -j $MJOBS $MAKEFLAGS >/dev/null 2>&1 &&		  \
+		   valgrind --track-origins=yes --tool=memcheck --leak-check=yes  \
+			    --show-reachable=yes --num-callers=20 --track-fds=yes \
+			    ./stest >/dev/null 2>$VAL_ERR_FILEx ; then
+			VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILEx" | awk -F \
+				   'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
+			if (( $VAL_ERRS > 0 )) ; then
+				ERRORS=$((ERRORS + $VAL_ERRS))
+				echo " ERROR"
+			else
+				echo " OK"
+			fi
+		else 	echo " ERROR"
+			ERRORS=$((ERRORS + 1))
 		fi
-	else 	echo " ERROR"
-		ERRORS=$((ERRORS + 1))
-	fi
+	done
 fi
 
 if (($TMUX & 4)) && type scan-build >/dev/null 2>&1 ; then

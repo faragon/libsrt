@@ -242,6 +242,6 @@ run_tests: stest
 	@./$(TEST)
 clean:
 	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out \
-	       callgrind* out\.txt clang_analysis.txt *\.errors
+	       callgrind* out\.txt clang_analysis.txt *\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 
