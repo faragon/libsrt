@@ -14,14 +14,18 @@ extern "C" {
  *
  * Features:
  *
- * - Currently only a simple 32-bit checksum is implemented (used in the
- *   routing hash in sdmap.c)
+ * - Three CRC-32 implementations:
+ *     + Minimal, without hash tables: 1 bit/loop (100MB/s on i5@3GHz)
+ *       (active if doing 'make MINIMAL=1' or 'make ADD_CFLAGS="-DS_MINIMAL"')
+ *     + 1024 byte hash table: 1 byte/loop (400MB/s on i5@3GHz)
+ *       (if not minimal build, doing 'make ADD_CFLAGS="-DS_DIS_CRC32_FULL_OPT")
+ *     + 16384 byte hash table: 16 bytes/loop (2500MB/s on i5@3GHz)
+ *       (if not minimal build, this is the enabled by default)
  */
 
 #include "scommon.h"
 
-
-/* #notAPI: |Simple hash: 32 bit hash from xor-ing 32-bit chunks ("fair" enough for hash routing, but not for generic hash tables)|CRC accumulator;buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+/* #notAPI: |CRC-32 (0xedb88320 polynomial)|CRC accumulator;buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size);
 
 #ifdef __cplusplus

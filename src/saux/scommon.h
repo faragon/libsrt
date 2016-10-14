@@ -353,10 +353,24 @@ S_INLINE void s_free(void *ptr)
 	#define S_IS_LITTLE_ENDIAN 0
 #endif
 
+/*
+ * NTOH: "network (big endian) to host"
+ * LTOH: "little endian to host"
+ */
 #if S_IS_LITTLE_ENDIAN
-	#define S_NTOH_U32(a) S_BSWAP32((unsigned)(a))
+	#define S_NTOH_U32(a) S_BSWAP32((uint32_t)(a))
+	#define S_LTOH_U32(a) (a)
+	#define S_U32_BYTE0(a) ((a) & 0xff)
+	#define S_U32_BYTE1(a) ((a >> 8) & 0xff)
+	#define S_U32_BYTE2(a) ((a >> 16) & 0xff)
+	#define S_U32_BYTE3(a) ((a >> 24) & 0xff)
 #else
 	#define S_NTOH_U32(a) (a)
+	#define S_LTOH_U32(a) S_BSWAP32((uint32_t)(a))
+	#define S_U32_BYTE0(a) ((a >> 24) & 0xff)
+	#define S_U32_BYTE1(a) ((a >> 16) & 0xff)
+	#define S_U32_BYTE2(a) ((a >> 8) & 0xff)
+	#define S_U32_BYTE3(a) ((a) & 0xff)
 #endif
 #define S_HTON_U32(a) S_NTOH_U32(a)
 #define S_LD_X(a, T) *(T *)(a)
