@@ -140,12 +140,6 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback);
 /* #NOTAPI: |Locate node|tree; node|Reference to the located node; NULL if not found|O(log n)|1;2| */
 const stn_t *st_locate(const st_t *t, const stn_t *n);
 
-/* #NOTAPI: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
-stn_t *st_enum(st_t *t, const stndx_t index);
-
-/* #NOTAPI: |Fast unsorted enumeration (read-only)|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
-const stn_t *st_enum_r(const st_t *t, const stndx_t index);
-
 /* #NOTAPI: |Full tree traversal: pre-order|tree; traverse callback; callback context|Number of levels stepped down|O(n)|1;2| */
 ssize_t st_traverse_preorder(const st_t *t, st_traverse f, void *context);
 
@@ -164,6 +158,36 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context);
 
 /* #NOTAPI: |Tree check (debug purposes)|tree|S_TREE: OK, S_FALSE: breaks RB tree rules|O(n)|1;2| */
 sbool_t st_assert(const st_t *t);
+
+/*
+ * Inlined functions
+ */
+
+S_INLINE stn_t *get_node(st_t *t, const stndx_t node_id)
+{
+	RETURN_IF(node_id == ST_NIL, NULL);
+	return (stn_t *)st_elem_addr(t, node_id);
+}
+
+S_INLINE const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
+{
+	RETURN_IF(node_id == ST_NIL, NULL);
+	return (const stn_t *)st_elem_addr_r(t, node_id);
+}
+
+/* #NOTAPI: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
+S_INLINE stn_t *st_enum(st_t *t, const stndx_t index)
+{
+	ASSERT_RETURN_IF(!t, NULL);
+	return get_node(t, index);
+}
+
+/* #NOTAPI: |Fast unsorted enumeration (read-only)|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
+S_INLINE const stn_t *st_enum_r(const st_t *t, const stndx_t index)
+{
+	ASSERT_RETURN_IF(!t, NULL);
+	return get_node_r(t, index);
+}
 
 #ifdef __cplusplus
 } /* extern "C" { */

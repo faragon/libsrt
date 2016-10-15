@@ -56,18 +56,6 @@ struct NodeContext
  * Internal functions
  */
 
-static stn_t *get_node(st_t *t, const stndx_t node_id)
-{
-	RETURN_IF(node_id == ST_NIL, NULL);
-	return (stn_t *)st_elem_addr(t, node_id);
-}
-
-static const stn_t *get_node_r(const st_t *t, const stndx_t node_id)
-{
-	RETURN_IF(node_id == ST_NIL, NULL);
-	return (const stn_t *)st_elem_addr_r(t, node_id);
-}
-
 static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 {
 	S_ASSERT(n);
@@ -534,18 +522,6 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 							    ST_Left))))
 			break;
 	return cn;
-}
-
-stn_t *st_enum(st_t *t, const stndx_t index)
-{
-	ASSERT_RETURN_IF(!t, NULL);
-	return get_node(t, index);
-}
-
-const stn_t *st_enum_r(const st_t *t, const stndx_t index)
-{
-	ASSERT_RETURN_IF(!t, NULL);
-	return get_node_r(t, index);
 }
 
 /*

@@ -13,6 +13,8 @@ extern "C" {
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
+#include "sconfig.h"
+
 #ifdef _MSC_VER
 	#define _CRT_SECURE_NO_WARNINGS
 	#define _CRT_NONSTDC_NO_DEPRECATE
@@ -227,23 +229,6 @@ S_INLINE sbool_t s_varg_tail_ptr_tag(const void *p)
 {
 	return p == S_INVALID_PTR_VARG_TAIL ? S_TRUE : S_FALSE;
 }
-
-/*
- * Heap allocation
- */
-
-#ifndef S_MALLOC
-	#define _s_malloc malloc
-#endif
-#ifndef S_CALLOC
-	#define _s_calloc calloc
-#endif
-#ifndef S_REALLOC
-	#define _s_realloc realloc
-#endif
-#ifndef S_FREE
-	#define _s_free free
-#endif
 
 /*
  * Artificial memory allocation limits (tests/debug)

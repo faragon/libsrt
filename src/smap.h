@@ -252,17 +252,107 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k);
  * Enumeration / export data
  */
 
-/* #API: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
+#if 0
+/* #NOTAPI: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
 stn_t *sm_enum(sm_t *m, const stndx_t i);
 
-/* #API: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
+/* #NOTAPI: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
 const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
+#endif
 
-/* #API: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
+#if 0
+/* #NOTAPI: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
 ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
+#endif
 
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
+
+/*
+ * Inlined functions
+ */
+
+#define S_SM_ENUM_AUX_K(NT, m, i, n_k, def_k)		\
+	const NT *n = (const NT *)st_enum_r(m, i);	\
+	RETURN_IF(!n, def_k);				\
+	return n_k
+
+#define S_SM_ENUM_AUX_V(NT, m, i, n_v, def_v)		\
+	const NT *n = (const NT *)st_enum_r(m, i);	\
+	RETURN_IF(!n, def_v);				\
+	return n_v
+
+/* #API: |Enumerate int32-int32 map keys|map; element, 0 to n - 1|sbool_t|O(log n)|0;1| */
+S_INLINE int32_t sm_enum_i32_k(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_K(struct SMapii, m, i, n->k, 0);
+}
+
+/* #API: |Enumerate int32-int32 map values|map; element, 0 to n - 1|sbool_t|O(log n)|0;1| */
+S_INLINE int32_t sm_enum_i32_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapii, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate uint32-uint32 map keys|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE uint32_t sm_enum_u32_k(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_K(struct SMapuu, m, i, n->k, 0);
+}
+
+/* #API: |Enumerate uint32-uint32 map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE uint32_t sm_enum_u32_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapuu, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate integer-interger map keys|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE int64_t sm_enum_i_k(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_K(struct SMapIx, m, i, n->k, 0);
+}
+
+/* #API: |Enumerate integer-interger map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE int64_t sm_enum_ii_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapII, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate integer-string map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE const ss_t *sm_enum_is_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapIS, m, i, n->v, ss_void);
+}
+
+/* #API: |Enumerate integer-pointer map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE const void *sm_enum_ip_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapIP, m, i, n->v, NULL);
+}
+
+/* #API: |Enumerate string-* map keys|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE const ss_t *sm_enum_s_k(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_K(struct SMapSx, m, i, n->k, ss_void);
+}
+
+/* #API: |Enumerate string-integer map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE int64_t sm_enum_si_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapSI, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate string-string map values|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE const ss_t *sm_enum_ss_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapSS, m, i, n->v, ss_void);
+}
+
+/* #API: |Enumerate string-pointer map|map; element, 0 to n - 1|S_INLINE sbool_t|O(log n)|0;1| */
+S_INLINE const void *sm_enum_sp_v(const sm_t *m, const stndx_t i)
+{
+	S_SM_ENUM_AUX_V(struct SMapSP, m, i, n->v, NULL);
+}
 
 #ifdef __cplusplus
 } /* extern "C" { */

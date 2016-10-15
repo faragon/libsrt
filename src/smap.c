@@ -159,6 +159,21 @@ static st_cmp_t type2cmpf(const enum eSM_Type t)
 	return NULL;
 }
 
+S_INLINE stn_t *sm_enum(sm_t *m, const stndx_t i)
+{
+	return st_enum(m, i);
+}
+
+S_INLINE const stn_t *sm_enum_r(const sm_t *m, const stndx_t i)
+{
+	return st_enum_r(m, i);
+}
+
+S_INLINE ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context)
+{
+	return st_traverse_inorder((const st_t *)m, f, context);
+}
+
 /*
 * Allocation
 */
@@ -585,21 +600,6 @@ sbool_t sm_s_delete(sm_t *m, const ss_t *k)
 /*
  * Enumeration / export data
  */
-
-stn_t *sm_enum(sm_t *m, const stndx_t i)
-{
-	return st_enum(m, i);
-}
-
-const stn_t *sm_enum_r(const sm_t *m, const stndx_t i)
-{
-	return st_enum_r(m, i);
-}
-
-ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context)
-{
-	return st_traverse_inorder((const st_t *)m, f, context);
-}
 
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 {

@@ -8,7 +8,7 @@ Short-term
 * Debug
  * Add sm_t prettyprinting
 * map:
- * enum inorder range
+ * enum inorder range, sm_sort_to_vectors range
 * Tests
  * ss_t: ss_alloc_errors, ss_encoding_errors, ss_clear_errors, ss_cpy_wn, ss_findb, ss_findbm, ss_findc, ss_findnb, ss_find_cn, ss_findr, ss_findrb, ss_findrbm, ss_findrc, ss_findrnb, ss_findr_cn
  * sm_t: sm_reset, sm_grow, sm_reserve, sm_cpy, sm_ii32_inc, sm_uu32_inc, sm_ii_inc, sm_si_inc, sm_i_delete, sm_s_delete, sm_enum, sm_enum_r, sm_inorder_enum
