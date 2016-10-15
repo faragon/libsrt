@@ -115,7 +115,7 @@ static const unsigned char h2n[64] = {
  * Internal functions
  */
 
-static unsigned char hex2nibble(const int h)
+S_INLINE unsigned char hex2nibble(const int h)
 {
 	return h2n[(h - 48) & 0x3f];
 }

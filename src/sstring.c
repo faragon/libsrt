@@ -120,7 +120,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 */
 
 static ss_t ss_void0 = EMPTY_SS;
-ss_t *ss_void = (ss_t *)&ss_void0; /* empty string w/ alloc error set */
+ss_t *ss_void = &ss_void0; /* empty string w/ alloc error set */
 
 /*
  * Forward definitions for some static functions
