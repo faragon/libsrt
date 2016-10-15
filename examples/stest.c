@@ -2498,18 +2498,18 @@ static int test_st_traverse()
 		return res;						\
 	}
 
-TEST_SM_ALLOC_X(test_sm_alloc_ii32, sm_alloc, SM_I32I32, sm_ii32_insert,
-		sm_ii32_at, sm_free)
-TEST_SM_ALLOC_X(test_sm_alloca_ii32, sm_alloca, SM_I32I32, sm_ii32_insert,
-		sm_ii32_at, TEST_SM_ALLOC_DONOTHING)
-TEST_SM_ALLOC_X(test_sm_alloc_uu32, sm_alloc, SM_U32U32, sm_uu32_insert,
-		sm_uu32_at, sm_free)
-TEST_SM_ALLOC_X(test_sm_alloca_uu32, sm_alloca, SM_U32U32, sm_uu32_insert,
-		sm_uu32_at, TEST_SM_ALLOC_DONOTHING)
-TEST_SM_ALLOC_X(test_sm_alloc_ii, sm_alloc, SM_IntInt, sm_ii_insert, sm_ii_at,
+TEST_SM_ALLOC_X(test_sm_alloc_ii32, sm_alloc, SM_I32I32, sm_insert_ii32,
+		sm_at_ii32, sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca_ii32, sm_alloca, SM_I32I32, sm_insert_ii32,
+		sm_at_ii32, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloc_uu32, sm_alloc, SM_U32U32, sm_insert_uu32,
+		sm_at_uu32, sm_free)
+TEST_SM_ALLOC_X(test_sm_alloca_uu32, sm_alloca, SM_U32U32, sm_insert_uu32,
+		sm_at_uu32, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloc_ii, sm_alloc, SM_IntInt, sm_insert_ii, sm_at_ii,
 		sm_free)
-TEST_SM_ALLOC_X(test_sm_alloca_ii, sm_alloca, SM_IntInt, sm_ii_insert,
-		sm_ii_at, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloca_ii, sm_alloca, SM_IntInt, sm_insert_ii,
+		sm_at_ii, TEST_SM_ALLOC_DONOTHING)
 
 #define TEST_SM_SHRINK_TO_FIT(m, ntest, atype, r)			\
 	sm_t *m = sm_alloc(atype, r), *m##2 = sm_alloca(atype, r);	\
@@ -2573,9 +2573,9 @@ static int test_sm_shrink()
 	sm_free(&m, &m##2, &m##b, &m##2b)
 
 /*
- * Covers: sm_dup, sm_ii32_insert, sm_uu32_insert, sm_ii_insert, sm_is_insert,
- * sm_ip_insert, sm_si_insert, sm_ss_insert, sm_sp_insert, sm_ii32_at,
- * sm_uu32_at, sm_ii_at, sm_is_at, sm_ip_at, sm_si_at, sm_ss_at, sm_sp_at
+ * Covers: sm_dup, sm_insert_ii32, sm_insert_uu32, sm_insert_ii, sm_insert_is,
+ * sm_insert_ip, sm_insert_si, sm_insert_ss, sm_insert_sp, sm_at_ii32,
+ * sm_at_uu32, sm_at_ii, sm_at_is, sm_at_ip, sm_at_si, sm_at_ss, sm_at_sp
  */
 static int test_sm_dup()
 {
@@ -2590,21 +2590,21 @@ static int test_sm_dup()
 		ss_printf(&ssk[i], 50, "key_%i", i);
 		ss_printf(&ssv[i], 50, "val_%i", i);
 	}
-	TEST_SM_DUP(aa, 0, SM_I32I32, sm_ii32_insert, i32k, i32v, sm_ii32_at,
+	TEST_SM_DUP(aa, 0, SM_I32I32, sm_insert_ii32, i32k, i32v, sm_at_ii32,
 		    scmp_int32, 10);
-	TEST_SM_DUP(bb, 1, SM_U32U32, sm_uu32_insert, u32k, u32v, sm_uu32_at,
+	TEST_SM_DUP(bb, 1, SM_U32U32, sm_insert_uu32, u32k, u32v, sm_at_uu32,
 		    scmp_uint32, 10);
-	TEST_SM_DUP(cc, 2, SM_IntInt, sm_ii_insert, sik, i64v, sm_ii_at,
+	TEST_SM_DUP(cc, 2, SM_IntInt, sm_insert_ii, sik, i64v, sm_at_ii,
 		    scmp_int64, 10);
-	TEST_SM_DUP(dd, 3, SM_IntStr, sm_is_insert, sik, ssv, sm_is_at,
+	TEST_SM_DUP(dd, 3, SM_IntStr, sm_insert_is, sik, ssv, sm_at_is,
 		    ss_cmp, 10);
-	TEST_SM_DUP(ee, 4, SM_IntPtr, sm_ip_insert, sik, spv, sm_ip_at,
+	TEST_SM_DUP(ee, 4, SM_IntPtr, sm_insert_ip, sik, spv, sm_at_ip,
 		    scmp_ptr, 10);
-	TEST_SM_DUP(ff, 5, SM_StrInt, sm_si_insert, ssk, i64v, sm_si_at,
+	TEST_SM_DUP(ff, 5, SM_StrInt, sm_insert_si, ssk, i64v, sm_at_si,
 		    scmp_int64, 10);
-	TEST_SM_DUP(gg, 6, SM_StrStr, sm_ss_insert, ssk, ssv, sm_ss_at,
+	TEST_SM_DUP(gg, 6, SM_StrStr, sm_insert_ss, ssk, ssv, sm_at_ss,
 		    ss_cmp, 10);
-	TEST_SM_DUP(hh, 7, SM_StrPtr, sm_sp_insert, ssk, spv, sm_sp_at,
+	TEST_SM_DUP(hh, 7, SM_StrPtr, sm_insert_sp, ssk, spv, sm_at_sp,
 		    scmp_ptr, 10);
 	ss_free(&s);
 	return res;
@@ -2615,65 +2615,65 @@ static int test_sm_dup()
 	uint32_t i, tcount = 100;			\
 	sm_t *m = sm_alloc(T, tcount);			\
 	for (i = 0; i < tcount; i++)			\
-		sm_uu32_insert(&m, (unsigned)i, v);	\
+		sm_insert_uu32(&m, (unsigned)i, v);	\
 	for (i = 0; i < tcount; i++)			\
-		if (!sm_u_count(m, i)) {		\
+		if (!sm_count_u(m, i)) {		\
 			res = 1 + (int)i;		\
 			break;				\
 		}					\
 	sm_free(&m);					\
 	return res;
 
-static int test_sm_u_count()
+static int test_sm_count_u()
 {
 	TEST_SM_X_COUNT(SM_U32U32, 1);
 }
 
-static int test_sm_i_count()
+static int test_sm_count_i()
 {
 	TEST_SM_X_COUNT(SM_I32I32, 1);
 }
 
-static int test_sm_s_count()
+static int test_sm_count_s()
 {
 	ss_t *s = ss_dup_c("a_1"), *t = ss_dup_c("a_2"), *u = ss_dup_c("a_3");
 	sm_t *m = sm_alloc(SM_StrInt, 3);
-	sm_si_insert(&m, s, 1);
-	sm_si_insert(&m, t, 2);
-	sm_si_insert(&m, u, 3);
-	int res = sm_s_count(m, s) && sm_s_count(m, t) &&
-		  sm_s_count(m, u) ? 0 : 1;
+	sm_insert_si(&m, s, 1);
+	sm_insert_si(&m, t, 2);
+	sm_insert_si(&m, u, 3);
+	int res = sm_count_s(m, s) && sm_count_s(m, t) &&
+		  sm_count_s(m, u) ? 0 : 1;
 	ss_free(&s, &t, &u);
 	sm_free(&m);
 	return res;
 }
 
-static int test_sm_ii32_inc()
+static int test_sm_inc_ii32()
 {
 	return 0; /* TODO */
 }
 
-static int test_sm_uu32_inc()
+static int test_sm_inc_uu32()
 {
 	return 0; /* TODO */
 }
 
-static int test_sm_ii_inc()
+static int test_sm_inc_ii()
 {
 	return 0; /* TODO */
 }
 
-static int test_sm_si_inc()
+static int test_sm_inc_si()
 {
 	return 0; /* TODO */
 }
 
-static int test_sm_i_delete()
+static int test_sm_delete_i()
 {
 	return 0; /* TODO */
 }
 
-static int test_sm_s_delete()
+static int test_sm_delete_s()
 {
 	return 0; /* TODO */
 }
@@ -2683,7 +2683,7 @@ static int test_sm_enum() /* also enum_r */
 	return 0; /* TODO */
 }
 
-static int test_sm_inorder_enum()
+static int test_sm_enum_inorder()
 {
         return 0; /* TODO */
 }
@@ -2701,7 +2701,7 @@ static int test_sm_sort_to_vectors()
 		 * Add elements
 		 */
 		for (i = test_elems; i > 0 && !res; i--) {
-			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res |= 2;
 				break;
@@ -2728,7 +2728,7 @@ static int test_sm_sort_to_vectors()
 				break;
 			sv_set_size(kv2, 0);
 			sv_set_size(vv2, 0);
-			if (!sm_i_delete(m, j) || !st_assert((st_t *)m)) {
+			if (!sm_delete_i(m, j) || !st_assert((st_t *)m)) {
 				res |= 16;
 				break;
 			}
@@ -2753,7 +2753,7 @@ static int test_sm_double_rotation()
 		 * Add elements
 		 */
 		for (i = test_elems; i > 0; i--) {
-			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res = 2;
 				break;
@@ -2768,7 +2768,7 @@ static int test_sm_double_rotation()
 		for (i = test_elems; i > 0; i--) {
 			if ((i % 2))
 				continue;
-			if (!sm_i_delete(m, i) || !st_assert((st_t *)m)) {
+			if (!sm_delete_i(m, i) || !st_assert((st_t *)m)) {
 				res = 3;
 				break;
 			}
@@ -2781,7 +2781,7 @@ static int test_sm_double_rotation()
 		for (i = 1; i <= (ssize_t)test_elems; i++) {
 			if ((i % 2))
 				continue;
-			if (!sm_ii32_insert(&m, (int)i, (int)-i) ||
+			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
 			    !st_assert((st_t *)m)) {
 				res = 4;
 				break;
@@ -2793,7 +2793,7 @@ static int test_sm_double_rotation()
 		 * Delete all elements
 		 */
 		for (i = test_elems; i > 0; i--) {
-			if (!sm_i_delete(m, i)) {
+			if (!sm_delete_i(m, i)) {
 				res = 5;
 				break;
 			}
@@ -3259,17 +3259,17 @@ int main()
 	STEST_ASSERT(test_sm_alloca_ii());
 	STEST_ASSERT(test_sm_shrink());
 	STEST_ASSERT(test_sm_dup());
-	STEST_ASSERT(test_sm_u_count());
-	STEST_ASSERT(test_sm_i_count());
-	STEST_ASSERT(test_sm_s_count());
-	STEST_ASSERT(test_sm_ii32_inc());
-	STEST_ASSERT(test_sm_uu32_inc());
-	STEST_ASSERT(test_sm_ii_inc());
-	STEST_ASSERT(test_sm_si_inc());
-	STEST_ASSERT(test_sm_i_delete());
-	STEST_ASSERT(test_sm_s_delete());
+	STEST_ASSERT(test_sm_count_u());
+	STEST_ASSERT(test_sm_count_i());
+	STEST_ASSERT(test_sm_count_s());
+	STEST_ASSERT(test_sm_inc_ii32());
+	STEST_ASSERT(test_sm_inc_uu32());
+	STEST_ASSERT(test_sm_inc_ii());
+	STEST_ASSERT(test_sm_inc_si());
+	STEST_ASSERT(test_sm_delete_i());
+	STEST_ASSERT(test_sm_delete_s());
 	STEST_ASSERT(test_sm_enum());
-	STEST_ASSERT(test_sm_inorder_enum());
+	STEST_ASSERT(test_sm_enum_inorder());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
 	/*

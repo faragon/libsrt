@@ -169,7 +169,7 @@ S_INLINE const stn_t *sm_enum_r(const sm_t *m, const stndx_t i)
 	return st_enum_r(m, i);
 }
 
-S_INLINE ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context)
+S_INLINE ssize_t sm_enum_inorder(const sm_t *m, st_traverse f, void *context)
 {
 	return st_traverse_inorder((const st_t *)m, f, context);
 }
@@ -309,7 +309,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
  * Random access
  */
 
-int32_t sm_ii32_at(const sm_t *m, const int32_t k)
+int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT32_MIN);
 	struct SMapii n;
@@ -319,7 +319,7 @@ int32_t sm_ii32_at(const sm_t *m, const int32_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-uint32_t sm_uu32_at(const sm_t *m, const uint32_t k)
+uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 {
 	ASSERT_RETURN_IF(!m, 0);
 	struct SMapuu n;
@@ -329,7 +329,7 @@ uint32_t sm_uu32_at(const sm_t *m, const uint32_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-int64_t sm_ii_at(const sm_t *m, const int64_t k)
+int64_t sm_at_ii(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, SINT64_MAX);
 	struct SMapII n;
@@ -339,7 +339,7 @@ int64_t sm_ii_at(const sm_t *m, const int64_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-const ss_t *sm_is_at(const sm_t *m, const int64_t k)
+const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, ss_void);
 	struct SMapIS n;
@@ -349,7 +349,7 @@ const ss_t *sm_is_at(const sm_t *m, const int64_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-const void *sm_ip_at(const sm_t *m, const int64_t k)
+const void *sm_at_ip(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, NULL);
 	struct SMapIP n;
@@ -359,7 +359,7 @@ const void *sm_ip_at(const sm_t *m, const int64_t k)
 	return nr ? nr->v : NULL;
 }
 
-int64_t sm_si_at(const sm_t *m, const ss_t *k)
+int64_t sm_at_si(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, SINT64_MIN);
 	struct SMapSI n;
@@ -369,7 +369,7 @@ int64_t sm_si_at(const sm_t *m, const ss_t *k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-const ss_t *sm_ss_at(const sm_t *m, const ss_t *k)
+const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, ss_void);
 	struct SMapSS n;
@@ -379,7 +379,7 @@ const ss_t *sm_ss_at(const sm_t *m, const ss_t *k)
 	return nr ? nr->v : ss_void;
 }
 
-const void *sm_sp_at(const sm_t *m, const ss_t *k)
+const void *sm_at_sp(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, NULL);
 	struct SMapSP n;
@@ -393,7 +393,7 @@ const void *sm_sp_at(const sm_t *m, const ss_t *k)
  * Existence check
  */
 
-sbool_t sm_u_count(const sm_t *m, const uint32_t k)
+sbool_t sm_count_u(const sm_t *m, const uint32_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
@@ -401,7 +401,7 @@ sbool_t sm_u_count(const sm_t *m, const uint32_t k)
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
 }
 
-sbool_t sm_i_count(const sm_t *m, const int64_t k)
+sbool_t sm_count_i(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIx n;
@@ -409,7 +409,7 @@ sbool_t sm_i_count(const sm_t *m, const int64_t k)
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
 }
 
-sbool_t sm_s_count(const sm_t *m, const ss_t *k)
+sbool_t sm_count_s(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSX n;
@@ -421,7 +421,7 @@ sbool_t sm_s_count(const sm_t *m, const ss_t *k)
  * Insert
  */
 
-S_INLINE sbool_t sm_ii32_insert_aux(sm_t **m, const int32_t k,
+S_INLINE sbool_t sm_insert_ii32_aux(sm_t **m, const int32_t k,
 				    const int32_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -431,17 +431,17 @@ S_INLINE sbool_t sm_ii32_insert_aux(sm_t **m, const int32_t k,
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
 
-sbool_t sm_ii32_insert(sm_t **m, const int32_t k, const int32_t v)
+sbool_t sm_insert_ii32(sm_t **m, const int32_t k, const int32_t v)
 {
-	return sm_ii32_insert_aux(m, k, v, NULL);
+	return sm_insert_ii32_aux(m, k, v, NULL);
 }
 
-sbool_t sm_ii32_inc(sm_t **m, const int32_t k, const int32_t v)
+sbool_t sm_inc_ii32(sm_t **m, const int32_t k, const int32_t v)
 {
-	return sm_ii32_insert_aux(m, k, v, rw_inc_SM_I32I32);
+	return sm_insert_ii32_aux(m, k, v, rw_inc_SM_I32I32);
 }
 
-S_INLINE sbool_t sm_uu32_insert_aux(sm_t **m, const uint32_t k,
+S_INLINE sbool_t sm_insert_uu32_aux(sm_t **m, const uint32_t k,
 				    const uint32_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -451,17 +451,17 @@ S_INLINE sbool_t sm_uu32_insert_aux(sm_t **m, const uint32_t k,
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
 
-sbool_t sm_uu32_insert(sm_t **m, const uint32_t k, const uint32_t v)
+sbool_t sm_insert_uu32(sm_t **m, const uint32_t k, const uint32_t v)
 {
-	return sm_uu32_insert_aux(m, k, v, NULL);
+	return sm_insert_uu32_aux(m, k, v, NULL);
 }
 
-sbool_t sm_uu32_inc(sm_t **m, const uint32_t k, const uint32_t v)
+sbool_t sm_inc_uu32(sm_t **m, const uint32_t k, const uint32_t v)
 {
-	return sm_uu32_insert_aux(m, k, v, rw_inc_SM_U32U32);
+	return sm_insert_uu32_aux(m, k, v, rw_inc_SM_U32U32);
 }
 
-S_INLINE sbool_t sm_ii_insert_aux(sm_t **m, const int64_t k,
+S_INLINE sbool_t sm_insert_ii_aux(sm_t **m, const int64_t k,
 			          const int64_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -471,17 +471,17 @@ S_INLINE sbool_t sm_ii_insert_aux(sm_t **m, const int64_t k,
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
 
-sbool_t sm_ii_insert(sm_t **m, const int64_t k, const int64_t v)
+sbool_t sm_insert_ii(sm_t **m, const int64_t k, const int64_t v)
 {
-	return sm_ii_insert_aux(m, k, v, NULL);
+	return sm_insert_ii_aux(m, k, v, NULL);
 }
 
-sbool_t sm_ii_inc(sm_t **m, const int64_t k, const int64_t v)
+sbool_t sm_inc_ii(sm_t **m, const int64_t k, const int64_t v)
 {
-	return sm_ii_insert_aux(m, k, v, rw_inc_SM_IntInt);
+	return sm_insert_ii_aux(m, k, v, rw_inc_SM_IntInt);
 }
 
-sbool_t sm_is_insert(sm_t **m, const int64_t k, const ss_t *v)
+sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIS n;
@@ -490,7 +490,7 @@ sbool_t sm_is_insert(sm_t **m, const int64_t k, const ss_t *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-sbool_t sm_ip_insert(sm_t **m, const int64_t k, const void *v)
+sbool_t sm_insert_ip(sm_t **m, const int64_t k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIP n;
@@ -499,7 +499,7 @@ sbool_t sm_ip_insert(sm_t **m, const int64_t k, const void *v)
 	return st_insert((st_t **)m, (const stn_t *)&n);
 }
 
-S_INLINE sbool_t sm_si_insert_aux(sm_t **m, const ss_t *k,
+S_INLINE sbool_t sm_insert_si_aux(sm_t **m, const ss_t *k,
 				  const int64_t v, const st_rewrite_t rw_f)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
@@ -513,17 +513,17 @@ S_INLINE sbool_t sm_si_insert_aux(sm_t **m, const ss_t *k,
 	return r;
 }
 
-sbool_t sm_si_insert(sm_t **m, const ss_t *k, const int64_t v)
+sbool_t sm_insert_si(sm_t **m, const ss_t *k, const int64_t v)
 {
-	return sm_si_insert_aux(m, k, v, NULL);
+	return sm_insert_si_aux(m, k, v, NULL);
 }
 
-sbool_t sm_si_inc(sm_t **m, const ss_t *k, const int64_t v)
+sbool_t sm_inc_si(sm_t **m, const ss_t *k, const int64_t v)
 {
-	return sm_si_insert_aux(m, k, v, rw_inc_SM_StrInt);
+	return sm_insert_si_aux(m, k, v, rw_inc_SM_StrInt);
 }
 
-sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
+sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSS n;
@@ -536,7 +536,7 @@ sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v)
 	return r;
 }
 
-sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
+sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSP n;
@@ -553,7 +553,7 @@ sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v)
  * Delete
  */
 
-sbool_t sm_i_delete(sm_t *m, const int64_t k)
+sbool_t sm_delete_i(sm_t *m, const int64_t k)
 {
 	struct SMapIx ix;
 	struct SMapii ii;
@@ -584,7 +584,7 @@ sbool_t sm_i_delete(sm_t *m, const int64_t k)
 	return st_delete(m, n, callback);
 }
 
-sbool_t sm_s_delete(sm_t *m, const ss_t *k)
+sbool_t sm_delete_s(sm_t *m, const ss_t *k)
 {
 	stn_callback_t callback = NULL;
 	struct SMapSx sx;

@@ -162,91 +162,91 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src);
  */
 
 /* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)|1;2| */
-int32_t sm_ii32_at(const sm_t *m, const int32_t k);
+int32_t sm_at_ii32(const sm_t *m, const int32_t k);
 
 /* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)|1;2| */
-uint32_t sm_uu32_at(const sm_t *m, const uint32_t k);
+uint32_t sm_at_uu32(const sm_t *m, const uint32_t k);
 
 /* #API: |Access to integer-interger map|map; integer key|integer|O(log n)|1;2| */
-int64_t sm_ii_at(const sm_t *m, const int64_t k);
+int64_t sm_at_ii(const sm_t *m, const int64_t k);
 
 /* #API: |Access to integer-string map|map; integer key|string|O(log n)|1;2| */
-const ss_t *sm_is_at(const sm_t *m, const int64_t k);
+const ss_t *sm_at_is(const sm_t *m, const int64_t k);
 
 /* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|1;2| */
-const void *sm_ip_at(const sm_t *m, const int64_t k);
+const void *sm_at_ip(const sm_t *m, const int64_t k);
 
 /* #API: |Access to string-integer map|map; string key|integer|O(log n)|1;2| */
-int64_t sm_si_at(const sm_t *m, const ss_t *k);
+int64_t sm_at_si(const sm_t *m, const ss_t *k);
 
 /* #API: |Access to string-string map|map; string key|string|O(log n)|1;2| */
-const ss_t *sm_ss_at(const sm_t *m, const ss_t *k);
+const ss_t *sm_at_ss(const sm_t *m, const ss_t *k);
 
 /* #API: |Access to string-pointer map|map; string key|pointer|O(log n)|1;2| */
-const void *sm_sp_at(const sm_t *m, const ss_t *k);
+const void *sm_at_sp(const sm_t *m, const ss_t *k);
 
 /*
  * Existence check
  */
 
 /* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-sbool_t sm_u_count(const sm_t *m, const uint32_t k);
+sbool_t sm_count_u(const sm_t *m, const uint32_t k);
 
 /* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-sbool_t sm_i_count(const sm_t *m, const int64_t k);
+sbool_t sm_count_i(const sm_t *m, const int64_t k);
 
 /* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-sbool_t sm_s_count(const sm_t *m, const ss_t *k);
+sbool_t sm_count_s(const sm_t *m, const ss_t *k);
 
 /*
  * Insert
  */
 
 /* #API: |Insert into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ii32_insert(sm_t **m, const int32_t k, const int32_t v);
+sbool_t sm_insert_ii32(sm_t **m, const int32_t k, const int32_t v);
 
 /* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_uu32_insert(sm_t **m, const uint32_t k, const uint32_t v);
+sbool_t sm_insert_uu32(sm_t **m, const uint32_t k, const uint32_t v);
 
 /* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ii_insert(sm_t **m, const int64_t k, const int64_t v);
+sbool_t sm_insert_ii(sm_t **m, const int64_t k, const int64_t v);
 
 /* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_is_insert(sm_t **m, const int64_t k, const ss_t *v);
+sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v);
 
 /* #API: |Insert into int-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ip_insert(sm_t **m, const int64_t k, const void *v);
+sbool_t sm_insert_ip(sm_t **m, const int64_t k, const void *v);
 
 /* #API: |Insert into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_si_insert(sm_t **m, const ss_t *k, const int64_t v);
+sbool_t sm_insert_si(sm_t **m, const ss_t *k, const int64_t v);
 
 /* #API: |Insert into string-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_ss_insert(sm_t **m, const ss_t *k, const ss_t *v);
+sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v);
 
 /* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-sbool_t sm_sp_insert(sm_t **m, const ss_t *k, const void *v);
+sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v);
 
 /* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
-sbool_t sm_ii32_inc(sm_t **m, const int32_t k, const int32_t v);
+sbool_t sm_inc_ii32(sm_t **m, const int32_t k, const int32_t v);
 
 /* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
-sbool_t sm_uu32_inc(sm_t **m, const uint32_t k, const uint32_t v);
+sbool_t sm_inc_uu32(sm_t **m, const uint32_t k, const uint32_t v);
 
 /* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
-sbool_t sm_ii_inc(sm_t **m, const int64_t k, const int64_t v);
+sbool_t sm_inc_ii(sm_t **m, const int64_t k, const int64_t v);
 
 /* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
-sbool_t sm_si_inc(sm_t **m, const ss_t *k, const int64_t v);
+sbool_t sm_inc_si(sm_t **m, const ss_t *k, const int64_t v);
 
 /*
  * Delete
  */
 
 /* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
-sbool_t sm_i_delete(sm_t *m, const int64_t k);
+sbool_t sm_delete_i(sm_t *m, const int64_t k);
 
 /* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
-sbool_t sm_s_delete(sm_t *m, const ss_t *k);
+sbool_t sm_delete_s(sm_t *m, const ss_t *k);
 
 /*
  * Enumeration / export data
@@ -262,7 +262,7 @@ const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
 
 #if 0
 /* #NOTAPI: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
-ssize_t sm_inorder_enum(const sm_t *m, st_traverse f, void *context);
+ssize_t sm_enum_inorder(const sm_t *m, st_traverse f, void *context);
 #endif
 
 /* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */

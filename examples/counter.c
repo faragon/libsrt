@@ -60,7 +60,7 @@ int main(int argc, const char **argv)
 	sb_t *bs = sb_alloc(0);
 	sb_eval(&bs, cmax);
 #else
-	#define COUNTER_SET(val) sm_uu32_insert(&m, val, 1)
+	#define COUNTER_SET(val) sm_insert_uu32(&m, val, 1)
 	#define COUNTER_POPCOUNT sm_size(m)
 	sm_t *m = sm_alloc(SM_U32U32, 0);
 #endif
