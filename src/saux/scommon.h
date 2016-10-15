@@ -327,6 +327,7 @@ S_INLINE void s_free(void *ptr)
     defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
     defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
     defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
+    (defined(__ARM_NEON) && __ARM_NEON > 0) ||				\
     defined(__ARM_FEATURE_UNALIGNED) ||					\
     defined(_MIPS_ARCH_OCTEON) && _MIPS_ARCH_OCTEON ||			\
     defined(__OCTEON__) && __OCTEON__ ||				\

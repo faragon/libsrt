@@ -21,7 +21,7 @@
 
 #ifndef S_BUILD_CRC32_TABLES
 
-#ifdef S_MINIMAL
+#if defined(S_MINIMAL) || (defined(S_CRC32_SLC) && S_CRC32_SLC == 0)
 
 /*
  * Compact implementation, without hash tables (one bit per loop)
@@ -48,37 +48,66 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 #include "scrc32.h"
 
 /*
- * 1 byte per loop: using 1024 byte hash table
- * 16 bytes per loop (CRC32_SLC == 16): using 16384 byte hash table
+ * 1, 4, 8, 12, and 16 bytes per loop using 1024 to 16384 bytes table
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
 	size_t i = 0;
 	const uint8_t *p = (const uint8_t *)buf;
 	crc = ~crc;
-#if CRC32_SLC == 16
-	size_t bs16 = buf_size & ~15;
-	for (; i < bs16; i += 16) {
-		uint32_t a = S_LD_U32(p + i) ^ S_LTOH_U32(crc),
-			 b = S_LD_U32(p + i + 4),
-			 c = S_LD_U32(p + i + 8),
-			 d = S_LD_U32(p + i + 12);
-		crc = crc32_tab[0][S_U32_BYTE3(d)] ^
-		      crc32_tab[1][S_U32_BYTE2(d)] ^
-		      crc32_tab[2][S_U32_BYTE1(d)] ^
-		      crc32_tab[3][S_U32_BYTE0(d)] ^
-		      crc32_tab[4][S_U32_BYTE3(c)] ^
-		      crc32_tab[5][S_U32_BYTE2(c)] ^
-		      crc32_tab[6][S_U32_BYTE1(c)] ^
-		      crc32_tab[7][S_U32_BYTE0(c)] ^
-		      crc32_tab[8][S_U32_BYTE3(b)] ^
-		      crc32_tab[9][S_U32_BYTE2(b)] ^
-		      crc32_tab[10][S_U32_BYTE1(b)] ^
-		      crc32_tab[11][S_U32_BYTE0(b)] ^
-		      crc32_tab[12][S_U32_BYTE3(a)] ^
-		      crc32_tab[13][S_U32_BYTE2(a)] ^
-		      crc32_tab[14][S_U32_BYTE1(a)] ^
-		      crc32_tab[15][S_U32_BYTE0(a)];
+#if S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 || \
+    S_CRC32_SLC == 16
+	size_t bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
+	for (; i < bsX; i += S_CRC32_SLC) {
+		uint32_t a = S_LD_U32(p + i) ^ S_LTOH_U32(crc)
+	#if S_CRC32_SLC >= 8
+		       , b = S_LD_U32(p + i + 4)
+	#endif
+	#if S_CRC32_SLC >= 12
+		       , c = S_LD_U32(p + i + 8)
+	#endif
+	#if S_CRC32_SLC == 16
+		       , d = S_LD_U32(p + i + 12)
+	#endif
+			;
+	#if S_CRC32_SLC == 4
+		#define SC32A a
+	#elif S_CRC32_SLC == 8
+		#define SC32A b
+		#define SC32B a
+	#elif S_CRC32_SLC == 12
+		#define SC32A c
+		#define SC32B b
+		#define SC32C a
+	#else
+		#define SC32A d
+		#define SC32B c
+		#define SC32C b
+		#define SC32D a
+	#endif
+		crc = crc32_tab[0][S_U32_BYTE3(SC32A)] ^
+		      crc32_tab[1][S_U32_BYTE2(SC32A)] ^
+		      crc32_tab[2][S_U32_BYTE1(SC32A)] ^
+		      crc32_tab[3][S_U32_BYTE0(SC32A)]
+        #if S_CRC32_SLC >= 8
+		    ^ crc32_tab[4][S_U32_BYTE3(SC32B)] ^
+		      crc32_tab[5][S_U32_BYTE2(SC32B)] ^
+		      crc32_tab[6][S_U32_BYTE1(SC32B)] ^
+		      crc32_tab[7][S_U32_BYTE0(SC32B)]
+	#endif
+	#if S_CRC32_SLC >= 12
+		    ^ crc32_tab[8][S_U32_BYTE3(SC32C)] ^
+		      crc32_tab[9][S_U32_BYTE2(SC32C)] ^
+		      crc32_tab[10][S_U32_BYTE1(SC32C)] ^
+		      crc32_tab[11][S_U32_BYTE0(SC32C)]
+	#endif
+        #if S_CRC32_SLC == 16
+		    ^ crc32_tab[12][S_U32_BYTE3(SC32D)] ^
+		      crc32_tab[13][S_U32_BYTE2(SC32D)] ^
+		      crc32_tab[14][S_U32_BYTE1(SC32D)] ^
+		      crc32_tab[15][S_U32_BYTE0(SC32D)]
+	#endif
+			;
 	}
 #endif
 	for (; i < buf_size; i++)
@@ -141,9 +170,19 @@ int main(int argc, const char **argv)
 	       " */\n\n"
 	       "#ifndef SCRC32_H\n"
 	       "#define SCRC32_H\n\n"
-	       "#ifndef S_DIS_CRC32_FULL_OPT\n#define CRC32_SLC 16\n"
-	       "#else\n#define CRC32_SLC 1\n#endif\n\n"
-	       "static const uint32_t crc32_tab[CRC32_SLC][256] = {\n",
+	       "#ifndef S_CRC32_SLC\n"
+	       "#define S_CRC32_SLC 12\n"
+	       "#else\n"
+	       "#if S_CRC32_SLC != 0 && S_CRC32_SLC != 1 && "
+						"S_CRC32_SLC != 4 && \\\n"
+	       "    S_CRC32_SLC != 8 && S_CRC32_SLC != 12 && "
+						"S_CRC32_SLC != 16\n"
+	       "#undef S_CRC32_SLC /* if invalid slice size, default to 1 */\n"
+	       "#define S_CRC32_SLC 1\n"
+	       "#endif\n"
+	       "#endif\n\n"
+	       "#if S_CRC32_SLC > 0\n\n"
+	       "static const uint32_t crc32_tab[S_CRC32_SLC][256] = {\n",
 	       S_CRC32_POLY);
 	int rows = 6;
 	for (i = 0; i < 16; i++) {
@@ -158,15 +197,21 @@ int main(int argc, const char **argv)
 			}
 		}
 		printf("\n\t}");
-		if (i < 15) {
-			if (i)
-				printf(",");
-			else
-				printf("\n#if CRC32_SLC == 16\n\t,");
+		switch (i) {
+		case 0: printf("\n#if S_CRC32_SLC >= 4\n\t,"); break;
+		case 3: printf("\n#endif /*#if S_CRC32_SLC >= 4*/");
+			printf("\n#if S_CRC32_SLC >= 8\n\t,"); break;
+		case 7: printf("\n#endif /*#if S_CRC32_SLC >= 8*/");
+			printf("\n#if S_CRC32_SLC >= 12\n\t,"); break;
+		case 11: printf("\n#endif /*#if S_CRC32_SLC >= 12*/");
+			 printf("\n#if S_CRC32_SLC >= 16\n\t,"); break;
+		case 15: printf("\n#endif /*#if S_CRC32_SLC >= 16*/\n"); break;
+		default: printf(",");
 		}
 		printf("\n");
 	}
-	printf("#endif /* #if CRC32_SLC == 16 */\n};\n\n"
+	printf("};\n\n"
+	       "#endif /*#if S_CRC32_SLC > 0*/\n\n"
 	       "#endif /* #ifdef SCRC32_H */\n\n");
 }
 

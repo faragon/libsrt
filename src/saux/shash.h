@@ -14,13 +14,19 @@ extern "C" {
  *
  * Features:
  *
- * - Three CRC-32 implementations:
+ * - Six CRC-32 modes:
  *     + Minimal, without hash tables: 1 bit/loop (100MB/s on i5@3GHz)
- *       (active if doing 'make MINIMAL=1' or 'make ADD_CFLAGS="-DS_MINIMAL"')
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=0" or 'make MINIMAL=1')
  *     + 1024 byte hash table: 1 byte/loop (400MB/s on i5@3GHz)
- *       (if not minimal build, doing 'make ADD_CFLAGS="-DS_DIS_CRC32_FULL_OPT")
- *     + 16384 byte hash table: 16 bytes/loop (2500MB/s on i5@3GHz)
- *       (if not minimal build, this is the enabled by default)
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=1")
+ *     + 4096 byte hash table: 4 bytes/loop (1000MB/s on i5@3GHz)
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=4")
+ *     + 8192 byte hash table: 8 bytes/loop (2000MB/s on i5@3GHz)
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=8")
+ *     + 12288 byte hash table: 12 bytes/loop (2500MB/s on i5@3GHz)
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=12", or 'make' -this is the default-)
+ *     + 16384 byte hash table: 16 bytes/loop (2700MB/s on i5@3GHz)
+ *       ('make ADD_CFLAGS="-DS_CRC32_SLC=16")
  */
 
 #include "scommon.h"

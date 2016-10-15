@@ -11,13 +11,19 @@
 #ifndef SCRC32_H
 #define SCRC32_H
 
-#ifndef S_DIS_CRC32_FULL_OPT
-#define CRC32_SLC 16
+#ifndef S_CRC32_SLC
+#define S_CRC32_SLC 12
 #else
-#define CRC32_SLC 1
+#if S_CRC32_SLC != 0 && S_CRC32_SLC != 1 && S_CRC32_SLC != 4 && \
+    S_CRC32_SLC != 8 && S_CRC32_SLC != 12 && S_CRC32_SLC != 16
+#undef S_CRC32_SLC /* if invalid slice size, default to 1 */
+#define S_CRC32_SLC 1
+#endif
 #endif
 
-static const uint32_t crc32_tab[CRC32_SLC][256] = {
+#if S_CRC32_SLC > 0
+
+static const uint32_t crc32_tab[S_CRC32_SLC][256] = {
 	{
 	0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419, 0x706af48f,
 	0xe963a535, 0x9e6495a3, 0x0edb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -63,7 +69,7 @@ static const uint32_t crc32_tab[CRC32_SLC][256] = {
 	0x54de5729, 0x23d967bf, 0xb3667a2e, 0xc4614ab8, 0x5d681b02, 0x2a6f2b94,
 	0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d
 	}
-#if CRC32_SLC == 16
+#if S_CRC32_SLC >= 4
 	,
 	{
 	0x00000000, 0x191b3141, 0x32366282, 0x2b2d53c3, 0x646cc504, 0x7d77f445,
@@ -199,7 +205,10 @@ static const uint32_t crc32_tab[CRC32_SLC][256] = {
 	0x866616a7, 0x3eda71c2, 0x2c6fde2c, 0x94d3b949, 0x090481f0, 0xb1b8e695,
 	0xa30d497b, 0x1bb12e1e, 0x43d23e48, 0xfb6e592d, 0xe9dbf6c3, 0x516791a6,
 	0xccb0a91f, 0x740cce7a, 0x66b96194, 0xde0506f1
-	},
+	}
+#endif /*#if S_CRC32_SLC >= 4*/
+#if S_CRC32_SLC >= 8
+	,
 	{
 	0x00000000, 0x3d6029b0, 0x7ac05360, 0x47a07ad0, 0xf580a6c0, 0xc8e08f70,
 	0x8f40f5a0, 0xb220dc10, 0x30704bc1, 0x0d106271, 0x4ab018a1, 0x77d03111,
@@ -379,7 +388,10 @@ static const uint32_t crc32_tab[CRC32_SLC][256] = {
 	0xff6b144a, 0x33c114d4, 0xbd4e1337, 0x71e413a9, 0x7b211ab0, 0xb78b1a2e,
 	0x39041dcd, 0xf5ae1d53, 0x2c8e0fff, 0xe0240f61, 0x6eab0882, 0xa201081c,
 	0xa8c40105, 0x646e019b, 0xeae10678, 0x264b06e6
-	},
+	}
+#endif /*#if S_CRC32_SLC >= 8*/
+#if S_CRC32_SLC >= 12
+	,
 	{
 	0x00000000, 0x177b1443, 0x2ef62886, 0x398d3cc5, 0x5dec510c, 0x4a97454f,
 	0x731a798a, 0x64616dc9, 0xbbd8a218, 0xaca3b65b, 0x952e8a9e, 0x82559edd,
@@ -559,7 +571,10 @@ static const uint32_t crc32_tab[CRC32_SLC][256] = {
 	0x448dee14, 0xdf28a27b, 0xa8b6708b, 0x33133ce4, 0x478bd56b, 0xdc2e9904,
 	0xabb04bf4, 0x3015079b, 0x428198ea, 0xd924d485, 0xaeba0675, 0x351f4a1a,
 	0x4187a395, 0xda22effa, 0xadbc3d0a, 0x36197165
-	},
+	}
+#endif /*#if S_CRC32_SLC >= 12*/
+#if S_CRC32_SLC >= 16
+	,
 	{
 	0x00000000, 0xdd96d985, 0x605cb54b, 0xbdca6cce, 0xc0b96a96, 0x1d2fb313,
 	0xa0e5dfdd, 0x7d730658, 0x5a03d36d, 0x87950ae8, 0x3a5f6626, 0xe7c9bfa3,
@@ -740,8 +755,11 @@ static const uint32_t crc32_tab[CRC32_SLC][256] = {
 	0xd00a3709, 0x7e62a698, 0xf088c1a2, 0x5ee05033, 0x7728e4c1, 0xd9407550,
 	0x24b98d25, 0x8ad11cb4, 0xa319a846, 0x0d7139d7
 	}
-#endif /* #if CRC32_SLC == 16 */
+#endif /*#if S_CRC32_SLC >= 16*/
+
 };
+
+#endif /*#if S_CRC32_SLC > 0*/
 
 #endif /* #ifdef SCRC32_H */
 
