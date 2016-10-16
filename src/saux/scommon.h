@@ -303,21 +303,22 @@ S_INLINE void s_free(void *ptr)
  * - Unaligned load/store
  */
 
-#if defined(__i386__) || defined(__x86_64__) || __ARM_ARCH >= 6 ||	\
-    ((defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__)) &&		\
-     !defined(__ARM_ARCH_6M__)) ||					\
+#if (defined(__i386__) || defined(__x86_64__) ||			\
+    (defined(__ARM_ARCH) && __ARM_ARCH >= 6) ||				\
+    defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__) ||			\
     defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6Z__) ||		\
     defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6K__) ||		\
     defined(__ARM_ARCH_6T2__) || defined(_ARM_ARCH_7) ||		\
     defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
-    defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) ||		\
+    defined(__ARM_ARCH_7R__) ||						\
     defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
     (defined(__ARM_NEON) && __ARM_NEON > 0) ||				\
     defined(__ARM_FEATURE_UNALIGNED) ||					\
     defined(_MIPS_ARCH_OCTEON) && _MIPS_ARCH_OCTEON ||			\
     defined(__OCTEON__) && __OCTEON__ ||				\
     defined(__ppc__) || defined(__POWERPC__) ||				\
-    defined(_M_AMD64) || defined(_M_IX86)
+    defined(_M_AMD64) || defined(_M_IX86)) &&				\
+    (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_7M__))
 	#define S_UNALIGNED_MEMORY_ACCESS
 #endif
 
