@@ -10,6 +10,7 @@
 #include "../src/libsrt.h"
 #include "../src/saux/sbitio.h"
 #include "../src/saux/schar.h"
+#include "../src/saux/sdbg.h"
 #include <locale.h>
 
 /*
@@ -2296,10 +2297,10 @@ static ss_t *ss_cat_stn_MyNode1(ss_t **s, const stn_t *n, const stndx_t id)
 	ASSERT_RETURN_IF(!s, NULL);
 	struct MyNode1 *node = (struct MyNode1 *)n;
 	char l[128], r[128];
-	ndx2s(l, sizeof(l), n->l);
+	ndx2s(l, sizeof(l), n->x.l);
 	ndx2s(r, sizeof(r), n->r);
 	ss_cat_printf(s, 128, "[%u: (%i, %c) -> (%s, %s; r:%u)]",
-		     (unsigned)id, node->k, node->v, l, r, n->is_red );
+		     (unsigned)id, node->k, node->v, l, r, n->x.is_red );
 	return *s;
 }
 #endif
@@ -2417,7 +2418,7 @@ static int test_st_insert_del()
 static int test_traverse(struct STraverseParams *tp)
 {
 	ss_t **log = (ss_t **)tp->context;
-	const struct MyNode1 *node = (const struct MyNode1 *)tp->cn;
+	const struct MyNode1 *node = (const struct MyNode1 *)get_node_r(tp->t, tp->c);
 	if (node)
 		ss_cat_printf(log, 512, "%c", node->v);
 	return 0;

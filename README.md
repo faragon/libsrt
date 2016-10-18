@@ -149,34 +149,16 @@ Vector-specific disadvantages/limitations
 
 * No insert function. Rationale: insert is slow (O(n)). Could be added, if someone asks for it.
 
-Tree-specific advantages (st\_t)
-===
-
-* Red-black tree implementation using linear memory pool: only 8 bytes per node overhead (31-bit * 2 indexes, one bit for the red/black flag), self-pack after delete, cache-friendy. E.g. a one million (10^6) node tree with 16 byte nodes (8 bytes for the overhead + 8 bytes for the user data) would requiere just 16MB of RAM: that's a fraction of memory used for per-node allocated memory trees (e.g. "typical" red-black tree for that example would require at least 3x more memory -see doc/benchmarks.md-).
-* Top-down implementation (insertion/deletion/traverse/search)
-* Zero node allocation cost (via pre-allocation or amortization)
-* O(1) allocation
-* O(1) deallocation for constant-size types, O(n) for types requiring additional memory management.
-* O(log(n)) node insert/delete/search (much faster than hash-map worst case, which is O(n) when rehashing is required).
-* O(n) sorted node enumeration (amortized O(n log(n))). Tree traversal provided cases: preorder, inorder, postorder.
-* O(n) unsorted node enumeration (faster than the sorted case)
-* O(n) copy: as fast as a memcpy(), instead of O(n * log(n)) of naive implementation. Rationale: because the Red Black Tree is implemented within a vector, using indexes for nodes, it can be copied directly, without requiring enumerating nodes on the source tree and doing N insertions in the new tree.
-
-Tree-specific disadvantages/limitations
-===
-
-* There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
-* Fix
-
 Map-specific advantages (sm\_t)
 ===
 
-* Abstraction over the tree implementation (st\_t), with same benefits, e.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element).
+* Abstraction over Red-Black tree implementation using linear memory pool with just 8 byte per node overhead, allowing up to (2^32)-1 nodes (for both 32 an 64 bit compilers). E.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element \-8 byte metadata, 4 + 4 byte data\-).
 * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
 * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
 * O(1) for allocation
 * O(1) for deleting maps without strings (one or zero calls to 'free' C function)
 * O(n) for deleting maps with strings (n + one or zero calls to 'free' C function)
+* O(n) for map copy (in case of maps without strings, would be as fast as a memcpy())
 * O(log n) insert, search, delete
 * O(n) sorted enumeration (amortized O(n log n))
 * O(n) unsorted enumeration (faster than the sorted case)
@@ -186,6 +168,7 @@ Map-specific disadvantages/limitations
 ===
 
 * Because of being implemented as a tree, it is slower than a hash-map, on average. However, in total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
+* There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
 
 Test-covered platforms
 ===

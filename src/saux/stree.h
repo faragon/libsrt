@@ -58,7 +58,6 @@ struct STraverseParams
 	void *context;
 	const st_t *t;
 	stndx_t c;
-	const stn_t *cn;
 	ssize_t level;
 	ssize_t max_level;
 };

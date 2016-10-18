@@ -531,7 +531,6 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
 struct TPath {
 	stndx_t p, c;		/* parent, current */
 	int s;			/* state */
-	const stn_t *cn;	/* current (pointer) */
 	};
 
 enum eTMode
@@ -554,12 +553,12 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	ASSERT_RETURN_IF(!t, -1);
 	const size_t ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
-	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
+	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
 	size_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
 	/*
 	 * DF path length takes twice the logarithm of the number of nodes,
-	 * so it will fit always in the stack (e.g. 2^63 nodes would require
-	 * allocating only about 4KB of stack space for the path).
+	 * so it will fit always in the stack (e.g. (2^32)-1 nodes would require
+	 * allocating less than 1KB of stack space for the path).
 	 */
 	struct TPath *p = (struct TPath *)alloca(sizeof(struct TPath) *
 						 (rbt_max_depth + 3));
@@ -568,8 +567,8 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		f(&tp);
 	p[0].p = ST_NIL;
 	p[0].c = t->root;
-	p[0].cn = get_node_r(t, p[0].c);
 	p[0].s = 0;
+	const stn_t *cn_aux;
 	int f_pre = f && m == TR_Preorder;
 	int f_ino = f && m == TR_Inorder;
 	int f_post = f && m == TR_Postorder;
@@ -591,27 +590,28 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		switch (p[tp.level].s) {
 		case 0:	if (f_pre) {
 				tp.c = p[tp.level].c;
-				tp.cn = p[tp.level].cn;
 				f(&tp);
 			}
-			if (p[tp.level].cn->x.l != ST_NIL) {
+			cn_aux = get_node_r(t, p[tp.level].c);
+			if (cn_aux->x.l != ST_NIL) {
 				p[tp.level].s = 1;
 				tp.level++;
-				p[tp.level].c = p[tp.level - 1].cn->x.l;
+				cn_aux = get_node_r(t, p[tp.level - 1].c);
+				p[tp.level].c = cn_aux->x.l;
 			} else {
 				if (f_ino) {
 					tp.c = p[tp.level].c;
-					tp.cn = p[tp.level].cn;
+					cn_aux = get_node_r(t, p[tp.level].c);
 					f(&tp);
 				}
-				if (p[tp.level].cn->r != ST_NIL) {
+				if (cn_aux->r != ST_NIL) {
 					p[tp.level].s = 2;
 					tp.level++;
-					p[tp.level].c = p[tp.level - 1].cn->r;
+					cn_aux = get_node_r(t, p[tp.level - 1].c);
+					p[tp.level].c = cn_aux->r;
 				} else {
 					if (f_post) {
 						tp.c = p[tp.level].c;
-						tp.cn = p[tp.level].cn;
 						f(&tp);
 					}
 					p[tp.level].s = 3;
@@ -620,25 +620,23 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				}
 			}
 			p[tp.level].p = p[tp.level - 1].c;
-			p[tp.level].cn = get_node_r(t, p[tp.level].c);
 			p[tp.level].s = 0;
 			continue;
 		case 1:	if (f_ino) {
 				tp.c = p[tp.level].c;
-				tp.cn = p[tp.level].cn;
 				f(&tp);
 			}
-			if (p[tp.level].cn->r != ST_NIL) {
+			cn_aux = get_node_r(t, p[tp.level].c);
+			if (cn_aux->r != ST_NIL) {
 				p[tp.level].s = 2;
 				tp.level++;
 				p[tp.level].p = p[tp.level - 1].c;
-				p[tp.level].c = p[tp.level - 1].cn->r;
-				p[tp.level].cn = get_node_r(t, p[tp.level].c);
+				cn_aux = get_node_r(t, p[tp.level - 1].c);
+				p[tp.level].c = cn_aux->r;
 				p[tp.level].s = 0;
 			} else {
 				if (f_post) {
 					tp.c = p[tp.level].c;
-					tp.cn = p[tp.level].cn;
 					f(&tp);
 				}
 				p[tp.level].s = 3;
@@ -648,7 +646,6 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			continue;
 		case 2:	if (f_post) {
 				tp.c = p[tp.level].c;
-				tp.cn = p[tp.level].cn;
 				f(&tp);
 			}
 			/* don't break */
@@ -680,14 +677,13 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 	ASSERT_RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
 	const size_t ts = st_size(t);
 	RETURN_IF(!ts, 0);	/* empty */
-	struct STraverseParams tp = { context, t, ST_NIL, NULL, 0, 0 };
+	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
 	sv_t *curr = sv_alloc_t(SV_U32, ts/2),
 	     *next = sv_alloc_t(SV_U32, ts/2);
 	sv_push_u(&curr, t->root);
 	for (;; tp.max_level = ++tp.level) {
 		if (f) {
-			tp.c = ST_NIL;
-			tp.cn = NULL;
+			tp.c = ST_NIL; /* report starting new tree level */
 			f(&tp);
 		}
 		size_t i = 0;
@@ -697,7 +693,6 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 			const stn_t *node = get_node_r(t, n);
 			if (f) {
 				tp.c = n;
-				tp.cn = node;
 				f(&tp);
 			}
 			if (node->x.l != ST_NIL)

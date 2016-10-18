@@ -253,14 +253,6 @@ sbool_t sm_delete_s(sm_t *m, const ss_t *k);
  */
 
 #if 0
-/* #NOTAPI: |Enumerate map elements (unordered)|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
-stn_t *sm_enum(sm_t *m, const stndx_t i);
-
-/* #NOTAPI: |Enumerate map elements (unordered) (read-only|map; element, 0 to n - 1, being n the number of elements|Element offset (0..n-1)|O(1)|0;2| */
-const stn_t *sm_enum_r(const sm_t *m, const stndx_t i);
-#endif
-
-#if 0
 /* #NOTAPI: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
 ssize_t sm_enum_inorder(const sm_t *m, st_traverse f, void *context);
 #endif
