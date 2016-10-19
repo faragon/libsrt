@@ -601,7 +601,6 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			} else {
 				if (f_ino) {
 					tp.c = p[tp.level].c;
-					cn_aux = get_node_r(t, p[tp.level].c);
 					f(&tp);
 				}
 				if (cn_aux->r != ST_NIL) {
