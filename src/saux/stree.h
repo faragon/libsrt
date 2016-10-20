@@ -188,6 +188,23 @@ S_INLINE const stn_t *st_enum_r(const st_t *t, const stndx_t index)
 	return get_node_r(t, index);
 }
 
+/*
+ * Structure required for tree expansion from
+ * other types (e.g. sm_t)
+ */
+
+enum STreeScanState {
+	STS_ScanStart	= 0,
+	STS_ScanLeft	= 1,
+	STS_ScanRight	= 2,
+	STS_ScanDone	= 3
+};
+
+struct STreeScan {
+	stndx_t p, c;		/* parent, current */
+	enum STreeScanState s;
+};
+
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif

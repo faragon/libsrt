@@ -528,11 +528,6 @@ const stn_t *st_locate(const st_t *t, const stn_t *n)
  * Depth-first tree traversal
  */
 
-struct TPath {
-	stndx_t p, c;		/* parent, current */
-	int s;			/* state */
-	};
-
 enum eTMode
 {
 	TR_Preorder	= 1,
@@ -560,14 +555,14 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	 * so it will fit always in the stack (e.g. (2^32)-1 nodes would require
 	 * allocating less than 1KB of stack space for the path).
 	 */
-	struct TPath *p = (struct TPath *)alloca(sizeof(struct TPath) *
+	struct STreeScan *p = (struct STreeScan *)alloca(sizeof(struct STreeScan) *
 						 (rbt_max_depth + 3));
 	ASSERT_RETURN_IF(!p, -1);
 	if (f)
 		f(&tp);
 	p[0].p = ST_NIL;
 	p[0].c = t->root;
-	p[0].s = 0;
+	p[0].s = STS_ScanStart;
 	const stn_t *cn_aux;
 	int f_pre = f && m == TR_Preorder;
 	int f_ino = f && m == TR_Inorder;
@@ -594,7 +589,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			}
 			cn_aux = get_node_r(t, p[tp.level].c);
 			if (cn_aux->x.l != ST_NIL) {
-				p[tp.level].s = 1;
+				p[tp.level].s = STS_ScanLeft;
 				tp.level++;
 				cn_aux = get_node_r(t, p[tp.level - 1].c);
 				p[tp.level].c = cn_aux->x.l;
@@ -604,7 +599,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 					f(&tp);
 				}
 				if (cn_aux->r != ST_NIL) {
-					p[tp.level].s = 2;
+					p[tp.level].s = STS_ScanRight;
 					tp.level++;
 					cn_aux = get_node_r(t, p[tp.level - 1].c);
 					p[tp.level].c = cn_aux->r;
@@ -613,13 +608,13 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 						tp.c = p[tp.level].c;
 						f(&tp);
 					}
-					p[tp.level].s = 3;
+					p[tp.level].s = STS_ScanDone;
 					tp.level--;
 					continue;
 				}
 			}
 			p[tp.level].p = p[tp.level - 1].c;
-			p[tp.level].s = 0;
+			p[tp.level].s = STS_ScanStart;
 			continue;
 		case 1:	if (f_ino) {
 				tp.c = p[tp.level].c;
@@ -627,18 +622,18 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			}
 			cn_aux = get_node_r(t, p[tp.level].c);
 			if (cn_aux->r != ST_NIL) {
-				p[tp.level].s = 2;
+				p[tp.level].s = STS_ScanRight;
 				tp.level++;
 				p[tp.level].p = p[tp.level - 1].c;
 				cn_aux = get_node_r(t, p[tp.level - 1].c);
 				p[tp.level].c = cn_aux->r;
-				p[tp.level].s = 0;
+				p[tp.level].s = STS_ScanStart;
 			} else {
 				if (f_post) {
 					tp.c = p[tp.level].c;
 					f(&tp);
 				}
-				p[tp.level].s = 3;
+				p[tp.level].s = STS_ScanDone;
 				tp.level--;
 				continue;
 			}
@@ -648,7 +643,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				f(&tp);
 			}
 			/* don't break */
-		default:p[tp.level].s = 3;
+		default:p[tp.level].s = STS_ScanDone;
 			tp.level--;
 			continue;
 		}
