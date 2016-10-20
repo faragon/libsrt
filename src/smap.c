@@ -276,8 +276,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 		for (i = 0; i < ss; i++) {
 			const struct SMapSx *ms = (const struct SMapSx *)st_enum_r(src, i);
 			struct SMapSx *mt = (struct SMapSx *)st_enum(*m, i);
-			ss_t *zzs = ss_dup(ms->k);
-			mt->k = zzs;
+			mt->k = ss_dup(ms->k);
 		}
 		break;
 	case SM_StrStr:
