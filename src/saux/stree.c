@@ -555,8 +555,9 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	 * so it will fit always in the stack (e.g. (2^32)-1 nodes would require
 	 * allocating less than 1KB of stack space for the path).
 	 */
-	struct STreeScan *p = (struct STreeScan *)alloca(sizeof(struct STreeScan) *
-						 (rbt_max_depth + 3));
+	struct STreeScan *p = (struct STreeScan *)
+					alloca(sizeof(struct STreeScan) *
+					       (rbt_max_depth + 3));
 	ASSERT_RETURN_IF(!p, -1);
 	if (f)
 		f(&tp);
@@ -576,14 +577,9 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		 * rebalanzing code.
 		 */
 		S_ASSERT(tp.max_level < (ssize_t)rbt_max_depth);
-		/* State:
-		 * 0: start scan
-		 * 1: scannning left subtree
-		 * 2: scanning right subtree
-		 * 3: scanning done
-		 */
 		switch (p[tp.level].s) {
-		case 0:	if (f_pre) {
+		case STS_ScanStart:
+			if (f_pre) {
 				tp.c = p[tp.level].c;
 				f(&tp);
 			}
@@ -616,7 +612,8 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			p[tp.level].p = p[tp.level - 1].c;
 			p[tp.level].s = STS_ScanStart;
 			continue;
-		case 1:	if (f_ino) {
+		case STS_ScanLeft:
+			if (f_ino) {
 				tp.c = p[tp.level].c;
 				f(&tp);
 			}
@@ -638,12 +635,14 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				continue;
 			}
 			continue;
-		case 2:	if (f_post) {
+		case STS_ScanRight:
+			if (f_post) {
 				tp.c = p[tp.level].c;
 				f(&tp);
 			}
 			/* don't break */
-		default:p[tp.level].s = STS_ScanDone;
+		default:
+			p[tp.level].s = STS_ScanDone;
 			tp.level--;
 			continue;
 		}
