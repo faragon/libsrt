@@ -72,6 +72,15 @@ struct SMapSP { struct SMapSx x; const void *v; };
 typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
 			/* (map is immplemented as a tree)	       */
 
+typedef sbool_t (*sm_enum_ii32_t)(int32_t k, int32_t v, void *context);
+typedef sbool_t (*sm_enum_uu32_t)(uint32_t k, uint32_t v, void *context);
+typedef sbool_t (*sm_enum_ii_t)(int64_t k, int64_t v, void *context);
+typedef sbool_t (*sm_enum_is_t)(int64_t k, const ss_t *, void *context);
+typedef sbool_t (*sm_enum_ip_t)(int64_t k, const void *, void *context);
+typedef sbool_t (*sm_enum_si_t)(const ss_t *, int64_t v, void *context);
+typedef sbool_t (*sm_enum_ss_t)(const ss_t *, const ss_t *, void *context);
+typedef sbool_t (*sm_enum_sp_t)(const ss_t *, const void *, void *context);
+
 /*
  * Allocation
  */

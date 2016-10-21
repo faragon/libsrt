@@ -14,9 +14,19 @@
  * Internal functions
  */
 
+S_INLINE int cmp_ni_i(const struct SMapii *a, int32_t b)
+{
+	return a->k - b;
+}
+
 static int cmp_i(const struct SMapii *a, const struct SMapii *b)
 {
 	return a->k - b->k;
+}
+
+S_INLINE int cmp_nu_u(const struct SMapuu *a, uint32_t b)
+{
+	return a->k - b;
 }
 
 static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
@@ -24,10 +34,21 @@ static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
+S_INLINE int cmp_nI_I(const struct SMapIx *a, uint64_t b)
+{
+	int64_t r = a->k - b;
+	return r > 0 ? 1 : r < 0 ? -1 : 0;
+}
+
 static int cmp_I(const struct SMapIx *a, const struct SMapIx *b)
 {
 	int64_t r = a->k - b->k;
 	return r > 0 ? 1 : r < 0 ? -1 : 0;
+}
+
+S_INLINE int cmp_ns_s(const struct SMapSx *a, const ss_t *b)
+{
+	return ss_cmp(a->k, b);
 }
 
 static int cmp_s(const struct SMapSx *a, const struct SMapSx *b)
@@ -159,10 +180,140 @@ static st_cmp_t type2cmpf(const enum eSM_Type t)
 	return NULL;
 }
 
-S_INLINE ssize_t sm_enum_inorder(const sm_t *m, st_traverse f, void *context)
-{
-	return st_traverse_inorder((const st_t *)m, f, context);
-}
+#define SM_ENUM_INORDER_XX(FN, CALLBACK_T, MAP_TYPE, KEY_T, TR_CMP_MIN,	     \
+			   TR_CMP_MAX,TR_CALLBACK)			     \
+	size_t FN(const sm_t *m, KEY_T kmin, KEY_T kmax, CALLBACK_T f,	     \
+		  void *context)					     \
+	{								     \
+		RETURN_IF(!m, 0); /* null tree */			     \
+		RETURN_IF(m->d.sub_type != MAP_TYPE, 0); /* wrong type */    \
+		const size_t ts = sm_size(m);				     \
+		RETURN_IF(!ts, S_FALSE); /* empty tree */		     \
+		ssize_t level = 0;					     \
+		size_t nelems = 0, rbt_max_depth = 2 * (slog2(ts) + 1);	     \
+		struct STreeScan *p = (struct STreeScan *)		     \
+					alloca(sizeof(struct STreeScan) *    \
+						 (rbt_max_depth + 3));	     \
+		ASSERT_RETURN_IF(!p, 0); /* BEHAVIOR: stack error */	     \
+		p[0].p = ST_NIL;					     \
+		p[0].c = m->root;					     \
+		p[0].s = STS_ScanStart;					     \
+		const stn_t *cn;					     \
+		int cmpmin, cmpmax;					     \
+		while (level >= 0) {					     \
+			S_ASSERT(level <= (ssize_t)rbt_max_depth);	     \
+			switch (p[level].s) {				     \
+			case STS_ScanStart:				     \
+				cn = get_node_r(m, p[level].c);		     \
+				cmpmin = TR_CMP_MIN;			     \
+				cmpmax = TR_CMP_MAX;			     \
+				if (cn->x.l != ST_NIL && cmpmin > 0) {	     \
+					p[level].s = STS_ScanLeft;	     \
+					level++;			     \
+					cn = get_node_r(m, p[level - 1].c);  \
+					p[level].c = cn->x.l;		     \
+				} else {				     \
+					/* node with null left children */   \
+					if (cmpmin >= 0 && cmpmax <= 0) {    \
+						if (f && !TR_CALLBACK)	     \
+							return nelems;	     \
+						nelems++;		     \
+					}				     \
+					if (cn->r != ST_NIL && cmpmax < 0) { \
+						p[level].s = STS_ScanRight;  \
+						level++;		     \
+						cn = get_node_r(m,	     \
+							  p[level - 1].c);   \
+						p[level].c = cn->r;	     \
+					} else {			     \
+						p[level].s = STS_ScanDone;   \
+						level--;		     \
+						continue;		     \
+					}				     \
+				}					     \
+				p[level].p = p[level - 1].c;		     \
+				p[level].s = STS_ScanStart;		     \
+				continue;				     \
+			case STS_ScanLeft:				     \
+				cn = get_node_r(m, p[level].c);		     \
+				cmpmin = TR_CMP_MIN;			     \
+				cmpmax = TR_CMP_MAX;			     \
+				if (cmpmin >= 0 && cmpmax <= 0) {	     \
+					if (f && !TR_CALLBACK)		     \
+						return nelems;		     \
+					nelems++;			     \
+				}					     \
+				if (cn->r != ST_NIL && cmpmax < 0) {	     \
+					p[level].s = STS_ScanRight;	     \
+					level++;			     \
+					p[level].p = p[level - 1].c;	     \
+					cn = get_node_r(m, p[level - 1].c);  \
+					p[level].c = cn->r;		     \
+					p[level].s = STS_ScanStart;	     \
+				} else {				     \
+					p[level].s = STS_ScanDone;	     \
+					level--;			     \
+					continue;			     \
+				}					     \
+				continue;				     \
+			case STS_ScanRight:				     \
+				/* don't break */			     \
+			default:					     \
+				p[level].s = STS_ScanDone;		     \
+				level--;				     \
+				continue;				     \
+			}						     \
+		}							     \
+		return nelems;						     \
+	}
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_ii32, sm_enum_ii32_t, SM_I32I32, int32_t,
+		   cmp_ni_i((const struct SMapii *)cn, kmin),
+		   cmp_ni_i((const struct SMapii *)cn, kmax),
+		   f(((const struct SMapii *)cn)->k,
+		     ((const struct SMapii *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_uu32, sm_enum_uu32_t, SM_U32U32, uint32_t,
+		   cmp_nu_u((const struct SMapuu *)cn, kmin),
+		   cmp_nu_u((const struct SMapuu *)cn, kmax),
+		   f(((const struct SMapuu *)cn)->k,
+		     ((const struct SMapuu *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_ii, sm_enum_ii_t, SM_IntInt, int64_t,
+		   cmp_nI_I((const struct SMapIx *)cn, kmin),
+		   cmp_nI_I((const struct SMapIx *)cn, kmax),
+		   f(((const struct SMapIx *)cn)->k,
+		     ((const struct SMapII *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_is, sm_enum_is_t, SM_IntStr, int64_t,
+		   cmp_nI_I((const struct SMapIx *)cn, kmin),
+		   cmp_nI_I((const struct SMapIx *)cn, kmax),
+		   f(((const struct SMapIx *)cn)->k,
+		     ((const struct SMapIS *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_ip, sm_enum_ip_t, SM_IntPtr, int64_t,
+		   cmp_nI_I((const struct SMapIx *)cn, kmin),
+		   cmp_nI_I((const struct SMapIx *)cn, kmax),
+		   f(((const struct SMapIx *)cn)->k,
+		     ((const struct SMapIP *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_si, sm_enum_si_t, SM_StrInt, const ss_t *,
+		   cmp_ns_s((const struct SMapSx *)cn, kmin),
+		   cmp_ns_s((const struct SMapSx *)cn, kmax),
+		   f(((const struct SMapSx *)cn)->k,
+		     ((const struct SMapSI *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_ss, sm_enum_ss_t, SM_StrStr, const ss_t *,
+		   cmp_ns_s((const struct SMapSx *)cn, kmin),
+		   cmp_ns_s((const struct SMapSx *)cn, kmax),
+		   f(((const struct SMapSx *)cn)->k,
+		     ((const struct SMapSS *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_enum_inorder_sp, sm_enum_sp_t, SM_StrPtr, const ss_t *,
+		   cmp_ns_s((const struct SMapSx *)cn, kmin),
+		   cmp_ns_s((const struct SMapSx *)cn, kmax),
+		   f(((const struct SMapSx *)cn)->k,
+		     ((const struct SMapSP *)cn)->v, context))
 
 /*
  * Allocation
@@ -611,7 +762,7 @@ ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 		kt = SV_GEN;
 		vt = m->d.sub_type == SM_StrInt ? SV_I64 : SV_GEN;
 		break;
-	default: return 0;
+	default: return 0; /* BEHAVIOR: invalid type */
 	}
 	if (v2x.kv) {
 		if (v2x.kv->d.sub_type != (uint8_t)kt)
