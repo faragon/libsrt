@@ -2684,9 +2684,66 @@ static int test_sm_enum() /* also enum_r */
 	return 0; /* TODO */
 }
 
+sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
+{
+	/* printf("k: %i, v: %i\n", k, v); */
+	if (context)
+		(*((size_t *)context))++;
+	return S_TRUE;
+}
+
+sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
+{
+	/* printf("k: '%s', v: '%s'\n", ss_to_c((ss_t **)&k), ss_to_c((ss_t **)&v)); */
+	if (context)
+		(*((size_t *)context))++;
+	return S_TRUE;
+}
+
 static int test_sm_enum_inorder()
 {
-        return 0; /* TODO */
+	int res = 1;
+	size_t nelems = 100;
+	sm_t *m = sm_alloc(SM_I32I32, nelems),
+	     *m2 = sm_alloc(SM_StrStr, nelems);
+	if (m && m2) {
+		ss_t *stmp = ss_alloca(1000);
+		size_t i;
+		for (i = 0; i < nelems; i++) {
+			sm_insert_ii32(&m, (int)i, (int)i);
+			ss_printf(&stmp, 200, "%04i", (int)i);
+			sm_insert_ss(&m2, stmp, stmp);
+		}
+		size_t cnt1 = 0, cnt2 = 0;
+		int32_t lowerb1 = 10, upperb1 = 20;
+		ss_t *lowerb2 = ss_alloca(100);
+		ss_t *upperb2 = ss_alloca(100);
+		ss_cpy_c(&lowerb2, "001"); /* covering from "0010" to "0019" */
+		ss_cpy_c(&upperb2, "002");
+		ssize_t processed1 = sm_enum_inorder_ii32(m, lowerb1, upperb1,
+							  cback_i32i32, &cnt1),
+			processed1b = sm_enum_inorder_ii32(m, lowerb1, upperb1,
+							   NULL, NULL),
+			processed2 = sm_enum_inorder_ss(m2, lowerb2, upperb2,
+							cback_ss, &cnt2),
+			processed2b = sm_enum_inorder_ss(m2, lowerb2, upperb2,
+							 NULL, NULL);
+		res = processed1 != 11 ? 2 : 0;
+		res |= processed1 != processed1b ? 4 : 0;
+		res |= processed1b != cnt1 ? 8 : 0;
+		res |= processed2 != 10 ? 0x20 : 0;
+		res |= processed2 != processed2b ? 0x40 : 0;
+		res |= processed2b != cnt2 ? 0x80 : 0;
+		/*
+		 * Wrong type checks
+		 */
+		res |= sm_enum_inorder_uu32(m, 10, 20, 0, 0) > 0 ? 0x100 : 0;
+		res |= sm_enum_inorder_ii(m, 10, 20, 0, 0) > 0 ? 0x200 : 0;
+		res |= sm_enum_inorder_is(m, 10, 20, 0, 0) > 0 ? 0x400 : 0;
+		res |= sm_enum_inorder_ip(m, 10, 20, 0, 0) > 0 ? 0x800 : 0;
+	}
+	sm_free(&m, &m2);
+        return res;
 }
 
 static int test_sm_sort_to_vectors()

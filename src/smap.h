@@ -261,16 +261,36 @@ sbool_t sm_delete_s(sm_t *m, const ss_t *k);
  * Enumeration / export data
  */
 
-#if 0
-/* #NOTAPI: |Enumerate map elements using callback (in-order traverse)|map; traverse function; traverse function context|Elements processed|O(n); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
-ssize_t sm_enum_inorder(const sm_t *m, st_traverse f, void *context);
-#endif
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_ii32(const sm_t *m, int32_t key_min, int32_t key_max, sm_enum_ii32_t f, void *context);
 
-/* #API: |Sort map to vector|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_uu32(const sm_t *m, uint32_t key_min, uint32_t key_max, sm_enum_uu32_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_ii(const sm_t *m, int64_t key_min, int64_t key_max, sm_enum_ii_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_is(const sm_t *m, int64_t key_min, int64_t key_max, sm_enum_is_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_ip(const sm_t *m, int64_t key_min, int64_t key_max, sm_enum_ip_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
+size_t sm_enum_inorder_si(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_enum_si_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_enum_inorder_ss(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_enum_ss_t f, void *context);
+
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
+size_t sm_enum_inorder_sp(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_enum_sp_t f, void *context);
+
+/* #NOTAPI: |Sort map to vector (used for test coverage, not as documented API)|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
 /*
- * Inlined functions
+ * Unordered enumeration is inlined in order to get almost as fast
+ * as array access after compiler optimization.
  */
 
 #define S_SM_ENUM_AUX_K(NT, m, i, n_k, def_k)		\
