@@ -106,8 +106,8 @@ static int AA_cmp(const void *a, const void *b) {
 	static int test_ss_dup_##suffix(const char *a, const char *b) {	      \
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);	      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
-			(!strcmp(ss_to_c(&sa), b) ? 0 : 4) |		      \
-			(!strcmp(ss_to_c(&sb), b) ? 0 : 8);		      \
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
 		ss_free(&sa, &sb);					      \
 		return res;						      \
 	}
@@ -117,8 +117,8 @@ static int AA_cmp(const void *a, const void *b) {
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");    \
 		ss_cpy_##suffix(&sb, sa);				      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
-			(!strcmp(ss_to_c(&sa), b) ? 0 : 4) |		      \
-			(!strcmp(ss_to_c(&sb), b) ? 0 : 8);		      \
+			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
 		ss_free(&sa, &sb);					      \
 		return res;						      \
 	}
@@ -129,7 +129,7 @@ static int AA_cmp(const void *a, const void *b) {
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);		   \
 		ss_cat_##suffix(&sa, sb);				   \
 		int res = (!sa || !sb) ? 1 :				   \
-				(!strcmp(ss_to_c(&sa), expected) ? 0 : 2); \
+				(!strcmp(ss_to_c(sa), expected) ? 0 : 2);  \
 		ss_free(&sa, &sb);					   \
 		return res;						   \
 	}
@@ -250,13 +250,13 @@ static int test_ss_resize_x()
 	ss_t *a = ss_dup_c(i0), *b = ss_dup(a);
 	int res = a && b ? 0 : 1;
 	res |= res ? 0: ((ss_resize(&a, 14, '_') &&
-			 !strcmp(ss_to_c(&a), i1)) ? 0 : 2) |
+			 !strcmp(ss_to_c(a), i1)) ? 0 : 2) |
 			((ss_resize_u(&b, 13, '_') &&
-			 !strcmp(ss_to_c(&b), i1)) ? 0 : 4) |
+			 !strcmp(ss_to_c(b), i1)) ? 0 : 4) |
 			((ss_resize(&a, 4, '_') &&
-			 !strcmp(ss_to_c(&a), i2)) ? 0 : 8) |
+			 !strcmp(ss_to_c(a), i2)) ? 0 : 8) |
 			((ss_resize_u(&b, 4, '_') &&
-			 !strcmp(ss_to_c(&b), i3)) ? 0 : 16);
+			 !strcmp(ss_to_c(b), i3)) ? 0 : 16);
 	ss_free(&a, &b);
 	return res;
 }
@@ -266,7 +266,7 @@ static int test_ss_trim(const char *in, const char *expected)
 	ss_t *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
 	res |= res ? 0 : (ss_trim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(&a), expected) ? 0 : 4);
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -276,7 +276,7 @@ static int test_ss_ltrim(const char *in, const char *expected)
 	ss_t *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
 	res |= res ? 0 : (ss_ltrim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(&a), expected) ? 0 : 4);
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -286,7 +286,7 @@ static int test_ss_rtrim(const char *in, const char *expected)
 	ss_t *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
 	res |= res ? 0 : (ss_rtrim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(&a), expected) ? 0 : 4);
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -297,7 +297,7 @@ static int test_ss_erase(const char *in, const size_t byte_off,
 	ss_t *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
 	res |= res ? 0 : (ss_erase(&a, byte_off, num_bytes) ? 0 : 2) |
-			(!strcmp(ss_to_c(&a), expected) ? 0 : 4);
+			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -312,7 +312,7 @@ static int test_ss_erase_u(const char *in, const size_t char_off,
 			(in_wlen - char_off) > num_chars ? in_wlen - num_chars :
 			char_off;
 	res |= res ? 0 : (ss_erase_u(&a, char_off, num_chars) ? 0 : 2) |
-			 (!strcmp(ss_to_c(&a), expected) ? 0 : 4) |
+			 (!strcmp(ss_to_c(a), expected) ? 0 : 4) |
 			 (expected_len == ss_len_u(a) ? 0 : 8);
 	ss_free(&a);
 	return res;
@@ -385,7 +385,7 @@ static int test_ss_dup()
 {
 	ss_t *b = ss_dup_c("hello");
 	ss_t *a = ss_dup(b);
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -398,7 +398,7 @@ static int test_ss_dup_sub()
 	sv_push_u(&sub, 5);
 	ss_t *a = ss_dup_sub(b, sub, 0);
 	int res = !a ? 1 : (ss_len(a) == ss_nth_size(sub, 0) ? 0 : 2) |
-			  (!strcmp("hello", ss_to_c(&a)) ? 0 : 4);
+			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
 	ss_free(&a, &b);
 	sv_free(&sub);
 	return res;
@@ -409,7 +409,7 @@ static int test_ss_dup_substr()
 	ss_t *a = ss_dup_c("hello");
 	ss_t *b = ss_dup_substr(a, 0, 5);
 	int res = (!a || !b) ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
-				   (!strcmp("hello", ss_to_c(&a)) ? 0 : 4);
+				   (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
 	ss_free(&a, &b);
 	return res;
 }
@@ -419,7 +419,7 @@ static int test_ss_dup_substr_u()
 	ss_t *b = ss_dup_c("hello");
 	ss_t *a = ss_dup_substr(b, 0, 5);
 	int res = !a ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
-			  (!strcmp("hello", ss_to_c(&a)) ? 0 : 4);
+			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
 	ss_free(&a, &b);
 	return res;
 }
@@ -427,7 +427,7 @@ static int test_ss_dup_substr_u()
 static int test_ss_dup_cn()
 {
 	ss_t *a = ss_dup_cn("hello123", 5);
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -435,7 +435,7 @@ static int test_ss_dup_cn()
 static int test_ss_dup_c()
 {
 	ss_t *a = ss_dup_cn("hello", 5);
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -443,7 +443,7 @@ static int test_ss_dup_c()
 static int test_ss_dup_wn()
 {
 	ss_t *a = ss_dup_wn(L"hello123", 5);
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -451,7 +451,7 @@ static int test_ss_dup_wn()
 static int test_ss_dup_w()
 {
 	ss_t *a = ss_dup_w(L"hello");
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -459,7 +459,7 @@ static int test_ss_dup_w()
 static int test_ss_dup_int(const int64_t num, const char *expected)
 {
 	ss_t *a = ss_dup_int(num);
-	int res = !a ? 1 : (!strcmp(ss_to_c(&a), expected) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -468,8 +468,8 @@ static int test_ss_dup_tolower(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_tolower(sa);
 	int res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4) |
-			   (!strcmp(ss_to_c(&sb), b) ? 0 : 8);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -478,8 +478,8 @@ static int test_ss_dup_toupper(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_toupper(sa);
 	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4) |
-			   (!strcmp(ss_to_c(&sb), b) ? 0 : 8);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -488,7 +488,7 @@ static int test_ss_dup_erase(const char *in, const size_t off,
 			     const size_t size, const char *expected)
 {
 	ss_t *a = ss_dup_c(in), *b = ss_dup_erase(a, off, size);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), expected) ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -497,7 +497,7 @@ static int test_ss_dup_erase_u()
 {
 	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
 	     *b = ss_dup_erase_u(a, 2, 3);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), "heo") ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -509,8 +509,8 @@ static int test_ss_dup_replace(const char *in, const char *r, const char *s,
 	     *c = ss_dup_c(s), *d = ss_dup_replace(a, 0, b, c),
 	     *e = ss_dup_replace(a, 0, a, a);
 	int res = (!a || !b) ? 1 :
-			(!strcmp(ss_to_c(&d), expected) ? 0 : 2) |
-			(!strcmp(ss_to_c(&e), in)? 0 : 4); /* aliasing */
+			(!strcmp(ss_to_c(d), expected) ? 0 : 2) |
+			(!strcmp(ss_to_c(e), in)? 0 : 4); /* aliasing */
 	ss_free(&a, &b, &c, &d, &e);
 	return res;
 }
@@ -519,8 +519,8 @@ static int test_ss_dup_resize()
 {
 	ss_t *a = ss_dup_c("hello"), *b = ss_dup_resize(a, 10, 'z'),
 	     *c = ss_dup_resize(a, 2, 'z');
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), "hellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(&c), "he") ? 0 : 4);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -532,8 +532,8 @@ static int test_ss_dup_resize_u()
 	     *c = ss_dup_resize_u(a, 3, 'z');
 	int res = (!a || !b) ?
 		1 :
-		(!strcmp(ss_to_c(&b), U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
-		(!strcmp(ss_to_c(&c), U8_S_N_TILDE_F1 "he") ? 0 : 4);
+		(!strcmp(ss_to_c(b), U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
+		(!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -541,7 +541,7 @@ static int test_ss_dup_resize_u()
 static int test_ss_dup_trim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_trim(sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -549,7 +549,7 @@ static int test_ss_dup_trim(const char *a, const char *expected)
 static int test_ss_dup_ltrim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -557,7 +557,7 @@ static int test_ss_dup_ltrim(const char *a, const char *expected)
 static int test_ss_dup_rtrim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -567,7 +567,7 @@ static int test_ss_dup_printf()
 	char btmp[512];
 	ss_t *a = ss_dup_printf(512, "abc%i%s%08X", 1, "hello", -1);
 	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
-	int res = !strcmp(ss_to_c(&a), btmp) ? 0 : 1;
+	int res = !strcmp(ss_to_c(a), btmp) ? 0 : 1;
 	ss_free(&a);
 	return res;
 }
@@ -579,7 +579,7 @@ static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
 	va_start(ap, fmt);
 	ss_t *a = ss_dup_printf_va(max_size, fmt, ap);
 	va_end(ap);
-	int res = !strcmp(ss_to_c(&a), expected) ? 0 : 1;
+	int res = !strcmp(ss_to_c(a), expected) ? 0 : 1;
 	ss_free(&a);
 	return res;
 }
@@ -587,7 +587,7 @@ static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
 static int test_ss_dup_char(const int32_t in, const char *expected)
 {
 	ss_t *a = ss_dup_char(in);
-	int res = !a ? 1 : !strcmp(ss_to_c(&a), expected) ? 0 : 2;
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
 	ss_free(&a);
 	return res;
 }
@@ -604,7 +604,7 @@ static int test_ss_dup_read(const char *pattern)
 		      write_size != pattern_size ? 2 :
 		      fseek(f, 0, SEEK_SET) != 0 ? 4 :
 		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
-		      strcmp(ss_to_c(&s), pattern) ? 16 : 0;
+		      strcmp(ss_to_c(s), pattern) ? 16 : 0;
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
 			res |= 32;
@@ -616,11 +616,11 @@ static int test_ss_dup_read(const char *pattern)
 static int test_ss_cpy(const char *in)
 {
 	ss_t *a = ss_dup_c(in);
-	int res = !a ? 1 : (!strcmp(ss_to_c(&a), in) ? 0 : 2) |
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
 			  (ss_len(a) == strlen(in) ? 0 : 4);
 	ss_t *b = NULL;
 	ss_cpy(&b, a);
-	res = res ? 0 : (!strcmp(ss_to_c(&b), in) ? 0 : 8) |
+	res = res ? 0 : (!strcmp(ss_to_c(b), in) ? 0 : 8) |
 		       (ss_len(b) == strlen(in) ? 0 : 16);
 	ss_free(&a, &b);
 	return res;
@@ -664,9 +664,9 @@ static int test_ss_cpy_cn()
 {
 	char b[3] = { 0, 1, 2 };
 	ss_t *a = NULL;
-	int res = !ss_cpy_cn(&a, b, 3) ? 1 : (ss_to_c(&a)[0] == b[0] ? 0: 2) |
-					     (ss_to_c(&a)[1] == b[1] ? 0: 4) |
-					     (ss_to_c(&a)[2] == b[2] ? 0: 8) |
+	int res = !ss_cpy_cn(&a, b, 3) ? 1 : (ss_to_c(a)[0] == b[0] ? 0: 2) |
+					     (ss_to_c(a)[1] == b[1] ? 0: 4) |
+					     (ss_to_c(a)[2] == b[2] ? 0: 8) |
 					     (ss_len(a) == 3 ? 0 : 16);
 	ss_free(&a);
 	return res;
@@ -675,12 +675,12 @@ static int test_ss_cpy_cn()
 static int test_ss_cpy_c(const char *in)
 {
 	ss_t *a = NULL;
-	int res = !ss_cpy_c(&a, in) ? 1 : (!strcmp(ss_to_c(&a), in) ? 0 : 2) |
+	int res = !ss_cpy_c(&a, in) ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
 					 (ss_len(a) == strlen(in) ? 0 : 4);
 	char tmp[512];
 	sprintf(tmp, "%s%s", in, in);
 	res |= res ? 0 :
-		ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(&a), tmp) ? 0 : 8;
+		ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
 }
@@ -689,11 +689,11 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 {
 	ss_t *a = NULL;
 	int res = !ss_cpy_w(&a, in) ? 1 :
-				(!strcmp(ss_to_c(&a), expected_utf8) ? 0 : 2) |
+				(!strcmp(ss_to_c(a), expected_utf8) ? 0 : 2) |
 				(ss_len(a) == strlen(expected_utf8) ? 0 : 4);
 	char tmp[512];
 	sprintf(tmp, "%ls%ls", in, in);
-	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(&a), tmp) ?
+	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ?
 									  0 : 8;
 	ss_free(&a);
 	return res;
@@ -703,7 +703,7 @@ static int test_ss_cpy_int(const int64_t num, const char *expected)
 {
 	ss_t *a = NULL;
 	ss_cpy_int(&a, num);
-	int res = !a ? 1 : (!strcmp(ss_to_c(&a), expected) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -713,8 +713,8 @@ static int test_ss_cpy_tolower(const char *a, const char *b)
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_tolower(&sb, sa);
 	int res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4) |
-			   (!strcmp(ss_to_c(&sb), b) ? 0 : 8);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -724,8 +724,8 @@ static int test_ss_cpy_toupper(const char *a, const char *b)
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_toupper(&sb, sa);
 	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4) |
-			   (!strcmp(ss_to_c(&sb), b) ? 0 : 8);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4) |
+			   (!strcmp(ss_to_c(sb), b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -735,7 +735,7 @@ static int test_ss_cpy_erase(const char *in, const size_t off,
 {
 	ss_t *a = ss_dup_c(in), *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase(&b, a, off, size);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), expected) ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -745,7 +745,7 @@ static int test_ss_cpy_erase_u()
 	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
 	     *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase_u(&b, a, 2, 3);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), "heo") ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -756,7 +756,7 @@ static int test_ss_cpy_replace(const char *in, const char *r, const char *s,
 	ss_t *a = ss_dup_c(in), *b = ss_dup_c(r),
 	     *c = ss_dup_c(s), *d = ss_dup_c("garbage i!&/()=");
 	ss_cpy_replace(&d, a, 0, b, c);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&d), expected) ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
 	ss_free(&a, &b, &c, &d);
 	return res;
 }
@@ -767,8 +767,8 @@ static int test_ss_cpy_resize()
 	     *c = ss_dup_c("garbage i!&/()=");
 	ss_cpy_resize(&b, a, 10, 'z');
 	ss_cpy_resize(&c, a, 2, 'z');
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), "hellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(&c), "he") ? 0 : 4);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
+				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -781,9 +781,9 @@ static int test_ss_cpy_resize_u()
 	ss_cpy_resize_u(&b, a, 11, 'z');
 	ss_cpy_resize_u(&c, a, 3, 'z');
 	int res = (!a || !b) ? 1 :
-			(!strcmp(ss_to_c(&b),
+			(!strcmp(ss_to_c(b),
 				 U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
-			(!strcmp(ss_to_c(&c),
+			(!strcmp(ss_to_c(c),
 				 U8_S_N_TILDE_F1 "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
@@ -793,7 +793,7 @@ static int test_ss_cpy_trim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_trim(&sb, sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -802,7 +802,7 @@ static int test_ss_cpy_ltrim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_ltrim(&sb, sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -811,7 +811,7 @@ static int test_ss_cpy_rtrim(const char *a, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_rtrim(&sb, sa);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sb), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -822,7 +822,7 @@ static int test_ss_cpy_printf()
 	ss_t *a = NULL;
 	ss_cpy_printf(&a, 512, "abc%i%s%08X", 1, "hello", -1);
 	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
-	int res = !a ? 1 : !strcmp(ss_to_c(&a), btmp) ? 0 : 2;
+	int res = !a ? 1 : !strcmp(ss_to_c(a), btmp) ? 0 : 2;
 	ss_free(&a);
 	return res;
 }
@@ -835,7 +835,7 @@ static int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
 	va_start(ap, fmt);
 	ss_cpy_printf_va(&a, max_size, fmt, ap);
 	va_end(ap);
-	int res = !a ? 1 : !strcmp(ss_to_c(&a), expected) ? 0 : 2;
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
 	ss_free(&a);
 	return res;
 }
@@ -844,7 +844,7 @@ static int test_ss_cpy_char(const int32_t in, const char *expected)
 {
 	ss_t *a = ss_dup_c("zz");
 	ss_cpy_char(&a, in);
-	int res = !a ? 1 : !strcmp(ss_to_c(&a), expected) ? 0 : 2;
+	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
 	ss_free(&a);
 	return res;
 }
@@ -867,8 +867,8 @@ static int test_ss_cpy_read()
 			!ss_cpy_read(&ah, f, max_buf) ? 8 :
 			fseek(f, 0, SEEK_SET) != 0 ? 16 :
 			!ss_cpy_read(&as, f, max_buf) ? 32 :
-			strcmp(ss_to_c(&ah), pattern) ? 64 :
-			strcmp(ss_to_c(&as), pattern) ? 128 : 0;
+			strcmp(ss_to_c(ah), pattern) ? 64 :
+			strcmp(ss_to_c(as), pattern) ? 128 : 0;
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
 			res |= 256;
@@ -884,11 +884,11 @@ static int test_ss_cat(const char *a, const char *b)
 	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0 : (ss_cat(&sa, sb, sb) ? 0 : 2) |
-			 (!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Aliasing test: */
-	res |= res ? 0 : (sprintf(btmp, "%s%s", ss_to_c(&sa), ss_to_c(&sa)) &&
+	res |= res ? 0 : (sprintf(btmp, "%s%s", ss_to_c(sa), ss_to_c(sa)) &&
 			  ss_cat(&sa, sa) ? 0 : 8); 
-	res |= res ? 0 : (!strcmp(ss_to_c(&sa), btmp) ? 0 : 16);
+	res |= res ? 0 : (!strcmp(ss_to_c(sa), btmp) ? 0 : 16);
 	ss_t *sc = ss_dup_c("c"), *sd = ss_dup_c("d"),
 		    *se = ss_dup_c("e"), *sf = ss_dup_c("f");
 #ifdef S_DEBUG
@@ -905,9 +905,9 @@ static int test_ss_cat(const char *a, const char *b)
 	/* Aliasing check */
 	res |= res ? 0 :
 		     ss_cat(&sf, se, sf, se, sf, se) &&
-		     !strcmp(ss_to_c(&sf), "fefefe") ? 0 : 64;
+		     !strcmp(ss_to_c(sf), "fefefe") ? 0 : 64;
 
-	res |= res ? 0 : (!strcmp(ss_to_c(&sc), "cdef")) ? 0 : 256;
+	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 256;
 	ss_free(&sa, &sb, &sc, &sd, &se, &sf);
 	return res;
 }
@@ -957,7 +957,7 @@ static int test_ss_cat_cn()
 	char btmp[8192];
 	sprintf(btmp, "%s%s", a, b);
 	res |= res ? 0 : (ss_cat_cn(&sa, b, 5) ? 0 : 2) |
-			(!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -969,11 +969,11 @@ static int test_ss_cat_c(const char *a, const char *b)
 	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0 : (ss_cat_c(&sa, b, b) ? 0 : 2) |
-			(!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
 	res |= res ? 0 :
 		     ss_cat_c(&sb, "c", "b", "c", "b", "c") &&
-		     !strcmp(ss_to_c(&sb), "bcbcbc") ? 0 : 8;
+		     !strcmp(ss_to_c(sb), "bcbcbc") ? 0 : 8;
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -986,7 +986,7 @@ static int test_ss_cat_wn()
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls", a, b);
 	res |= res ? 0 : (ss_cat_wn(&sa, b, 5) ? 0 : 2) |
-			 (!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -998,11 +998,11 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls%ls%ls", a, b, b, b);
 	res |= res ? 0 : (ss_cat_w(&sa, b, b, b) ? 0 : 2) |
-			 (!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
 	res |= res ? 0 :
 		     ss_cat_w(&sb, L"c", L"b", L"c", L"b", L"c") &&
-		     !strcmp(ss_to_c(&sb), "bcbcbc") ? 0 : 8;
+		     !strcmp(ss_to_c(sb), "bcbcbc") ? 0 : 8;
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1012,7 +1012,7 @@ static int test_ss_cat_int(const char *in, const int64_t num,
 {
 	ss_t *a = ss_dup_c(in);
 	ss_cat_int(&a, num);
-	int res = !a ? 1 : (!strcmp(ss_to_c(&a), expected) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -1022,7 +1022,7 @@ static int test_ss_cat_tolower(const char *a, const char *b,
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_tolower(&sa, sb);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sa), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1032,7 +1032,7 @@ static int test_ss_cat_toupper(const char *a, const char *b,
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_toupper(&sa, sb);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sa), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1043,7 +1043,7 @@ static int test_ss_cat_erase(const char *prefix, const char *in,
 {
 	ss_t *a = ss_dup_c(in), *b = ss_dup_c(prefix);
 	ss_cat_erase(&b, a, off, size);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), expected) ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -1052,7 +1052,7 @@ static int test_ss_cat_erase_u()
 {
 	ss_t *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"), *b = ss_dup_c("x");
 	ss_cat_erase_u(&b, a, 2, 3);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&b), "xheo") ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
 }
@@ -1064,7 +1064,7 @@ static int test_ss_cat_replace(const char *prefix, const char *in,
 	ss_t *a = ss_dup_c(in), *b = ss_dup_c(r),
 	     *c = ss_dup_c(s), *d = ss_dup_c(prefix);
 	ss_cat_replace(&d, a, 0, b, c);
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(&d), expected) ? 0 : 2);
+	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
 	ss_free(&a, &b, &c, &d);
 	return res;
 }
@@ -1076,8 +1076,8 @@ static int test_ss_cat_resize()
 	ss_cat_resize(&b, a, 10, 'z');
 	ss_cat_resize(&c, a, 2, 'z');
 	int res = (!a || !b) ? 1 :
-		  (!strcmp(ss_to_c(&b), "xhellozzzzz") ? 0 : 2) |
-		  (!strcmp(ss_to_c(&c), "xhe") ? 0 : 4);
+		  (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2) |
+		  (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -1089,8 +1089,8 @@ static int test_ss_cat_resize_u()
 	ss_cat_resize_u(&b, a, 11, 'z');
 	ss_cat_resize_u(&c, a, 3, 'z');
 	int res = (!a || !b) ? 1 :
-		    (!strcmp(ss_to_c(&b), "x\xc3\xb1" "hellozzzzz") ? 0 : 2) |
-		    (!strcmp(ss_to_c(&c), "x\xc3\xb1" "he") ? 0 : 4);
+		    (!strcmp(ss_to_c(b), "x\xc3\xb1" "hellozzzzz") ? 0 : 2) |
+		    (!strcmp(ss_to_c(c), "x\xc3\xb1" "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -1099,7 +1099,7 @@ static int test_ss_cat_trim(const char *a, const char *b, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_trim(&sa, sb);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sa), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1108,7 +1108,7 @@ static int test_ss_cat_ltrim(const char *a, const char *b, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_ltrim(&sa, sb);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sa), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1117,7 +1117,7 @@ static int test_ss_cat_rtrim(const char *a, const char *b, const char *expected)
 {
 	ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_rtrim(&sa, sb);
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(&sa), expected) ? 0 : 2);
+	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1128,7 +1128,7 @@ static int test_ss_cat_printf()
 	ss_t *sa = ss_dup_c("abc");
 	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
 	ss_cat_printf(&sa, 512, "%i%s%08X", 1, "hello", -1);
-	int res = !sa? 1 : !strcmp(ss_to_c(&sa), btmp) ? 0 : 2;
+	int res = !sa? 1 : !strcmp(ss_to_c(sa), btmp) ? 0 : 2;
 	ss_free(&sa);
 	return res;
 }
@@ -1146,7 +1146,7 @@ static int test_ss_cat_char()
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls", a, b);
 	res |= res ? 0 : (ss_cat_char(&sa, b[0]) ? 0 : 2) |
-			(!strcmp(ss_to_c(&sa), btmp) ? 0 : 4);
+			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1170,8 +1170,8 @@ static int test_ss_cat_read()
 			!ss_cat_read(&ah, f, max_buf) ? 8 :
 			fseek(f, 0, SEEK_SET) != 0 ? 16 :
 			!ss_cat_read(&as, f, max_buf) ? 32 :
-			strcmp(ss_to_c(&ah), pattern) ? 64 :
-			strcmp(ss_to_c(&as), pattern) ? 128 : 0;
+			strcmp(ss_to_c(ah), pattern) ? 64 :
+			strcmp(ss_to_c(as), pattern) ? 128 : 0;
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
 			res |= 256;
@@ -1184,7 +1184,7 @@ static int test_ss_tolower(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a);
 	int res = !sa ? 1 : (ss_tolower(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1193,7 +1193,7 @@ static int test_ss_toupper(const char *a, const char *b)
 {
 	ss_t *sa = ss_dup_c(a);
 	int res = !sa ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(&sa), b) ? 0 : 4);
+			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1224,7 +1224,7 @@ static int test_ss_replace(const char *s, const size_t off,
 	ss_t *a = ss_dup_c(s), *b = ss_dup_c(s1),
 		    *c = ss_dup_c(s2);
 	int res = a && b && c && ss_replace(&a, off, b, c) ? 0 : 1;
-	res |= res ? 0 : (!strcmp(ss_to_c(&a), expected) ? 0 : 2);
+	res |= res ? 0 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -1232,7 +1232,7 @@ static int test_ss_replace(const char *s, const size_t off,
 static int test_ss_to_c(const char *in)
 {
 	ss_t *a = ss_dup_c(in);
-	int res = !a ? 1 : (!strcmp(in, ss_to_c(&a)) ? 0 : 2);
+	int res = !a ? 1 : (!strcmp(in, ss_to_c(a)) ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -1248,7 +1248,7 @@ static int test_ss_to_w(const char *in)
 	res |= (((ssa > 0 && out_size > 0) || ssa == out_size) ? 0 : 4);
 	if (!res) {
 		char b1[16384], b2[16384];
-		int sb1i = sprintf(b1, "%s", ss_to_c(&a));
+		int sb1i = sprintf(b1, "%s", ss_to_c(a));
 		int sb2i = sprintf(b2, "%ls", out);
 		size_t sb1 = sb1i >= 0 ? (size_t)sb1i : 0,
 		       sb2 = sb2i >= 0 ? (size_t)sb2i : 0;
@@ -1334,7 +1334,7 @@ static int test_ss_printf()
 	char btmp[512];
 	sprintf(btmp, "%i%s%08X", 1, "hello", -1);
 	ss_printf(&a, 512, "%i%s%08X", 1, "hello", -1);
-	int res = !strcmp(ss_to_c(&a), btmp) ? 0 : 1;
+	int res = !strcmp(ss_to_c(a), btmp) ? 0 : 1;
 	ss_free(&a);
 	return res;
 }
@@ -1354,7 +1354,7 @@ static int test_ss_putchar()
 {
 	ss_t *a = NULL;
 	int res = ss_putchar(&a, '1') && ss_putchar(&a, '2') ? 0 : 1;
-	res |= res ? 0 : (!strcmp(ss_to_c(&a), "12") ? 0 : 2);
+	res |= res ? 0 : (!strcmp(ss_to_c(a), "12") ? 0 : 2);
 	ss_free(&a);
 	return res;
 }
@@ -1384,7 +1384,7 @@ static int test_ss_read_write()
 			ss_write(f, sa, 0, S_NPOS) != (ssize_t)la ? 3 :
 			fseek(f, 0, SEEK_SET) != 0 ? 4 :
 			ss_read(&sb, f, 4000) != (ssize_t)la ? 5 :
-			strcmp(ss_to_c(&sa), ss_to_c(&sb)) != 0 ? 6 : 0;
+			strcmp(ss_to_c(sa), ss_to_c(sb)) != 0 ? 6 : 0;
 		ss_free(&sa, &sb);
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
@@ -2195,7 +2195,7 @@ static int test_sv_push_pop_set_i()
 				res |= 3 << (i * 4);
 				break;
 			}
-			if (sv_len(a) != 0 || sv_len(b) != 0 ){
+			if (sv_len(a) != 0 || sv_len(b) != 0) {
 				res |= 4 << (i * 4);
 				break;
 			}
@@ -2435,28 +2435,28 @@ static int test_st_traverse()
 		ST_A_INS(0, 'a'); ST_A_INS(1, 'b'); ST_A_INS(2, 'c');
 		ss_cpy_c(&log, "");
 		levels = st_traverse_preorder(t, test_traverse, (void *)&log);
-		const char *out = ss_to_c(&log);
+		const char *out = ss_to_c(log);
 		if (levels < 1 || strcmp(out, "ebadchgfi") != 0) {
 			res |= 1;
 			break;
 		}
 		ss_cpy_c(&log, "");
 		levels = st_traverse_levelorder(t, test_traverse, (void *)&log);
-		out = ss_to_c(&log);
+		out = ss_to_c(log);
 		if (levels < 1 || strcmp(out, "ebhadgicf") != 0) {
 			res |= 2;
 			break;
 		}
 		ss_cpy_c(&log, "");
 		levels = st_traverse_inorder(t, test_traverse, (void *)&log);
-		out = ss_to_c(&log);
+		out = ss_to_c(log);
 		if (levels < 1 || strcmp(out, "abcdefghi") != 0) {
 			res |= 4;
 			break;
 		}
 		ss_cpy_c(&log, "");
 		levels = st_traverse_postorder(t, test_traverse, (void *)&log);
-		out = ss_to_c(&log);
+		out = ss_to_c(log);
 		if (levels < 1 || strcmp(out, "acdbfgihe") != 0) {
 			res |= 8;
 			break;

@@ -93,7 +93,7 @@ st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf,
 /* #NOTAPI: |Allocate tree (heap)|compare function;element size;space preallocated to store n elements|allocated tree|O(1)|1;2| */
 st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size);
 
-SD_BUILDFUNCS_FULL(st)
+SD_BUILDFUNCS_FULL(st, 0)
 
 /*
 #NOTAPI: |Free one or more trees (heap)|tree;more trees (optional)|-|O(1)|1;2|

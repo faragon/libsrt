@@ -77,7 +77,7 @@ void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f)
 	else
 		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n",
 			      (int)levels, (unsigned)st_size(t));
-	fprintf(stdout, "%s", ss_to_c(log));
+	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
 static void ndx2s(char *out, const size_t out_max, const stndx_t id)
@@ -167,7 +167,7 @@ void sm_log_obj(ss_t **log, const sm_t *m)
 	else
 		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n",
 			      (int)levels, (unsigned)st_size(m));
-	fprintf(stdout, "%s", ss_to_c(log));
+	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
 void s_hex_dump(ss_t **log, const char *label, const char *buf,

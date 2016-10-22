@@ -134,7 +134,7 @@ void sm_free(sm_t **m, ...)
 #define sm_free(...) sm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 void sm_free_aux(sm_t **m, ...);
 
-SD_BUILDFUNCS_FULL_ST(sm)
+SD_BUILDFUNCS_FULL_ST(sm, 0)
 
 /*
 #API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|0;2|

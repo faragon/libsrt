@@ -83,7 +83,7 @@ extern ss_t *ss_void;
  * Generated from template
  */
 
-SD_BUILDFUNCS_DYN(ss)
+SD_BUILDFUNCS_DYN(ss, 1)
 
 size_t ss_grow(ss_t **c, const size_t extra_elems);
 size_t ss_reserve(ss_t **c, const size_t max_elems);
@@ -140,9 +140,12 @@ ss_t *ss_alloc(const size_t initial_heap_reserve);
 #API: |Allocate string (stack)|space preallocated to store n elements|allocated string|O(1)|1;2|
 ss_t *ss_alloca(const size_t max_size)
  */
-#define	ss_alloca(max_size)						\
-	ss_alloc_into_ext_buf(alloca(sd_alloc_size(sizeof(ss_t), 1,	\
-						   max_size, S_TRUE)),	\
+/*
+ * +1 extra byte allocated for the \0 required by ss_to_c()
+ */
+#define	ss_alloca(max_size)						   \
+	ss_alloc_into_ext_buf(alloca(sd_alloc_size(sizeof(ss_t), 1,	   \
+						   max_size, S_TRUE) + 1), \
 			      max_size)
 
 ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
@@ -636,7 +639,7 @@ ss_t *ss_rtrim(ss_t **s);
  */
 
 /* #API: |Give a C-compatible zero-ended string reference (byte/UTF-8 mode)|input string|Zero-ended C compatible string reference (UTF-8)|O(1)|1;2| */
-const char *ss_to_c(ss_t **s);
+const char *ss_to_c(const ss_t *s);
 
 /* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)|1;2| */
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
@@ -745,6 +748,20 @@ unsigned ss_crc32(const ss_t *s);
 
 /* #API: |CRC-32 checksum for substring|string; CRC resulting from previous chained CRC calls (use 0 for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
 unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2);
+
+/*
+ * Inlined functions
+ */
+
+S_INLINE char *ss_get_buffer(ss_t *s)
+{
+	return sdx_get_buffer((sd_t *)s);
+}
+
+S_INLINE const char *ss_get_buffer_r(const ss_t *s)
+{
+	return sdx_get_buffer_r((const sd_t *)s);
+}
 
 /*
  * Aux

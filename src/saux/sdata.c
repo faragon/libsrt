@@ -40,11 +40,12 @@ sd_t *sd_void = &sd_void0;
  */
 
 sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size,
-	       const size_t initial_reserve, const sbool_t dyn_st)
+	       const size_t initial_reserve, const sbool_t dyn_st,
+	       const size_t extra_tail_bytes)
 {
 	size_t alloc_size = sd_alloc_size(header_size, elem_size,
 					  initial_reserve, dyn_st);
-	sd_t *d = (sd_t *)s_malloc(alloc_size);
+	sd_t *d = (sd_t *)s_malloc(alloc_size + extra_tail_bytes);
 	if (d) {
 		sd_reset(d, header_size, elem_size, initial_reserve, S_FALSE,
 			 dyn_st);
@@ -69,6 +70,10 @@ sd_t *sd_alloc_into_ext_buf(void *buffer, const size_t max_size,
 void sd_free(sd_t **d)
 {
 	if (d && *d) {
+		/*
+		 * Request for freeing external buffers are ignored
+		 */
+		S_ASSERT(!(*d)->f.ext_buffer);
 		if (!(*d)->f.ext_buffer)
 			s_free(*d);
 		*d = NULL;
@@ -111,17 +116,18 @@ void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size,
 }
 
 /* Acknowledgements: similar to git's strbuf_grow */
-size_t sd_grow(sd_t **d, const size_t extra_size)
+size_t sd_grow(sd_t **d, const size_t extra_size, const size_t extra_tail_bytes)
 {
 	ASSERT_RETURN_IF(!d, 0);
 	size_t size = sd_size(*d);
 	ASSERT_RETURN_IF(s_size_t_overflow(size, extra_size), 0);
-	size_t new_size = sd_reserve(d, size + extra_size);
+	size_t new_size = sd_reserve(d, size + extra_size, extra_tail_bytes);
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
 }
 
 S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
-			       uint8_t full_header_size)
+			       uint8_t full_header_size,
+			       const size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d || (*d)->f.st_mode == SData_VoidData, 0);
 	const size_t curr_max_size = sdx_max_size(*d);
@@ -154,7 +160,7 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 		size_t elem_size = sdx_elem_size(*d);
 		size_t as = sd_alloc_size(full_header_size,
 						elem_size, max_size, is_dyn);
-		sd_t *d_next = (sd_t *)s_realloc(*d, as);
+		sd_t *d_next = (sd_t *)s_realloc(*d, as + extra_tail_bytes);
 		if (!d_next) {
 			S_ERROR("sd_reserve: not enough memory");
 			sd_set_alloc_errors(*d);
@@ -177,19 +183,20 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 	return sdx_max_size(*d);
 }
 
-size_t sd_reserve(sd_t **d, size_t max_size)
+size_t sd_reserve(sd_t **d, size_t max_size, const size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);
-	return sd_reserve_aux(d, max_size, (*d)->header_size);
+	return sd_reserve_aux(d, max_size, (*d)->header_size, extra_tail_bytes);
 }
 
-size_t sdx_reserve(sd_t **d, size_t max_size, uint8_t full_header_size)
+size_t sdx_reserve(sd_t **d, size_t max_size, uint8_t full_header_size,
+		   const size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);
-	return sd_reserve_aux(d, max_size, full_header_size);
+	return sd_reserve_aux(d, max_size, full_header_size, extra_tail_bytes);
 }
 
-sd_t *sd_shrink(sd_t **d)
+sd_t *sd_shrink(sd_t **d, const size_t extra_tail_bytes)
 {
 	ASSERT_RETURN_IF(!d || !(*d), sd_void); /* BEHAVIOR */
 	RETURN_IF((*d)->f.ext_buffer, *d); /* non-shrinkable */
@@ -200,7 +207,7 @@ sd_t *sd_shrink(sd_t **d)
 		size_t as = sd_alloc_size((*d)->header_size,
 					  (*d)->elem_size, new_max_size,
 					  S_FALSE);
-		sd_t *d_next = (sd_t *)s_realloc(*d, as);
+		sd_t *d_next = (sd_t *)s_realloc(*d, as + extra_tail_bytes);
 		if (d_next) {
 			*d = d_next;
 			(*d)->max_size = new_max_size;

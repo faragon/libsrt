@@ -31,9 +31,9 @@ extern "C" {
  * Macros
  */
 
-#define SD_BUILDFUNCS_COMMON(pfix)					       \
+#define SD_BUILDFUNCS_COMMON(pfix, tail_bytes)				       \
 	S_INLINE pfix##_t *pfix##_shrink(pfix##_t **c) {		       \
-		return (pfix##_t *)sd_shrink((sd_t **)c);		       \
+		return (pfix##_t *)sd_shrink((sd_t **)c, tail_bytes);	       \
 	}								       \
 	S_INLINE sbool_t pfix##_empty(const pfix##_t *c) {		       \
 		return pfix##_size(c) == 0 ? S_TRUE : S_FALSE;		       \
@@ -58,15 +58,9 @@ extern "C" {
 	S_INLINE size_t pfix##_max_size(const pfix##_t *c) {		       \
 		return stpfix##_max_size((const sd_t *)c);		       \
 	}								       \
-	S_INLINE char *pfix##_get_buffer(pfix##_t *c) {			       \
-		return stpfix##_get_buffer((sd_t *)c);			       \
-	}								       \
 	S_INLINE size_t pfix##_get_buffer_size(const pfix##_t *c) {	       \
 		return stpfix##_size((const sd_t *)c) *			       \
 		       stpfix##_elem_size((const sd_t *)c);		       \
-	}								       \
-	S_INLINE const char *pfix##_get_buffer_r(const pfix##_t *c) {	       \
-		return stpfix##_get_buffer_r((const sd_t *)c);		       \
 	}								       \
 	S_INLINE void *pfix##_elem_addr(pfix##_t *c, const size_t pos) {       \
 		return stpfix##_elem_addr((sd_t *)c, pos);		       \
@@ -86,18 +80,27 @@ extern "C" {
 		return stpfix##_size((const sd_t *)c);			       \
 	}								       \
 
-#define SD_BUILDFUNCS_DYN_ST(pfix)					       \
-	SD_BUILDFUNCS_ST(pfix, sdx)					       \
-	SD_BUILDFUNCS_COMMON(pfix)
+#define SD_BUILDFUNCS_ST2(pfix, stpfix)					       \
+	S_INLINE char *pfix##_get_buffer(pfix##_t *c) {			       \
+		return stpfix##_get_buffer((sd_t *)c);			       \
+	}								       \
+	S_INLINE const char *pfix##_get_buffer_r(const pfix##_t *c) {	       \
+		return stpfix##_get_buffer_r((const sd_t *)c);		       \
+	}								       \
 
-#define SD_BUILDFUNCS_FULL_ST(pfix)					       \
+#define SD_BUILDFUNCS_DYN_ST(pfix, tail_bytes)				       \
+	SD_BUILDFUNCS_ST(pfix, sdx)					       \
+	SD_BUILDFUNCS_COMMON(pfix, tail_bytes)
+
+#define SD_BUILDFUNCS_FULL_ST(pfix, tail_bytes)				       \
 	SD_BUILDFUNCS_ST(pfix, sd)					       \
-	SD_BUILDFUNCS_COMMON(pfix)					       \
+	SD_BUILDFUNCS_ST2(pfix, sd)					       \
+	SD_BUILDFUNCS_COMMON(pfix, tail_bytes)				       \
 	S_INLINE size_t pfix##_grow(pfix##_t **c, const size_t extra_elems) {  \
-		return sd_grow((sd_t **)c, extra_elems);		       \
+		return sd_grow((sd_t **)c, extra_elems, tail_bytes);	       \
 	}								       \
 	S_INLINE size_t pfix##_reserve(pfix##_t **c, const size_t max_elems) { \
-		return sd_reserve((sd_t **)c, max_elems);		       \
+		return sd_reserve((sd_t **)c, max_elems, tail_bytes);	       \
 	}								       \
 
 #define SD_FREE_AUX(pfix)						       \
@@ -108,12 +111,12 @@ extern "C" {
 		va_end(ap);						       \
 	}
 
-#define SD_BUILDFUNCS_DYN(pfix)						       \
-	SD_BUILDFUNCS_DYN_ST(pfix)					       \
+#define SD_BUILDFUNCS_DYN(pfix, tail_bytes)				       \
+	SD_BUILDFUNCS_DYN_ST(pfix, tail_bytes)				       \
 	SD_FREE_AUX(pfix)
 
-#define SD_BUILDFUNCS_FULL(pfix)					       \
-	SD_BUILDFUNCS_FULL_ST(pfix)					       \
+#define SD_BUILDFUNCS_FULL(pfix, tail_bytes)				       \
+	SD_BUILDFUNCS_FULL_ST(pfix, tail_bytes)				       \
 	SD_FREE_AUX(pfix)
 
 /*
@@ -151,14 +154,16 @@ struct SDataFlags /* 1-byte structure */
 	unsigned char alloc_errors : 1;
 
 	/* Struct mode
-	*
-	* 0: full mode (header_size >= sizeof(struct SDataFull))
-	* 1: dynamic, full mode (header_size >= sizeof(struct SDataFull))
-	* 2: dynamic, small mode (header_size == sizeof(struct SDataSmall))
-	* 3: void data, not suitable for any operation. The intention for
-	*    for this is constant data containing a default object (e.g.
-	*    empty string for avoding returning null pointers)
-	*/
+	 *
+	 * SData_Full(0): full mode (header_size >= sizeof(struct SDataFull))
+	 * SData_DynFull(1): dynamic, full mode (header_size >=
+	 *					 sizeof(struct SDataFull))
+	 * SData_DynSmall(2): dynamic, small mode (header_size ==
+	 *					   sizeof(struct SDataSmall))
+	 * SData_VoidData(3): void data, not suitable for any operation. The
+	 * intention for for this is constant data containing a default object
+	 * (e.g. empty string for avoding returning null pointers)
+	 */
 	unsigned char st_mode : 2;
 
 	/*
@@ -435,15 +440,15 @@ S_INLINE size_t sd_compute_max_elems(size_t buffer_size, size_t header_size, siz
 }
 
 void sd_set_alloc_size(sd_t *d, const size_t alloc_size);
-sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const sbool_t dyn_st);
+sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const sbool_t dyn_st, const size_t extra_tail_bytes);
 sd_t *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const uint8_t header_size, const size_t elem_size, const sbool_t dyn_st);
 void sd_free(sd_t **d);
 void sd_free_va(sd_t **first, va_list ap);
 void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size, const size_t max_size, const sbool_t ext_buf, const sbool_t dyn_st);
-size_t sd_grow(sd_t **d, const size_t extra_size);
-size_t sd_reserve(sd_t **d, size_t max_size);
-size_t sdx_reserve(sd_t **d, size_t max_size, uint8_t full_header_size);
-sd_t *sd_shrink(sd_t **d);
+size_t sd_grow(sd_t **d, const size_t extra_size, const size_t extra_tail_bytes);
+size_t sd_reserve(sd_t **d, size_t max_size, const size_t extra_tail_bytes);
+size_t sdx_reserve(sd_t **d, size_t max_size, uint8_t full_header_size, const size_t extra_tail_bytes);
+sd_t *sd_shrink(sd_t **d, const size_t extra_tail_bytes);
 
 #ifdef __cplusplus
 }      /* extern "C" { */

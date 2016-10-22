@@ -225,7 +225,7 @@ static ss_t *ss_reset(ss_t *s)
 size_t ss_reserve(ss_t **s, const size_t max_size)
 {
 	RETURN_IF(!s, 0);
-	if (!(*s)) {
+	if (!*s) {
 		*s = ss_alloc(max_size);
 		RETURN_IF(!(*s), 0);
 		size_t ss = ss_max_size(*s);
@@ -237,7 +237,7 @@ size_t ss_reserve(ss_t **s, const size_t max_size)
 	 */
 	size_t unicode_size = get_unicode_size(*s);
 	sbool_t full_st = sdx_full_st(&(*s)->d);
-	size_t r = sdx_reserve((sd_t **)s, max_size, sizeof(ss_t));
+	size_t r = sdx_reserve((sd_t **)s, max_size, sizeof(ss_t), 1);
 	if (!full_st && r > 255)
 		set_unicode_size(*s, unicode_size);
 	return r;
@@ -256,7 +256,7 @@ size_t ss_grow(ss_t **s, const size_t extra_size)
 	size_t unicode_size = get_unicode_size(*s);
 	sbool_t full_st = sdx_full_st(&(*s)->d);
 	size_t new_size = sdx_reserve((sd_t **)s, size + extra_size,
-				      sizeof(ss_t));
+				      sizeof(ss_t), 1);
 	if (!full_st && new_size > 255)
 		set_unicode_size(*s, unicode_size);
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
@@ -934,14 +934,19 @@ MK_SS_DUP_CPY_CAT(dec_esc_squote, sdec_esc_squote, NULL)
 
 ss_t *ss_alloc(const size_t initial_reserve)
 {
-	return ss_reset((ss_t *)sd_alloc(sizeof(ss_t), 1, initial_reserve,
-			S_TRUE));
+	ss_t *s = ss_reset((ss_t *)sd_alloc(sizeof(ss_t), 1, initial_reserve,
+			   S_TRUE, 1));
+	RETURN_IF(!s, ss_void);
+	return s;
 }
 
 ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
 {
-	sd_t *s = sd_alloc_into_ext_buf(buf, max_size, sizeof(ss_t), 1, S_TRUE);
-	return ss_reset((ss_t *)s);
+	ss_t *s = (ss_t *)sd_alloc_into_ext_buf(buf, max_size, sizeof(ss_t), 1,
+								       S_TRUE);
+	RETURN_IF(!s, ss_void);
+	ss_reset((ss_t *)s);
+	return s;
 }
 
 /*
@@ -1701,15 +1706,23 @@ ss_t *ss_rtrim(ss_t **s)
  * Export
  */
 
-const char *ss_to_c(ss_t **s)
+const char *ss_to_c(const ss_t *s)
 {
-	ASSERT_RETURN_IF(!s || !(*s), S_NULL_C); /* Ensure valid string */
-	RETURN_IF((*s)->d.f.st_mode == SData_VoidData, "");
-	const size_t size = ss_size(*s);
-	RETURN_IF(!ss_reserve(s, size + 1), ""); /* Ensure space for the terminator */
-	char *s_str = ss_get_buffer(*s);
-	s_str[size] = 0;	/* Ensure ASCIIz-ness */
-	return s_str;		/* +1 space is guaranteed */
+	ASSERT_RETURN_IF(!s || s->d.f.st_mode == SData_VoidData, "");
+	/*
+	 * BEHAVIOR:
+	 * Constness is kept regarding internal ss_t state. Said that,
+	 * in order to ensure safe behavior, a 0 terminator is forced
+	 * in case the string was not previously terminated.
+	 * WARNING: be aware of that in the case of storing ss_t
+	 * string on ROM memory or using read-only mmap (int that case
+	 * you'll have to put terminating 0 by yourself after every
+	 * ss_t on ROM or mmap'ed).
+	 */
+	char *buf = (char *)ss_get_buffer_r(s);
+	const size_t size = ss_size(s);
+	buf[size] = 0; /* C string terminator */
+	return buf;
 }
 
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)

@@ -96,7 +96,7 @@ sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve, c
 /* #API: |Allocate typed vector (heap)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2| */
 sv_t *sv_alloc_t(const enum eSV_Type t, const size_t initial_num_elems_reserve);
 
-SD_BUILDFUNCS_FULL(sv)
+SD_BUILDFUNCS_FULL(sv, 0)
 
 /*
 #API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|

@@ -20,7 +20,7 @@
 #if DBG_TABLE
 	#define DBG_ENC_FIELD(type, field, nrow, nfield)		\
 		fprintf(stderr, "enc %s: '%s' (%i, %i)\n",		\
-			type, ss_to_c((ss_t *)field), (int)nrow, (int)nfield);
+			type, ss_to_c(field), (int)nrow, (int)nfield);
 #else
 	#define DBG_ENC_FIELD(type, field, nrow, nfield)
 #endif

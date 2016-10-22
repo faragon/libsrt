@@ -197,7 +197,7 @@ static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_size)
 			sv_alloc_t((enum eSV_Type)src->d.sub_type, max_size);
 		return sv_max_size(*v);
 	}
-	return sd_reserve((sd_t **)v, max_size);
+	return sd_reserve((sd_t **)v, max_size, 0);
 }
 
 static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
