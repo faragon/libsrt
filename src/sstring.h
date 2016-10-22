@@ -11,9 +11,10 @@ extern "C" {
  *
  * #DOC Provided functions allow efficient operations on strings. Internal
  * #DOC string format is binary, supporting arbitrary data. Operations
- * #DOC on strings that involve format, e.g. string length, is
- * #DOC interpreted as UTF-8. Strings below 256 bytes take just 4 bytes for
- * #DOC internal structure, and 5 * sizeof(size_t) for bigger strings.
+ * #DOC on strings that involve format, e.g. Unicode string length (ss_len_u()),
+ * #DOC is interpreted as UTF-8. However, operations without Unicode meaning,
+ * #DOC e.g. ss_len() operate on bytes. Strings below 256 bytes take just 5
+ * #DOC bytes for internal structure, and 5 * sizeof(size_t) for bigger strings.
  * #DOC Unicode-size is cached between operations, when possible, so
  * #DOC in those cases UTF-8 string length computation would be O(1).
  *
