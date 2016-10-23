@@ -169,10 +169,10 @@ const ss_t *ss_refa(const char *c_str)
 #define ss_refa(c_str)	\
 	ss_ref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
 
-/* #API: |Create a reference from raw data, i.e. not 0 terminated|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
+/* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: avoid calling ss_to_c() afterwards, unless you ensure raw data contains a 0 terminator|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
 const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
 
-/* #API: |Create a reference from raw data, i.e. not 0 terminated. WARNING: avoid calling ss_to_c() when using raw references (as there is no guarantee of 0 terminator), use ss_get_buffer_r() instead|input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2|
+/* #API: |Create a reference from raw data, i.e. not 0 terminated. WARNING: avoid calling ss_to_c() afterwards, unless you ensure raw data contains a 0 terminator|input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2|
 const ss_t *ss_refa_raw(const char *buf, const size_t buf_size)
 */
 #define ss_refa_raw(buf, buf_size)	\
