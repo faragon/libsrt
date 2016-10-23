@@ -161,13 +161,13 @@ ss_t *ss_alloca(const size_t max_size)
 ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
 
 /* #API: |Create a reference from C string. This is intended for avoid duplicating C strings when working with ss_t functions|string reference to be built (can be on heap or stack, it is a small structure); input C string (0 terminated ASCII or UTF-8 string)|ss_t string derived from ss_ref_t|O(1)|1;2| */
-const ss_t *ss_ref(ss_ref_t *s_ref, const char *c_str);
+const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str);
 
 /* #API: |Create a reference from C string using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-)|input C string (0 terminated ASCII or UTF-8 string)|ss_t string derived from ss_ref_t|O(1)|1;2|
 const ss_t *ss_refa(const char *c_str)
 */
-#define ss_refa(c_str)	\
-	ss_ref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
+#define ss_crefa(c_str)	\
+	ss_cref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
 
 /* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: avoid calling ss_to_c() afterwards, unless you ensure raw data contains a 0 terminator|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
 const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size);

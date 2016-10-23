@@ -957,7 +957,7 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
 	return s;
 }
 
-const ss_t *ss_ref(ss_ref_t *s_ref, const char *c_str)
+const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str)
 {
 	return ss_ref_raw(s_ref, c_str, strlen(c_str));
 }

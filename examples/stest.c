@@ -105,7 +105,7 @@ static int AA_cmp(const void *a, const void *b) {
 #define MK_TEST_SS_DUP_CODEC(suffix)					      \
 	static int test_ss_dup_##suffix(const char *a, const char *b) {	      \
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa),	      \
-		     *sc = ss_dup_##suffix(ss_refa(a));			      \
+		     *sc = ss_dup_##suffix(ss_crefa(a));			      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
 			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
 			(!strcmp(ss_to_c(sb), b) ? 0 : 8) |		      \
@@ -119,7 +119,7 @@ static int AA_cmp(const void *a, const void *b) {
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()="),    \
 		     *sc = ss_dup(sb);					      \
 		ss_cpy_##suffix(&sb, sa);				      \
-		ss_cpy_##suffix(&sc, ss_refa(a));			      \
+		ss_cpy_##suffix(&sc, ss_crefa(a));			      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
 			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
 			(!strcmp(ss_to_c(sb), b) ? 0 : 8) |		      \
@@ -134,7 +134,7 @@ static int AA_cmp(const void *a, const void *b) {
 		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b),		   \
 		     *sc = ss_dup(sa);					   \
 		ss_cat_##suffix(&sa, sb);				   \
-		ss_cat_##suffix(&sc, ss_refa(b));			   \
+		ss_cat_##suffix(&sc, ss_crefa(b));			   \
 		int res = (!sa || !sb) ? 1 :				   \
 				(!strcmp(ss_to_c(sa), expected) ? 0 : 2) | \
 				(!strcmp(ss_to_c(sc), expected) ? 0 : 4);  \
