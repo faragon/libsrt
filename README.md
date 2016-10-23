@@ -15,11 +15,11 @@ Key points:
 
 * Easy: write high-level-like C code. Write code faster and safer.
 * Fast: using O(n)/O(log n)/O(1) state of the art algorithms.
-* Useful: UTF-8 strings, vector, tree, and map structures.
+* Useful: strings supporting raw data handling (per-byte), vector, tree, and map structures.
 * Efficient: space optimized, minimum allocation calls (heap and stack support).
 * Compatible: OS-independent (e.g. built-in space-optimized UTF-8 support).
 * Predictable: suitable for microcontrollers and hard real-time compliant code.
-* Unicode: UTF-8 support for strings, including binary/raw data cases.
+* Unicode: although string internal representation is raw data (bytes), functions for handling Unicode interpretation/generation/transformation are provided, so when Unicode-specific functions are used, the result of these functions is stored internally as UTF-8 (also, caching some operations, like Unicode string length -e.g. ss_len()/ss_size() give length in bytes, and ss_len_u() the length in Unicode characters-).
 
 Generic advantages
 ===
