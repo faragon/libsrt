@@ -11,11 +11,12 @@ extern "C" {
  *
  * #DOC Provided functions allow efficient operations on strings. Internal
  * #DOC string format is binary, supporting arbitrary data. Operations
- * #DOC on strings that involve format, e.g. Unicode string length (ss_len_u()),
- * #DOC is interpreted as UTF-8. However, operations without Unicode meaning,
- * #DOC e.g. ss_len() operate on bytes. Strings below 256 bytes take just 5
- * #DOC bytes for internal structure, and 5 * sizeof(size_t) for bigger strings.
- * #DOC Unicode-size is cached between operations, when possible, so
+ * #DOC on strings involving format interpretation, e.g. string length is
+ * #DOC interpreted as UTF-8 when calling to the Unicode function ss_len_u(),
+ * #DOC and as raw data when calling the functions not using Unicode
+ * #DOC interpretation (ss_len()/ss_size()). Strings below 256 bytes take just
+ * #DOC 5 bytes for internal structure, and 5 * sizeof(size_t) for bigger
+ * #DOC strings. Unicode-size is cached between operations, when possible, so
  * #DOC in those cases UTF-8 string length computation would be O(1).
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
@@ -37,12 +38,19 @@ extern "C" {
  * - Usage of struct SDataFlags type-specific elements:
  *	flag1: Unicode size is cached
  *	flag2: string has UTF-8 encoding errors (e.g. after some operation)
+ *	flag3: C string reference (built using ss_build_ref())
  */
 
 struct SString
 {
 	struct SDataFull d;
 	size_t unicode_size;
+};
+
+struct SStringRef
+{
+	struct SString s;
+	const char *cstr;
 };
 
 #define SS_RANGE	(sizeof(size_t) - sizeof(ss_t))
@@ -52,7 +60,8 @@ struct SString
  * Types
  */
 
-typedef struct SString ss_t; /* "Hidden" structure (accessors are provided) */
+typedef struct SString ss_t;		/* Opaque structures (accessors are provided) */
+typedef struct SStringRef ss_ref_t;
 
 /*
  * Aux
@@ -151,6 +160,24 @@ ss_t *ss_alloca(const size_t max_size)
 
 ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
 
+/* #API: |Create a reference from C string. This is intended for avoid duplicating C strings when working with ss_t functions|string reference to be built (can be on heap or stack, it is a small structure); input C string (0 terminated ASCII or UTF-8 string)|ss_t string derived from ss_ref_t|O(1)|1;2| */
+const ss_t *ss_ref(ss_ref_t *s_ref, const char *c_str);
+
+/* #API: |Create a reference from C string using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-)|input C string (0 terminated ASCII or UTF-8 string)|ss_t string derived from ss_ref_t|O(1)|1;2|
+const ss_t *ss_refa(const char *c_str)
+*/
+#define ss_refa(c_str)	\
+	ss_ref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
+
+/* #API: |Create a reference from raw data, i.e. not 0 terminated|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
+const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
+
+/* #API: |Create a reference from raw data, i.e. not 0 terminated. WARNING: avoid calling ss_to_c() when using raw references (as there is no guarantee of 0 terminator), use ss_get_buffer_r() instead|input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2|
+const ss_t *ss_refa_raw(const char *buf, const size_t buf_size)
+*/
+#define ss_refa_raw(buf, buf_size)	\
+	ss_ref_raw((ss_ref_t *)alloca(sizeof(ss_ref_t)), buf, buf_size)
+
 /*
  * Accessors
  */
@@ -159,7 +186,7 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
 int ss_at(const ss_t *s, size_t off);
 
 /* #API: |String length (Unicode)|string|number of Unicode characters|O(1) if cached, O(n) if not previously computed|1;2| */
-size_t ss_len_u(ss_t *s);
+size_t ss_len_u(const ss_t *s);
 
 /* #API: |Get the maximum possible string size|string|max string size (bytes)|O(1)|1;2| */
 size_t ss_max(const ss_t *s);
@@ -754,14 +781,24 @@ unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2);
  * Inlined functions
  */
 
+S_INLINE sbool_t ss_is_ref(const ss_t *s)
+{
+	return s && s->d.f.flag3 != 0 ? S_TRUE : S_FALSE;
+}
+
 S_INLINE char *ss_get_buffer(ss_t *s)
 {
-	return sdx_get_buffer((sd_t *)s);
+	/*
+	 * Constness breaking will be addressed once the ss_to_c gets fixed.
+	 */
+	return ss_is_ref(s) ? (char *)((struct SStringRef *)s)->cstr :
+		sdx_get_buffer((sd_t *)s);
 }
 
 S_INLINE const char *ss_get_buffer_r(const ss_t *s)
 {
-	return sdx_get_buffer_r((const sd_t *)s);
+	return ss_is_ref(s) ? ((struct SStringRef *)s)->cstr :
+		sdx_get_buffer_r((const sd_t *)s);
 }
 
 /*

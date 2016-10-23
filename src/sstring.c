@@ -162,6 +162,12 @@ static void set_encoding_errors(ss_t *s, const sbool_t has_errors)
 		s->d.f.flag2 = has_errors;
 }
 
+static void set_reference_mode(ss_t *s, const sbool_t is_reference)
+{
+	if (s)
+		s->d.f.flag3 = is_reference;
+}
+
 S_INLINE size_t get_unicode_size(const ss_t *s)
 {
 	return !s ? 0 : sdx_full_st(&s->d) ? s->unicode_size :
@@ -937,6 +943,7 @@ ss_t *ss_alloc(const size_t initial_reserve)
 	ss_t *s = ss_reset((ss_t *)sd_alloc(sizeof(ss_t), 1, initial_reserve,
 			   S_TRUE, 1));
 	RETURN_IF(!s, ss_void);
+	set_reference_mode(s, S_FALSE);
 	return s;
 }
 
@@ -946,7 +953,26 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
 								       S_TRUE);
 	RETURN_IF(!s, ss_void);
 	ss_reset((ss_t *)s);
+	set_reference_mode(s, S_FALSE);
 	return s;
+}
+
+const ss_t *ss_ref(ss_ref_t *s_ref, const char *c_str)
+{
+	return ss_ref_raw(s_ref, c_str, strlen(c_str));
+}
+
+const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size)
+{
+	RETURN_IF(!s_ref || !buf, ss_void); /* BEHAVIOR */
+	memset(s_ref, 0, sizeof(*s_ref));
+	s_ref->s.d.f.ext_buffer = 1;
+	s_ref->s.d.f.st_mode = SData_Full;
+	s_ref->cstr = buf;
+	ss_set_size(&s_ref->s, buf_size);
+	sd_set_max_size((sd_t *)&s_ref->s, buf_size);
+	set_reference_mode(&s_ref->s, S_TRUE);
+	return &s_ref->s;
 }
 
 /*
@@ -960,7 +986,7 @@ int ss_at(const ss_t *s, size_t off)
 	return off < ss ? ss_get_buffer_r(s)[off] : 0;
 }
 
-size_t ss_len_u(ss_t *s)
+size_t ss_len_u(const ss_t *s)
 {
 	ASSERT_RETURN_IF(!s, 0);
 	if (is_unicode_size_cached(s))
@@ -969,8 +995,16 @@ size_t ss_len_u(ss_t *s)
 	const char *p = ss_get_buffer_r(s);
 	const size_t ss = ss_size(s),
 		     cached_uc_size = sc_utf8_count_chars(p, ss);
-	set_unicode_size_cached(s, S_TRUE);
-	set_unicode_size(s, cached_uc_size);
+	/*
+	 * BEHAVIOR:
+	 * Constness is kept regarding ss_t internal logical state. Said that,
+	 * cached unicode size breaks the constness, as is an opaque
+	 * operation. This is required for allowing caching string
+	 * references (which are always 'const ss_t *', by construction)
+	 */
+	ss_t *ws = (ss_t *)s;
+	set_unicode_size_cached(ws, S_TRUE);
+	set_unicode_size(ws, cached_uc_size);
 	return cached_uc_size;
 }
 
@@ -1709,9 +1743,10 @@ ss_t *ss_rtrim(ss_t **s)
 const char *ss_to_c(const ss_t *s)
 {
 	ASSERT_RETURN_IF(!s || s->d.f.st_mode == SData_VoidData, "");
+	RETURN_IF(ss_is_ref(s), ss_get_buffer_r(s));
 	/*
 	 * BEHAVIOR:
-	 * Constness is kept regarding internal ss_t state. Said that,
+	 * Constness is kept regarding ss_t internal logical state. Said that,
 	 * in order to ensure safe behavior, a 0 terminator is forced
 	 * in case the string was not previously terminated.
 	 * WARNING: be aware of that in the case of storing ss_t

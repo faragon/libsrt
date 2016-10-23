@@ -104,33 +104,41 @@ static int AA_cmp(const void *a, const void *b) {
  */
 #define MK_TEST_SS_DUP_CODEC(suffix)					      \
 	static int test_ss_dup_##suffix(const char *a, const char *b) {	      \
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa);	      \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_##suffix(sa),	      \
+		     *sc = ss_dup_##suffix(ss_refa(a));			      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
 			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
-		ss_free(&sa, &sb);					      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8) |		      \
+			(!strcmp(ss_to_c(sc), b) ? 0 : 16);		      \
+		ss_free(&sa, &sb, &sc);					      \
 		return res;						      \
 	}
 
 #define MK_TEST_SS_CPY_CODEC(suffix)					      \
 	static int test_ss_cpy_##suffix(const char *a, const char *b) {	      \
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");    \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()="),    \
+		     *sc = ss_dup(sb);					      \
 		ss_cpy_##suffix(&sb, sa);				      \
+		ss_cpy_##suffix(&sc, ss_refa(a));			      \
 		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
 			(!strcmp(ss_to_c(sa), b) ? 0 : 4) |		      \
-			(!strcmp(ss_to_c(sb), b) ? 0 : 8);		      \
-		ss_free(&sa, &sb);					      \
+			(!strcmp(ss_to_c(sb), b) ? 0 : 8) |		      \
+			(!strcmp(ss_to_c(sc), b) ? 0 : 16);		      \
+		ss_free(&sa, &sb, &sc);					      \
 		return res;						      \
 	}
 
 #define MK_TEST_SS_CAT_CODEC(suffix)					   \
 	static int test_ss_cat_##suffix(const char *a, const char *b,	   \
 					const char *expected) {		   \
-		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b);		   \
+		ss_t *sa = ss_dup_c(a), *sb = ss_dup_c(b),		   \
+		     *sc = ss_dup(sa);					   \
 		ss_cat_##suffix(&sa, sb);				   \
+		ss_cat_##suffix(&sc, ss_refa(b));			   \
 		int res = (!sa || !sb) ? 1 :				   \
-				(!strcmp(ss_to_c(sa), expected) ? 0 : 2);  \
-		ss_free(&sa, &sb);					   \
+				(!strcmp(ss_to_c(sa), expected) ? 0 : 2) | \
+				(!strcmp(ss_to_c(sc), expected) ? 0 : 4);  \
+		ss_free(&sa, &sb, &sc);					   \
 		return res;						   \
 	}
 
@@ -2195,7 +2203,7 @@ static int test_sv_push_pop_set_i()
 				res |= 3 << (i * 4);
 				break;
 			}
-			if (sv_len(a) != 0 || sv_len(b) != 0) {
+			if (sv_len(a) != 0 || sv_len(b) != 0 ){
 				res |= 4 << (i * 4);
 				break;
 			}
