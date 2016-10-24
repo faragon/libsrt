@@ -76,11 +76,11 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size)
 		return 0;
 	size_t i = 0, unicode_sz = 0;
 #ifdef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
-	const size_t size_cutted = s_size >= 6? s_size - 6 : 0;
+	const size_t size_cutted = s_size >= 6 ? s_size - 6 : 0;
 	union s_u32 m1;
 	m1.b[0] = m1.b[1] = m1.b[2] = m1.b[3] = SSU8_M1;
 	for (; i < size_cutted;) {
-		if ((S_LD_U32(s + i) & m1.a32) == m1.a32) {
+		if ((S_LD_U32(s + i) & m1.a32) == 0) {
 			i += 4;
 			unicode_sz += 4;
 			continue;
