@@ -1286,6 +1286,7 @@ static int test_ss_split()
 	       !ss_cmp(ss_ref(&subs[0]), ss_crefa("how")) &&
 	       !ss_cmp(ss_ref(&subs[1]), ss_crefa("are")) &&
 	       !ss_cmp(ss_ref(&subs[2]), ss_crefa("you")) ? 0 : 4;
+	ss_free(&a, &sep1);
 	return res;
 }
 
