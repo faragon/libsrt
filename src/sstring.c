@@ -162,10 +162,13 @@ static void set_encoding_errors(ss_t *s, const sbool_t has_errors)
 		s->d.f.flag2 = has_errors;
 }
 
-static void set_reference_mode(ss_t *s, const sbool_t is_reference)
+static void set_reference_mode(ss_t *s, const sbool_t is_reference,
+			       const sbool_t has_C_terminator)
 {
-	if (s)
+	if (s) {
 		s->d.f.flag3 = is_reference;
+		s->d.f.flag4 = has_C_terminator;
+	}
 }
 
 S_INLINE size_t get_unicode_size(const ss_t *s)
@@ -943,7 +946,7 @@ ss_t *ss_alloc(const size_t initial_reserve)
 	ss_t *s = ss_reset((ss_t *)sd_alloc(sizeof(ss_t), 1, initial_reserve,
 			   S_TRUE, 1));
 	RETURN_IF(!s, ss_void);
-	set_reference_mode(s, S_FALSE);
+	set_reference_mode(s, S_FALSE, S_FALSE);
 	return s;
 }
 
@@ -953,16 +956,13 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
 								       S_TRUE);
 	RETURN_IF(!s, ss_void);
 	ss_reset((ss_t *)s);
-	set_reference_mode(s, S_FALSE);
+	set_reference_mode(s, S_FALSE, S_FALSE);
 	return s;
 }
 
-const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str)
-{
-	return ss_ref_raw(s_ref, c_str, strlen(c_str));
-}
-
-const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size)
+static const ss_t *aux_ss_ref_raw(ss_ref_t *s_ref, const char *buf,
+				  const size_t buf_size,
+				  const sbool_t has_C_terminator)
 {
 	RETURN_IF(!s_ref || !buf, ss_void); /* BEHAVIOR */
 	memset(s_ref, 0, sizeof(*s_ref));
@@ -971,8 +971,18 @@ const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size)
 	s_ref->cstr = buf;
 	ss_set_size(&s_ref->s, buf_size);
 	sd_set_max_size((sd_t *)&s_ref->s, buf_size);
-	set_reference_mode(&s_ref->s, S_TRUE);
+	set_reference_mode(&s_ref->s, S_TRUE, has_C_terminator);
 	return &s_ref->s;
+}
+
+const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str)
+{
+	return aux_ss_ref_raw(s_ref, c_str, strlen(c_str), S_TRUE);
+}
+
+const ss_t *ss_ref_buf(ss_ref_t *s_ref, const char *buf, const size_t buf_size)
+{
+	return aux_ss_ref_raw(s_ref, buf, buf_size, S_FALSE);
 }
 
 /*
@@ -1743,7 +1753,14 @@ ss_t *ss_rtrim(ss_t **s)
 const char *ss_to_c(const ss_t *s)
 {
 	ASSERT_RETURN_IF(!s || s->d.f.st_mode == SData_VoidData, "");
-	RETURN_IF(ss_is_ref(s), ss_get_buffer_r(s));
+	/*
+	 * BEHAVIOR:
+	 * - References based on C strings are allowed using ss_to_c(),
+	 * however, references using raw data are not, returning an
+	 * empty string instead. In case of requiring accessing to
+	 * the buffer, ss_get_buffer_r(s) could be used instead.
+	 */
+	RETURN_IF(ss_is_ref(s), ss_is_cref(s) ? ss_get_buffer_r(s) : "");
 	/*
 	 * BEHAVIOR:
 	 * Constness is kept regarding ss_t internal logical state. Said that,

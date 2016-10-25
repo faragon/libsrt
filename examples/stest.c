@@ -257,14 +257,14 @@ static int test_ss_resize_x()
 	const char *i3 = U8_C_N_TILDE_D1 "123";
 	ss_t *a = ss_dup_c(i0), *b = ss_dup(a);
 	int res = a && b ? 0 : 1;
-	res |= res ? 0: ((ss_resize(&a, 14, '_') &&
+	res |= res ? 0 : ((ss_resize(&a, 14, '_') &&
 			 !strcmp(ss_to_c(a), i1)) ? 0 : 2) |
-			((ss_resize_u(&b, 13, '_') &&
-			 !strcmp(ss_to_c(b), i1)) ? 0 : 4) |
-			((ss_resize(&a, 4, '_') &&
-			 !strcmp(ss_to_c(a), i2)) ? 0 : 8) |
-			((ss_resize_u(&b, 4, '_') &&
-			 !strcmp(ss_to_c(b), i3)) ? 0 : 16);
+			 ((ss_resize_u(&b, 13, '_') &&
+			  !strcmp(ss_to_c(b), i1)) ? 0 : 4) |
+			 ((ss_resize(&a, 4, '_') &&
+			  !strcmp(ss_to_c(a), i2)) ? 0 : 8) |
+			 ((ss_resize_u(&b, 4, '_') &&
+			  !strcmp(ss_to_c(b), i3)) ? 0 : 16);
 	ss_free(&a, &b);
 	return res;
 }
@@ -338,7 +338,10 @@ static int test_ss_free(const size_t max_size)
 static int test_ss_len(const char *a, const size_t expected_size)
 {
 	ss_t *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (ss_len(sa) == expected_size ? 0 : 1);
+	const ss_t *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
+	int res = !sa ? 1 : (ss_len(sa) == expected_size ? 0 : 1) |
+			    (ss_len(sb) == expected_size ? 0 : 2) |
+			    (ss_len(sc) == expected_size ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -346,7 +349,10 @@ static int test_ss_len(const char *a, const size_t expected_size)
 static int test_ss_len_u(const char *a, const size_t expected_size)
 {
 	ss_t *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (ss_len_u(sa) == expected_size ? 0 : 1);
+	const ss_t *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
+	int res = !sa ? 1 : (ss_len_u(sa) == expected_size ? 0 : 1) |
+			    (ss_len_u(sb) == expected_size ? 0 : 2) |
+			    (ss_len_u(sc) == expected_size ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1125,8 +1131,8 @@ static int test_ss_cat_resize_u()
 	ss_cat_resize_u(&b, a, 11, 'z');
 	ss_cat_resize_u(&c, a, 3, 'z');
 	int res = (!a || !b) ? 1 :
-		    (!strcmp(ss_to_c(b), "x\xc3\xb1" "hellozzzzz") ? 0 : 2) |
-		    (!strcmp(ss_to_c(c), "x\xc3\xb1" "he") ? 0 : 4);
+		    (!strcmp(ss_to_c(b), "x" U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
+		    (!strcmp(ss_to_c(c), "x" U8_S_N_TILDE_F1 "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -3064,7 +3070,17 @@ int main()
 	STEST_ASSERT(test_ss_free(0));
 	STEST_ASSERT(test_ss_free(16));
 	STEST_ASSERT(test_ss_len("hello", 5));
-	STEST_ASSERT(test_ss_len_u("hello\xc3\x91", 6));
+	STEST_ASSERT(test_ss_len(U8_HAN_24B62, 4));
+	STEST_ASSERT(test_ss_len(U8_C_N_TILDE_D1 U8_S_N_TILDE_F1
+		U8_S_I_DOTLESS_131 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E
+		U8_S_G_BREVE_11F U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
+		U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62, 25)); /* bytes */
+	STEST_ASSERT(test_ss_len_u("hello" U8_C_N_TILDE_D1, 6));
+	STEST_ASSERT(test_ss_len_u(U8_HAN_24B62, 1));
+	STEST_ASSERT(test_ss_len_u(U8_C_N_TILDE_D1 U8_S_N_TILDE_F1
+		U8_S_I_DOTLESS_131 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E
+		U8_S_G_BREVE_11F U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
+		U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62, 11)); /* Unicode chrs */
 	STEST_ASSERT(test_ss_capacity());
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());

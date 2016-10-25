@@ -38,7 +38,8 @@ extern "C" {
  * - Usage of struct SDataFlags type-specific elements:
  *	flag1: Unicode size is cached
  *	flag2: string has UTF-8 encoding errors (e.g. after some operation)
- *	flag3: C string reference (built using ss_build_ref())
+ *	flag3: string reference (built using ss_cref[a]() or ss_ref[a]())
+ *	flag4: string reference with C terminator (built using ss_cref[a]())
  */
 
 struct SString
@@ -164,19 +165,19 @@ ss_t *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
 const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str);
 
 /* #API: |Create a reference from C string using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-)|input C string (0 terminated ASCII or UTF-8 string)|ss_t string derived from ss_ref_t|O(1)|1;2|
-const ss_t *ss_refa(const char *c_str)
+const ss_t *ss_crefa(const char *c_str)
 */
 #define ss_crefa(c_str)	\
 	ss_cref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
 
-/* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: avoid calling ss_to_c() afterwards, unless you ensure raw data contains a 0 terminator|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
-const ss_t *ss_ref_raw(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
+/* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: when using raw references when calling ss_to_c() will return a "" string (safety)), so, if you need a reference to the internal raw buffer use ss_get_buffer_r() instead|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
+const ss_t *ss_ref_buf(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
 
-/* #API: |Create a reference from raw data, i.e. not 0 terminated. WARNING: avoid calling ss_to_c() afterwards, unless you ensure raw data contains a 0 terminator|input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2|
-const ss_t *ss_refa_raw(const char *buf, const size_t buf_size)
+/* #API: |Create a reference from raw data, i.e. not 0 terminated, using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-). WARNING: when using raw references when calling ss_to_c() will return a "" string (safety), so, if you need a reference to the internal raw buffer use ss_get_buffer_r() instead|input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2|
+const ss_t *ss_refa_buf(const char *buf, const size_t buf_size)
 */
-#define ss_refa_raw(buf, buf_size)	\
-	ss_ref_raw((ss_ref_t *)alloca(sizeof(ss_ref_t)), buf, buf_size)
+#define ss_refa_buf(buf, buf_size)	\
+	ss_ref_buf((ss_ref_t *)alloca(sizeof(ss_ref_t)), buf, buf_size)
 
 /*
  * Accessors
@@ -784,6 +785,11 @@ unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2);
 S_INLINE sbool_t ss_is_ref(const ss_t *s)
 {
 	return s && s->d.f.flag3 != 0 ? S_TRUE : S_FALSE;
+}
+
+S_INLINE sbool_t ss_is_cref(const ss_t *s)
+{
+	return s && s->d.f.flag4 != 0 ? S_TRUE : S_FALSE;
 }
 
 S_INLINE char *ss_get_buffer(ss_t *s)
