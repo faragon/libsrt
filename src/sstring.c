@@ -628,8 +628,8 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 				return ss_check(s);
 		}
 		o0 = o = ss_get_buffer(*s);
+		RETURN_IF(!o, ss_check(s));
 	}
-	RETURN_IF(!o, ss_check(s));
 	typedef void (*memcpy_t)(void *, const void *, size_t);
 	memcpy_t f_cpy;
 	if (aliasing) {
