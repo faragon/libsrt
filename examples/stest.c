@@ -411,21 +411,6 @@ static int test_ss_dup()
 	return res;
 }
 
-static int test_ss_dup_sub()
-{
-	/* TODO: add SV_SREF to sv_t */
-	ss_t *b = ss_dup_c("hello");
-	sv_t *sub = sv_alloc_t(SV_U64, 2);
-	sv_push_u(&sub, 0);
-	sv_push_u(&sub, 5);
-	ss_t *a = ss_dup_sub(b, sub, 0);
-	int res = !a ? 1 : (ss_len(a) == ss_nth_size(sub, 0) ? 0 : 2) |
-			  (!strcmp("hello", ss_to_c(a)) ? 0 : 4);
-	ss_free(&a, &b);
-	sv_free(&sub);
-	return res;
-}
-
 static int test_ss_dup_substr()
 {
 	ss_t *a = ss_dup_c("hello");
@@ -665,20 +650,6 @@ static int test_ss_cpy(const char *in)
 	res = res ? 0 : (!strcmp(ss_to_c(b), in) ? 0 : 8) |
 		       (ss_len(b) == strlen(in) ? 0 : 16);
 	ss_free(&a, &b);
-	return res;
-}
-
-static int test_ss_cpy_sub()
-{
-	sv_t *v = NULL;
-	ss_t *d = NULL;
-	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
-		  *c = ss_dup_c("how");
-	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
-	res |= res ? 0 : (ss_cpy_sub(&d, a, v, 0) ? 0 : 4);
-	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
-	ss_free(&a, &b, &c, &d);
-	sv_free(&v);
 	return res;
 }
 
@@ -951,19 +922,6 @@ static int test_ss_cat(const char *a, const char *b)
 
 	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 256;
 	ss_free(&sa, &sb, &sc, &sd, &se, &sf);
-	return res;
-}
-
-static int test_ss_cat_sub()
-{
-	sv_t *v = NULL;
-	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
-		    *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
-	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
-	res |= res ? 0 : (ss_cat_sub(&d, a, v, 2) ? 0 : 4);
-	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
-	ss_free(&a, &b, &c, &d);
-	sv_free(&v);
 	return res;
 }
 
@@ -1312,15 +1270,22 @@ static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 
 static int test_ss_split()
 {
-	sv_t *v = NULL;
-	ss_t *a = ss_dup_c("how are you"), *b = ss_dup_c(" ");
-	int res = (!a || !b) ? 1 : (ss_split(&v, a, b) == 3 ? 0 : 2);
-	res |= res ? 0 :
-		(ss_nth_offset(v, 0) == 0 && ss_nth_size(v, 0) == 3 &&
-		 ss_nth_offset(v, 1) == 4 && ss_nth_size(v, 1) == 3 &&
-		 ss_nth_offset(v, 2) == 8 && ss_nth_size(v, 2) == 3 ? 0 : 4);
-	ss_free(&a, &b);
-	sv_free(&v);
+	const char *howareyou = "how are you";
+	ss_t *a = ss_dup_c(howareyou), *sep1 = ss_dup_c(" ");
+	const ss_t *c = ss_crefa(howareyou), *sep2 = ss_crefa(" ");
+	#define TSS_SPLIT_MAX_SUBS 16
+	ss_ref_t subs[TSS_SPLIT_MAX_SUBS];
+	size_t elems1 = ss_split(a, sep1, subs, TSS_SPLIT_MAX_SUBS);
+	int res = (!a || !sep1) ? 1 :
+			(elems1 == 3 &&
+			 !ss_cmp(ss_ref(&subs[0]), ss_crefa("how")) &&
+			 !ss_cmp(ss_ref(&subs[1]), ss_crefa("are")) &&
+			 !ss_cmp(ss_ref(&subs[2]), ss_crefa("you")) ? 0 : 2);
+	size_t elems2 = ss_split(c, sep2, subs, TSS_SPLIT_MAX_SUBS);
+	res |= elems2 == 3 &&
+	       !ss_cmp(ss_ref(&subs[0]), ss_crefa("how")) &&
+	       !ss_cmp(ss_ref(&subs[1]), ss_crefa("are")) &&
+	       !ss_cmp(ss_ref(&subs[2]), ss_crefa("you")) ? 0 : 4;
 	return res;
 }
 
@@ -3084,8 +3049,6 @@ int main()
 	STEST_ASSERT(test_ss_capacity());
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());
-	STEST_ASSERT(test_ss_dup());
-	STEST_ASSERT(test_ss_dup_sub());
 	STEST_ASSERT(test_ss_dup_substr());
 	STEST_ASSERT(test_ss_dup_substr_u());
 	STEST_ASSERT(test_ss_dup_cn());
@@ -3154,7 +3117,6 @@ int main()
 	STEST_ASSERT(test_ss_cpy(""));
 	STEST_ASSERT(test_ss_cpy("hello"));
 	STEST_ASSERT(test_ss_cpy_cn());
-	STEST_ASSERT(test_ss_cpy_sub());
 	STEST_ASSERT(test_ss_cpy_substr());
 	STEST_ASSERT(test_ss_cpy_substr_u());
 	STEST_ASSERT(test_ss_cpy_c(""));
@@ -3184,7 +3146,6 @@ int main()
 	if (sizeof(wchar_t) > 2)
 		STEST_ASSERT(test_ss_cpy_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_cat("hello", "all"));
-	STEST_ASSERT(test_ss_cat_sub());
 	STEST_ASSERT(test_ss_cat_substr());
 	STEST_ASSERT(test_ss_cat_substr_u());
 	STEST_ASSERT(test_ss_cat_cn());

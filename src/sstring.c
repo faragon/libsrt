@@ -1052,12 +1052,6 @@ ss_t *ss_dup(const ss_t *src)
 	return ss_cpy(&s, src);
 }
 
-ss_t *ss_dup_sub(const ss_t *src, const sv_t *offs, const size_t nth)
-{
-	ss_t *s = NULL;
-	return ss_cpy_sub(&s, src, offs, nth);
-}
-
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n)
 {
 	ss_t *s = NULL;
@@ -1201,17 +1195,6 @@ ss_t *ss_cpy(ss_t **s, const ss_t *src)
 	if (*s)
 		ss_clear(s);
 	return ss_cat(s, src);
-}
-
-ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
-{
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF((!src || !offs), ss_clear(s)); /* BEHAVIOR: empty */
-	const size_t elems = sv_size(offs) / 2;
-	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
-	const size_t off = (size_t)sv_at_u(offs, nth * 2);
-	const size_t size = (size_t)sv_at_u(offs, nth * 2 + 1);
-	return ss_cpy_substr(s, src, off, size);
 }
 
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
@@ -1435,35 +1418,6 @@ ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 		}
 	}
 	return ss_check(s);
-}
-
-ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offs, const size_t nth)
-{
-	ASSERT_RETURN_IF(!s, ss_void);
-	RETURN_IF((!src || !offs), ss_check(s)); /* same string */
-	const char *src_str = NULL, *src_aux;
-	const size_t elems = sv_size(offs) / 2;
-	ASSERT_RETURN_IF(nth >= elems, ss_clear(s)); /* BEHAVIOR: empty */
-	size_t src_off = get_str_off(src), src_size;
-	if (nth < elems) {
-		src_off += (size_t)sv_at_u(offs, nth * 2);
-		src_size = (size_t)sv_at_u(offs, nth * 2 + 1);
-	} else {
-		src_size = ss_size(src);
-	}
-	if (*s == src && *s && !(*s)->d.f.ext_buffer) {
-		/* Aliasing case: make grow the buffer in order
-		   to keep the reference to the data valid. */
-		if (!ss_grow(s, src_size))
-			return *s; /* not enough memory */
-		src_str = (const char *)*s;
-	} else {
-		src_aux = (const char *)src;
-		src_str = (const char *)src_aux;
-	}
-	const size_t src_unicode_size = is_unicode_size_cached(src) ?
-					get_unicode_size(src) : 0;
-	return ss_cat_cn_raw(s, src_str, src_off, src_size, src_unicode_size);
 }
 
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
@@ -1898,47 +1852,30 @@ size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off,
 
 #undef SS_FINDRX_AUX
 
-size_t ss_split(sv_t **v, const ss_t *src, const ss_t *separator)
+size_t ss_split(const ss_t *src, const ss_t *separator,
+		ss_ref_t out_substrings[], const size_t max_refs)
 {
-	S_ASSERT(v && src && separator);
-	if (!v || !src || !separator)
-		return 0;
-	if (*v == NULL)
-		*v = sv_alloc_t(SV_U64, S_SPLIT_MIN_ALLOC_ELEMS);
-	ASSERT_RETURN_IF(!*v, 0);
-	const size_t src_size = ss_size(src),
-		     separator_size = ss_size(separator);
-	S_ASSERT(src_size > 0 && separator_size > 0);
-	if (src_size > 0 && separator_size > 0) {
-		size_t i = 0;
-		for (; i < src_size;) {
+	size_t i, nelems = 0;
+	const size_t src_size = ss_size(src), sep_size = ss_size(separator);
+	if (src_size > 0 && sep_size > 0) {
+		const char *p = ss_get_buffer_r(src);
+		for (i = 0; i < src_size;) {
 			const size_t off = ss_find(src, i, separator);
 			const size_t sz = (off != S_NPOS ? off : src_size) - i;
-			if (!sv_push_u(v, i) || !sv_push_u(v, sz)) {
-				S_ERROR("not enough memory");
-				sv_set_size(*v, 0);
+			if (nelems < max_refs) {
+				ss_ref_buf(&out_substrings[nelems], p + i, sz);
+				nelems++;
+			} else {
+				/* BEHAVOIR: out of reference space */
 				break;
 			}
-			if (off == S_NPOS) {	/* no more separators */
+			if (off == S_NPOS) {	/* no more separators found */
 				break;
 			}
-			i = off + separator_size;
+			i = off + sep_size;
 		}
 	}
-	return sv_size(*v) / 2;
-}
-
-size_t ss_nth_size(const sv_t *offsets, const size_t nth)
-{
-	RETURN_IF(!offsets, 0);
-	const size_t elems = sv_size(offsets) / 2;
-	return nth < elems ? (size_t)sv_at_u(offsets, nth * 2 + 1) : 0;
-}
-
-size_t ss_nth_offset(const sv_t *offsets, const size_t nth)
-{
-	RETURN_IF(!offsets, 0);
-	return (size_t)sv_at_u(offsets, nth * 2);
+	return nelems;
 }
 
 /*

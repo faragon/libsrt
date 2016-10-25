@@ -179,6 +179,13 @@ const ss_t *ss_refa_buf(const char *buf, const size_t buf_size)
 #define ss_refa_buf(buf, buf_size)	\
 	ss_ref_buf((ss_ref_t *)alloca(sizeof(ss_ref_t)), buf, buf_size)
 
+/* #API: |Get string reference from string reference container|string reference container|ss_t string derived from ss_ref_t|O(1)|1;2| */
+S_INLINE const ss_t *ss_ref(const ss_ref_t *s_ref)
+{
+	RETURN_IF(!s_ref, ss_void);
+	return &s_ref->s;
+}
+
 /*
  * Accessors
  */
@@ -212,9 +219,6 @@ void ss_clear_errors(ss_t *s);
 
 /* #API: |Duplicate string|string|Output result|O(n)|1;2| */
 ss_t *ss_dup(const ss_t *src);
-
-/* #API: |Duplicate from substring|string;substring offsets;select nth substring|Output result|O(n)|1;2| */
-ss_t *ss_dup_sub(const ss_t *src, const sv_t *offsets, const size_t nth);
 
 /* #API: |Duplicate from substring|string;byte offset;number of bytes|output result|O(n)|1;2| */
 ss_t *ss_dup_substr(const ss_t *src, const size_t off, const size_t n);
@@ -330,9 +334,6 @@ ss_t *ss_dup_read(FILE *handle, const size_t max_bytes);
 
 /* #API: |Overwrite string with a string copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy(ss_t **s, const ss_t *src);
-
-/* #API: |Overwrite string with a substring copy|output string; input string; separator offsets; Nth substring to be used|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_sub(ss_t **s, const ss_t *src, const sv_t *offsets, const size_t nth);
 
 /* #API: |Overwrite string with a substring copy (byte mode)|output string; input string; input string start offset (bytes); number of bytes to be copied|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -457,9 +458,6 @@ ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes);
 ss_t *ss_cat(ss_t **s, const ss_t *s1, ...)
 */
 ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...);
-
-/* #API: |Concatenate substring token|output string; input string; substring offsets;select nth substring|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_sub(ss_t **s, const ss_t *src, const sv_t *offsets, const size_t nth);
 
 /* #API: |Concatenate substring (byte/UTF-8 mode)|output string; input string; input string substring byte offset; input string substring size (bytes)|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n);
@@ -713,14 +711,8 @@ size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off);
 /* #API: |Find n bytes|input string; search offset start; max offset (S_NPOS for end of string); target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
 size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off, const char *t, const size_t ts);
 
-/* #API: |Split/tokenize: break string by separators|output offset structure;input string; separator|Number of elements|O(n)|1;2| */
-size_t ss_split(sv_t **offsets, const ss_t *src, const ss_t *separator);
-
-/* #API: |Substring size|substring offset data; n-th element|Size in bytes of the n-th element|O(1)|1;2| */
-size_t ss_nth_size(const sv_t *offsets, const size_t nth);
-
-/* #API: |Substring offset|substring offset data; n-th element|Offset in bytes of the n-th element|O(1)|1;2| */
-size_t ss_nth_offset(const sv_t *offsets, const size_t nth);
+/* #API: |Split/tokenize: break string by separators|input string; separator; output substring references; number of output substrings|Number of elements|O(n)|1;2| */
+size_t ss_split(const ss_t *src, const ss_t *separator, ss_ref_t out_substrings[], const size_t max_refs);
 
 /*
  * Compare
