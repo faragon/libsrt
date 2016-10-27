@@ -16,21 +16,21 @@ extern "C" {
  * #DOC Supported key/value modes:
  * #DOC
  * #DOC
- * #DOC 	SM_I32I32: 32-bit integer key, 32-bit integer value
+ * #DOC 	SM_II32: 32-bit integer key, 32-bit integer value
  * #DOC
- * #DOC 	SM_U32U32: 32-bit unsigned int key, 32-bit unsigned int value
+ * #DOC 	SM_UU32: 32-bit unsigned int key, 32-bit unsigned int value
  * #DOC
- * #DOC 	SM_IntInt: 64-bit int key, 64-bit int value
+ * #DOC 	SM_II: 64-bit int key, 64-bit int value
  * #DOC
- * #DOC 	SM_IntStr: 64-bit int key, string value
+ * #DOC 	SM_IS: 64-bit int key, string value
  * #DOC
- * #DOC 	SM_IntPtr: 64-bit int key, pointer value
+ * #DOC 	SM_IP: 64-bit int key, pointer value
  * #DOC
- * #DOC 	SM_StrInt: 64-bit string key, 64-bit int value
+ * #DOC 	SM_SI: 64-bit string key, 64-bit int value
  * #DOC
- * #DOC 	SM_StrStr: string key, string value
+ * #DOC 	SM_SS: string key, string value
  * #DOC
- * #DOC 	SM_StrPtr: string key, pointer value
+ * #DOC 	SM_SP: string key, pointer value
  *
  * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
@@ -46,14 +46,14 @@ extern "C" {
 
 enum eSM_Type
 {
-	SM_I32I32,
-	SM_U32U32,
-	SM_IntInt,
-	SM_IntStr,
-	SM_IntPtr,
-	SM_StrInt,
-	SM_StrStr,
-	SM_StrPtr,
+	SM_II32,
+	SM_UU32,
+	SM_II,
+	SM_IS,
+	SM_IP,
+	SM_SI,
+	SM_SS,
+	SM_SP,
 	SM_TotalTypes
 };
 
@@ -108,14 +108,14 @@ sm_t *sm_shrink(sm_t **m);
 S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
 {
 	switch (t) {
-	case SM_I32I32:	return sizeof(struct SMapii);
-	case SM_U32U32:	return sizeof(struct SMapuu);
-	case SM_IntInt:	return sizeof(struct SMapII);
-	case SM_IntStr:	return sizeof(struct SMapIS);
-	case SM_IntPtr: return sizeof(struct SMapIP);
-	case SM_StrInt:	return sizeof(struct SMapSI);
-	case SM_StrStr:	return sizeof(struct SMapSS);
-	case SM_StrPtr: return sizeof(struct SMapSP);
+	case SM_II32:	return sizeof(struct SMapii);
+	case SM_UU32:	return sizeof(struct SMapuu);
+	case SM_II:	return sizeof(struct SMapII);
+	case SM_IS:	return sizeof(struct SMapIS);
+	case SM_IP:	return sizeof(struct SMapIP);
+	case SM_SI:	return sizeof(struct SMapSI);
+	case SM_SS:	return sizeof(struct SMapSS);
+	case SM_SP:	return sizeof(struct SMapSP);
 	default: break;
 	}
 	return 0;

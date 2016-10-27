@@ -62,7 +62,7 @@ int main(int argc, const char **argv)
 #else
 	#define COUNTER_SET(val) sm_insert_uu32(&m, val, 1)
 	#define COUNTER_POPCOUNT sm_size(m)
-	sm_t *m = sm_alloc(SM_U32U32, 0);
+	sm_t *m = sm_alloc(SM_UU32, 0);
 #endif
 	unsigned char buf[3 * 4 * 128];
 	size_t i, l;
