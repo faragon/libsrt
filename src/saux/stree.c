@@ -267,6 +267,8 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	if (!ts) {
 		stn_t *node = get_node(t, 0);
 		new_node(t, node, n, S_FALSE);
+		if (rw_f)
+			rw_f(node, n, S_FALSE);
 		t->root = 0;
 		st_set_size(t, 1);
 		return S_TRUE;
@@ -299,6 +301,8 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 			w[c].x = (stndx_t)ts;
 			w[c].n = get_node(t, (stndx_t)ts);
 			new_node(t, w[c].n, n, S_TRUE);
+			if (rw_f)
+				rw_f(w[c].n, n, S_FALSE);
 			/* Update parent node: */
 			set_lr(w[cp].n, d, w[c].x);
 			if (get_lr(w[cp].n, cd(d)) != ST_NIL)
@@ -336,7 +340,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		const int64_t cmp = t->cmp_f(w[c].n, n);
 		if (!cmp) {
 			if (rw_f)
-				rw_f(w[c].n, n);
+				rw_f(w[c].n, n, S_TRUE);
 			else
 				update_node_data(t, w[c].n, n);
 			break;

@@ -56,24 +56,65 @@ static int cmp_s(const struct SMapSx *a, const struct SMapSx *b)
 	return ss_cmp(a->k, b->k);
 }
 
-static void rw_inc_SM_II32(stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_II32(stn_t *node, const stn_t *new_data,
+			   const sbool_t existing)
 {
-	((struct SMapii *)node)->v += ((const struct SMapii *)new_data)->v;
+	if (existing)
+		((struct SMapii *)node)->v += ((const struct SMapii *)new_data)->v;
 }
 
-static void rw_inc_SM_UU32(stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_UU32(stn_t *node, const stn_t *new_data,
+			   const sbool_t existing)
 {
-	((struct SMapuu *)node)->v += ((const struct SMapuu *)new_data)->v;
+	if (existing)
+		((struct SMapuu *)node)->v += ((const struct SMapuu *)new_data)->v;
 }
 
-static void rw_inc_SM_II(stn_t *node, const stn_t *new_data)
+static void rw_inc_SM_II(stn_t *node, const stn_t *new_data,
+			 const sbool_t existing)
 {
-	((struct SMapII *)node)->v += ((const struct SMapII *)new_data)->v;
+	if (existing)
+		((struct SMapII *)node)->v += ((const struct SMapII *)new_data)->v;
 }
 
-static void rw_inc_SM_SI(stn_t *node, const stn_t *new_data)
+static void rw_add_SM_SP(stn_t *node, const stn_t *new_data,
+			 const sbool_t existing)
 {
-	((struct SMapSI *)node)->v += ((const struct SMapSI *)new_data)->v;
+	struct SMapSP *n = (struct SMapSP *)node;
+	const struct SMapSP *m = (const struct SMapSP *)new_data;
+	if (!existing)
+		n->x.k = NULL;
+	ss_cpy(&n->x.k, m->x.k);
+}
+
+static void rw_add_SM_SS(stn_t *node, const stn_t *new_data,
+			 const sbool_t existing)
+{
+	struct SMapSS *n = (struct SMapSS *)node;
+	const struct SMapSS *m = (const struct SMapSS *)new_data;
+	if (!existing)
+		n->x.k = n->v = NULL;
+	ss_cpy(&n->x.k, m->x.k);
+	ss_cpy(&n->v, m->v);
+}
+
+static void rw_add_SM_SI(stn_t *node, const stn_t *new_data,
+			 const sbool_t existing)
+{
+	struct SMapSI *n = (struct SMapSI *)node;
+	const struct SMapSI *m = (const struct SMapSI *)new_data;
+	if (!existing)
+		n->x.k = NULL;
+	ss_cpy(&n->x.k, m->x.k);
+}
+
+static void rw_inc_SM_SI(stn_t *node, const stn_t *new_data,
+			 const sbool_t existing)
+{
+	if (!existing)
+		rw_add_SM_SI(node, new_data, existing);
+	else
+		((struct SMapSI *)node)->v += ((const struct SMapSI *)new_data)->v;
 }
 
 static void aux_is_delete(void *node)
@@ -644,18 +685,15 @@ S_INLINE sbool_t sm_insert_si_aux(sm_t **m, const ss_t *k,
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSI n;
-	n.x.k = NULL;
-	ss_cpy(&n.x.k, k);
+	n.x.k = (ss_t *)k;
 	n.v = v;
 	sbool_t r = st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
-	if (!r)
-		ss_free(&n.x.k);
 	return r;
 }
 
 sbool_t sm_insert_si(sm_t **m, const ss_t *k, const int64_t v)
 {
-	return sm_insert_si_aux(m, k, v, NULL);
+	return sm_insert_si_aux(m, k, v, rw_add_SM_SI);
 }
 
 sbool_t sm_inc_si(sm_t **m, const ss_t *k, const int64_t v)
@@ -667,26 +705,18 @@ sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSS n;
-	n.x.k = n.v = NULL;
-	ss_cpy(&n.x.k, k);
-	ss_cpy(&n.v, v);
-	sbool_t r = st_insert((st_t **)m, (const stn_t *)&n);
-	if (!r)
-		ss_free(&n.x.k, &n.v);
-	return r;
+	n.x.k = (ss_t *)k;
+	n.v = (ss_t *)v;
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_add_SM_SS);
 }
 
 sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSP n;
-	n.x.k = NULL;
-	ss_cpy(&n.x.k, k);
+	n.x.k = (ss_t *)k;
 	n.v = v;
-	sbool_t r = st_insert((st_t **)m, (const stn_t *)&n);
-	if (!r)
-		ss_free(&n.x.k);
-	return r;
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_add_SM_SP);
 }
 
 /*
