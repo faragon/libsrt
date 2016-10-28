@@ -13,7 +13,7 @@ extern "C" {
  * #DOC Red-Black tree (O(n log n) maximum complexity for insert/read/delete).
  * #DOC
  * #DOC
- * #DOC Supported key/value modes:
+ * #DOC Supported key/value modes (enum eSM_Type):
  * #DOC
  * #DOC
  * #DOC 	SM_II32: 32-bit integer key, 32-bit integer value
@@ -137,10 +137,10 @@ void sm_free_aux(sm_t **m, ...);
 SD_BUILDFUNCS_FULL_ST(sm, 0)
 
 /*
-#API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|0;2|
+#API: |Ensure space for extra elements|map;number of extra elements|extra size allocated|O(1)|1;2|
 size_t sm_grow(sm_t **m, const size_t extra_elems)
 
-#API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|0;2|
+#API: |Ensure space for elements|map;absolute element reserve|reserved elements|O(1)|1;2|
 size_t sm_reserve(sm_t **m, const size_t max_elems)
 
 #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
@@ -235,26 +235,26 @@ sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v);
 /* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v);
 
-/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
+/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_inc_ii32(sm_t **m, const int32_t k, const int32_t v);
 
-/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
+/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_inc_uu32(sm_t **m, const uint32_t k, const uint32_t v);
 
-/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
+/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_inc_ii(sm_t **m, const int64_t k, const int64_t v);
 
-/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;2| */
+/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 sbool_t sm_inc_si(sm_t **m, const ss_t *k, const int64_t v);
 
 /*
  * Delete
  */
 
-/* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
+/* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 sbool_t sm_delete_i(sm_t *m, const int64_t k);
 
-/* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;2| */
+/* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 sbool_t sm_delete_s(sm_t *m, const ss_t *k);
 
 /*

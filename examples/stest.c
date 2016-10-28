@@ -2659,32 +2659,138 @@ static int test_sm_count_s()
 
 static int test_sm_inc_ii32()
 {
-	return 0; /* TODO */
+	sm_t *m = sm_alloc(SM_II32, 0);
+	sm_inc_ii32(&m, 123, -10);
+	sm_inc_ii32(&m, 123, -20);
+	sm_inc_ii32(&m, 123, -30);
+	int res = !m ? 1 : (sm_at_ii32(m, 123) == -60 ? 0 : 2);
+	sm_free(&m);
+	return res;
 }
 
 static int test_sm_inc_uu32()
 {
-	return 0; /* TODO */
+	sm_t *m = sm_alloc(SM_UU32, 0);
+	sm_inc_uu32(&m, 123, 10);
+	sm_inc_uu32(&m, 123, 20);
+	sm_inc_uu32(&m, 123, 30);
+	int res = !m ? 1 : (sm_at_uu32(m, 123) == 60 ? 0 : 2);
+	sm_free(&m);
+	return res;
 }
 
 static int test_sm_inc_ii()
 {
-	return 0; /* TODO */
+	sm_t *m = sm_alloc(SM_II, 0);
+	sm_inc_ii(&m, 123, -7);
+	sm_inc_ii(&m, 123, 9223372036854775807LL);
+	sm_inc_ii(&m, 123, 3);
+	int res = !m ? 1 : (sm_at_ii(m, 123) == 9223372036854775803LL ? 0 : 2);
+	sm_free(&m);
+	return res;
 }
 
 static int test_sm_inc_si()
 {
-	return 0; /* TODO */
+	sm_t *m = sm_alloc(SM_SI, 0);
+	const ss_t *k = ss_crefa("hello");
+	sm_inc_si(&m, k, -7);
+	sm_inc_si(&m, k, 9223372036854775807LL);
+	sm_inc_si(&m, k, 3);
+	int res = !m ? 1 : (sm_at_si(m, k) == 9223372036854775803LL ? 0 : 2);
+	sm_free(&m);
+	return res;
 }
 
 static int test_sm_delete_i()
 {
-	return 0; /* TODO */
+	sm_t *m_ii32 = sm_alloc(SM_II32, 0), *m_uu32 = sm_alloc(SM_UU32, 0),
+	     *m_ii = sm_alloc(SM_II, 0);
+	/*
+	 * Insert elements
+	 */
+	sm_insert_ii32(&m_ii32, -1, -1);
+	sm_insert_ii32(&m_ii32, -2, -2);
+	sm_insert_ii32(&m_ii32, -3, -3);
+	sm_insert_uu32(&m_uu32, 1, 1);
+	sm_insert_uu32(&m_uu32, 2, 2);
+	sm_insert_uu32(&m_uu32, 3, 3);
+	sm_insert_ii(&m_ii, 9223372036854775807LL, 9223372036854775807LL);
+	sm_insert_ii(&m_ii, 9223372036854775806LL, 9223372036854775806LL);
+	sm_insert_ii(&m_ii, 9223372036854775805LL, 9223372036854775805LL);
+	/*
+	 * Check elements were properly inserted
+	 */
+	int res = m_ii32 && m_uu32 && m_ii ? 0 : 1;
+	res |= (sm_at_ii32(m_ii32, -2) == -2 ? 0 : 2);
+	res |= (sm_at_uu32(m_uu32, 2) == 2 ? 0 : 4);
+	res |= (sm_at_ii(m_ii, 9223372036854775806LL) ==
+		9223372036854775806LL ? 0 : 8);
+	/*
+	 * Delete elements, checking that second deletion of same
+	 * element gives error
+	 */
+	res |= sm_delete_i(m_ii32, -2) ? 0 : 16;
+	res |= !sm_delete_i(m_ii32, -2) ? 0 : 32;
+	res |= sm_delete_i(m_uu32, 2) ? 0 : 64;
+	res |= !sm_delete_i(m_uu32, 2) ? 0 : 128;
+	res |= sm_delete_i(m_ii, 9223372036854775806LL) ? 0 : 256;
+	res |= !sm_delete_i(m_ii, 9223372036854775806LL) ? 0 : 512;
+	/*
+	 * Check that querying for deleted elements gives default value
+	 */
+	res |= (sm_at_ii32(m_ii32, -2) == 0 ? 0 : 1024);
+	res |= (sm_at_uu32(m_uu32, 2) == 0 ? 0 : 2048);
+	res |= (sm_at_ii(m_ii, 9223372036854775806LL) == 0 ? 0 : 4096);
+	sm_free(&m_ii32, &m_uu32, &m_ii);
+	return res;
 }
 
 static int test_sm_delete_s()
 {
-	return 0; /* TODO */
+	sm_t *m_si = sm_alloc(SM_SI, 0), *m_sp = sm_alloc(SM_SP, 0),
+	     *m_ss = sm_alloc(SM_SS, 0);
+
+	/*
+	 * Insert elements
+	 */
+	const ss_t *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+		   *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+		   *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
+	sm_insert_si(&m_si, k1, -1);
+	sm_insert_si(&m_si, k2, 9223372036854775807LL);
+	sm_insert_si(&m_si, k3, -3);
+	sm_insert_sp(&m_sp, k1, (void *)-1);
+	sm_insert_sp(&m_sp, k2, (void *)-2);
+	sm_insert_sp(&m_sp, k3, (void *)-3);
+	sm_insert_ss(&m_ss, k1, v1);
+	sm_insert_ss(&m_ss, k2, v2);
+	sm_insert_ss(&m_ss, k3, v3);
+	/*
+	 * Check elements were properly inserted
+	 */
+	int res = m_si && m_sp && m_ss ? 0 : 1;
+	res |= (sm_at_si(m_si, k2) == 9223372036854775807LL ? 0 : 2);
+	res |= (sm_at_sp(m_sp, k2) == (void *)-2 ? 0 : 4);
+	res |= (!ss_cmp(sm_at_ss(m_ss, k2), v2) ? 0 : 8);
+	/*
+	 * Delete elements, checking that second deletion of same
+	 * element gives error
+	 */
+	res |= sm_delete_s(m_si, k2) ? 0 : 16;
+	res |= !sm_delete_s(m_si, k2) ? 0 : 32;
+	res |= sm_delete_s(m_sp, k2) ? 0 : 64;
+	res |= !sm_delete_s(m_sp, k2) ? 0 : 128;
+	res |= sm_delete_s(m_ss, k2) ? 0 : 256;
+	res |= !sm_delete_s(m_ss, k2) ? 0 : 512;
+	/*
+	 * Check that querying for deleted elements gives default value
+	 */
+	res |= (sm_at_si(m_si, k2) == 0 ? 0 : 1024);
+	res |= (sm_at_sp(m_sp, k2) == 0 ? 0 : 2048);
+	res |= (!ss_cmp(sm_at_ss(m_ss, k2), ss_void) ? 0 : 4096);
+	sm_free(&m_si, &m_sp, &m_ss);
+	return res;
 }
 
 static int test_sm_enum() /* also enum_r */
