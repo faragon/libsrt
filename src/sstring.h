@@ -795,7 +795,7 @@ S_INLINE char *ss_get_buffer(ss_t *s)
 
 S_INLINE const char *ss_get_buffer_r(const ss_t *s)
 {
-	return ss_is_ref(s) ? ((struct SStringRef *)s)->cstr :
+	return ss_is_ref(s) ? ((const struct SStringRef *)s)->cstr :
 		sdx_get_buffer_r((const sd_t *)s);
 }
 
