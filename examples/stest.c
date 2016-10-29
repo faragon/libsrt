@@ -2814,7 +2814,7 @@ sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 	return S_TRUE;
 }
 
-static int test_sm_enum_inorder()
+static int test_sm_it_range()
 {
 	int res = 1;
 	size_t nelems = 100;
@@ -2834,13 +2834,13 @@ static int test_sm_enum_inorder()
 		ss_t *upperb2 = ss_alloca(100);
 		ss_cpy_c(&lowerb2, "001"); /* covering from "0010" to "0019" */
 		ss_cpy_c(&upperb2, "002");
-		ssize_t processed1 = sm_enum_inorder_ii32(m, lowerb1, upperb1,
+		ssize_t processed1 = sm_itr_ii32(m, lowerb1, upperb1,
 							  cback_i32i32, &cnt1),
-			processed1b = sm_enum_inorder_ii32(m, lowerb1, upperb1,
+			processed1b = sm_itr_ii32(m, lowerb1, upperb1,
 							   NULL, NULL),
-			processed2 = sm_enum_inorder_ss(m2, lowerb2, upperb2,
+			processed2 = sm_itr_ss(m2, lowerb2, upperb2,
 							cback_ss, &cnt2),
-			processed2b = sm_enum_inorder_ss(m2, lowerb2, upperb2,
+			processed2b = sm_itr_ss(m2, lowerb2, upperb2,
 							 NULL, NULL);
 		res = processed1 != 11 ? 2 : 0;
 		res |= processed1 != processed1b ? 4 : 0;
@@ -2851,10 +2851,10 @@ static int test_sm_enum_inorder()
 		/*
 		 * Wrong type checks
 		 */
-		res |= sm_enum_inorder_uu32(m, 10, 20, 0, 0) > 0 ? 0x100 : 0;
-		res |= sm_enum_inorder_ii(m, 10, 20, 0, 0) > 0 ? 0x200 : 0;
-		res |= sm_enum_inorder_is(m, 10, 20, 0, 0) > 0 ? 0x400 : 0;
-		res |= sm_enum_inorder_ip(m, 10, 20, 0, 0) > 0 ? 0x800 : 0;
+		res |= sm_itr_uu32(m, 10, 20, 0, 0) > 0 ? 0x100 : 0;
+		res |= sm_itr_ii(m, 10, 20, 0, 0) > 0 ? 0x200 : 0;
+		res |= sm_itr_is(m, 10, 20, 0, 0) > 0 ? 0x400 : 0;
+		res |= sm_itr_ip(m, 10, 20, 0, 0) > 0 ? 0x800 : 0;
 	}
 	sm_free(&m, &m2);
         return res;
@@ -3447,7 +3447,7 @@ int main()
 	STEST_ASSERT(test_sm_delete_i());
 	STEST_ASSERT(test_sm_delete_s());
 	STEST_ASSERT(test_sm_enum());
-	STEST_ASSERT(test_sm_enum_inorder());
+	STEST_ASSERT(test_sm_it_range());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
 	/*

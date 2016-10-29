@@ -308,49 +308,49 @@ static st_cmp_t type2cmpf(const enum eSM_Type t)
 		return nelems;						     \
 	}
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_ii32, sm_enum_ii32_t, SM_II32, int32_t,
+SM_ENUM_INORDER_XX(sm_itr_ii32, sm_it_ii32_t, SM_II32, int32_t,
 		   cmp_ni_i((const struct SMapii *)cn, kmin),
 		   cmp_ni_i((const struct SMapii *)cn, kmax),
 		   f(((const struct SMapii *)cn)->k,
 		     ((const struct SMapii *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_uu32, sm_enum_uu32_t, SM_UU32, uint32_t,
+SM_ENUM_INORDER_XX(sm_itr_uu32, sm_it_uu32_t, SM_UU32, uint32_t,
 		   cmp_nu_u((const struct SMapuu *)cn, kmin),
 		   cmp_nu_u((const struct SMapuu *)cn, kmax),
 		   f(((const struct SMapuu *)cn)->k,
 		     ((const struct SMapuu *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_ii, sm_enum_ii_t, SM_II, int64_t,
+SM_ENUM_INORDER_XX(sm_itr_ii, sm_it_ii_t, SM_II, int64_t,
 		   cmp_nI_I((const struct SMapIx *)cn, kmin),
 		   cmp_nI_I((const struct SMapIx *)cn, kmax),
 		   f(((const struct SMapIx *)cn)->k,
 		     ((const struct SMapII *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_is, sm_enum_is_t, SM_IS, int64_t,
+SM_ENUM_INORDER_XX(sm_itr_is, sm_it_is_t, SM_IS, int64_t,
 		   cmp_nI_I((const struct SMapIx *)cn, kmin),
 		   cmp_nI_I((const struct SMapIx *)cn, kmax),
 		   f(((const struct SMapIx *)cn)->k,
 		     ((const struct SMapIS *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_ip, sm_enum_ip_t, SM_IP, int64_t,
+SM_ENUM_INORDER_XX(sm_itr_ip, sm_it_ip_t, SM_IP, int64_t,
 		   cmp_nI_I((const struct SMapIx *)cn, kmin),
 		   cmp_nI_I((const struct SMapIx *)cn, kmax),
 		   f(((const struct SMapIx *)cn)->k,
 		     ((const struct SMapIP *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_si, sm_enum_si_t, SM_SI, const ss_t *,
+SM_ENUM_INORDER_XX(sm_itr_si, sm_it_si_t, SM_SI, const ss_t *,
 		   cmp_ns_s((const struct SMapSx *)cn, kmin),
 		   cmp_ns_s((const struct SMapSx *)cn, kmax),
 		   f(((const struct SMapSx *)cn)->k,
 		     ((const struct SMapSI *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_ss, sm_enum_ss_t, SM_SS, const ss_t *,
+SM_ENUM_INORDER_XX(sm_itr_ss, sm_it_ss_t, SM_SS, const ss_t *,
 		   cmp_ns_s((const struct SMapSx *)cn, kmin),
 		   cmp_ns_s((const struct SMapSx *)cn, kmax),
 		   f(((const struct SMapSx *)cn)->k,
 		     ((const struct SMapSS *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_enum_inorder_sp, sm_enum_sp_t, SM_SP, const ss_t *,
+SM_ENUM_INORDER_XX(sm_itr_sp, sm_it_sp_t, SM_SP, const ss_t *,
 		   cmp_ns_s((const struct SMapSx *)cn, kmin),
 		   cmp_ns_s((const struct SMapSx *)cn, kmax),
 		   f(((const struct SMapSx *)cn)->k,
