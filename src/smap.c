@@ -16,17 +16,17 @@
 
 S_INLINE int cmp_ni_i(const struct SMapii *a, int32_t b)
 {
-	return a->k - b;
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
 static int cmp_i(const struct SMapii *a, const struct SMapii *b)
 {
-	return a->k - b->k;
+	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
 S_INLINE int cmp_nu_u(const struct SMapuu *a, uint32_t b)
 {
-	return a->k - b;
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
 static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
@@ -36,14 +36,12 @@ static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
 
 S_INLINE int cmp_nI_I(const struct SMapIx *a, uint64_t b)
 {
-	int64_t r = a->k - b;
-	return r > 0 ? 1 : r < 0 ? -1 : 0;
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
 static int cmp_I(const struct SMapIx *a, const struct SMapIx *b)
 {
-	int64_t r = a->k - b->k;
-	return r > 0 ? 1 : r < 0 ? -1 : 0;
+	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
 S_INLINE int cmp_ns_s(const struct SMapSx *a, const ss_t *b)
