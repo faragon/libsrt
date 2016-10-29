@@ -22,7 +22,7 @@ Vector benchmarks (sv\_t)
 Introduction
 ---
 
-Tree benchmarks (st\_t)
+Bitset benchmarks (sb\_t)
 ===
 
 Introduction
@@ -127,10 +127,4 @@ Because of access not having the penalty of memory allocation, the std::unordere
 String-key map insert
 ---
 
-
-Distributed map benchmarks (sdm\_t)
-===
-
-Introduction
----
 
