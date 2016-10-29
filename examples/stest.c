@@ -49,6 +49,9 @@
 #define U8_EURO_20AC		"\xe2\x82\xac"
 #define U8_HAN_24B62		"\xf0\xa4\xad\xa2"
 
+#define S_MAX_I64	9223372036854775807LL
+#define S_MIN_I64	(0 - S_MAX_I64 - 1)
+
 /*
  * Test resource usage
  */
@@ -92,6 +95,12 @@ static uint32_t u32k[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 static int AA_cmp(const void *a, const void *b) {
 	int64_t r = ((const struct AA *)a)->a - ((const struct AA *)b)->a;
 	return r < 0 ? -1 : r > 0 ? 1 : 0;
+}
+static int cmp_ii(int64_t a, int64_t b) {
+	return a > b ? 1 : b > a ? -1 : 0;
+}
+static int cmp_pp(const void *a, const void *b) {
+	return a > b ? 1 : b > a ? -1 : 0;
 }
 
 /*
@@ -2683,9 +2692,9 @@ static int test_sm_inc_ii()
 {
 	sm_t *m = sm_alloc(SM_II, 0);
 	sm_inc_ii(&m, 123, -7);
-	sm_inc_ii(&m, 123, 9223372036854775807LL);
+	sm_inc_ii(&m, 123, S_MAX_I64);
 	sm_inc_ii(&m, 123, 3);
-	int res = !m ? 1 : (sm_at_ii(m, 123) == 9223372036854775803LL ? 0 : 2);
+	int res = !m ? 1 : (sm_at_ii(m, 123) == S_MAX_I64 - 4 ? 0 : 2);
 	sm_free(&m);
 	return res;
 }
@@ -2695,9 +2704,9 @@ static int test_sm_inc_si()
 	sm_t *m = sm_alloc(SM_SI, 0);
 	const ss_t *k = ss_crefa("hello");
 	sm_inc_si(&m, k, -7);
-	sm_inc_si(&m, k, 9223372036854775807LL);
+	sm_inc_si(&m, k, S_MAX_I64);
 	sm_inc_si(&m, k, 3);
-	int res = !m ? 1 : (sm_at_si(m, k) == 9223372036854775803LL ? 0 : 2);
+	int res = !m ? 1 : (sm_at_si(m, k) == S_MAX_I64 - 4 ? 0 : 2);
 	sm_free(&m);
 	return res;
 }
@@ -2715,17 +2724,16 @@ static int test_sm_delete_i()
 	sm_insert_uu32(&m_uu32, 1, 1);
 	sm_insert_uu32(&m_uu32, 2, 2);
 	sm_insert_uu32(&m_uu32, 3, 3);
-	sm_insert_ii(&m_ii, 9223372036854775807LL, 9223372036854775807LL);
-	sm_insert_ii(&m_ii, 9223372036854775806LL, 9223372036854775806LL);
-	sm_insert_ii(&m_ii, 9223372036854775805LL, 9223372036854775805LL);
+	sm_insert_ii(&m_ii, S_MAX_I64, S_MAX_I64);
+	sm_insert_ii(&m_ii, S_MAX_I64 - 1, S_MAX_I64 - 1);
+	sm_insert_ii(&m_ii, S_MAX_I64 - 2, S_MAX_I64 - 2);
 	/*
 	 * Check elements were properly inserted
 	 */
 	int res = m_ii32 && m_uu32 && m_ii ? 0 : 1;
 	res |= (sm_at_ii32(m_ii32, -2) == -2 ? 0 : 2);
 	res |= (sm_at_uu32(m_uu32, 2) == 2 ? 0 : 4);
-	res |= (sm_at_ii(m_ii, 9223372036854775806LL) ==
-		9223372036854775806LL ? 0 : 8);
+	res |= (sm_at_ii(m_ii, S_MAX_I64 - 1) == S_MAX_I64 - 1 ? 0 : 8);
 	/*
 	 * Delete elements, checking that second deletion of same
 	 * element gives error
@@ -2734,14 +2742,14 @@ static int test_sm_delete_i()
 	res |= !sm_delete_i(m_ii32, -2) ? 0 : 32;
 	res |= sm_delete_i(m_uu32, 2) ? 0 : 64;
 	res |= !sm_delete_i(m_uu32, 2) ? 0 : 128;
-	res |= sm_delete_i(m_ii, 9223372036854775806LL) ? 0 : 256;
-	res |= !sm_delete_i(m_ii, 9223372036854775806LL) ? 0 : 512;
+	res |= sm_delete_i(m_ii, S_MAX_I64 - 1) ? 0 : 256;
+	res |= !sm_delete_i(m_ii, S_MAX_I64 - 1) ? 0 : 512;
 	/*
 	 * Check that querying for deleted elements gives default value
 	 */
 	res |= (sm_at_ii32(m_ii32, -2) == 0 ? 0 : 1024);
 	res |= (sm_at_uu32(m_uu32, 2) == 0 ? 0 : 2048);
-	res |= (sm_at_ii(m_ii, 9223372036854775806LL) == 0 ? 0 : 4096);
+	res |= (sm_at_ii(m_ii, S_MAX_I64 - 1) == 0 ? 0 : 4096);
 	sm_free(&m_ii32, &m_uu32, &m_ii);
 	return res;
 }
@@ -2758,7 +2766,7 @@ static int test_sm_delete_s()
 		   *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
 		   *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	sm_insert_si(&m_si, k1, -1);
-	sm_insert_si(&m_si, k2, 9223372036854775807LL);
+	sm_insert_si(&m_si, k2, S_MAX_I64);
 	sm_insert_si(&m_si, k3, -3);
 	sm_insert_sp(&m_sp, k1, (void *)-1);
 	sm_insert_sp(&m_sp, k2, (void *)-2);
@@ -2770,7 +2778,7 @@ static int test_sm_delete_s()
 	 * Check elements were properly inserted
 	 */
 	int res = m_si && m_sp && m_ss ? 0 : 1;
-	res |= (sm_at_si(m_si, k2) == 9223372036854775807LL ? 0 : 2);
+	res |= (sm_at_si(m_si, k2) == S_MAX_I64 ? 0 : 2);
 	res |= (sm_at_sp(m_sp, k2) == (void *)-2 ? 0 : 4);
 	res |= (!ss_cmp(sm_at_ss(m_ss, k2), v2) ? 0 : 8);
 	/*
@@ -2793,11 +2801,6 @@ static int test_sm_delete_s()
 	return res;
 }
 
-static int test_sm_enum() /* also enum_r */
-{
-	return 0; /* TODO */
-}
-
 sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 {
 	/* printf("k: %i, v: %i\n", k, v); */
@@ -2808,13 +2811,66 @@ sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 
 sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 {
-	/* printf("k: '%s', v: '%s'\n", ss_to_c((ss_t **)&k), ss_to_c((ss_t **)&v)); */
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
 }
 
-static int test_sm_it_range()
+#define TEST_SM_IT_X(n, id, et, itk, itv, cmpkf, cmpvf, k1, v1, k2, v2, k3, v3,\
+		     res)						       \
+	sm_t *m_##id = sm_alloc(et, 0), *m_a##id = sm_alloca(et, 3);	       \
+	sm_insert_##id(&m_##id, k1, v1); sm_insert_##id(&m_a##id, k1, v1);     \
+	res |= (!cmpkf(itk(m_##id, 0), k1) &&				       \
+		!cmpvf(itv(m_##id, 0), v1)) ? 0 : n;			       \
+	sm_insert_##id(&m_##id, k2, v2); sm_insert_##id(&m_##id, k3, v3);      \
+	sm_insert_##id(&m_a##id, k2, v2); sm_insert_##id(&m_a##id, k3, v3);    \
+	res |= (!cmpvf(sm_at_##id(m_##id, k1), v1) &&			       \
+		!cmpvf(sm_at_##id(m_##id, k2), v2) &&			       \
+		!cmpvf(sm_at_##id(m_##id, k3), v3) &&			       \
+		!cmpvf(sm_at_##id(m_a##id, k1), v1) &&			       \
+		!cmpvf(sm_at_##id(m_a##id, k2), v2) &&			       \
+		!cmpvf(sm_at_##id(m_a##id, k3), v3) &&			       \
+		!cmpkf(itk(m_##id, 0), itk(m_a##id, 0)) &&		       \
+		!cmpkf(itk(m_##id, 1), itk(m_a##id, 1)) &&		       \
+		!cmpkf(itk(m_##id, 2), itk(m_a##id, 2)) &&		       \
+		!cmpvf(itv(m_##id, 0), itv(m_a##id, 0)) &&		       \
+		!cmpvf(itv(m_##id, 1), itv(m_a##id, 1)) &&		       \
+		!cmpvf(itv(m_##id, 2), itv(m_a##id, 2)) &&		       \
+		cmpkf(itk(m_##id, 0), 0) && cmpkf(itk(m_a##id, 0), 0) &&       \
+		cmpkf(itk(m_##id, 1), 0) && cmpkf(itk(m_a##id, 1), 0) &&       \
+		cmpkf(itk(m_##id, 2), 0) && cmpkf(itk(m_a##id, 2), 0) &&       \
+		cmpvf(itv(m_##id, 0), 0) && cmpvf(itv(m_a##id, 0), 0) &&       \
+		cmpvf(itv(m_##id, 1), 0) && cmpvf(itv(m_a##id, 1), 0) &&       \
+		cmpvf(itv(m_##id, 2), 0) && cmpvf(itv(m_a##id, 2), 0)) ? 0 : n;\
+	sm_free(&m_##id); sm_free(&m_a##id);
+
+static int test_sm_it()
+{
+	int res = 0;
+	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_i32_v, cmp_ii, cmp_ii,
+		     -1, -1, -2, -2, -3, -3, res);
+	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_u32_v, cmp_ii, cmp_ii,
+		     1, 1, 2, 2, 3, 3, res);
+	TEST_SM_IT_X(4, ii, SM_II, sm_it_i_k, sm_it_ii_v, cmp_ii, cmp_ii,
+		     S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
+		     S_MIN_I64 + 1, res);
+	TEST_SM_IT_X(8, is, SM_IS, sm_it_i_k, sm_it_is_v, cmp_ii, ss_cmp, 1,
+		     ss_crefa("v1"), 2, ss_crefa("v2"), 3, ss_crefa("v3"), res);
+	TEST_SM_IT_X(16, ip, SM_IP, sm_it_i_k, sm_it_ip_v, cmp_ii, cmp_pp,
+		     1, (void *)1, 2, (void *)2, 3, (void *)3, res);
+	TEST_SM_IT_X(32, si, SM_SI, sm_it_s_k, sm_it_si_v, ss_cmp, cmp_ii,
+		     ss_crefa("v1"), 1, ss_crefa("v2"), 2, ss_crefa("v3"), 3,
+		     res);
+	TEST_SM_IT_X(64, ss, SM_SS, sm_it_s_k, sm_it_ss_v, ss_cmp, ss_cmp,
+		     ss_crefa("k1"), ss_crefa("v1"), ss_crefa("k2"),
+		     ss_crefa("v2"), ss_crefa("k3"), ss_crefa("v3"), res);
+	TEST_SM_IT_X(128, sp, SM_SP, sm_it_s_k, sm_it_sp_v, ss_cmp, cmp_pp,
+		     ss_crefa("k1"), (void *)1, ss_crefa("k2"), (void *)2,
+		     ss_crefa("k3"), (void *)3, res);
+	return res;
+}
+
+static int test_sm_itr()
 {
 	int res = 1;
 	size_t nelems = 100;
@@ -3446,8 +3502,8 @@ int main()
 	STEST_ASSERT(test_sm_inc_si());
 	STEST_ASSERT(test_sm_delete_i());
 	STEST_ASSERT(test_sm_delete_s());
-	STEST_ASSERT(test_sm_enum());
-	STEST_ASSERT(test_sm_it_range());
+	STEST_ASSERT(test_sm_it());
+	STEST_ASSERT(test_sm_itr());
 	STEST_ASSERT(test_sm_sort_to_vectors());
 	STEST_ASSERT(test_sm_double_rotation());
 	/*
