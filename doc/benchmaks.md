@@ -6,6 +6,7 @@ Common
 * smap: gcc libsrt smap
 * gcc/g++ 4.8.2-19ubuntu1 (x86\_64) (optimization flags: -O2), Ubuntu 14.04, Intel i5-3330 (3.00GHz 6144KB cache)
 
+Detailed benchmarks will be added once the API gets freezed. Currently only integer map benchmarks are available. If you have tests done by yourself, and willing to share, you're welcome.
 
 String benchmarks (ss\_t)
 ===
