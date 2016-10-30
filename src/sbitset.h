@@ -67,13 +67,13 @@ sb_t *sb_dup(const sb_t *src)
  * Accessors
  */
 
-/* #API: |Reset bitset|bitset|output bitset|O(1)|1;2| */
-S_INLINE sb_t *sb_reset(sb_t *b)
+/* #API: |Reset bitset|bitset|-|O(1)|1;2| */
+S_INLINE void sb_clear(sb_t *b)
 {
-	RETURN_IF(!b, 0);
-	sv_set_size(b, 0);
-	b->vx.cnt = 0;
-	return b;
+	if (b) {
+		sv_set_size(b, 0);
+		b->vx.cnt = 0;
+	}
 }
 
 /* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)|1;2| */
@@ -136,7 +136,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 
 /* #API: |Set nth bit to 0|bitset; bit offset||O(1)|1;2| */
 
-S_INLINE void sb_clear(sb_t **b, const size_t nth)
+S_INLINE void sb_reset(sb_t **b, const size_t nth)
 {
 	S_ASSERT(!b);
 	if (b && *b) {
@@ -162,7 +162,7 @@ S_INLINE void sb_eval(sb_t **b, const size_t nth)
 		int prev = sb_test(*b, nth);
 		sb_set(b, nth);
 		if (!prev)
-			sb_clear(b, nth);
+			sb_reset(b, nth);
 	}
 }
 

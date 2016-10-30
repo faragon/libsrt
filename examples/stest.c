@@ -194,12 +194,12 @@ static int test_sb(size_t nelems)
 		  !sb_test(a, 0) || !sb_test(b, 0) ||
 		  !sb_test(da, 0) || !sb_test(db, 0) ? 2 : 0;
 	/* clear 'a', 'b', 'da' all at once */
-	sb_reset(a);
-	sb_reset(b);
-	sb_reset(da);
+	sb_clear(a);
+	sb_clear(b);
+	sb_clear(da);
 	/* clear 'db' one manually */
-	sb_clear(&db, 0);
-	sb_clear(&db, nelems - 1);
+	sb_reset(&db, 0);
+	sb_reset(&db, nelems - 1);
 	res |= sb_popcount(a) || sb_popcount(b) || sb_popcount(da) ||
 	       sb_popcount(db) ? 4 : sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
 	res |= sb_capacity(da) < nelems || sb_capacity(db) < nelems ? 16 : 0;
@@ -1212,7 +1212,7 @@ static int test_ss_clear(const char *in)
 	ss_t *sa = ss_dup_c(in);
 	int res = !sa ? 1 : (ss_len(sa) == strlen(in) ? 0 : 2) |
 			   (ss_capacity(sa) == strlen(in) ? 0 : 4);
-	ss_clear(&sa);
+	ss_clear(sa);
 	res |= res ? 0 : (ss_len(sa) == 0 ? 0 : 16);
 	ss_free(&sa);
 	return res;

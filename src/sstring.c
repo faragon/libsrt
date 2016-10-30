@@ -87,7 +87,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 		if ((cat && ss_grow(s, extra_size)) ||			\
 		    ss_reserve(s, extra_size) >= extra_size) {		\
 			if (!cat)					\
-				ss_clear(s);				\
+				ss_clear(*s);				\
 			SS_CAT_XN(s, s1, sizes[0]);			\
 			va_start(ap, s1);				\
 			for (i = 1; i < nargs; i++) {			\
@@ -722,9 +722,9 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 			     at_inc = srcs + new_elems * char_size;
 		SS_OVERFLOW_CHECK(s, at, at_inc);
 		const size_t out_size = at + at_inc;
-		if (ss_reserve(s, out_size) >= out_size) {
+		if (ss_reserve(s, out_size) >= out_size && *s) {
 			if (!cat && !aliasing) /* copy */
-				ss_clear(s);
+				ss_clear(*s);
 			if (!aliasing) {
 				memcpy(ss_get_buffer(*s) + at,
 				       ss_get_buffer_r(src), srcs);
@@ -747,7 +747,7 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 		if (!aliasing) { /* copy or cat */
 			if (ss_reserve(s, out_size) >= out_size && *s) {
 				if (!cat && !aliasing) /* copy */
-					ss_clear(s);
+					ss_clear(*s);
 				memcpy(ss_get_buffer(*s) + at, ps, head_size);
 				inc_unicode_size(*s, actual_unicode_count);
 				inc_size(*s, head_size);
@@ -798,7 +798,7 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 		if (cat)
 			ss_check(s);
 		else
-			ss_clear(s);
+			ss_clear(*s);
 	}
 	return *s;
 }
@@ -833,7 +833,7 @@ static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 		if (cat)
 			ss_check(s);
 		else
-			ss_clear(s);
+			ss_clear(*s);
 	}
 	return *s;
 }
@@ -880,7 +880,7 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 		if (cat)
 			ss_check(s);
 		else
-			ss_clear(s);
+			ss_clear(*s);
 	}
 	return l;
 }
@@ -1189,29 +1189,27 @@ ss_t *ss_dup_read(FILE *handle, const size_t max_bytes)
 
 ss_t *ss_cpy(ss_t **s, const ss_t *src)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
+	RETURN_IF(!s, ss_void);
 	RETURN_IF(*s == src && ss_check(s), *s); /* aliasing, same string */
-	RETURN_IF(!src, ss_clear(s)); /* BEHAVIOR: empty */
-	if (*s)
-		ss_clear(s);
+	ss_clear(*s);
+	RETURN_IF(!src, *s); /* BEHAVIOR: empty */
 	return ss_cat(s, src);
 }
 
 ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF(!src || !n, ss_clear(s)); /* BEHAVIOR: empty */
+	RETURN_IF(!s, ss_void);
+	RETURN_IF(!src || !n, ss_reset(*s)); /* BEHAVIOR: empty */
 	if (*s == src) { /* aliasing */
 		char *ps = ss_get_buffer(*s);
 		const size_t ss = ss_size(*s);
-		ASSERT_RETURN_IF(off >= ss, ss_clear(s)); /* BEHAVIOR: empty */
+		RETURN_IF(off >= ss, ss_reset(*s)); /* BEHAVIOR: empty */
 		const size_t copy_size = S_MIN(ss - off, n);
 		memmove(ps, ps + off, copy_size);
 		ss_set_size(*s, copy_size);
 		set_unicode_size_cached(*s, S_FALSE); /* BEHAVIOR: cache lost */
 	} else {
-		if (*s)
-			ss_clear(s);
+		ss_clear(*s);
 		ss_cat_substr(s, src, off, n);
 	}
 	return ss_check(s);
@@ -1220,8 +1218,8 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 		      const size_t n)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF(!src || !n, ss_clear(s)); /* BEHAVIOR: empty */
+	RETURN_IF(!s, ss_void);
+	RETURN_IF(!src || !n, ss_reset(*s)); /* BEHAVIOR: empty */
 	if (*s == src) { /* aliasing */
 		char *ps = ss_get_buffer(*s);
 		size_t actual_unicode_count = 0;
@@ -1230,7 +1228,7 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 					ss, char_off, &actual_unicode_count);
 		const size_t n_size = sc_unicode_count_to_utf8_size(ps,
 			off, ss, n, &actual_unicode_count);
-		ASSERT_RETURN_IF(off >= ss, ss_clear(s)); /* BEHAVIOR: empty */
+		RETURN_IF(off >= ss, ss_reset(*s)); /* BEHAVIOR: empty */
 		const size_t copy_size = S_MIN(ss - off, n_size);
 		memmove(ps, ps + off, copy_size);
 		ss_set_size(*s, copy_size);
@@ -1241,8 +1239,7 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 			set_unicode_size_cached(*s, S_FALSE);
 		}
 	} else {
-		if (*s)
-			ss_clear(s);
+		ss_clear(*s);
 		ss_cat_substr_u(s, src, char_off, n);
 	}
 	return ss_check(s);
@@ -1250,10 +1247,9 @@ ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 
 ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF(!src || !src_size, ss_clear(s)); /* BEHAVIOR: empty */
-	if (*s)
-		ss_clear(s);
+	RETURN_IF(!s, ss_void);
+	ss_clear(*s);
+	RETURN_IF(!src || !src_size, *s); /* BEHAVIOR: empty */
 	ss_cat_cn(s, src, src_size);
 	return ss_check(s);
 }
@@ -1268,8 +1264,7 @@ ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...)
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
-	if (*s)
-		ss_clear(s);
+	ss_clear(*s);
 	return ss_cat_wn(s, src, src_size);
 }
 
@@ -1341,11 +1336,11 @@ ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src)
 
 ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF((!size || !fmt) && ss_clear(s), *s);
+	RETURN_IF(!s, ss_void);
+	RETURN_IF((!size || !fmt) && ss_reset(*s), *s);
 	if (*s) {
 		ss_reserve(s, size);
-		ss_clear(s);
+		ss_clear(*s);
 	}
 	va_list ap;
 	va_start(ap, fmt);
@@ -1356,22 +1351,21 @@ ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 
 ss_t *ss_cpy_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	ASSERT_RETURN_IF((!size || !fmt) && ss_clear(s), *s);
+	RETURN_IF(!s, ss_void);
+	RETURN_IF((!size || !fmt) && ss_reset(*s), *s);
 	if (*s) {
 		ss_reserve(s, size);
-		ss_clear(s);
+		ss_clear(*s);
 	}
 	return ss_cat_printf_va(s, size, fmt, ap);
 }
 
 ss_t *ss_cpy_char(ss_t **s, const int c)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	if (ss_reserve(s, SSU8_MAX_SIZE) >= SSU8_MAX_SIZE) {
-		ss_clear(s);
+	RETURN_IF(!s, ss_void);
+	ss_clear(*s);
+	if (ss_reserve(s, SSU8_MAX_SIZE) >= SSU8_MAX_SIZE)
 		return ss_cat_char(s, c);
-	}
 	return *s;
 }
 
@@ -1387,7 +1381,7 @@ ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes)
 
 ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
+	RETURN_IF(!s, ss_void);
 	if (s1 && ss_size(s1) > 0) {
 		va_list ap;
 		size_t extra_size = 0, nargs = 0;
@@ -1634,11 +1628,9 @@ sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode)
 	return fsc_tolower != 0 && fsc_toupper != 0;
 }
 
-ss_t *ss_clear(ss_t **s)
+void ss_clear(ss_t *s)
 {
-	ASSERT_RETURN_IF(!s || !*s, ss_check(s));
-	ss_reset(*s);
-	return *s;
+	ss_reset(s);
 }
 
 ss_t *ss_check(ss_t **s)
@@ -1886,8 +1878,7 @@ int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 {
 	int out_size = -1;
 	if (s && ss_reserve(s, size) >= size) {
-		if (*s)
-			ss_clear(s);
+		ss_clear(*s);
 		va_list ap;
 		va_start(ap, fmt);
 		if (ss_cat_printf_va(s, size, fmt, ap))

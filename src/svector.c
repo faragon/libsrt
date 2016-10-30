@@ -155,14 +155,10 @@ static sv_t *sv_check(sv_t **v)
 	return *v;
 }
 
-static sv_t *sv_clear(sv_t **v)
+void sv_clear(sv_t *v)
 {
-	ASSERT_RETURN_IF(!v, sv_void);
-	if (!*v)
-		*v = sv_void;
-	else
-		sv_set_size(*v, 0);
-	return *v;
+	if (v)
+		sv_set_size(v, 0);
 }
 
 static sv_t *aux_dup(const sv_t *src, const size_t n_elems)
@@ -223,7 +219,8 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 			sv_set_size(*v, at + ss);
 		}
 	} else {
-		return cat ? sv_check(v) : sv_clear(v);
+		RETURN_IF(cat, sv_check(v));
+		sv_clear(*v);
 	}
 	return *v;
 }
@@ -260,8 +257,12 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 			const size_t n0)
 {
-	ASSERT_RETURN_IF(!v, sv_void);
-	ASSERT_RETURN_IF(!src, (cat ? sv_check(v) : sv_clear(v)));
+	RETURN_IF(!v, sv_void);
+	if (!src) {
+		RETURN_IF(cat, sv_check(v));
+		sv_clear(*v);
+		return *v;
+	}
 	const size_t src_size = sv_size(src),
 		     at = (cat && *v) ? sv_size(*v) : 0;
 	const size_t n = n0 < src_size ? n0 : src_size;

@@ -152,7 +152,7 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 	}
 
 #define RGBA_CNTMIN_ROW(r, len, ps, cnt, cmin, cselect, ct, k, t2)	\
-	sb_reset(bs);							\
+	sb_clear(bs);							\
 	for (k = 0; k < len && sb_popcount(bs) < cmin; k += ps)		\
 		sb_set(&bs, RGB_PACK(r + k, ps));			\
 	cnt = sb_popcount(bs);						\

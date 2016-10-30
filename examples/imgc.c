@@ -680,7 +680,7 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 #endif /* #ifdef HAS_JPG */	/* JPG codec end */
 
 #define RGB_COUNT_LOOP(i, p, ss, ps, bs, cmx, out)			\
-	sb_reset(bs);							\
+	sb_clear(bs);							\
 	for (i = 0; i < ss && sb_popcount(bs) < cmx; i += ps) {		\
 		unsigned c = (unsigned)p[i] & 0xff;			\
 		if (ps > 1) c |= ((unsigned)p[i + 1] & 0xff) << 8;	\
@@ -691,14 +691,14 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 	out = sb_popcount(bs);
 
 #define RGBC_COUNT_LOOP(i, p, ss, ps, bs, off, out)			\
-	sb_reset(bs);							\
+	sb_clear(bs);							\
 	for (i = 0; i < ss && sb_popcount(bs) < 1 << 8; i += ps) {	\
 		sb_set(&bs, (unsigned char)p[i + off]);			\
 	}								\
 	out = sb_popcount(bs);
 
 #define RGBC2_COUNT_LOOP(i, p, ss, ps, bs, off, out) {			\
-	sb_reset(bs);							\
+	sb_clear(bs);							\
 	size_t off2 = (off + 1) % 3;					\
 	for (i = 0; i < ss && sb_popcount(bs) < 1 << 16; i += ps) {	\
 		unsigned c = ((unsigned)p[i + off] & 0xff) |		\

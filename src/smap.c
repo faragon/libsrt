@@ -382,7 +382,7 @@ void sm_free_aux(sm_t **m, ...)
 	sm_t **next = m;
 	while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
 		if (next) {
-			sm_reset(*next); /* release associated dynamic memory */
+			sm_clear(*next); /* release associated dynamic memory */
 			sd_free((sd_t **)next);
 		}
 		next = (sm_t **)va_arg(ap, sm_t **);
@@ -396,10 +396,10 @@ sm_t *sm_dup(const sm_t *src)
 	return sm_cpy(&m, src);
 }
 
-sbool_t sm_reset(sm_t *m)
+void sm_clear(sm_t *m)
 {
-	RETURN_IF(!m, S_FALSE);
-	RETURN_IF(!m->d.size, S_TRUE);
+	if (!m || !m->d.size)
+		return;
 	stn_callback_t delete_callback = NULL;
 	switch (m->d.sub_type) {
 	case SM_IS: delete_callback = aux_is_delete; break;
@@ -415,7 +415,6 @@ sbool_t sm_reset(sm_t *m)
 		}
 	}
 	st_set_size((st_t *)m, 0);
-	return S_TRUE;
 }
 
 /*
@@ -432,7 +431,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	if (*m) {
 		if (src->d.f.ext_buffer)
 		{	/* If using ext buffer, we'll have grow limits */
-			sm_reset(*m);
+			sm_clear(*m);
 			*m = sm_alloc_raw(t, S_TRUE, *m, (*m)->d.elem_size,
 					  (*m)->d.max_size);
 		} else {

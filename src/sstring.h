@@ -632,7 +632,7 @@ ss_t *ss_dec_esc_squote(ss_t **s, const ss_t *src);
 sbool_t ss_set_turkish_mode(const sbool_t enable_turkish_mode);
 
 /* #API: |Clear string|output string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_clear(ss_t **s);
+void ss_clear(ss_t *s);
 
 /* #API: |Check and fix string (if input string is NULL, replaces it with a empty valid string)|output string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_check(ss_t **s);
