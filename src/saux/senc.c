@@ -666,6 +666,7 @@ typedef short slzw_ndx_t;
 
 size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
+	RETURN_IF(!o && ss > 0, ss + (ss / 10) + 128); /* max out size */
 	RETURN_IF(!s || !o || !ss, 0);
 	/*
 	 * Node structure (separated elements and not a "struct", in order to
