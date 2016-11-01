@@ -34,7 +34,7 @@ static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-S_INLINE int cmp_nI_I(const struct SMapIx *a, uint64_t b)
+S_INLINE int cmp_nI_I(const struct SMapIx *a, int64_t b)
 {
 	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
