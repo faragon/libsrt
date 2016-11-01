@@ -256,6 +256,12 @@ ss_t *ss_dup_enc_hex(const ss_t *src);
 /* #API: |Duplicate string with hex encoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_enc_HEX(const ss_t *src);
 
+/* #API: |Duplicate string with LZW encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_lzw(const ss_t *src);
+
+/* #API: |Duplicate string with RLE encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_rle(const ss_t *src);
+
 /* #API: |Duplicate string with JSON escape encoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_enc_esc_json(const ss_t *src);
 
@@ -276,6 +282,12 @@ ss_t *ss_dup_dec_b64(const ss_t *src);
 
 /* #API: |Duplicate string with hex decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_hex(const ss_t *src);
+
+/* #API: |Duplicate string with LZW decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_lzw(const ss_t *src);
+
+/* #API: |Duplicate string with RLE decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_rle(const ss_t *src);
 
 /* #API: |Duplicate string with JSON escape decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_esc_json(const ss_t *src);
@@ -371,6 +383,12 @@ ss_t *ss_cpy_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Overwrite string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_enc_HEX(ss_t **s, const ss_t *src);
 
+/* #API: |Overwrite string with input string LZW encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string RLE encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_rle(ss_t **s, const ss_t *src);
+
 /* #API: |Overwrite string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_enc_esc_json(ss_t **s, const ss_t *src);
 
@@ -391,6 +409,12 @@ ss_t *ss_cpy_dec_b64(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string LZW decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Overwrite string with input string RLE decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_rle(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_esc_json(ss_t **s, const ss_t *src);
@@ -501,6 +525,12 @@ ss_t *ss_cat_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Concatenate string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_enc_HEX(ss_t **s, const ss_t *src);
 
+/* #API: |Concatenate string with input string LZW encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string RLE encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_rle(ss_t **s, const ss_t *src);
+
 /* #API: |Concatenate string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_enc_esc_json(ss_t **s, const ss_t *src);
 
@@ -521,6 +551,12 @@ ss_t *ss_cat_dec_b64(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string LZW decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Concatenate string with input string RLE decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_rle(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_esc_json(ss_t **s, const ss_t *src);
@@ -592,6 +628,12 @@ ss_t *ss_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_HEX(ss_t **s, const ss_t *src);
 
+/* #API: |Convert to LZW|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_enc_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Convert to RLE|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_enc_rle(ss_t **s, const ss_t *src);
+
 /* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_json(ss_t **s, const ss_t *src);
 
@@ -612,6 +654,12 @@ ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
 
 /* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_hex(ss_t **s, const ss_t *src);
+
+/* #API: |Decode from LZW|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_dec_lzw(ss_t **s, const ss_t *src);
+
+/* #API: |Decode from RLE|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_dec_rle(ss_t **s, const ss_t *src);
 
 /* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_json(ss_t **s, const ss_t *src);

@@ -463,14 +463,30 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 	if (!src)
 		src = ss_void;
 	sbool_t aliasing = *s == src ? S_TRUE : S_FALSE;
+	const unsigned char *src_buf = (const unsigned char *)
+						ss_get_buffer_r(src);
 	size_t in_size = ss_size(src),
 	       at = (cat && *s) ? ss_size(*s) : 0,
-	       enc_size = f ? f(NULL, in_size, NULL) :
-			       f2((const unsigned char *)ss_get_buffer_r(src),
-				  in_size, NULL, 0),
+	       enc_size = f ? f(src_buf, in_size, NULL) :
+			       f2(src_buf, in_size, NULL, 0),
 	       out_size = at + enc_size;
 	if (ss_reserve(s, out_size) >= out_size) {
-		const ss_t *src1 = aliasing ? *s : src;
+		ss_t *src_aux = NULL;
+		const ss_t *src1;
+		if (aliasing) {
+			/*
+			 * For functions not supporting aliasing, use a
+			 * copy for the input
+			 */
+			if (f == senc_lzw || f == sdec_lzw ||
+			    f == senc_rle || f == sdec_rle) {
+				ss_cpy(&src_aux, *s);
+				src1 = src_aux;
+			} else
+				src1 = *s;
+		} else {
+			src1 = src;
+		}
 		const unsigned char *s_in =
 				(const unsigned char *)ss_get_buffer_r(src1);
 		unsigned char *s_out = (unsigned char *)ss_get_buffer(*s) + at;
@@ -489,6 +505,8 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 		}
 		out_size = at + enc_size;
 		ss_set_size(*s, out_size);
+		if (src_aux)
+			ss_free(&src_aux);
 	}
 	return ss_check(s);
 }
@@ -923,6 +941,8 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 MK_SS_DUP_CPY_CAT(enc_b64, senc_b64, NULL)
 MK_SS_DUP_CPY_CAT(enc_hex, senc_hex, NULL)
 MK_SS_DUP_CPY_CAT(enc_HEX, senc_HEX, NULL)
+MK_SS_DUP_CPY_CAT(enc_lzw, senc_lzw, NULL)
+MK_SS_DUP_CPY_CAT(enc_rle, senc_rle, NULL)
 MK_SS_DUP_CPY_CAT(enc_esc_xml, NULL, senc_esc_xml)
 MK_SS_DUP_CPY_CAT(enc_esc_json, NULL, senc_esc_json)
 MK_SS_DUP_CPY_CAT(enc_esc_url, NULL, senc_esc_url)
@@ -931,6 +951,8 @@ MK_SS_DUP_CPY_CAT(enc_esc_squote, NULL, senc_esc_squote)
 
 MK_SS_DUP_CPY_CAT(dec_b64, sdec_b64, NULL)
 MK_SS_DUP_CPY_CAT(dec_hex, sdec_hex, NULL)
+MK_SS_DUP_CPY_CAT(dec_lzw, sdec_lzw, NULL)
+MK_SS_DUP_CPY_CAT(dec_rle, sdec_rle, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_xml, sdec_esc_xml, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_json, sdec_esc_json, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_url, sdec_esc_url, NULL)

@@ -307,8 +307,8 @@ size_t senc_b64(const unsigned char *s, const size_t ss, unsigned char *o)
 
 size_t sdec_b64(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s, (ss / 4) * 3);
-	ASSERT_RETURN_IF(!o, 0);
+	RETURN_IF(!o, (ss / 4) * 3);
+	RETURN_IF(!s, 0);
 	size_t i = 0, j = 0;
 	const size_t ssd4 = ss - (ss % 4);
 	const size_t tail = s[ss - 2] == '=' || s[ss - 1] == '=' ? 4 : 0;
@@ -346,8 +346,7 @@ size_t senc_HEX(const unsigned char *s, const size_t ss, unsigned char *o)
 
 size_t sdec_hex(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!s, ss / 2);
-	ASSERT_RETURN_IF(!o, 0);
+	RETURN_IF(!o, ss / 2);
 	const size_t ssd2 = ss - (ss % 2),
 		     ssd4 = ss - (ss % 4);
 	ASSERT_RETURN_IF(!ssd2, 0);
@@ -655,7 +654,36 @@ size_t sdec_esc_squote(const unsigned char *s, const size_t ss,
 		       unsigned char *o)
 {
 	return sdec_esc_byte(s, ss, '\'', o);
+}
 
+/*
+ * Header for LZW and RLE encoding
+ */
+
+static size_t build_header(const unsigned char *s, const size_t ss,
+			   unsigned char *o)
+{
+	size_t header_bytes = ss < 128 ? 1 : 4;
+	if (header_bytes == 1)
+		o[0] = (unsigned char)(ss << 1); /* bit 0 kept 0 */
+	else
+		S_ST_LE_U32(o, (uint32_t)((ss << 1) | 1));
+	return header_bytes;
+}
+
+static const unsigned char *dec_header(const unsigned char *s, const size_t ss,
+				       size_t *header_size, size_t *expected_ss)
+{
+	if ((s[0] & 1) == 0) { /* 1 byte header */
+		*header_size = 1;
+		*expected_ss = s[0] >> 1;
+		s++;
+	} else { /* 4 byte header */
+		*header_size = 4;
+		*expected_ss = S_LD_LE_U32(s) >> 1;
+		s += 4;
+	}
+	return s;
 }
 
 /*
@@ -666,7 +694,8 @@ typedef short slzw_ndx_t;
 
 size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 {
-	RETURN_IF(!o && ss > 0, ss + (ss / 10) + 128); /* max out size */
+	RETURN_IF(ss >= 0x80000000, 0); /* currently limited to 2^31-1 input */
+	RETURN_IF(!o && ss > 0, ss + (ss / 10) + 32); /* max out size */
 	RETURN_IF(!s || !o || !ss, 0);
 	/*
 	 * Node structure (separated elements and not a "struct", in order to
@@ -688,8 +717,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 */
 	size_t normal_count = 0, esc_count = 0;
 	size_t next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1;
+	size_t header_bytes = build_header(s, ss, o);
 	sbio_t bio;
-	sbio_write_init(&bio, o);
+	sbio_write_init(&bio, o + header_bytes);
 	/*
 	 * Initialize data structures
 	 */
@@ -813,12 +843,17 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	slzw_bio_write(&bio, SLZW_STOP, curr_code_len, &normal_count,
 		       &esc_count);
 #endif
-	return sbio_write_close(&bio);
+	return sbio_write_close(&bio) + header_bytes;
 }
 
-size_t sdec_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
+size_t sdec_lzw(const unsigned char *s, const size_t ss0, unsigned char *o)
 {
-	RETURN_IF(!s || !o || !ss, 0);
+	RETURN_IF(!s || !ss0, 0);
+	size_t expected_ss, header_size;
+	s = dec_header(s, ss0, &header_size, &expected_ss);
+	RETURN_IF(!o, expected_ss); /* max out size */
+	RETURN_IF(ss0 <= header_size, 0);
+	size_t ss = ss0 - header_size;
 	sbio_t bio;
 	size_t oi = 0, normal_count = 0, esc_count = 0, last_code,
 	       curr_code_len = SLZW_ROOT_NODE_BITS + 1, next_inc_code;
@@ -944,7 +979,11 @@ static size_t senc_rle_flush(const unsigned char *s, const size_t i,
 
 size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 {
+	RETURN_IF(ss >= 0x80000000, 0); /* currently limited to 2^31-1 input */
+	RETURN_IF(!o && ss > 0, ss + (ss / 10) + 128); /* max out size */
 	RETURN_IF(!s || !o || !ss, 0);
+	size_t header_bytes = build_header(s, ss, o);
+	o += header_bytes;
 	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size;
 	for (; i < ss;) {
 		run_length = srle_run(s, i, ss, 10, (uint32_t)-1,
@@ -997,12 +1036,17 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 		i_done = i;
 	}
 	oi = senc_rle_flush(s, i, i_done, o, oi);
-	return oi;
+	return oi + header_bytes;
 }
 
-size_t sdec_rle(const unsigned char *s, const size_t ss, unsigned char *o)
+size_t sdec_rle(const unsigned char *s, const size_t ss0, unsigned char *o)
 {
-	RETURN_IF(!s || !o || !ss, 0);
+	RETURN_IF(!s || !ss0, 0);
+	size_t expected_ss, header_size;
+	s = dec_header(s, ss0, &header_size, &expected_ss);
+	RETURN_IF(!o, expected_ss); /* max out size */
+	RETURN_IF(ss0 <= header_size, 0);
+	size_t ss = ss0 - header_size;
 	size_t i = 0, oi = 0, op, ops, op_sz, cnt;
 	for (; i < ss;) {
 		op = s[i++];
