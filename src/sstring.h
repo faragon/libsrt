@@ -362,7 +362,7 @@ ss_t *ss_cpy_c(ss_t **s, ...)
 */
 ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...);
 
-/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|0;2| */
+/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Overwrite string with integer to string copy|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */

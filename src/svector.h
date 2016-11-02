@@ -162,7 +162,7 @@ sv_t *sv_dup_erase(const sv_t *src, const size_t off, const size_t n);
 /* #API: |Duplicate vector with resize operation|vector; size for the output|output vector|O(n)|1;2| */
 sv_t *sv_dup_resize(const sv_t *src, const size_t n);
 
-/* #API: |Reset/clean vector (keeping vector type)|vector|-|O(1)|0;2| */
+/* #API: |Reset/clean vector (keeping vector type)|vector|-|O(1)|1;2| */
 void sv_clear(sv_t *v);
 
 

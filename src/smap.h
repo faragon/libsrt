@@ -124,7 +124,7 @@ S_INLINE uint8_t sm_elem_size(const enum eSM_Type t)
 /* #API: |Duplicate map|input map|output map|O(n)|1;2| */
 sm_t *sm_dup(const sm_t *src);
 
-/* #API: |Reset/clean map (keeping map type)|map|-|O(1) for simple maps, O(n) for maps having nodes with strings|0;2| */
+/* #API: |Reset/clean map (keeping map type)|map|-|O(1) for simple maps, O(n) for maps having nodes with strings|1;2| */
 void sm_clear(sm_t *m);
 
 /*

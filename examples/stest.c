@@ -725,6 +725,37 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 	return res;
 }
 
+static int test_ss_cpy_wn()
+{
+	int res = 0;
+	wchar_t t_u32[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e, 0x15f, 0xa2,
+			    0x20ac, 0x24b62, 0 };
+	#define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
+	#define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
+	#define TU8C3 U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F U8_CENT_00A2
+	#define TU8D2 U8_EURO_20AC U8_HAN_24B62
+	#define TU8ALL11 TU8A3 TU8B3 TU8C3 TU8D2
+	ss_t *a = ss_dup_c("hello"), *b_a3 = ss_dup_c(TU8A3),
+	     *b_b3 = ss_dup_c(TU8B3), *b_c3 = ss_dup_c(TU8C3),
+	     *b_d2 = ss_dup_c(TU8D2), *b_all11 = ss_dup_c(TU8ALL11);
+	ss_cpy_wn(&a, t_u32, 3);
+	res |= !ss_cmp(a, b_a3) ? 0 : 1;
+	ss_cpy_wn(&a, t_u32 + 3, 3);
+	res |= !ss_cmp(a, b_b3) ? 0 : 2;
+	ss_cpy_wn(&a, t_u32 + 6, 3);
+	res |= !ss_cmp(a, b_c3) ? 0 : 4;
+	ss_cpy_wn(&a, t_u32 + 9, 2);
+	res |= !ss_cmp(a, b_d2) ? 0 : 8;
+	ss_cpy_wn(&a, t_u32, 11);
+	res |= !ss_cmp(a, b_all11) ? 0 : 16;
+	res |= !strcmp(TU8ALL11, ss_to_c(b_all11)) ? 0 : 32;
+	res |= ss_len_u(b_a3) == 3 && ss_len_u(b_b3) == 3 &&
+	       ss_len_u(b_c3) == 3 && ss_len_u(b_d2) == 2 &&
+	       ss_len_u(b_all11) == 11 ? 0 : 64;
+	ss_free(&a, &b_a3, &b_b3, &b_c3, &b_d2, &b_all11);
+	return res;
+}
+
 static int test_ss_cpy_int(const int64_t num, const char *expected)
 {
 	ss_t *a = NULL;
@@ -1444,6 +1475,9 @@ static int test_sc_wc_to_utf8(const int unicode32,
 
 static int test_ss_null()
 {
+	/*
+	 * This tests code is not crashing (more calls to be added)
+	 */
 	ss_clear(NULL);
 	ss_to_c(NULL);
 	ss_reserve(NULL, 0);
@@ -2059,6 +2093,8 @@ static int test_sv_erase()
 	res |= !v ? 1 << (ntest * 3) :					 \
 		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
 		    (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));		 \
+	sv_clear(v);							 \
+	res |= (!sv_size(v) ? 0 : 4 << (ntest * 3));			 \
 	sv_free(&v);
 
 static int test_sv_resize()
@@ -2517,6 +2553,10 @@ static int test_st_traverse()
 			if (at(m, 3) != 1003) { res = 7; break; }	\
 			break;						\
 		}							\
+		if (!res) {						\
+			sm_clear(m);					\
+			res = !sm_size(m) ? 0 : 8;			\
+		}							\
 		sm_free_X(&m);						\
 		return res;						\
 	}
@@ -2631,6 +2671,12 @@ static int test_sm_dup()
 		    scmp_ptr, 10);
 	ss_free(&s);
 	return res;
+}
+
+static int test_sm_cpy()
+{
+	/*TODO*/
+	return 0;
 }
 
 #define TEST_SM_X_COUNT(T, v)				\
@@ -2917,6 +2963,9 @@ static int test_sm_itr()
 		res |= sm_itr_is(m, 10, 20, 0, 0) > 0 ? 0x400 : 0;
 		res |= sm_itr_ip(m, 10, 20, 0, 0) > 0 ? 0x800 : 0;
 	}
+	/*
+	 * TODO: add sm_itr_si, sm_itr_sp
+	 */
 	sm_free(&m, &m2);
         return res;
 }
@@ -3320,6 +3369,7 @@ int main()
 	STEST_ASSERT(test_ss_cpy_c(""));
 	STEST_ASSERT(test_ss_cpy_c("hello"));
 	STEST_ASSERT(test_ss_cpy_w(L"hello", "hello"));
+	STEST_ASSERT(test_ss_cpy_wn());
 	STEST_ASSERT(test_ss_cpy_int(0, "0"));
 	STEST_ASSERT(test_ss_cpy_int(1, "1"));
 	STEST_ASSERT(test_ss_cpy_int(-1, "-1"));
@@ -3528,6 +3578,7 @@ int main()
 	STEST_ASSERT(test_sm_alloca_ii());
 	STEST_ASSERT(test_sm_shrink());
 	STEST_ASSERT(test_sm_dup());
+	STEST_ASSERT(test_sm_cpy());
 	STEST_ASSERT(test_sm_count_u());
 	STEST_ASSERT(test_sm_count_i());
 	STEST_ASSERT(test_sm_count_s());
