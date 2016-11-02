@@ -92,7 +92,7 @@ int main(int argc, const char **argv)
 			ss_cat_read(&in, stdin, IBUF_SIZE);
 			l = ss_size(in);
 			li += (l - ss0);
-			if (!l || ferror(stdin)) {
+			if (!l) {
 				done = S_TRUE;
 				continue;
 			}
