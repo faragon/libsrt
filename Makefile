@@ -20,9 +20,6 @@
 
 # Makefile parameters
 
-ifdef ADD_CFLAGS
-	CFLAGS += $(ADD_CFLAGS)
-endif
 ifndef C99
 	C99 = 0
 endif
@@ -219,6 +216,10 @@ endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
 LDFLAGS += $(COMMON_FLAGS)
+
+ifdef ADD_CFLAGS
+	CFLAGS += $(ADD_CFLAGS)
+endif
 
 VPATH   = src:src/saux:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c \
