@@ -1489,6 +1489,36 @@ static int test_ss_null()
 	return 0;
 }
 
+static int test_ss_misc()
+{
+	ss_t *a = ss_alloc(10);
+	int res = a ? 0 : 1;
+	res |= (!ss_alloc_errors(a) ? 0 : 2);
+	/*
+	 * 32-bit mode: ask for growing 4 GB
+	 * 64-bit mode: Ask for growing 1 PB (10^15 bytes), and check
+	 * memory allocation fails:
+	 */
+#if UINTPTR_MAX == 0xffffffff
+	ss_grow(&a, 4 * 1000 * 1000 * 1000);
+#elif UINTPTR_MAX > 0xffffffff
+	ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
+#endif
+	res |= (ss_alloc_errors(a) ? 0 : 4);
+	/*
+	 * Clear errors, and check are not set afterwards
+	 */
+	ss_clear_errors(a);
+	res |= (!ss_alloc_errors(a) ? 0 : 8);
+	ss_free(&a);
+#if 0	/*TODO*/
+	ss_alloc_errors
+	ss_encoding_errors
+	ss_clear_errors
+#endif
+	return res;
+}
+
 #define TEST_SV_ALLOC(sv_alloc_x, sv_alloc_x_t, free_op)		\
 	sv_t *a = sv_alloc_x(sizeof(struct AA), 10, NULL);		\
 	sv_t *b = sv_alloc_x_t(SV_I8, 10);				\
@@ -3494,6 +3524,7 @@ int main()
 	STEST_ASSERT(test_ss_read_write());
 	STEST_ASSERT(test_ss_csum32());
 	STEST_ASSERT(test_ss_null());
+	STEST_ASSERT(test_ss_misc());
 	const char *utf8[] = { "a", "$", U8_CENT_00A2, U8_EURO_20AC,
 			       U8_HAN_24B62, U8_C_N_TILDE_D1,
 			       U8_S_N_TILDE_F1 };
