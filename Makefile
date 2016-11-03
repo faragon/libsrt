@@ -15,7 +15,7 @@
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
 #   and not GNU make). If not installed, use: pkg install gmake
 #
-# Copyright (c) 2015 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2016 F. Aragon. All rights reserved.
 #
 
 # Makefile parameters
