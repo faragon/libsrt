@@ -289,7 +289,7 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 		nl2 = ss_findrc(ppm, off, nl, '#'); /* skip comments */
 		nl2 = nl2 == S_NPOS ? nl : nl2;
 		for (i = off; i < nl2;) { /* get fields */
-			i = ss_findrbm(ppm, i, nl2, 0x30, 0xc0); /* digits */
+			i = ss_findrcx(ppm, i, nl2, '0', '9'); /* digits */
 			if (i == S_NPOS)
 				break;
 			f[nf++] = (size_t)atoi(p + i);
