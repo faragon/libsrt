@@ -1312,6 +1312,29 @@ static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 	return res;
 }
 
+static int test_ss_find_misc()
+{
+	int res = 0;
+	/*                    01234 56 7 8901234  5             6 */
+	const char *sample = "abc \t \n\r 123zyx" U8_HAN_24B62 "s";
+	const ss_t *a = ss_crefa(sample);
+	res |= ss_findb(a, 0) == 3 ? 0 : 1;
+	res |= ss_findrb(a, 0, S_NPOS) == 3 ? 0 : 2;
+	res |= ss_findc(a, 0, 'z') == 12 ? 0 : 4;
+	res |= ss_findrc(a, 0, S_NPOS, 'z') == 12 ? 0 : 8;
+	res |= ss_findu(a, 0, 0x24B62) == 15 ? 0 : 16;
+	res |= ss_findru(a, 0, S_NPOS, 0x24B62) == 15 ? 0 : 32;
+	res |= ss_findcx(a, 0, '0', '9') == 9 ? 0 : 64;
+	res |= ss_findrcx(a, 0, S_NPOS, '0', '9') == 9 ? 0 : 128;
+	res |= ss_findnb(a, 3) == 9 ? 0 : 256;
+	res |= ss_findrnb(a, 3, S_NPOS) == 9 ? 0 : 512;
+	res |= ss_find(a, 0, ss_crefa(U8_HAN_24B62 "s")) == 15 ? 0 : 1024;
+	res |= ss_findr(a, 0, S_NPOS, ss_crefa("yx")) == 13 ? 0 : 2048;
+	res |= ss_find_cn(a, 0, "yx", 2) == 13 ? 0 : 4096;
+	res |= ss_findr_cn(a, 0, S_NPOS, "yx", 2) == 13 ? 0 : 8192;
+	return res;
+}
+
 static int test_ss_split()
 {
 	const char *howareyou = "how are you";
@@ -3491,6 +3514,7 @@ int main()
 #endif
 	STEST_ASSERT(test_ss_find("full text", "text", 5));
 	STEST_ASSERT(test_ss_find("full text", "hello", S_NPOS));
+	STEST_ASSERT(test_ss_find_misc());
 	STEST_ASSERT(test_ss_split());
 	STEST_ASSERT(test_ss_cmp("hello", "hello2", -1));
 	STEST_ASSERT(test_ss_cmp("hello2", "hello", 1));

@@ -1855,7 +1855,7 @@ size_t ss_findru(const ss_t *s, const size_t off, const size_t max_off,
 		SS_FINDRX_AUX(*p == c);
 	/* Unicode search */
 	RETURN_IF(!s || off == S_NPOS, S_NPOS);
-	ss_t *tmps = ss_alloc(16);
+	ss_t *tmps = ss_alloca(6);
 	ss_cat_char(&tmps, c);
 	return ss_findr(s, off, max_off, tmps);
 }

@@ -726,43 +726,43 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
 /* #API: |Find substring into string|input string; search offset start; target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_find(const ss_t *s, const size_t off, const ss_t *tgt);
 
-/* #API: |Find blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findb(const ss_t *s, const size_t off);
 
-/* #API: |Find first byte between a min and a max value|input string; search offset start; target byte mininum value; target byte maximum value|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find first byte between a min and a max value|input string; search offset start; target byte mininum value; target byte maximum value|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findcx(const ss_t *s, const size_t off, const unsigned char c_min, const unsigned char c_max);
 
-/* #API: |Find byte into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find byte into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findc(const ss_t *s, const size_t off, const char c);
 
-/* #API: |Find Unicode character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find Unicode character into string|input string; search offset start; target character|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findu(const ss_t *s, const size_t off, const int c);
 
-/* #API: |Find non-blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find non-blank (9, 10, 13, 32) character into string|input string; search offset start|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findnb(const ss_t *s, const size_t off);
 
-/* #API: |Find n bytes|input string; search offset start; target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find n bytes|input string; search offset start; target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_find_cn(const ss_t *s, const size_t off, const char *t, const size_t ts);
 
 /* #API: |Find substring into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target string|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off, const ss_t *tgt);
 
-/* #API: |Find blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off);
 
-/* #API: |Find first byte between a min and a max value|input string; search offset start; max offset (S_NPOS for end of string); target byte mininum value; target byte maximum value|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find first byte between a min and a max value|input string; search offset start; max offset (S_NPOS for end of string); target byte mininum value; target byte maximum value|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findrcx(const ss_t *s, const size_t off, const size_t max_off, const unsigned char c_min, const unsigned char c_max);
 
-/* #API: |Find byte into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find byte into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off, const char c);
 
-/* #API: |Find Unicode character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find Unicode character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string); target character|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findru(const ss_t *s, const size_t off, const size_t max_off, const int c);
 
-/* #API: |Find non-blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find non-blank (9, 10, 13, 32) character into string (in range)|input string; search offset start; max offset (S_NPOS for end of string)|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off);
 
-/* #API: |Find n bytes|input string; search offset start; max offset (S_NPOS for end of string); target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|0;2| */
+/* #API: |Find n bytes|input string; search offset start; max offset (S_NPOS for end of string); target buffer; target buffer size (bytes)|Offset location if found, S_NPOS if not found|O(n)|1;2| */
 size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off, const char *t, const size_t ts);
 
 /* #API: |Split/tokenize: break string by separators|input string; separator; output substring references; number of output substrings|Number of elements|O(n)|1;2| */
