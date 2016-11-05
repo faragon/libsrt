@@ -1024,9 +1024,10 @@ size_t ss_len_u(const ss_t *s)
 	if (is_unicode_size_cached(s))
 		return get_unicode_size(s);
 	/* Not cached, so cache it: */
+	size_t enc_errors = 0;
 	const char *p = ss_get_buffer_r(s);
 	const size_t ss = ss_size(s),
-		     cached_uc_size = sc_utf8_count_chars(p, ss);
+		     cached_uc_size = sc_utf8_count_chars(p, ss, &enc_errors);
 	/*
 	 * BEHAVIOR:
 	 * Constness is kept regarding ss_t internal logical state. Said that,
@@ -1037,6 +1038,14 @@ size_t ss_len_u(const ss_t *s)
 	ss_t *ws = (ss_t *)s;
 	set_unicode_size_cached(ws, S_TRUE);
 	set_unicode_size(ws, cached_uc_size);
+	if (enc_errors) {
+		/* BEHAVIOR:
+		 * Unicode string length must be *always* less or equal to
+		 * the UTF-8 number of bytes. Otherwise, it would mean an
+		 * UTF-8 encoding error.
+		 */
+		set_encoding_errors(ws, S_TRUE);
+	}
 	return cached_uc_size;
 }
 

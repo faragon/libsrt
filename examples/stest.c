@@ -1534,11 +1534,39 @@ static int test_ss_misc()
 	ss_clear_errors(a);
 	res |= (!ss_alloc_errors(a) ? 0 : 8);
 	ss_free(&a);
-#if 0	/*TODO*/
-	ss_alloc_errors
-	ss_encoding_errors
-	ss_clear_errors
-#endif
+	/*
+	 * UTF-8 encoding error check, on strings starting by
+	 * Unicode characters of size 2/3/4/5/6 that instead of
+	 * that size, have the first character broken
+	 */
+	char xutf8[5][3] = {
+		{ (char)SSU8_S2, 32, '2' },
+		{ (char)SSU8_S3, 32, '3' },
+		{ (char)SSU8_S4, 32, '4' },
+		{ (char)SSU8_S5, 32, '5' },
+		{ (char)SSU8_S6, 32, '6' } };
+	const ss_t *srefs[5] = {
+		ss_refa_buf(xutf8[0], 3),
+		ss_refa_buf(xutf8[1], 3),
+		ss_refa_buf(xutf8[2], 3),
+		ss_refa_buf(xutf8[3], 3),
+		ss_refa_buf(xutf8[4], 3) };
+	res |= (ss_len_u(srefs[0]) == 2 &&
+		!ss_encoding_errors(srefs[0]) ? 0 : 16);
+	res |= (ss_len_u(srefs[1]) == 1 &&
+		!ss_encoding_errors(srefs[1]) ? 0 : 32);
+	res |= (ss_len_u(srefs[2]) == 3 &&
+		ss_encoding_errors(srefs[2]) ? 0 : 64);
+	res |= (ss_len_u(srefs[3]) == 3 &&
+		ss_encoding_errors(srefs[3]) ? 0 : 128);
+	res |= (ss_len_u(srefs[4]) == 3 &&
+		ss_encoding_errors(srefs[4]) ? 0 : 256);
+	ss_clear_errors((ss_t *)srefs[2]);
+	ss_clear_errors((ss_t *)srefs[3]);
+	ss_clear_errors((ss_t *)srefs[4]);
+	res |= (!ss_encoding_errors(srefs[2]) &&
+		!ss_encoding_errors(srefs[3]) &&
+		!ss_encoding_errors(srefs[4]) ? 0: 512);
 	return res;
 }
 

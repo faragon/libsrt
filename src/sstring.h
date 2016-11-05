@@ -207,7 +207,7 @@ size_t ss_real_off(const ss_t *s, const size_t off);
 sbool_t ss_alloc_errors(const ss_t *s);
 */
 
-/* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|0;2| */
+/* #API: |Check if string had UTF8 encoding errors|string|S_TRUE: has errors; S_FALSE: no errors|O(1)|1;2| */
 sbool_t ss_encoding_errors(const ss_t *s);
 
 /* #API: |Clear allocation/encoding error flags|string|-|O(1)|1;2| */

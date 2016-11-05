@@ -57,8 +57,8 @@ enum SSUTF8 {
 
 #define SSU8_VALID_START(c)     (((c) & 0xc0) != SSU8_SX)
 
-size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off);
-size_t sc_utf8_count_chars(const char *s, const size_t s_size);
+size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off, size_t *enc_errors);
+size_t sc_utf8_count_chars(const char *s, const size_t s_size, size_t *enc_errors);
 size_t sc_wc_to_utf8_size(const int32_t c);
 size_t sc_wc_to_utf8(const int c, char *s, const size_t off, const size_t max_off);
 size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off, int *unicode_out, int *encoding_errors);

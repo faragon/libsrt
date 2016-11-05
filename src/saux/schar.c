@@ -60,17 +60,25 @@
  * Functions
  */
 
-size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off)
+size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
+			 size_t *enc_errors)
 {
 	if (!s || off >= max_off)
 		return 0;
 	const int c = s[off];
 	size_t char_size = SSU8_SZ1(c)? 1 : SSU8_SZ2(c)? 2 : SSU8_SZ3(c)? 3 :
 			   SSU8_SZ4(c)? 4 : SSU8_SZ5(c)? 5 : SSU8_SZ6(c)? 6 : 1;
-	return (off + char_size) <= max_off? char_size : 1;
+	RETURN_IF((off + char_size) <= max_off, char_size);
+	/* BEHAVIOR:
+	 * On encoding errors, increase the error count, and return 1 as size
+	 */
+	if (enc_errors)
+		(*enc_errors)++;
+	return 1;
 }
 
-size_t sc_utf8_count_chars(const char *s, const size_t s_size)
+size_t sc_utf8_count_chars(const char *s, const size_t s_size,
+			   size_t *enc_errors)
 {
 	if (!s || !s_size)
 		return 0;
@@ -85,11 +93,12 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size)
 			unicode_sz += 4;
 			continue;
 		}
-		i += sc_utf8_char_size(s, i, s_size);
+		i += sc_utf8_char_size(s, i, s_size, enc_errors);
 		unicode_sz++;
 	}
 #endif
-	for (; i < s_size; i += sc_utf8_char_size(s, i, s_size), unicode_sz++);
+	for (; i < s_size;
+	     i += sc_utf8_char_size(s, i, s_size, enc_errors), unicode_sz++);
 	return unicode_sz;
 }
 
@@ -183,9 +192,9 @@ size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
 {
 	if (!s || off >= max_off)
 		return 0;
-	size_t i = off, unicode_size = 0;
+	size_t i = off, unicode_size = 0, enc_errors = 0;
 	for (;	i < max_off && unicode_size < unicode_count;
-		i += sc_utf8_char_size(s, i, max_off), unicode_size++);
+		i += sc_utf8_char_size(s, i, max_off, NULL), unicode_size++);
 	if (actual_unicode_count)
 		*actual_unicode_count = unicode_size;
 	return i - off;
