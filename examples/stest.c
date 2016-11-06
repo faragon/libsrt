@@ -1523,7 +1523,7 @@ static int test_ss_misc()
 	 * memory allocation fails:
 	 */
 #if UINTPTR_MAX == 0xffffffff
-	ss_grow(&a, 4 * 1000 * 1000 * 1000);
+	ss_grow(&a, (size_t)4 * 1000 * 1000 * 1000);
 #elif UINTPTR_MAX > 0xffffffff
 	ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
 #endif
@@ -2756,8 +2756,32 @@ static int test_sm_dup()
 
 static int test_sm_cpy()
 {
-	/*TODO*/
-	return 0;
+	int res = 0;
+	sm_t *m1 = sm_alloc(SM_II32, 0), *m2 = sm_alloc(SM_SS, 0),
+	     *m1a3 = sm_alloca(SM_II32, 3), *m1a10 = sm_alloca(SM_II32, 10);
+	sm_insert_ii32(&m1, 1, 1);
+	sm_insert_ii32(&m1, 2, 2);
+	sm_insert_ii32(&m1, 3, 3);
+	sm_insert_ss(&m2, ss_crefa("k1"), ss_crefa("v1"));
+	sm_insert_ss(&m2, ss_crefa("k2"), ss_crefa("v2"));
+	sm_insert_ss(&m2, ss_crefa("k3"), ss_crefa("v3"));
+	sm_cpy(&m1, m2);
+	sm_cpy(&m1a3, m2);
+	sm_cpy(&m1a10, m2);
+	res |= (sm_size(m1) == 3 ? 0 : 1);
+	if (sizeof(uint32_t) == sizeof(void *))
+		res |= (sm_size(m1a3) == 3 ? 0 : 2);
+	else
+		res |= (sm_size(m1a3) < 3 ? 0 : 4);
+	res |= (sm_size(m1a10) == 3 ? 0 : 8);
+	res |= (!ss_cmp(sm_it_s_k(m1, 0), sm_it_s_k(m2, 0)) ? 0 : 16);
+	res |= (!ss_cmp(sm_it_s_k(m1, 1), sm_it_s_k(m2, 1)) ? 0 : 32);
+	res |= (!ss_cmp(sm_it_s_k(m1, 2), sm_it_s_k(m2, 2)) ? 0 : 64);
+	res |= (!ss_cmp(sm_it_s_k(m1, 0), sm_it_s_k(m1a10, 0)) ? 0 : 128);
+	res |= (!ss_cmp(sm_it_s_k(m1, 1), sm_it_s_k(m1a10, 1)) ? 0 : 256);
+	res |= (!ss_cmp(sm_it_s_k(m1, 2), sm_it_s_k(m1a10, 2)) ? 0 : 512);
+	sm_free(&m1, &m2, &m1a3, &m1a10);
+	return res;
 }
 
 #define TEST_SM_X_COUNT(T, v)				\

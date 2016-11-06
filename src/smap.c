@@ -429,18 +429,25 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	       src_buf_size = src->d.elem_size * src->d.size;
 	RETURN_IF(ss > ST_NDX_MAX, NULL); /* BEHAVIOR */
 	if (*m) {
-		if (src->d.f.ext_buffer)
-		{	/* If using ext buffer, we'll have grow limits */
-			sm_clear(*m);
-			*m = sm_alloc_raw(t, S_TRUE, *m, (*m)->d.elem_size,
-					  (*m)->d.max_size);
-		} else {
-			st_reserve(m, ss);
+		sm_clear(*m);
+		if ((*m)->d.sub_type != t) {
+			/*
+			 * Case of changing map type, reusing allocated memory,
+			 * but changing container configuration.
+			 */
+			size_t raw_space = (*m)->d.elem_size * (*m)->d.max_size,
+			       new_max_size = raw_space / src->d.elem_size;
+			(*m)->d.elem_size = src->d.elem_size;
+			(*m)->d.max_size = new_max_size;
+			(*m)->cmp_f = src->cmp_f;
+			(*m)->d.sub_type = src->d.sub_type;
 		}
-	}
-	if (!*m)
+		sm_reserve(m, ss);
+	} else {
 		*m = sm_alloc(t, ss);
-	RETURN_IF(!*m || st_max_size(*m) < ss, NULL); /* BEHAVIOR */
+		RETURN_IF(!*m, NULL); /* BEHAVIOR: allocation error */
+	}
+	RETURN_IF(sm_max_size(*m) < ss, *m); /* BEHAVIOR: not enough space */
 	/*
 	 * Bulk tree copy: tree structure can be copied as is, because of
 	 * of using indexes instead of pointers.

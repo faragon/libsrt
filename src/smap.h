@@ -163,7 +163,7 @@ sbool_t sm_empty(const sm_t *m)
  * Copy
  */
 
-/* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|0;2| */
+/* #API: |Overwrite map with a map copy|output map; input map|output map reference (optional usage)|O(n)|1;2| */
 sm_t *sm_cpy(sm_t **m, const sm_t *src);
 
 /*
