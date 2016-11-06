@@ -219,8 +219,20 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 			sv_set_size(*v, at + ss);
 		}
 	} else {
-		RETURN_IF(cat, sv_check(v));
+		RETURN_IF(cat, sv_check(v)); /* BEHAVIOR: cat wrong type */
 		sv_clear(*v);
+		RETURN_IF(!src, sv_check(v)); /* BEHAVIOR: null input */
+		size_t ss = sv_size(src),
+		       raw_space = (*v)->d.elem_size * (*v)->d.max_size,
+		       new_max_size = raw_space / src->d.elem_size;
+		(*v)->d.elem_size = src->d.elem_size;
+		(*v)->d.max_size = new_max_size;
+		(*v)->d.sub_type = src->d.sub_type;
+		(*v)->vx.cmpf = src->vx.cmpf;
+		if (sv_reserve(v, ss) >= ss) { /* BEHAVIOR: only if enough space */
+			sv_copy_elems(*v, 0, src, 0, ss);
+			sv_set_size(*v, ss);
+		}
 	}
 	return *v;
 }

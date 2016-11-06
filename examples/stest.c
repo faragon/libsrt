@@ -1935,6 +1935,25 @@ static int test_sv_cpy()
 	TEST_SV_CPY(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, r, s);
 	TEST_SV_CPY(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, r, s);
 	TEST_SV_CPY(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, r, s);
+	sv_t *v1 = sv_alloc_t(SV_I8, 0), *v2 = sv_alloc_t(SV_I64, 0),
+	     *v1a3 = sv_alloca_t(SV_I8, 3), *v1a24 = sv_alloca_t(SV_I8, 24);
+	sv_push_i(&v1, 1);
+	sv_push_i(&v1, 2);
+	sv_push_i(&v1, 3);
+	sv_push_i(&v2, 1);
+	sv_push_i(&v2, 2);
+	sv_push_i(&v2, 3);
+	sv_cpy(&v1, v2);
+	sv_cpy(&v1a3, v2);
+	sv_cpy(&v1a24, v2);
+	res |= (sv_size(v1) == 3 ? 0 : 1<<31);
+	res |= (sv_size(v1a3) == 0 ? 0 : 1<<30);
+	res |= (sv_size(v1a24) == 3 ? 0 : 1<<29);
+	res |= (sv_at_i(v1, 0) == 1 && sv_at_i(v1, 1) == 2 &&
+		sv_at_i(v1, 2) == 3 ? 0 : 1<<28);
+	res |= (sv_at_i(v1a24, 0) == 1 && sv_at_i(v1a24, 1) == 2 &&
+		sv_at_i(v1a24, 2) == 3 ? 0 : 1<<27);
+	sv_free(&v1, &v2);
 	return res;
 }
 
