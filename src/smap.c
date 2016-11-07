@@ -496,7 +496,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 
 int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 {
-	ASSERT_RETURN_IF(!m, SINT32_MIN);
+	RETURN_IF(!m || m->d.sub_type != SM_II32, 0);
 	struct SMapii n;
 	n.k = k;
 	const struct SMapii *nr =
@@ -506,7 +506,7 @@ int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 
 uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 {
-	ASSERT_RETURN_IF(!m, 0);
+	RETURN_IF(!m || m->d.sub_type != SM_UU32, 0);
 	struct SMapuu n;
 	n.k = k;
 	const struct SMapuu *nr =
@@ -516,7 +516,7 @@ uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 
 int64_t sm_at_ii(const sm_t *m, const int64_t k)
 {
-	ASSERT_RETURN_IF(!m, SINT64_MAX);
+	RETURN_IF(!m || m->d.sub_type != SM_II, 0);
 	struct SMapII n;
 	n.x.k = k;
 	const struct SMapII *nr =
@@ -526,7 +526,7 @@ int64_t sm_at_ii(const sm_t *m, const int64_t k)
 
 const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 {
-	ASSERT_RETURN_IF(!m, ss_void);
+	RETURN_IF(!m || m->d.sub_type != SM_IS, ss_void);
 	struct SMapIS n;
 	n.x.k = k;
 	const struct SMapIS *nr =
@@ -536,7 +536,7 @@ const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 
 const void *sm_at_ip(const sm_t *m, const int64_t k)
 {
-	ASSERT_RETURN_IF(!m, NULL);
+	RETURN_IF(!m || m->d.sub_type != SM_IP, NULL);
 	struct SMapIP n;
 	n.x.k = k;
 	const struct SMapIP *nr =
@@ -546,7 +546,7 @@ const void *sm_at_ip(const sm_t *m, const int64_t k)
 
 int64_t sm_at_si(const sm_t *m, const ss_t *k)
 {
-	ASSERT_RETURN_IF(!m, SINT64_MIN);
+	RETURN_IF(!m || m->d.sub_type != SM_SI, 0);
 	struct SMapSI n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
 	const struct SMapSI *nr =
@@ -556,7 +556,7 @@ int64_t sm_at_si(const sm_t *m, const ss_t *k)
 
 const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 {
-	ASSERT_RETURN_IF(!m, ss_void);
+	RETURN_IF(!m || m->d.sub_type != SM_SS, ss_void);
 	struct SMapSS n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
 	const struct SMapSS *nr =
@@ -566,7 +566,7 @@ const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 
 const void *sm_at_sp(const sm_t *m, const ss_t *k)
 {
-	ASSERT_RETURN_IF(!m, NULL);
+	RETURN_IF(!m || m->d.sub_type != SM_SP, NULL);
 	struct SMapSP n;
 	n.x.k = (ss_t *)k;	/* not going to be overwritten */
 	const struct SMapSP *nr =
