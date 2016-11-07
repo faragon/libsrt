@@ -3049,48 +3049,82 @@ static int test_sm_itr()
 {
 	int res = 1;
 	size_t nelems = 100;
-	sm_t *m = sm_alloc(SM_II32, nelems),
-	     *m2 = sm_alloc(SM_SS, nelems);
-	if (m && m2) {
-		ss_t *stmp = ss_alloca(1000);
-		size_t i;
+	sm_t *m_ii32 = sm_alloc(SM_II32, nelems),
+	     *m_uu32 = sm_alloc(SM_UU32, nelems),
+	     *m_ii = sm_alloc(SM_II, nelems),
+	     *m_is = sm_alloc(SM_IS, nelems),
+	     *m_ip = sm_alloc(SM_IP, nelems),
+	     *m_si = sm_alloc(SM_SI, nelems),
+	     *m_ss = sm_alloc(SM_SS, nelems),
+	     *m_sp = sm_alloc(SM_SP, nelems);
+	if (m_ii32 && m_uu32 && m_ii && m_is && m_ip && m_si && m_ss && m_sp) {
+		ss_t *ktmp = ss_alloca(1000), *vtmp = ss_alloca(1000);
+		int i;
 		for (i = 0; i < nelems; i++) {
-			sm_insert_ii32(&m, (int)i, (int)i);
-			ss_printf(&stmp, 200, "%04i", (int)i);
-			sm_insert_ss(&m2, stmp, stmp);
+			sm_insert_ii32(&m_ii32, -i, -i);
+			sm_insert_uu32(&m_uu32, i, i);
+			sm_insert_ii(&m_ii, -i, -i);
+			ss_printf(&ktmp, 200, "k%04i", i);
+			ss_printf(&vtmp, 200, "v%04i", i);
+			sm_insert_is(&m_is, -i, vtmp);
+			sm_insert_ip(&m_ip, -i, (char *)0 + i);
+			sm_insert_si(&m_si, ktmp, i);
+			sm_insert_ss(&m_ss, ktmp, vtmp);
+			sm_insert_sp(&m_sp, ktmp, (char *)0 + i);
 		}
 		size_t cnt1 = 0, cnt2 = 0;
-		int32_t lowerb1 = 10, upperb1 = 20;
-		ss_t *lowerb2 = ss_alloca(100);
-		ss_t *upperb2 = ss_alloca(100);
-		ss_cpy_c(&lowerb2, "001"); /* covering from "0010" to "0019" */
-		ss_cpy_c(&upperb2, "002");
-		ssize_t processed1 = sm_itr_ii32(m, lowerb1, upperb1,
-							  cback_i32i32, &cnt1),
-			processed1b = sm_itr_ii32(m, lowerb1, upperb1,
-							   NULL, NULL),
-			processed2 = sm_itr_ss(m2, lowerb2, upperb2,
+		int32_t lower_i32 = -20, upper_i32 = -10;
+		uint32_t lower_u32 = 10, upper_u32 = 20;
+		int64_t lower_i = -20, upper_i = -10;
+		ss_t *lower_s = ss_alloca(100);
+		ss_t *upper_s = ss_alloca(100);
+		ss_cpy_c(&lower_s, "k001"); /* covering from "k0010" to "k0019" */
+		ss_cpy_c(&upper_s, "k002");
+		ssize_t processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
+							cback_i32i32, &cnt1),
+			processed_ii322 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
+							NULL, NULL),
+			processed_uu32 = sm_itr_uu32(m_uu32, lower_u32, upper_u32,
+							NULL, NULL),
+			processed_ii = sm_itr_ii(m_ii, lower_i, upper_i,
+							NULL, NULL),
+			processed_is = sm_itr_is(m_is, lower_i, upper_i,
+							NULL, NULL),
+			processed_ip = sm_itr_ip(m_ip, lower_i, upper_i,
+							NULL, NULL),
+			processed_si = sm_itr_si(m_si, lower_s, upper_s,
+							NULL, NULL),
+			processed_ss1 = sm_itr_ss(m_ss, lower_s, upper_s,
 							cback_ss, &cnt2),
-			processed2b = sm_itr_ss(m2, lowerb2, upperb2,
-							 NULL, NULL);
-		res = processed1 != 11 ? 2 : 0;
-		res |= processed1 != processed1b ? 4 : 0;
-		res |= processed1b != cnt1 ? 8 : 0;
-		res |= processed2 != 10 ? 0x20 : 0;
-		res |= processed2 != processed2b ? 0x40 : 0;
-		res |= processed2b != cnt2 ? 0x80 : 0;
+			processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s,
+							NULL, NULL),
+			processed_sp = sm_itr_sp(m_sp, lower_s, upper_s,
+							NULL, NULL);
+		res = processed_ii321 == 11 ? 0 : 2;
+		res |= processed_ii321 == processed_ii322 ? 0 : 4;
+		res |= processed_ii322 == cnt1 ? 0 : 8;
+		res |= processed_uu32 == cnt1 ? 0 : 0x10;
+		res |= processed_ii == cnt1 ? 0 : 0x20;
+		res |= processed_is == cnt1 ? 0 : 0x40;
+		res |= processed_ip == cnt1 ? 0 : 0x80;
+		res |= processed_si == 10 ? 0 : 0x100;
+		res |= processed_ss1 == 10 ? 0 : 0x200;
+		res |= processed_ss1 == processed_ss2 ? 0 : 0x400;
+		res |= processed_ss2 == cnt2 ? 0 : 0x800;
+		res |= processed_sp == 10 ? 0 : 0x1000;
 		/*
 		 * Wrong type checks
 		 */
-		res |= sm_itr_uu32(m, 10, 20, 0, 0) > 0 ? 0x100 : 0;
-		res |= sm_itr_ii(m, 10, 20, 0, 0) > 0 ? 0x200 : 0;
-		res |= sm_itr_is(m, 10, 20, 0, 0) > 0 ? 0x400 : 0;
-		res |= sm_itr_ip(m, 10, 20, 0, 0) > 0 ? 0x800 : 0;
+		res |= sm_itr_uu32(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x2000 : 0;
+		res |= sm_itr_ii(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x4000 : 0;
+		res |= sm_itr_is(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x8000 : 0;
+		res |= sm_itr_ip(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x10000 : 0;
+		res |= sm_itr_si(m_ii32, ss_crefa("10"), ss_crefa("20"),
+				 NULL, NULL) > 0 ? 0x20000 : 0;
+		res |= sm_itr_sp(m_ii32, ss_crefa("10"), ss_crefa("20"),
+				 NULL, NULL) > 0 ? 0x40000 : 0;
 	}
-	/*
-	 * TODO: add sm_itr_si, sm_itr_sp
-	 */
-	sm_free(&m, &m2);
+	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
         return res;
 }
 

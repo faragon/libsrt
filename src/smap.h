@@ -276,13 +276,13 @@ size_t sm_itr_is(const sm_t *m, int64_t key_min, int64_t key_max, sm_it_is_t f, 
 /* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ip(const sm_t *m, int64_t key_min, int64_t key_max, sm_it_ip_t f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_si(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_si_t f, void *context);
 
 /* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ss(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_ss_t f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|0;2| */
+/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_sp(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_sp_t f, void *context);
 
 /* #NOTAPI: |Sort map to vector (used for test coverage, not as documented API)|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
