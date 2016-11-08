@@ -3022,9 +3022,9 @@ sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 static int test_sm_it()
 {
 	int res = 0;
-	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_i32_v, cmp_ii, cmp_ii,
+	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_ii32_v, cmp_ii, cmp_ii,
 		     -1, -1, -2, -2, -3, -3, res);
-	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_u32_v, cmp_ii, cmp_ii,
+	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_uu32_v, cmp_ii, cmp_ii,
 		     1, 1, 2, 2, 3, 3, res);
 	TEST_SM_IT_X(4, ii, SM_II, sm_it_i_k, sm_it_ii_v, cmp_ii, cmp_ii,
 		     S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
@@ -3124,6 +3124,11 @@ static int test_sm_itr()
 		res |= sm_itr_sp(m_ii32, ss_crefa("10"), ss_crefa("20"),
 				 NULL, NULL) > 0 ? 0x40000 : 0;
 	}
+
+	/*
+	 * TODO: add sm_itr_i32, sm_itr_u32, sm_itr_i, sm_itr_s
+	 */
+
 	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
         return res;
 }

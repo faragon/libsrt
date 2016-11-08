@@ -99,17 +99,17 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 	const stn_t *cn = get_node_r(tp->t, tp->c);
 	switch (tp->t->d.sub_type) {
 	case SM_II32:
-		sprintf(k, "%i", ((const struct SMapii *)cn)->k);
+		sprintf(k, "%i", ((const struct SMapii *)cn)->x.k);
 		sprintf(v, "%i", ((const struct SMapii *)cn)->v);
 		break;
 	case SM_UU32:
-		sprintf(k, "%u", ((const struct SMapuu *)cn)->k);
+		sprintf(k, "%u", ((const struct SMapuu *)cn)->x.k);
 		sprintf(v, "%u", ((const struct SMapuu *)cn)->v);
 		break;
 	case SM_II:
 	case SM_IS:
 	case SM_IP:
-		sprintf(k, FMT_I, ((const struct SMapIx *)cn)->k);
+		sprintf(k, FMT_I, ((const struct SMapI *)cn)->k);
 		break;
 	case SM_SI:
 		sprintf(k, "%p",
@@ -118,7 +118,7 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 	case SM_SS:
 	case SM_SP:
 		sprintf(k, "%p",
-			(const void *)((const struct SMapSx *)cn)->k);
+			(const void *)((const struct SMapS *)cn)->k);
 		break;
 	}
 	switch (tp->t->d.sub_type) {

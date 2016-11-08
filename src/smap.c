@@ -14,42 +14,42 @@
  * Internal functions
  */
 
-S_INLINE int cmp_ni_i(const struct SMapii *a, int32_t b)
+S_INLINE int cmp_ni_i(const struct SMapi *a, int32_t b)
 {
 	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
-static int cmp_i(const struct SMapii *a, const struct SMapii *b)
+static int cmp_i(const struct SMapi *a, const struct SMapi *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-S_INLINE int cmp_nu_u(const struct SMapuu *a, uint32_t b)
+S_INLINE int cmp_nu_u(const struct SMapu *a, uint32_t b)
 {
 	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
-static int cmp_u(const struct SMapuu *a, const struct SMapuu *b)
+static int cmp_u(const struct SMapu *a, const struct SMapu *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-S_INLINE int cmp_nI_I(const struct SMapIx *a, int64_t b)
+S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
 {
 	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
-static int cmp_I(const struct SMapIx *a, const struct SMapIx *b)
+static int cmp_I(const struct SMapI *a, const struct SMapI *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-S_INLINE int cmp_ns_s(const struct SMapSx *a, const ss_t *b)
+S_INLINE int cmp_ns_s(const struct SMapS *a, const ss_t *b)
 {
 	return ss_cmp(a->k, b);
 }
 
-static int cmp_s(const struct SMapSx *a, const struct SMapSx *b)
+static int cmp_s(const struct SMapS *a, const struct SMapS *b)
 {
 	return ss_cmp(a->k, b->k);
 }
@@ -120,19 +120,14 @@ static void aux_is_delete(void *node)
 	ss_free(&((struct SMapIS *)node)->v);
 }
 
-static void aux_si_delete(void *node)
+static void aux_sx_delete(void *node)
 {
-	ss_free(&((struct SMapSI *)node)->x.k);
+	ss_free(&((struct SMapS *)node)->k);
 }
 
 static void aux_ss_delete(void *node)
 {
 	ss_free(&((struct SMapSS *)node)->x.k, &((struct SMapSS *)node)->v);
-}
-
-static void aux_sp_delete(void *node)
-{
-	ss_free(&((struct SMapSP *)node)->x.k);
 }
 
 struct SV2X { sv_t *kv, *vv; };
@@ -142,7 +137,7 @@ static int aux_ii32_sort(struct STraverseParams *tp)
 	const struct SMapii *cn = (const struct SMapii *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
-		sv_push_i(&v2x->kv, cn->k);
+		sv_push_i(&v2x->kv, cn->x.k);
 		sv_push_i(&v2x->vv, cn->v);
 	}
 	return 0;
@@ -153,7 +148,7 @@ static int aux_uu32_sort(struct STraverseParams *tp)
 	const struct SMapuu *cn = (const struct SMapuu *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
-		sv_push_u(&v2x->kv, cn->k);
+		sv_push_u(&v2x->kv, cn->x.k);
 		sv_push_u(&v2x->vv, cn->v);
 	}
 	return 0;
@@ -202,16 +197,16 @@ static int aux_sp_ss_sort(struct STraverseParams *tp)
 	return 0;
 }
 
-static st_cmp_t type2cmpf(const enum eSM_Type t)
+static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 {
 	switch (t) {
-	case SM_UU32:
+	case SM0_U32: case SM0_UU32:
 		return (st_cmp_t)cmp_u;
-	case SM_II32:
+	case SM0_I32: case SM0_II32:
 		return (st_cmp_t)cmp_i;
-	case SM_II: case SM_IS: case SM_IP:
+	case SM0_I: case SM0_II: case SM0_IS: case SM0_IP:
 		return (st_cmp_t)cmp_I;
-	case SM_SI: case SM_SS: case SM_SP:
+	case SM0_S: case SM0_SI: case SM0_SS: case SM0_SP:
 		return (st_cmp_t)cmp_s;
 	default:
 		break;
@@ -307,58 +302,78 @@ static st_cmp_t type2cmpf(const enum eSM_Type t)
 	}
 
 SM_ENUM_INORDER_XX(sm_itr_ii32, sm_it_ii32_t, SM_II32, int32_t,
-		   cmp_ni_i((const struct SMapii *)cn, kmin),
-		   cmp_ni_i((const struct SMapii *)cn, kmax),
-		   f(((const struct SMapii *)cn)->k,
+		   cmp_ni_i((const struct SMapi *)cn, kmin),
+		   cmp_ni_i((const struct SMapi *)cn, kmax),
+		   f(((const struct SMapi *)cn)->k,
 		     ((const struct SMapii *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_uu32, sm_it_uu32_t, SM_UU32, uint32_t,
-		   cmp_nu_u((const struct SMapuu *)cn, kmin),
-		   cmp_nu_u((const struct SMapuu *)cn, kmax),
-		   f(((const struct SMapuu *)cn)->k,
+		   cmp_nu_u((const struct SMapu *)cn, kmin),
+		   cmp_nu_u((const struct SMapu *)cn, kmax),
+		   f(((const struct SMapu *)cn)->k,
 		     ((const struct SMapuu *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_ii, sm_it_ii_t, SM_II, int64_t,
-		   cmp_nI_I((const struct SMapIx *)cn, kmin),
-		   cmp_nI_I((const struct SMapIx *)cn, kmax),
-		   f(((const struct SMapIx *)cn)->k,
+		   cmp_nI_I((const struct SMapI *)cn, kmin),
+		   cmp_nI_I((const struct SMapI *)cn, kmax),
+		   f(((const struct SMapI *)cn)->k,
 		     ((const struct SMapII *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_is, sm_it_is_t, SM_IS, int64_t,
-		   cmp_nI_I((const struct SMapIx *)cn, kmin),
-		   cmp_nI_I((const struct SMapIx *)cn, kmax),
-		   f(((const struct SMapIx *)cn)->k,
+		   cmp_nI_I((const struct SMapI *)cn, kmin),
+		   cmp_nI_I((const struct SMapI *)cn, kmax),
+		   f(((const struct SMapI *)cn)->k,
 		     ((const struct SMapIS *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_ip, sm_it_ip_t, SM_IP, int64_t,
-		   cmp_nI_I((const struct SMapIx *)cn, kmin),
-		   cmp_nI_I((const struct SMapIx *)cn, kmax),
-		   f(((const struct SMapIx *)cn)->k,
+		   cmp_nI_I((const struct SMapI *)cn, kmin),
+		   cmp_nI_I((const struct SMapI *)cn, kmax),
+		   f(((const struct SMapI *)cn)->k,
 		     ((const struct SMapIP *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_si, sm_it_si_t, SM_SI, const ss_t *,
-		   cmp_ns_s((const struct SMapSx *)cn, kmin),
-		   cmp_ns_s((const struct SMapSx *)cn, kmax),
-		   f(((const struct SMapSx *)cn)->k,
+		   cmp_ns_s((const struct SMapS *)cn, kmin),
+		   cmp_ns_s((const struct SMapS *)cn, kmax),
+		   f(((const struct SMapS *)cn)->k,
 		     ((const struct SMapSI *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_ss, sm_it_ss_t, SM_SS, const ss_t *,
-		   cmp_ns_s((const struct SMapSx *)cn, kmin),
-		   cmp_ns_s((const struct SMapSx *)cn, kmax),
-		   f(((const struct SMapSx *)cn)->k,
+		   cmp_ns_s((const struct SMapS *)cn, kmin),
+		   cmp_ns_s((const struct SMapS *)cn, kmax),
+		   f(((const struct SMapS *)cn)->k,
 		     ((const struct SMapSS *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_sp, sm_it_sp_t, SM_SP, const ss_t *,
-		   cmp_ns_s((const struct SMapSx *)cn, kmin),
-		   cmp_ns_s((const struct SMapSx *)cn, kmax),
-		   f(((const struct SMapSx *)cn)->k,
+		   cmp_ns_s((const struct SMapS *)cn, kmin),
+		   cmp_ns_s((const struct SMapS *)cn, kmax),
+		   f(((const struct SMapS *)cn)->k,
 		     ((const struct SMapSP *)cn)->v, context))
+
+SM_ENUM_INORDER_XX(sm_itr_i32, sm_it_i32_t, SM0_I32, int32_t,
+		   cmp_ni_i((const struct SMapi *)cn, kmin),
+		   cmp_ni_i((const struct SMapi *)cn, kmax),
+		   f(((const struct SMapi *)cn)->k, context))
+
+SM_ENUM_INORDER_XX(sm_itr_u32, sm_it_u32_t, SM0_U32, uint32_t,
+		   cmp_nu_u((const struct SMapu *)cn, kmin),
+		   cmp_nu_u((const struct SMapu *)cn, kmax),
+		   f(((const struct SMapu *)cn)->k, context))
+
+SM_ENUM_INORDER_XX(sm_itr_i, sm_it_i_t, SM0_I, int64_t,
+		   cmp_nI_I((const struct SMapI *)cn, kmin),
+		   cmp_nI_I((const struct SMapI *)cn, kmax),
+		   f(((const struct SMapI *)cn)->k, context))
+
+SM_ENUM_INORDER_XX(sm_itr_s, sm_it_s_t, SM0_S, const ss_t *,
+		   cmp_ns_s((const struct SMapS *)cn, kmin),
+		   cmp_ns_s((const struct SMapS *)cn, kmax),
+		   f(((const struct SMapS *)cn)->k, context))
 
 /*
  * Allocation
  */
 
-sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer,
+sm_t *sm_alloc_raw0(const enum eSM_Type0 t, const sbool_t ext_buf, void *buffer,
 		   const size_t elem_size, const size_t max_size)
 {
 	RETURN_IF(!buffer || !max_size, NULL);
@@ -368,7 +383,7 @@ sm_t *sm_alloc_raw(const enum eSM_Type t, const sbool_t ext_buf, void *buffer,
 	return m;
 }
 
-sm_t *sm_alloc(const enum eSM_Type t, const size_t init_size)
+sm_t *sm_alloc0(const enum eSM_Type0 t, const size_t init_size)
 {
 	sm_t *m = (sm_t *)st_alloc(type2cmpf(t), sm_elem_size(t), init_size);
 	m->d.sub_type = t;
@@ -402,10 +417,15 @@ void sm_clear(sm_t *m)
 		return;
 	stn_callback_t delete_callback = NULL;
 	switch (m->d.sub_type) {
-	case SM_IS: delete_callback = aux_is_delete; break;
-	case SM_SI: delete_callback = aux_si_delete; break;
-	case SM_SS: delete_callback = aux_ss_delete; break;
-	case SM_SP: delete_callback = aux_sp_delete; break;
+	case SM_IS:
+		delete_callback = aux_is_delete;
+		break;
+	case SM_SS:
+		delete_callback = aux_ss_delete;
+		break;
+	case SM0_S: case SM_SI: case SM_SP:
+		delete_callback = aux_sx_delete;
+		break;
 	}
 	if (delete_callback) {	/* deletion of dynamic memory elems */
 		stndx_t i = 0;
@@ -470,8 +490,8 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	case SM_SI:
 	case SM_SP:
 		for (i = 0; i < ss; i++) {
-			const struct SMapSx *ms = (const struct SMapSx *)st_enum_r(src, i);
-			struct SMapSx *mt = (struct SMapSx *)st_enum(*m, i);
+			const struct SMapS *ms = (const struct SMapS *)st_enum_r(src, i);
+			struct SMapS *mt = (struct SMapS *)st_enum(*m, i);
 			mt->k = ss_dup(ms->k);
 		}
 		break;
@@ -498,7 +518,7 @@ int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 {
 	RETURN_IF(!m || m->d.sub_type != SM_II32, 0);
 	struct SMapii n;
-	n.k = k;
+	n.x.k = k;
 	const struct SMapii *nr =
 			(const struct SMapii *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : 0; /* BEHAVIOR */
@@ -508,7 +528,7 @@ uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 {
 	RETURN_IF(!m || m->d.sub_type != SM_UU32, 0);
 	struct SMapuu n;
-	n.k = k;
+	n.x.k = k;
 	const struct SMapuu *nr =
 			(const struct SMapuu *)st_locate(m, (const stn_t *)&n);
 	return nr ? nr->v : 0; /* BEHAVIOR */
@@ -582,14 +602,14 @@ sbool_t sm_count_u(const sm_t *m, const uint32_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
-	n.k = k;
+	n.x.k = k;
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
 }
 
 sbool_t sm_count_i(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
-	struct SMapIx n;
+	struct SMapI n;
 	n.k = k;
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
 }
@@ -611,7 +631,7 @@ S_INLINE sbool_t sm_insert_ii32_aux(sm_t **m, const int32_t k,
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapii n;
-	n.k = k;
+	n.x.k = k;
 	n.v = v;
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
@@ -631,7 +651,7 @@ S_INLINE sbool_t sm_insert_uu32_aux(sm_t **m, const uint32_t k,
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapuu n;
-	n.k = k;
+	n.x.k = k;
 	n.v = v;
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 }
@@ -729,28 +749,28 @@ sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v)
 
 sbool_t sm_delete_i(sm_t *m, const int64_t k)
 {
-	struct SMapIx ix;
-	struct SMapii ii;
-	struct SMapuu uu;
+	struct SMapI n_i64;
+	struct SMapi n_i32;
+	struct SMapu n_u32;
 	const stn_t *n;
 	stn_callback_t callback = NULL;
 	switch (m->d.sub_type) {
-	case SM_II32:
+	case SM0_I32: case SM_II32:
 		RETURN_IF(k > SINT32_MAX || k < SINT32_MIN, S_FALSE);
-		ii.k = (int32_t)k;
-		n = (const stn_t *)&ii;
+		n_i32.k = (int32_t)k;
+		n = (const stn_t *)&n_i32;
 		break;
-	case SM_UU32:
+	case SM0_U32: case SM_UU32:
 		RETURN_IF(k > SUINT32_MAX, S_FALSE);
-		uu.k = (uint32_t)k;
-		n = (const stn_t *)&uu;
+		n_u32.k = (uint32_t)k;
+		n = (const stn_t *)&n_u32;
 		break;
 	case SM_IS:
 		callback = aux_is_delete;
 		/* don't break */
-	case SM_II: case SM_IP:
-		ix.k = k;
-		n = (const stn_t *)&ix;
+	case SM0_I: case SM_II: case SM_IP:
+		n_i64.k = k;
+		n = (const stn_t *)&n_i64;
 		break;
 	default:
 		return S_FALSE;
@@ -761,12 +781,15 @@ sbool_t sm_delete_i(sm_t *m, const int64_t k)
 sbool_t sm_delete_s(sm_t *m, const ss_t *k)
 {
 	stn_callback_t callback = NULL;
-	struct SMapSx sx;
+	struct SMapS sx;
 	sx.k = (ss_t *)k;	/* not going to be overwritten */
 	switch (m->d.sub_type) {
-		case SM_SI: callback = aux_si_delete; break;
-		case SM_SS: callback = aux_ss_delete; break;
-		case SM_SP: callback = aux_sp_delete; break;
+		case SM0_SS:
+			callback = aux_ss_delete;
+			break;
+		case SM0_S: case SM0_SP: case SM0_SI:
+			callback = aux_sx_delete;
+			break;
 	}
 	return st_delete(m, (const stn_t *)&sx, callback);
 }
