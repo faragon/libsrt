@@ -52,7 +52,7 @@ typedef sm_t sms_t;	/* "Hidden" structure (accessors are provided) */
 
 /*
 #API: |Allocate set (stack)|set type; initial reserve|set|O(1)|0;1|
-sms_t *sm_alloca(const enum eSMS_Type t, const size_t n);
+sms_t *sms_alloca(const enum eSMS_Type t, const size_t n);
 */
 #define sms_alloca(type, max_size)						\
 	sms_alloc_raw(type, S_TRUE,						\
@@ -119,7 +119,7 @@ sbool_t sms_empty(const sms_t *s)
  */
 
 /* #API: |Overwrite set with a set copy|output set; input set|output set reference (optional usage)|O(n)|0;1| */
-S_INLINE sm_t *sms_cpy(sms_t **s, const sms_t *src)
+S_INLINE sms_t *sms_cpy(sms_t **s, const sms_t *src)
 {
 	return sm_cpy(s, src);
 }
@@ -129,7 +129,7 @@ S_INLINE sm_t *sms_cpy(sms_t **s, const sms_t *src)
  */
 
 /* #API: |Set element count/check|set; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|0;1| */
-S_INLINE sbool_t sms_count_u(const sm_t *s, const uint32_t k)
+S_INLINE sbool_t sms_count_u(const sms_t *s, const uint32_t k)
 {
 	return sm_count_u(s, k);
 }
@@ -151,7 +151,7 @@ S_INLINE sbool_t sms_count_s(const sms_t *s, const ss_t *k)
  */
 
 /* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-S_INLINE sbool_t sm_insert_i32(sm_t **s, const int32_t k)
+S_INLINE sbool_t sms_insert_i32(sms_t **s, const int32_t k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapi n;
@@ -160,7 +160,7 @@ S_INLINE sbool_t sm_insert_i32(sm_t **s, const int32_t k)
 }
 
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_u32(sm_t **s, const uint32_t k)
+sbool_t sms_insert_u32(sms_t **s, const uint32_t k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapu n;
@@ -169,7 +169,7 @@ sbool_t sm_insert_u32(sm_t **s, const uint32_t k)
 }
 
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_i(sm_t **s, const int64_t k)
+sbool_t sms_insert_i(sms_t **s, const int64_t k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapI n;
@@ -178,7 +178,7 @@ sbool_t sm_insert_i(sm_t **s, const int64_t k)
 }
 
 /* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_s(sm_t **s, const ss_t *k)
+sbool_t sms_insert_s(sms_t **s, const ss_t *k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapS n;
@@ -200,13 +200,13 @@ sbool_t sm_insert_s(sm_t **s, const ss_t *k)
  */
 
 /* #API: |Delete set element|set; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
-S_INLINE sbool_t sms_delete_i(sm_t *s, const int64_t k)
+S_INLINE sbool_t sms_delete_i(sms_t *s, const int64_t k)
 {
 	return sm_delete_i(s, k);
 }
 
 /* #API: |Delete set element|set; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
-S_INLINE sbool_t sms_delete_s(sm_t *s, const ss_t *k)
+S_INLINE sbool_t sms_delete_s(sms_t *s, const ss_t *k)
 {
 	return sm_delete_s(s, k);
 }
