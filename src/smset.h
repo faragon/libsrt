@@ -159,7 +159,7 @@ S_INLINE sbool_t sm_insert_i32(sm_t **s, const int32_t k)
 }
 
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_u32(sm_t **s, const uint32_t k, const uint32_t v)
+sbool_t sm_insert_u32(sm_t **s, const uint32_t k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapu n;
@@ -168,7 +168,7 @@ sbool_t sm_insert_u32(sm_t **s, const uint32_t k, const uint32_t v)
 }
 
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_i(sm_t **s, const int64_t k, const int64_t v)
+sbool_t sm_insert_i(sm_t **s, const int64_t k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapI n;
@@ -177,7 +177,7 @@ sbool_t sm_insert_i(sm_t **s, const int64_t k, const int64_t v)
 }
 
 /* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|0;1| */
-sbool_t sm_insert_s(sm_t **s, const ss_t *k, const ss_t *v)
+sbool_t sm_insert_s(sm_t **s, const ss_t *k)
 {
         RETURN_IF(!s, S_FALSE);
         struct SMapS n;
