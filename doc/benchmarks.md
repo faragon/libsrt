@@ -36,8 +36,6 @@ Introduction
 
 libsrt map implementation use red-black trees. It is about 10 times slower than hash tables (e.g. std::unsorted\_map) for maps with up to 10^8 elements doing search on simplest data types. E.g. just doing search, with same CPU used for the tests, you could query about 6 million of nodes per second (int-int type) while with the hash map, more than 60 million per second (in both cases with one CPU). For more complex data structures in the map, or including interface operations like serialization/deserialization, the total per-query time gets closer between the tree-based implementation and the hash-map implementation (e.g. serving 1 million key-value queries per second on one CPU is a huge achievement, so having 6 or 60 million QPS throughput is not going to make a world of difference). Regarding memory usage, libsrt map uses one third of libstdc++ map (RB tree) and unordered\_map (hash tables) for the case of int-int, i.e. with same memory, it can hold 3 times more data in that case.
 
-There is room for some optimization on the libsrt map (sm\_t), but bigger gains come from using distributed maps (see sdm\_t type, libstrt map implementation that manages N maps with same interface as the simple map), so micro-optimization is not a priority (e.g. some unrolling and explicit prefetch could be added for helping non-OooE CPUs -both optimizations tried on OooE CPUs, with no visible gain, even inlining the compare function instead of using a function pointer; more tests will be done with a simpler CPU, e.g. board with ARM v6 ISA CPU-).
-
 Integer-key map insert
 ---
 

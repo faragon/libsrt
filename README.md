@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, bit set, and map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
+libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
