@@ -12,6 +12,7 @@ extern "C" {
  * #DOC Set functions handle key-only storage, which is implemented as a
  * #DOC Red-Black tree (O(n log n) maximum complexity for insert/read/delete).
  * #DOC
+ * #DOC
  * #DOC Supported set modes (enum eSSet_Type):
  * #DOC
  * #DOC 	SSet_I32: 32-bit integer key
