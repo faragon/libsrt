@@ -15,6 +15,7 @@ extern "C" {
 
 #include "sbitset.h"
 #include "smap.h"
+#include "smset.h"
 #include "sstring.h"
 #include "svector.h"
 
