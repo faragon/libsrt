@@ -691,8 +691,17 @@ sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v)
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapIS n;
 	n.x.k = k;
+#if 1 /* workaround */
 	n.v = ss_dup(v);
-	return st_insert((st_t **)m, (const stn_t *)&n);
+	sbool_t ins_ok = st_insert((st_t **)m, (const stn_t *)&n);
+	if (!ins_ok)
+		ss_free(&n.v);
+	return ins_ok;
+#else
+	/* TODO: rw_add_SM_IS */
+	n.v = v;
+	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_add_SM_IS);
+#endif
 }
 
 sbool_t sm_insert_ip(sm_t **m, const int64_t k, const void *v)
