@@ -87,7 +87,7 @@ struct SMapSS { struct SMapS x; ss_t *v; };
 struct SMapSP { struct SMapS x; const void *v; };
 
 typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
-			/* (map is immplemented as a tree)	       */
+			/* (map is implemented as a tree)	       */
 
 typedef sbool_t (*sm_it_ii32_t)(int32_t k, int32_t v, void *context);
 typedef sbool_t (*sm_it_uu32_t)(uint32_t k, uint32_t v, void *context);
