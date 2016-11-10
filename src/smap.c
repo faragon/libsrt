@@ -290,13 +290,13 @@ void sm_clear(sm_t *m)
 		return;
 	stn_callback_t delete_callback = NULL;
 	switch (m->d.sub_type) {
-	case SM_IS:
+	case SM0_IS:
 		delete_callback = aux_is_delete;
 		break;
-	case SM_SS:
+	case SM0_SS:
 		delete_callback = aux_ss_delete;
 		break;
-	case SM0_S: case SM_SI: case SM_SP:
+	case SM0_S: case SM0_SI: case SM0_SP:
 		delete_callback = aux_sx_delete;
 		break;
 	}
@@ -636,20 +636,20 @@ sbool_t sm_delete_i(sm_t *m, const int64_t k)
 	const stn_t *n;
 	stn_callback_t callback = NULL;
 	switch (m->d.sub_type) {
-	case SM0_I32: case SM_II32:
+	case SM0_I32: case SM0_II32:
 		RETURN_IF(k > SINT32_MAX || k < SINT32_MIN, S_FALSE);
 		n_i32.k = (int32_t)k;
 		n = (const stn_t *)&n_i32;
 		break;
-	case SM0_U32: case SM_UU32:
+	case SM0_U32: case SM0_UU32:
 		RETURN_IF(k > SUINT32_MAX, S_FALSE);
 		n_u32.k = (uint32_t)k;
 		n = (const stn_t *)&n_u32;
 		break;
-	case SM_IS:
+	case SM0_IS:
 		callback = aux_is_delete;
 		/* don't break */
-	case SM0_I: case SM_II: case SM_IP:
+	case SM0_I: case SM0_II: case SM0_IP:
 		n_i64.k = k;
 		n = (const stn_t *)&n_i64;
 		break;
