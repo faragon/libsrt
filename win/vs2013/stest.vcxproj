@@ -157,6 +157,7 @@
     <ClCompile Include="..\..\src\saux\ssearch.c" />
     <ClCompile Include="..\..\src\saux\stree.c" />
     <ClCompile Include="..\..\src\smap.c" />
+    <ClCompile Include="..\..\src\smset.c" />
     <ClCompile Include="..\..\src\sstring.c" />
     <ClCompile Include="..\..\src\svector.c" />
     <ClCompile Include="..\..\examples\stest.c" />
@@ -173,6 +174,7 @@
     <ClInclude Include="..\..\src\saux\stree.h" />
     <ClInclude Include="..\..\src\sbitset.h" />
     <ClInclude Include="..\..\src\smap.h" />
+    <ClInclude Include="..\..\src\smset.h" />
     <ClInclude Include="..\..\src\sstring.h" />
     <ClInclude Include="..\..\src\svector.h" />
   </ItemGroup>
