@@ -5,7 +5,7 @@ extern "C" {
 #endif
 
 /*
- * sset.h
+ * smset.h
  *
  * #SHORTDOC set handling (key-only storage)
  *

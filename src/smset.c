@@ -1,5 +1,5 @@
 /*
- * sset.c
+ * smset.c
  *
  * Set handling.
  *
