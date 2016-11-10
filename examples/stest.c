@@ -1523,11 +1523,11 @@ static int test_ss_misc()
 	 * memory allocation fails:
 	 */
 #if UINTPTR_MAX == 0xffffffff
-	ss_grow(&a, (size_t)4 * 1000 * 1000 * 1000);
+	size_t gs = ss_grow(&a, (size_t)4 * 1000 * 1000 * 1000);
 #elif UINTPTR_MAX > 0xffffffff
-	ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
+	size_t gs = ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
 #endif
-	res |= (ss_alloc_errors(a) ? 0 : 4);
+	res |= (gs == 0 && ss_alloc_errors(a) ? 0 : 4);
 	/*
 	 * Clear errors, and check are not set afterwards
 	 */
