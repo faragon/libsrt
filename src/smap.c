@@ -14,19 +14,9 @@
  * Internal functions
  */
 
-S_INLINE int cmp_ni_i(const struct SMapi *a, int32_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
-}
-
 static int cmp_i(const struct SMapi *a, const struct SMapi *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
-}
-
-S_INLINE int cmp_nu_u(const struct SMapu *a, uint32_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
 }
 
 static int cmp_u(const struct SMapu *a, const struct SMapu *b)
@@ -34,19 +24,9 @@ static int cmp_u(const struct SMapu *a, const struct SMapu *b)
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
 }
 
-S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
-}
-
 static int cmp_I(const struct SMapI *a, const struct SMapI *b)
 {
 	return a->k > b->k ? 1 : a->k < b->k ? -1 : 0;
-}
-
-S_INLINE int cmp_ns_s(const struct SMapS *a, const ss_t *b)
-{
-	return ss_cmp(a->k, b);
 }
 
 static int cmp_s(const struct SMapS *a, const struct SMapS *b)
@@ -214,93 +194,6 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 	return NULL;
 }
 
-#define SM_ENUM_INORDER_XX(FN, CALLBACK_T, MAP_TYPE, KEY_T, TR_CMP_MIN,	     \
-			   TR_CMP_MAX,TR_CALLBACK)			     \
-	size_t FN(const sm_t *m, KEY_T kmin, KEY_T kmax, CALLBACK_T f,	     \
-		  void *context)					     \
-	{								     \
-		RETURN_IF(!m, 0); /* null tree */			     \
-		RETURN_IF(m->d.sub_type != MAP_TYPE, 0); /* wrong type */    \
-		const size_t ts = sm_size(m);				     \
-		RETURN_IF(!ts, S_FALSE); /* empty tree */		     \
-		ssize_t level = 0;					     \
-		size_t nelems = 0, rbt_max_depth = 2 * (slog2(ts) + 1);	     \
-		struct STreeScan *p = (struct STreeScan *)		     \
-					alloca(sizeof(struct STreeScan) *    \
-						 (rbt_max_depth + 3));	     \
-		ASSERT_RETURN_IF(!p, 0); /* BEHAVIOR: stack error */	     \
-		p[0].p = ST_NIL;					     \
-		p[0].c = m->root;					     \
-		p[0].s = STS_ScanStart;					     \
-		const stn_t *cn;					     \
-		int cmpmin, cmpmax;					     \
-		while (level >= 0) {					     \
-			S_ASSERT(level <= (ssize_t)rbt_max_depth);	     \
-			switch (p[level].s) {				     \
-			case STS_ScanStart:				     \
-				cn = get_node_r(m, p[level].c);		     \
-				cmpmin = TR_CMP_MIN;			     \
-				cmpmax = TR_CMP_MAX;			     \
-				if (cn->x.l != ST_NIL && cmpmin > 0) {	     \
-					p[level].s = STS_ScanLeft;	     \
-					level++;			     \
-					cn = get_node_r(m, p[level - 1].c);  \
-					p[level].c = cn->x.l;		     \
-				} else {				     \
-					/* node with null left children */   \
-					if (cmpmin >= 0 && cmpmax <= 0) {    \
-						if (f && !TR_CALLBACK)	     \
-							return nelems;	     \
-						nelems++;		     \
-					}				     \
-					if (cn->r != ST_NIL && cmpmax < 0) { \
-						p[level].s = STS_ScanRight;  \
-						level++;		     \
-						cn = get_node_r(m,	     \
-							  p[level - 1].c);   \
-						p[level].c = cn->r;	     \
-					} else {			     \
-						p[level].s = STS_ScanDone;   \
-						level--;		     \
-						continue;		     \
-					}				     \
-				}					     \
-				p[level].p = p[level - 1].c;		     \
-				p[level].s = STS_ScanStart;		     \
-				continue;				     \
-			case STS_ScanLeft:				     \
-				cn = get_node_r(m, p[level].c);		     \
-				cmpmin = TR_CMP_MIN;			     \
-				cmpmax = TR_CMP_MAX;			     \
-				if (cmpmin >= 0 && cmpmax <= 0) {	     \
-					if (f && !TR_CALLBACK)		     \
-						return nelems;		     \
-					nelems++;			     \
-				}					     \
-				if (cn->r != ST_NIL && cmpmax < 0) {	     \
-					p[level].s = STS_ScanRight;	     \
-					level++;			     \
-					p[level].p = p[level - 1].c;	     \
-					cn = get_node_r(m, p[level - 1].c);  \
-					p[level].c = cn->r;		     \
-					p[level].s = STS_ScanStart;	     \
-				} else {				     \
-					p[level].s = STS_ScanDone;	     \
-					level--;			     \
-					continue;			     \
-				}					     \
-				continue;				     \
-			case STS_ScanRight:				     \
-				/* don't break */			     \
-			default:					     \
-				p[level].s = STS_ScanDone;		     \
-				level--;				     \
-				continue;				     \
-			}						     \
-		}							     \
-		return nelems;						     \
-	}
-
 SM_ENUM_INORDER_XX(sm_itr_ii32, sm_it_ii32_t, SM_II32, int32_t,
 		   cmp_ni_i((const struct SMapi *)cn, kmin),
 		   cmp_ni_i((const struct SMapi *)cn, kmax),
@@ -348,26 +241,6 @@ SM_ENUM_INORDER_XX(sm_itr_sp, sm_it_sp_t, SM_SP, const ss_t *,
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
 		   f(((const struct SMapS *)cn)->k,
 		     ((const struct SMapSP *)cn)->v, context))
-
-SM_ENUM_INORDER_XX(sm_itr_i32, sm_it_i32_t, SM0_I32, int32_t,
-		   cmp_ni_i((const struct SMapi *)cn, kmin),
-		   cmp_ni_i((const struct SMapi *)cn, kmax),
-		   f(((const struct SMapi *)cn)->k, context))
-
-SM_ENUM_INORDER_XX(sm_itr_u32, sm_it_u32_t, SM0_U32, uint32_t,
-		   cmp_nu_u((const struct SMapu *)cn, kmin),
-		   cmp_nu_u((const struct SMapu *)cn, kmax),
-		   f(((const struct SMapu *)cn)->k, context))
-
-SM_ENUM_INORDER_XX(sm_itr_i, sm_it_i_t, SM0_I, int64_t,
-		   cmp_nI_I((const struct SMapI *)cn, kmin),
-		   cmp_nI_I((const struct SMapI *)cn, kmax),
-		   f(((const struct SMapI *)cn)->k, context))
-
-SM_ENUM_INORDER_XX(sm_itr_s, sm_it_s_t, SM0_S, const ss_t *,
-		   cmp_ns_s((const struct SMapS *)cn, kmin),
-		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(((const struct SMapS *)cn)->k, context))
 
 /*
  * Allocation
@@ -444,7 +317,7 @@ void sm_clear(sm_t *m)
 sm_t *sm_cpy(sm_t **m, const sm_t *src)
 {
 	RETURN_IF(!m || !src, NULL); /* BEHAVIOR */
-	const enum eSM_Type t = (enum eSM_Type)src->d.sub_type;
+	const enum eSM_Type0 t = (enum eSM_Type0)src->d.sub_type;
 	size_t ss = sm_size(src),
 	       src_buf_size = src->d.elem_size * src->d.size;
 	RETURN_IF(ss > ST_NDX_MAX, NULL); /* BEHAVIOR */
@@ -464,7 +337,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 		}
 		sm_reserve(m, ss);
 	} else {
-		*m = sm_alloc(t, ss);
+		*m = sm_alloc0(t, ss);
 		RETURN_IF(!*m, NULL); /* BEHAVIOR: allocation error */
 	}
 	RETURN_IF(sm_max_size(*m) < ss, *m); /* BEHAVIOR: not enough space */
@@ -480,22 +353,21 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	 */
 	stndx_t i;
 	switch (t) {
-	case SM_IS:
+	case SM0_IS:
 		for (i = 0; i < ss; i++) {
 			const struct SMapIS *ms = (const struct SMapIS *)st_enum_r(src, i);
 			struct SMapIS *mt = (struct SMapIS *)st_enum(*m, i);
 			mt->v = ss_dup(ms->v);
 		}
 		break;
-	case SM_SI:
-	case SM_SP:
+	case SM0_S: case SM0_SI: case SM0_SP:
 		for (i = 0; i < ss; i++) {
 			const struct SMapS *ms = (const struct SMapS *)st_enum_r(src, i);
 			struct SMapS *mt = (struct SMapS *)st_enum(*m, i);
 			mt->k = ss_dup(ms->k);
 		}
 		break;
-	case SM_SS:
+	case SM0_SS:
 		for (i = 0; i < ss; i++) {
 			const struct SMapSS *ms = (const struct SMapSS *)st_enum_r(src, i);
 			struct SMapSS *mt = (struct SMapSS *)st_enum(*m, i);
@@ -503,7 +375,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 			mt->v = ss_dup(ms->v);
 		}
 		break;
-	case SM_II32: case SM_UU32: case SM_II: case SM_IP:
+	case SM0_II32: case SM0_UU32: case SM0_II: case SM0_IP:
 	default: /* no additional action required */
 		break;
 	}

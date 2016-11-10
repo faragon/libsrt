@@ -223,7 +223,7 @@ endif
 
 VPATH   = src:src/saux:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c \
-	  smap.c shash.c sbitio.c
+	  smap.c smset.c shash.c sbitio.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a

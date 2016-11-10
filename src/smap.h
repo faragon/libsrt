@@ -97,10 +97,6 @@ typedef sbool_t (*sm_it_ip_t)(int64_t k, const void *, void *context);
 typedef sbool_t (*sm_it_si_t)(const ss_t *, int64_t v, void *context);
 typedef sbool_t (*sm_it_ss_t)(const ss_t *, const ss_t *, void *context);
 typedef sbool_t (*sm_it_sp_t)(const ss_t *, const void *, void *context);
-typedef sbool_t (*sm_it_i32_t)(int32_t k, void *context);
-typedef sbool_t (*sm_it_u32_t)(uint32_t k, void *context);
-typedef sbool_t (*sm_it_i_t)(int64_t k, void *context);
-typedef sbool_t (*sm_it_s_t)(const ss_t *, void *context);
 
 /*
  * Allocation
@@ -130,10 +126,6 @@ S_INLINE sm_t *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems_re
 {
 	return sm_alloc0((enum eSM_Type0)t, initial_num_elems_reserve);
 }
-
-/* #API: |Make the map use the minimum possible memory|map|map reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
-sm_t *sm_shrink(sm_t **m);
-*/
 
 /* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|1;2| */
 S_INLINE uint8_t sm_elem_size(const int t)
@@ -320,18 +312,6 @@ size_t sm_itr_ss(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_
 /* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_sp(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_sp_t f, void *context);
 
-/* #NOTAPI: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
-size_t sm_itr_i32(const sm_t *m, int32_t key_min, int32_t key_max, sm_it_i32_t f, void *context);
-
-/* #NOTAPI: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
-size_t sm_itr_u32(const sm_t *m, uint32_t key_min, uint32_t key_max, sm_it_u32_t f, void *context);
-
-/* #NOTAPI: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
-size_t sm_itr_i(const sm_t *m, int64_t key_min, int64_t key_max, sm_it_i_t f, void *context);
-
-/* #NOTAPI: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
-size_t sm_itr_s(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_s_t f, void *context);
-
 /* #NOTAPI: |Sort map to vector (used for test coverage, not as documented API)|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
@@ -421,6 +401,117 @@ S_INLINE const ss_t *sm_it_ss_v(const sm_t *m, const stndx_t i)
 S_INLINE const void *sm_it_sp_v(const sm_t *m, const stndx_t i)
 {
 	S_SM_ENUM_AUX_V(SM_SP, struct SMapSP, m, i, n->v, NULL);
+}
+
+/*
+ * Templates (internal usage)
+ */
+
+#define SM_ENUM_INORDER_XX(FN, CALLBACK_T, MAP_TYPE, KEY_T, TR_CMP_MIN,	     \
+			   TR_CMP_MAX,TR_CALLBACK)			     \
+	size_t FN(const sm_t *m, KEY_T kmin, KEY_T kmax, CALLBACK_T f,	     \
+		  void *context)					     \
+	{								     \
+		RETURN_IF(!m, 0); /* null tree */			     \
+		RETURN_IF(m->d.sub_type != MAP_TYPE, 0); /* wrong type */    \
+		const size_t ts = sm_size(m);				     \
+		RETURN_IF(!ts, S_FALSE); /* empty tree */		     \
+		ssize_t level = 0;					     \
+		size_t nelems = 0, rbt_max_depth = 2 * (slog2(ts) + 1);	     \
+		struct STreeScan *p = (struct STreeScan *)		     \
+					alloca(sizeof(struct STreeScan) *    \
+						 (rbt_max_depth + 3));	     \
+		ASSERT_RETURN_IF(!p, 0); /* BEHAVIOR: stack error */	     \
+		p[0].p = ST_NIL;					     \
+		p[0].c = m->root;					     \
+		p[0].s = STS_ScanStart;					     \
+		const stn_t *cn;					     \
+		int cmpmin, cmpmax;					     \
+		while (level >= 0) {					     \
+			S_ASSERT(level <= (ssize_t)rbt_max_depth);	     \
+			switch (p[level].s) {				     \
+			case STS_ScanStart:				     \
+				cn = get_node_r(m, p[level].c);		     \
+				cmpmin = TR_CMP_MIN;			     \
+				cmpmax = TR_CMP_MAX;			     \
+				if (cn->x.l != ST_NIL && cmpmin > 0) {	     \
+					p[level].s = STS_ScanLeft;	     \
+					level++;			     \
+					cn = get_node_r(m, p[level - 1].c);  \
+					p[level].c = cn->x.l;		     \
+				} else {				     \
+					/* node with null left children */   \
+					if (cmpmin >= 0 && cmpmax <= 0) {    \
+						if (f && !TR_CALLBACK)	     \
+							return nelems;	     \
+						nelems++;		     \
+					}				     \
+					if (cn->r != ST_NIL && cmpmax < 0) { \
+						p[level].s = STS_ScanRight;  \
+						level++;		     \
+						cn = get_node_r(m,	     \
+							  p[level - 1].c);   \
+						p[level].c = cn->r;	     \
+					} else {			     \
+						p[level].s = STS_ScanDone;   \
+						level--;		     \
+						continue;		     \
+					}				     \
+				}					     \
+				p[level].p = p[level - 1].c;		     \
+				p[level].s = STS_ScanStart;		     \
+				continue;				     \
+			case STS_ScanLeft:				     \
+				cn = get_node_r(m, p[level].c);		     \
+				cmpmin = TR_CMP_MIN;			     \
+				cmpmax = TR_CMP_MAX;			     \
+				if (cmpmin >= 0 && cmpmax <= 0) {	     \
+					if (f && !TR_CALLBACK)		     \
+						return nelems;		     \
+					nelems++;			     \
+				}					     \
+				if (cn->r != ST_NIL && cmpmax < 0) {	     \
+					p[level].s = STS_ScanRight;	     \
+					level++;			     \
+					p[level].p = p[level - 1].c;	     \
+					cn = get_node_r(m, p[level - 1].c);  \
+					p[level].c = cn->r;		     \
+					p[level].s = STS_ScanStart;	     \
+				} else {				     \
+					p[level].s = STS_ScanDone;	     \
+					level--;			     \
+					continue;			     \
+				}					     \
+				continue;				     \
+			case STS_ScanRight:				     \
+				/* don't break */			     \
+			default:					     \
+				p[level].s = STS_ScanDone;		     \
+				level--;				     \
+				continue;				     \
+			}						     \
+		}							     \
+		return nelems;						     \
+	}
+
+S_INLINE int cmp_ni_i(const struct SMapi *a, int32_t b)
+{
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
+}
+
+S_INLINE int cmp_nu_u(const struct SMapu *a, uint32_t b)
+{
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
+}
+
+S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
+{
+	return a->k > b ? 1 : a->k < b ? -1 : 0;
+}
+
+S_INLINE int cmp_ns_s(const struct SMapS *a, const ss_t *b)
+{
+	return ss_cmp(a->k, b);
 }
 
 #ifdef __cplusplus
