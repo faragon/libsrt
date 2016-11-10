@@ -242,22 +242,22 @@ size_t sms_itr_s(const sms_t *s, const ss_t *key_min, const ss_t *key_max, sms_i
  * as array access after compiler optimization.
  */
 
-/* #API: |Enumerate int32 set|set; element, 0 to n - 1|int32_t|O(1)|0;1|
+/* #API: |Enumerate int32 set|set; element, 0 to n - 1|int32_t|O(1)|1;2|
 int32_t sms_it_i32(const sms_t *s, stndx_t i);
 */
 #define sms_it_i32(s, i) sm_it_i32_k(s, i)
 
-/* #API: |Enumerate uint32 set|set; element, 0 to n - 1|uint32_t|O(1)|0;1|
+/* #API: |Enumerate uint32 set|set; element, 0 to n - 1|uint32_t|O(1)|1;2|
 uint32_t sms_it_u32(const sms_t *s, stndx_t i);
 */
 #define sms_it_u32(s, i) sm_it_u32_k(s, i)
 
-/* #API: |Enumerate int64 set|set; element, 0 to n - 1|int64_t|O(1)|0;1|
+/* #API: |Enumerate int64 set|set; element, 0 to n - 1|int64_t|O(1)|1;2|
 int32_t sms_it_i32(const sms_t *s, stndx_t i);
 */
 #define sms_it_i(s, i) sm_it_i_k(s, i)
 
-/* #API: |Enumerate string set|set; element, 0 to n - 1|string|O(1)|0;1|
+/* #API: |Enumerate string set|set; element, 0 to n - 1|string|O(1)|1;2|
 int32_t sms_it_s(const sms_t *s, stndx_t i);
 */
 #define sms_it_s(s, i) sm_it_s_k(s, i)

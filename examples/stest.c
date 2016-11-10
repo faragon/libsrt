@@ -3290,10 +3290,10 @@ static int test_sm_double_rotation()
 static int test_sms()
 {
 	int i, res = 0;
+	const ss_t *k[] = { ss_crefa("k000"), ss_crefa("k001"), ss_crefa("k002") };
 	/*
 	 * Allocation: heap, stack with 3 elements, and stack with 10 elements
 	 */
-	ss_t *stmp = ss_alloca(512);
 	sms_t *s_i32 = sms_alloc(SMS_I32, 0),
 	      *s_u32 = sms_alloc(SMS_U32, 0),
 	      *s_i = sms_alloc(SMS_I, 0),
@@ -3311,8 +3311,7 @@ static int test_sms()
 		sms_insert_i32(&s_i32, i + 10);
 		sms_insert_u32(&s_u32, i + 20);
 		sms_insert_i(&s_i, i);
-		ss_printf(&stmp, 128, "k%03i", i);
-		sms_insert_s(&s_s, stmp);
+		sms_insert_s(&s_s, k[i]);
 	}
 	res |= (!sms_empty(s_i32) && !sms_empty(s_u32) && !sms_empty(s_i) &&
 		!sms_empty(s_s) && sms_empty(s_s2) && sms_empty(s_a3) &&
@@ -3321,9 +3320,8 @@ static int test_sms()
 		sms_count_i(s_i32, 12) && sms_count_u(s_u32, 20) &&
 		sms_count_u(s_u32, 21) && sms_count_u(s_u32, 22) &&
 		sms_count_i(s_i, 0) && sms_count_i(s_i, 1) &&
-		sms_count_i(s_i, 2) && sms_count_s(s_s, ss_crefa("k000")) &&
-		sms_count_s(s_s, ss_crefa("k001")) &&
-		sms_count_s(s_s, ss_crefa("k002")) ? 0 : 1<<2);
+		sms_count_i(s_i, 2) && sms_count_s(s_s, k[0]) &&
+		sms_count_s(s_s, k[1]) && sms_count_s(s_s, k[2]) ? 0 : 1<<2);
 	/*
 	 * Enumeration
 	 */
@@ -3332,10 +3330,8 @@ static int test_sms()
 	ssize_t processed_i32 = sms_itr_i32(s_i32, -1, 100, cback_i32, &cnt_i32),
 		processed_u32 = sms_itr_u32(s_u32, 0, 100, cback_u32, &cnt_u32),
 		processed_i = sms_itr_i(s_i, -1, 100, cback_i, &cnt_i),
-		processed_s = sms_itr_s(s_s, ss_crefa("k000"), ss_crefa("k002"),
-					cback_s, &cnt_s),
-		processed_s2 = sms_itr_s(s_s2, ss_crefa("k000"), ss_crefa("k002"),
-					cback_s, &cnt_s2);
+		processed_s = sms_itr_s(s_s, k[0], k[2], cback_s, &cnt_s),
+		processed_s2 = sms_itr_s(s_s2, k[0], k[2], cback_s, &cnt_s2);
 	res |= (processed_i32 == cnt_i32 && cnt_i32 == 3 ? 0 : 1<<3);
 	res |= (processed_u32 == cnt_u32 && cnt_u32 == 3 ? 0 : 1<<4);
 	res |= (processed_i == cnt_i && cnt_i == 3 ? 0 : 1<<5);
@@ -3370,31 +3366,43 @@ static int test_sms()
 	 */
 	sms_reserve(&s_i32, 1000);
 	sms_grow(&s_u32, 1000 - sms_max_size(s_u32));
-	res |= (sms_capacity(s_i32) >= 1000 ? 0 : 1<<17);
-	res |= (sms_capacity(s_u32) >= 1000 ? 0 : 1<<18);
-	res |= (sms_capacity_left(s_i32) >= 997 ? 0 : 1<<19);
-	res |= (sms_capacity_left(s_u32) >= 997 ? 0 : 1<<20);
+	res |= (sms_capacity(s_i32) >= 1000 &&
+		sms_capacity(s_u32) >= 1000 &&
+		sms_capacity_left(s_i32) >= 997 &&
+		sms_capacity_left(s_u32) >= 997 ? 0 : 1<<17);
 	/*
 	 * Shrink memory
 	 */
 	sms_shrink(&s_i32);
 	sms_shrink(&s_u32);
-	res |= (sms_capacity(s_i32) == 3 ? 0 : 1<<21);
-	res |= (sms_capacity(s_u32) == 3 ? 0 : 1<<22);
-	res |= (sms_capacity_left(s_i32) == 0 ? 0 : 1<<23);
-	res |= (sms_capacity_left(s_u32) == 0 ? 0 : 1<<24);
+	res |= (sms_capacity(s_i32) == 3 &&
+		sms_capacity(s_u32) == 3 &&
+		sms_capacity_left(s_i32) == 0 &&
+		sms_capacity_left(s_u32) == 0 ? 0 : 1<<18);
+	/*
+	 * Random access
+	 */
+	res |= (sms_it_i32(s_i32, 0) == 10 &&
+		sms_it_i32(s_i32, 1) == 11 &&
+		sms_it_i32(s_i32, 2) == 12 ? 0 : 1<<19);
+	res |= (sms_it_u32(s_u32, 0) == 20 &&
+		sms_it_u32(s_u32, 1) == 21 &&
+		sms_it_u32(s_u32, 2) == 22 ? 0 : 1<<20);
+	res |= (sms_it_i(s_i, 0) == 0 &&
+		sms_it_i(s_i, 1) == 1 &&
+		sms_it_i(s_i, 2) == 2 ? 0 : 1<<21);
+	res |= (!ss_cmp(sms_it_s(s_s, 0), k[0]) &&
+		!ss_cmp(sms_it_s(s_s, 1), k[1]) &&
+		!ss_cmp(sms_it_s(s_s, 2), k[2]) ? 0 : 1<<22);
 	/*
 	 * Delete
 	 */
 	sms_delete_i(s_i32, 10);
-	res |= (!sms_count_i(s_i32, 10) ? 0 : 1<<25);
 	sms_delete_i(s_u32, 20);
-	res |= (!sms_count_i(s_u32, 20) ? 0 : 1<<26);
 	sms_delete_i(s_i, 0);
-	res |= (!sms_count_i(s_i, 0) ? 0 : 1<<27);
-	const ss_t *k001 = ss_crefa("k001");
-	sms_delete_s(s_s, k001);
-	res |= (!sms_count_s(s_s, k001) ? 0 : 1<<28);
+	sms_delete_s(s_s, k[1]);
+	res |= (!sms_count_i(s_i32, 10) && !sms_count_i(s_u32, 20) &&
+		!sms_count_i(s_i, 0) && !sms_count_s(s_s, k[1]) ? 0 : 1<<23);
 	/*
 	 * Release memory
 	 */
