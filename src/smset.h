@@ -15,6 +15,7 @@ extern "C" {
  * #DOC
  * #DOC Supported set modes (enum eSMS_Type):
  * #DOC
+ * #DOC
  * #DOC 	SMS_I32: 32-bit integer key
  * #DOC
  * #DOC 	SMS_U32: 32-bit unsigned int key
