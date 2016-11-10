@@ -62,14 +62,14 @@ enum eSM_Type0
 
 enum eSM_Type
 {
-	SM_II32 = SM0_II32,
-	SM_UU32 = SM0_UU32,
-	SM_II = SM0_II,
-	SM_IS = SM0_IS,
-	SM_IP = SM0_IP,
-	SM_SI = SM0_SI,
-	SM_SS = SM0_SS,
-	SM_SP = SM0_SP
+	SM_II32	= SM0_II32,
+	SM_UU32	= SM0_UU32,
+	SM_II	= SM0_II,
+	SM_IS	= SM0_IS,
+	SM_IP	= SM0_IP,
+	SM_SI	= SM0_SI,
+	SM_SS	= SM0_SS,
+	SM_SP	= SM0_SP
 };
 
 struct SMapI { stn_t n; int64_t k; };
