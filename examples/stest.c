@@ -3711,8 +3711,8 @@ int main()
 	STEST_ASSERT(test_ss_cat_cn());
 	STEST_ASSERT(test_ss_cat_c("hello", "all"));
 	char btmp1[400], btmp2[400];
-	memset(btmp1, '0', sizeof(btmp1) - 1);
-	memset(btmp2, '1', sizeof(btmp2) - 1);
+	memset(btmp1, 48, sizeof(btmp1) - 1); /* 0's */
+	memset(btmp2, 49, sizeof(btmp2) - 1); /* 1's */
 	btmp1[sizeof(btmp1) - 1] = btmp2[sizeof(btmp2) - 1] = 0;
 	STEST_ASSERT(test_ss_cat_c(btmp1, btmp2));
 	STEST_ASSERT(test_ss_cat_wn());
