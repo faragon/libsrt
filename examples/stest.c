@@ -3168,7 +3168,7 @@ static int test_sm_sort_to_vectors()
 	sv_t *kv2 = NULL, *vv2 = NULL;
 	int res = m ? 0 : 1;
 	ssize_t i, j;
-	for (;;) {
+	do {
 		/*
 		 * Add elements
 		 */
@@ -3205,8 +3205,7 @@ static int test_sm_sort_to_vectors()
 				break;
 			}
 		}
-		break;
-	}
+	} while (0);
 	sm_free(&m);
 	sv_free(&kv, &vv, &kv2, &vv2);
 	return res;
