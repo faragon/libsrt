@@ -67,7 +67,7 @@ static const unsigned char h2n[64] = {
 #endif
 #define SLZW_FIRST		(SLZW_OP_END + 1)
 #define SLZW_LUT_CHILD_ELEMS	256
-#define SLZW_MAX_LUTS		70
+#define SLZW_MAX_LUTS		25
 #define SLZW_ESC_RATIO		(1 << (17 - SLZW_MAX_TREE_BITS))
 
 #define SRLE_OP_MASK_SHORT	0xe0
@@ -706,13 +706,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 * node_child[i]: if node_lutref[0] < 0: next node byte (one-child node)
 	 */
         slzw_ndx_t node_codes[SLZW_CODE_LIMIT],
-		   node_lutref[SLZW_CODE_LIMIT],
-		   node_lutref2[SLZW_CODE_LIMIT],
-		   node_lutref3[SLZW_CODE_LIMIT],
+		   node_lutref[5][SLZW_CODE_LIMIT],
 		   lut_stack[SLZW_MAX_LUTS][SLZW_LUT_CHILD_ELEMS];
-        unsigned char node_child[SLZW_CODE_LIMIT],
-		      node_child2[SLZW_CODE_LIMIT],
-		      node_child3[SLZW_CODE_LIMIT];
+        unsigned char node_child[5][SLZW_CODE_LIMIT];
 	/*
 	 * Stack allocation control
 	 */
@@ -735,7 +731,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		node_codes[j + 2] = j + 2;
 		node_codes[j + 3] = j + 3;
 	}
-	SLZW_ENC_RESET(node_lutref, lut_stack_in_use,
+	SLZW_ENC_RESET(node_lutref[0], lut_stack_in_use,
 		       node_stack_in_use, next_code, curr_code_len);
 	/*
 	 * Encoding loop
@@ -780,25 +776,35 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		curr_node = in_byte;
 		slzw_ndx_t r;
 		for (; i < ss; i++) {
-			#define __LZW_BYTE_CHECK			\
-				if (in_byte == node_child[curr_node]) {	\
-					curr_node = -nlut;		\
-					continue;			\
+			#define _LZW_BYTECHK(x)			   	   \
+				if (in_byte == node_child[x][curr_node]) { \
+					curr_node = -nlut;		   \
+					continue;			   \
 				}
 			in_byte = s[i];
-			slzw_ndx_t nlut = node_lutref[curr_node];
+			slzw_ndx_t nlut = node_lutref[0][curr_node];
 			if (nlut < 0) {
-				__LZW_BYTE_CHECK;
-				nlut = node_lutref2[curr_node];
+				_LZW_BYTECHK(0);
+				nlut = node_lutref[1][curr_node];
 				if (nlut < 0) {
-					__LZW_BYTE_CHECK;
-					nlut = node_lutref3[curr_node];
+					_LZW_BYTECHK(1);
+					nlut = node_lutref[2][curr_node];
 					if (nlut < 0) {
-						__LZW_BYTE_CHECK;
+						_LZW_BYTECHK(2);
+						nlut = node_lutref[3]
+								    [curr_node];
+						if (nlut < 0) {
+							_LZW_BYTECHK(3);
+							nlut = node_lutref[4]
+								    [curr_node];
+							if (nlut < 0) {
+								_LZW_BYTECHK(4);
+							}
+						}
 					}
 				}
 			}
-			#undef __LZW_BYTE_CHECK
+			#undef _LZW_BYTECHK
 			if (nlut <= 0 || !(r = lut_stack[nlut][in_byte]))
 				break;
 			curr_node = r;
@@ -809,49 +815,66 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 		 * Add new code to the tree
 		 */
 		const slzw_ndx_t new_node = node_stack_in_use++;
-		if (node_lutref[curr_node] <= 0) {
-			if (node_lutref[curr_node] == 0) { /* empty */
-				node_lutref[curr_node] = -new_node;
-				node_child[curr_node] = in_byte;
-				node_lutref2[curr_node] = 0;
+		if (node_lutref[0][curr_node] <= 0) {
+			if (node_lutref[0][curr_node] == 0) { /* empty -> 1st */
+				node_lutref[0][curr_node] = -new_node;
+				node_child[0][curr_node] = in_byte;
+				node_lutref[1][curr_node] = 0;
 			} else {
-				if (node_lutref[curr_node] < 0 &&
-				    node_lutref2[curr_node] == 0) { /*2nd*/
-					node_lutref2[curr_node] = -new_node;
-					node_child2[curr_node] = in_byte;
-					node_lutref3[curr_node] = 0;
-				} else if (node_lutref2[curr_node] < 0 &&
-					   node_lutref3[curr_node] == 0) {
-					node_lutref3[curr_node] = -new_node;
-					node_child3[curr_node] = in_byte;
-				} else { /* >2 nodes: convert it to LUT */
-					slzw_ndx_t alt_n = -node_lutref[curr_node];
+				if (node_lutref[0][curr_node] < 0 &&
+				    node_lutref[1][curr_node] == 0) { /* 2nd */
+					node_lutref[1][curr_node] = -new_node;
+					node_child[1][curr_node] = in_byte;
+					node_lutref[2][curr_node] = 0;
+				} else if (node_lutref[1][curr_node] < 0 &&
+					   node_lutref[2][curr_node] == 0) {
+					node_lutref[2][curr_node] = -new_node;
+					node_child[2][curr_node] = in_byte;
+					node_lutref[3][curr_node] = 0;
+				} else if (node_lutref[2][curr_node] < 0 &&
+					   node_lutref[3][curr_node] == 0) {
+					node_lutref[3][curr_node] = -new_node;
+					node_child[3][curr_node] = in_byte;
+					node_lutref[4][curr_node] = 0;
+				} else if (node_lutref[3][curr_node] < 0 &&
+					   node_lutref[4][curr_node] == 0) {
+					node_lutref[4][curr_node] = -new_node;
+					node_child[4][curr_node] = in_byte;
+				} else { /* > 5 nodes: convert it to LUT */
+					slzw_ndx_t alt_n = -node_lutref[0]
+								[curr_node];
 					slzw_ndx_t new_lut = lut_stack_in_use++;
-					node_lutref[curr_node] = new_lut;
+					node_lutref[0][curr_node] = new_lut;
 					memset(&lut_stack[new_lut], 0,
 					       sizeof(lut_stack[0]));
 #ifdef _MSC_VER
 #pragma warning(suppress: 6001)
 #endif
 					lut_stack[new_lut]
-						 [node_child[curr_node]] =
+						 [node_child[0][curr_node]] =
 						 alt_n;
 					lut_stack[new_lut]
-						 [node_child2[curr_node]] =
-						 -node_lutref2[curr_node];
+						 [node_child[1][curr_node]] =
+						 -node_lutref[1][curr_node];
 					lut_stack[new_lut]
-						 [node_child3[curr_node]] =
-						 -node_lutref3[curr_node];
+						 [node_child[2][curr_node]] =
+						 -node_lutref[2][curr_node];
+					lut_stack[new_lut]
+						 [node_child[3][curr_node]] =
+						 -node_lutref[3][curr_node];
+					lut_stack[new_lut]
+						 [node_child[4][curr_node]] =
+						 -node_lutref[4][curr_node];
 				}
 			}
 		}
-		if (node_lutref[curr_node] > 0)
-			lut_stack[node_lutref[curr_node]][in_byte] = new_node;
+		if (node_lutref[0][curr_node] > 0)
+			lut_stack[node_lutref[0][curr_node]][in_byte] = new_node;
 		/*
 		 * Write pattern code to the output stream
 		 */
 		node_codes[new_node] = (slzw_ndx_t)next_code;
-		node_lutref[new_node] = 0;
+		node_lutref[0][new_node] = 0;
 		slzw_bio_write(&bio, (size_t)node_codes[curr_node],
 			         curr_code_len, &normal_count, &esc_count);
 		if (next_code == (size_t)(1 << curr_code_len))
@@ -866,7 +889,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 			slzw_bio_write(&bio, SLZW_RESET,
 					 curr_code_len, &normal_count,
 					 &esc_count);
-		        SLZW_ENC_RESET(node_lutref, lut_stack_in_use,
+		        SLZW_ENC_RESET(node_lutref[0], lut_stack_in_use,
 				       node_stack_in_use, next_code,
 				       curr_code_len);
 		}
