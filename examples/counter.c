@@ -50,10 +50,10 @@ int main(int argc, const char **argv)
 	if (climit0 < 0)
 		return syntax_error(argv, 7);
 	int exit_code = 0;
-	size_t count = 0;
-	size_t cmax = csize == 4 ? 0xffffffff :
-				   0xffffffff & ((1 << (csize * 8)) - 1);
-	size_t climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
+	size_t count = 0,
+	       cmax = csize == 4 ? 0xffffffff :
+				   0xffffffff & ((1 << (csize * 8)) - 1),
+	       climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
 #ifdef COUNTER_USE_BITSET
 	#define COUNTER_SET(val) sb_set(&bs, val)
 	#define COUNTER_POPCOUNT sb_popcount(bs)

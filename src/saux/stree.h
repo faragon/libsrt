@@ -68,10 +68,7 @@ typedef void (*st_rewrite_t)(stn_t *node, const stn_t *new_data, const sbool_t e
 /*
 * Constants
 */
-/*
-#define EMPTY_STC { 0, 0, 0, 0, 0, 0, 0 }
-#define EMPTY_ST { EMPTY_SData_Full(sizeof(st_t)), 0, EMPTY_STC }
-*/
+
 #define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
 
 /*

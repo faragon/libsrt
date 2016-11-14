@@ -36,12 +36,10 @@ void sbio_write(sbio_t *bio, size_t c, size_t cbits)
 		if (cbits % 8) {
 			b[bio->off] = (unsigned char)c;
 			bio->acc = (cbits % 8);
-		}
-		else {
+		} else {
 			bio->acc = 0;
 		}
-	}
-	else {
+	} else {
 		bio->acc += cbits;
 	}
 }
