@@ -729,7 +729,7 @@ static int test_ss_cpy_wn()
 {
 	int res = 0;
 	wchar_t t_u32[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e, 0x15f, 0xa2,
-			    0x20ac, 0x24b62, 0 };
+			    (wchar_t)0x20ac, (wchar_t)0x24b62, 0 };
 	#define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
 	#define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
 	#define TU8C3 U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F U8_CENT_00A2
@@ -3087,7 +3087,7 @@ static int test_sm_itr()
 	if (m_ii32 && m_uu32 && m_ii && m_is && m_ip && m_si && m_ss && m_sp) {
 		ss_t *ktmp = ss_alloca(1000), *vtmp = ss_alloca(1000);
 		int i;
-		for (i = 0; i < nelems; i++) {
+		for (i = 0; i < (int)nelems; i++) {
 			sm_insert_ii32(&m_ii32, -i, -i);
 			sm_insert_uu32(&m_uu32, i, i);
 			sm_insert_ii(&m_ii, -i, -i);
