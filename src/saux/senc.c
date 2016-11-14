@@ -668,8 +668,7 @@ size_t sdec_esc_squote(const unsigned char *s, const size_t ss,
  * Header for LZW and RLE encoding
  */
 
-static size_t build_header(const unsigned char *s, const size_t ss,
-			   unsigned char *o)
+static size_t build_header(const size_t ss, unsigned char *o)
 {
 	size_t header_bytes = ss < 128 ? 1 : 4;
 	if (header_bytes == 1)
@@ -732,17 +731,17 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 	 */
 	size_t normal_count = 0, esc_count = 0;
 	size_t next_code, curr_code_len = SLZW_ROOT_NODE_BITS + 1;
-	size_t header_bytes = build_header(s, ss, o);
+	size_t header_bytes = build_header(ss, o);
 	sbio_t bio;
 	sbio_write_init(&bio, o + header_bytes);
 	/*
 	 * Initialize data structures
 	 */
 	for (j = 0; j < 256; j += 4) {
-		node_codes[j] = j;
-		node_codes[j + 1] = j + 1;
-		node_codes[j + 2] = j + 2;
-		node_codes[j + 3] = j + 3;
+		node_codes[j] = (slzw_ndx_t)j;
+		node_codes[j + 1] = (slzw_ndx_t)j + 1;
+		node_codes[j + 2] = (slzw_ndx_t)j + 2;
+		node_codes[j + 3] = (slzw_ndx_t)j + 3;
 	}
 	SLZW_ENC_RESET(node_lutref, lut_stack_in_use,
 		       node_stack_in_use, next_code, curr_code_len,
@@ -1054,7 +1053,7 @@ size_t senc_rle(const unsigned char *s, const size_t ss, unsigned char *o)
 	RETURN_IF(ss >= 0x80000000, 0); /* currently limited to 2^31-1 input */
 	RETURN_IF(!o && ss > 0, ss + (ss / 10) + 128); /* max out size */
 	RETURN_IF(!s || !o || !ss, 0);
-	size_t header_bytes = build_header(s, ss, o);
+	size_t header_bytes = build_header(ss, o);
 	o += header_bytes;
 	size_t i = 0, oi = 0, i_done = 0, run_length, run_elem_size;
 	for (; i < ss;) {

@@ -53,16 +53,6 @@
 #define S_MIN_I64	(0 - S_MAX_I64 - 1)
 
 /*
- * Test resource usage
- */
-
-#ifdef S_MINIMAL
-#define SDM_TEST_NELEMS	100
-#else
-#define SDM_TEST_NELEMS	100000
-#endif
-
-/*
  * Test common data structures
  */
 
@@ -2971,6 +2961,8 @@ static int test_sm_delete_s()
 
 sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 {
+	(void)k;
+	(void)v;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -2978,6 +2970,8 @@ sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 
 sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 {
+	(void)k;
+	(void)v;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -2985,6 +2979,7 @@ sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 
 sbool_t cback_i32(int32_t k, void *context)
 {
+	(void)k;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -2992,6 +2987,7 @@ sbool_t cback_i32(int32_t k, void *context)
 
 sbool_t cback_u32(uint32_t k, void *context)
 {
+	(void)k;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -2999,6 +2995,7 @@ sbool_t cback_u32(uint32_t k, void *context)
 
 sbool_t cback_i(int64_t k, void *context)
 {
+	(void)k;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -3006,6 +3003,7 @@ sbool_t cback_i(int64_t k, void *context)
 
 sbool_t cback_s(const ss_t *k, void *context)
 {
+	(void)k;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
@@ -3099,25 +3097,25 @@ static int test_sm_itr()
 		ss_t *upper_s = ss_alloca(100);
 		ss_cpy_c(&lower_s, "k001"); /* covering from "k0010" to "k0019" */
 		ss_cpy_c(&upper_s, "k002");
-		ssize_t processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
+		size_t processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
 							cback_i32i32, &cnt1),
-			processed_ii322 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
+		       processed_ii322 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
 							NULL, NULL),
-			processed_uu32 = sm_itr_uu32(m_uu32, lower_u32, upper_u32,
-							NULL, NULL),
-			processed_ii = sm_itr_ii(m_ii, lower_i, upper_i,
-							NULL, NULL),
-			processed_is = sm_itr_is(m_is, lower_i, upper_i,
-							NULL, NULL),
-			processed_ip = sm_itr_ip(m_ip, lower_i, upper_i,
-							NULL, NULL),
-			processed_si = sm_itr_si(m_si, lower_s, upper_s,
-							NULL, NULL),
-			processed_ss1 = sm_itr_ss(m_ss, lower_s, upper_s,
-							cback_ss, &cnt2),
-			processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s,
-							NULL, NULL),
-			processed_sp = sm_itr_sp(m_sp, lower_s, upper_s,
+		       processed_uu32 = sm_itr_uu32(m_uu32, lower_u32, upper_u32,
+						NULL, NULL),
+		       processed_ii = sm_itr_ii(m_ii, lower_i, upper_i,
+						NULL, NULL),
+		       processed_is = sm_itr_is(m_is, lower_i, upper_i,
+						NULL, NULL),
+		       processed_ip = sm_itr_ip(m_ip, lower_i, upper_i,
+						NULL, NULL),
+		       processed_si = sm_itr_si(m_si, lower_s, upper_s,
+						NULL, NULL),
+		       processed_ss1 = sm_itr_ss(m_ss, lower_s, upper_s,
+						cback_ss, &cnt2),
+		       processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s,
+						NULL, NULL),
+		       processed_sp = sm_itr_sp(m_sp, lower_s, upper_s,
 							NULL, NULL);
 		res = processed_ii321 == 11 ? 0 : 2;
 		res |= processed_ii321 == processed_ii322 ? 0 : 4;
@@ -3316,11 +3314,11 @@ static int test_sms()
 	 */
 	size_t cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0, cnt_s2 = 0;
 	s_s2 = sms_dup(s_s);
-	ssize_t processed_i32 = sms_itr_i32(s_i32, -1, 100, cback_i32, &cnt_i32),
-		processed_u32 = sms_itr_u32(s_u32, 0, 100, cback_u32, &cnt_u32),
-		processed_i = sms_itr_i(s_i, -1, 100, cback_i, &cnt_i),
-		processed_s = sms_itr_s(s_s, k[0], k[2], cback_s, &cnt_s),
-		processed_s2 = sms_itr_s(s_s2, k[0], k[2], cback_s, &cnt_s2);
+	size_t processed_i32 = sms_itr_i32(s_i32, -1, 100, cback_i32, &cnt_i32),
+	       processed_u32 = sms_itr_u32(s_u32, 0, 100, cback_u32, &cnt_u32),
+	       processed_i = sms_itr_i(s_i, -1, 100, cback_i, &cnt_i),
+	       processed_s = sms_itr_s(s_s, k[0], k[2], cback_s, &cnt_s),
+	       processed_s2 = sms_itr_s(s_s2, k[0], k[2], cback_s, &cnt_s2);
 	res |= (processed_i32 == cnt_i32 && cnt_i32 == 3 ? 0 : 1<<3);
 	res |= (processed_u32 == cnt_u32 && cnt_u32 == 3 ? 0 : 1<<4);
 	res |= (processed_i == cnt_i && cnt_i == 3 ? 0 : 1<<5);
@@ -3568,6 +3566,7 @@ int main()
 	STEST_ASSERT(test_ss_capacity());
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());
+	STEST_ASSERT(test_ss_dup());
 	STEST_ASSERT(test_ss_dup_substr());
 	STEST_ASSERT(test_ss_dup_substr_u());
 	STEST_ASSERT(test_ss_dup_cn());

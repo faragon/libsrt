@@ -179,7 +179,7 @@ S_INLINE size_t sb_reserve(sb_t **b, const size_t max_elems)
 }
 
 /* #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|1;2| */
-sb_t *sb_shrink(sb_t **b)
+S_INLINE sb_t *sb_shrink(sb_t **b)
 {
 	RETURN_IF(!b || !*b, NULL); /* BEHAVIOR */ /* TODO: null bitset */
 	if (!sb_popcount(*b))
