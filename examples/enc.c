@@ -41,7 +41,7 @@ int main(int argc, const char **argv)
 	if (!strncmp(argv[1], "-crc32", 6)) {
 		uint32_t crc = 0, buf_size = 8192;
 		ss_t *buf = ss_alloca(buf_size);
-		for (; ss_read(&buf, stdin, buf_size);)
+		while (ss_read(&buf, stdin, buf_size))
 			crc = ss_crc32r(buf, crc, 0, S_NPOS);
 		printf("%08x\n", crc);
 		return 0;
