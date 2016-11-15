@@ -21,7 +21,7 @@
 #define STEST_END	ss_errors
 #define STEST_ASSERT_BASE(a, pre_op) {					\
 		pre_op;							\
-		const int r = a;					\
+		const int r = (int)(a);					\
 		ss_tmp += r;						\
 		if (r) {						\
 			fprintf(stderr, "%s: %08X <--------\n", #a, r);	\
@@ -3079,7 +3079,7 @@ static int test_sm_itr()
 		int i;
 		for (i = 0; i < (int)nelems; i++) {
 			sm_insert_ii32(&m_ii32, -i, -i);
-			sm_insert_uu32(&m_uu32, i, i);
+			sm_insert_uu32(&m_uu32, (uint32_t)i, (uint32_t)i);
 			sm_insert_ii(&m_ii, -i, -i);
 			ss_printf(&ktmp, 200, "k%04i", i);
 			ss_printf(&vtmp, 200, "v%04i", i);
@@ -3296,7 +3296,7 @@ static int test_sms()
 	 */
 	for (i = 0; i < 3; i++) {
 		sms_insert_i32(&s_i32, i + 10);
-		sms_insert_u32(&s_u32, i + 20);
+		sms_insert_u32(&s_u32, (uint32_t)i + 20);
 		sms_insert_i(&s_i, i);
 		sms_insert_s(&s_s, k[i]);
 	}
