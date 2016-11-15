@@ -2063,12 +2063,12 @@ ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset,
  * Hashing
  */
 
-unsigned ss_crc32(const ss_t *s)
+uint32_t ss_crc32(const ss_t *s)
 {
 	return ss_crc32r(s, 0, 0, S_NPOS);
 }
 
-unsigned ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2)
+uint32_t ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2)
 {
 	RETURN_IF(!s || off1 >= off2, 0);
 	size_t ss = ss_size(s);
