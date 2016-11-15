@@ -681,7 +681,10 @@ static size_t build_header(const size_t ss, unsigned char *o)
 static const unsigned char *dec_header(const unsigned char *s, const size_t ss,
 				       size_t *header_size, size_t *expected_ss)
 {
-	if ((s[0] & 1) == 0) { /* 1 byte header */
+	if (!ss) {
+		*header_size = 0;
+		*expected_ss = 0;
+	} else if ((s[0] & 1) == 0) { /* 1 byte header */
 		*header_size = 1;
 		*expected_ss = s[0] >> 1;
 		s++;
