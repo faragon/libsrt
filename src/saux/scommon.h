@@ -50,7 +50,7 @@ extern "C" {
  * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
  * (WG14/N1256 Committee Draft 20070907 ISO/IEC 9899:TC3, 7.18.2, page 257)
  */
-#ifdef __cplusplus
+#if defined(__cplusplus) && __cplusplus <= 19971L
 #define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
