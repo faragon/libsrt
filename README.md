@@ -76,7 +76,10 @@ Generic disadvantages/limitations
  * type of bit-field in 'struct'
  * %S printf extension (only for unit testing)
  * Format functions (\*printf) rely on system C library, so be aware if you write multi-platform software before using compiler-specific extensions or targetting different C standards).
- * Allow mixed code and variable declaration.
+ * Allow mixed code and variable declaration
+* It may work in C++98 mode only if following language extensions are available:
+ * Anonymous variadic macros
+ * Long long integer constant (LL): required only for the tests, not by the library itself
 
 String-specific advantages (ss\_t)
 ===
