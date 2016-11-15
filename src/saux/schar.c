@@ -192,7 +192,7 @@ size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
 {
 	if (!s || off >= max_off)
 		return 0;
-	size_t i = off, unicode_size = 0, enc_errors = 0;
+	size_t i = off, unicode_size = 0;
 	for (;	i < max_off && unicode_size < unicode_count;
 		i += sc_utf8_char_size(s, i, max_off, NULL), unicode_size++);
 	if (actual_unicode_count)
