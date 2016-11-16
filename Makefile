@@ -10,6 +10,21 @@
 # Build with TinyCC with debug symbols: make CC=tcc DEBUG=1
 # Build with gcc cross compiler (PPC): make CC=powerpc-linux-gnu-gcc
 # Build with gcc cross compiler (ARM): make CC=arm-linux-gnueabi-gcc
+# Build without CRC32 hash tables, 1 bit/loop (100MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=0"
+#   or	make MINIMAL=1
+# Build with CRC32 1024 byte hash table, 1 byte/loop (400MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=1"
+# Build with CRC32 4096 byte hash table, 4 bytes/loop (1000MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=4"
+# Build with CRC32 8192 byte hash table, 8 bytes/loop (2000MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=8"
+# Build with CRC32 12288 byte hash table, 12 bytes/loop (2500MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=12"
+#   or	make -this is the default-
+# Build with CRC32 16384 byte hash table, 16 bytes/loop (2700MB/s on i5@3GHz):
+#	make ADD_CFLAGS="-DS_CRC32_SLC=16"
+
 #
 # Observations:
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
