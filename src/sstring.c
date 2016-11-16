@@ -221,7 +221,6 @@ static void dec_unicode_size(ss_t *s, const size_t dec_size)
 
 static ss_t *ss_reset(ss_t *s)
 {
-	S_ASSERT(s);
 	if (s) { /* do not change 'ext_buffer' */
 		set_unicode_size_cached(s, S_TRUE);
 		set_encoding_errors(s, S_FALSE);
@@ -1622,9 +1621,9 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 
 ss_t *ss_cat_char(ss_t **s, const int c)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
-	const wchar_t src[1] = { (wchar_t)c };
-	return ss_cat_wn(s, src, 1);
+	RETURN_IF(!s, ss_void);
+	char tmp[6];
+	return ss_cat_cn(s, tmp, sc_wc_to_utf8(c, tmp, 0, sizeof(tmp)));
 }
 
 ss_t *ss_cat_read(ss_t **s, FILE *handle, const size_t max_bytes)
