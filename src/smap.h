@@ -484,8 +484,7 @@ S_INLINE const void *sm_it_sp_v(const sm_t *m, const stndx_t i)
 				}					     \
 				continue;				     \
 			case STS_ScanRight:				     \
-				/* don't break */			     \
-			default:					     \
+			case STS_ScanDone:				     \
 				p[level].s = STS_ScanDone;		     \
 				level--;				     \
 				continue;				     \

@@ -197,11 +197,13 @@ static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_size)
 }
 
 static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
-		     const size_t ss)
+		     const size_t ss0)
 {
 	ASSERT_RETURN_IF(!v, sv_void);
 	if (!*v)  /* duplicate source */
 		return *v = (sv_t *)aux_dup_sd((const sd_t *)src);
+	const size_t s_src = sv_size(src),
+		     ss = s_src < ss0 ? s_src : ss0;
 	if (src && (*v)->d.sub_type == src->d.sub_type) {
 		const sbool_t aliasing = *v == src;
 		const size_t at = (cat && *v) ? sv_size(*v) : 0;
@@ -222,8 +224,7 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		RETURN_IF(cat, sv_check(v)); /* BEHAVIOR: cat wrong type */
 		sv_clear(*v);
 		RETURN_IF(!src, sv_check(v)); /* BEHAVIOR: null input */
-		size_t ss = sv_size(src),
-		       raw_space = (*v)->d.elem_size * (*v)->d.max_size,
+		size_t raw_space = (*v)->d.elem_size * (*v)->d.max_size,
 		       new_max_size = raw_space / src->d.elem_size;
 		(*v)->d.elem_size = src->d.elem_size;
 		(*v)->d.max_size = new_max_size;

@@ -645,7 +645,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				f(&tp);
 			}
 			/* don't break */
-		default:
+		case STS_ScanDone:
 			p[tp.level].s = STS_ScanDone;
 			tp.level--;
 			continue;

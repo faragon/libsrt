@@ -188,8 +188,6 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 		return (st_cmp_t)cmp_I;
 	case SM0_S: case SM0_SI: case SM0_SS: case SM0_SP:
 		return (st_cmp_t)cmp_s;
-	default:
-		break;
 	}
 	return NULL;
 }
@@ -376,7 +374,8 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 		}
 		break;
 	case SM0_II32: case SM0_UU32: case SM0_II: case SM0_IP:
-	default: /* no additional action required */
+	case SM0_I: case SM0_I32: case SM0_U32:
+		/* no additional action required */
 		break;
 	}
 	return *m;
