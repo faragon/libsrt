@@ -151,8 +151,7 @@ else
 		endif
 		ifeq ($(CLANG), 1)
 			CFLAGS += -Weverything -Wno-old-style-cast \
-				  -Wno-format-nonliteral \
-				  -Wno-disabled-macro-expansion
+				  -Wno-format-nonliteral
 		endif
 		CFLAGS += -pedantic
 	endif
@@ -189,18 +188,18 @@ ifeq ($(FORCE32), 1)
 	endif
 	ifeq ($(UNAME_M), mips64)
 		ifeq ($(OCTEON), 1)
-			COMMON_FLAGS += -march=octeon
+			GCC_COMMON_FLAGS += -march=octeon
 		else
-			COMMON_FLAGS += -mips32
+			GCC_COMMON_FLAGS += -mips32
 		endif
 	endif
 else
 	ifeq ($(UNAME_M), mips64)
-		COMMON_FLAGS += -mabi=64
+		GCC_COMMON_FLAGS += -mabi=64
 		ifeq ($(OCTEON), 1)
-			COMMON_FLAGS += -march=octeon
+			GCC_COMMON_FLAGS += -march=octeon
 		else
-			COMMON_FLAGS += -mips64
+			GCC_COMMON_FLAGS += -mips64
 		endif
 	endif
 endif
@@ -229,6 +228,10 @@ endif
 
 ifeq ($(HAS_LL1), 1)
 	COMMON_FLAGS += -DHAS_LL1
+endif
+
+ifeq ($(GNUC), 1)
+	CFLAGS += $(GCC_COMMON_FLAGS)
 endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
