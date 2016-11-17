@@ -55,13 +55,32 @@ enum SSUTF8 {
 	SSU8_MAX_SIZE = 6
 };
 
-#define SSU8_VALID_START(c)     (((c) & 0xc0) != SSU8_SX)
+enum SSUTF16 {
+	SSU16_HS0 = 0xd800, /* high surrogate range */
+	SSU16_HSN = 0xdbff,
+	SSU16_LS0 = 0xdc00, /* low surrogate range */
+	SSU16_LSN = 0xdfff,
+	SSU16_SM = 0xfc00,
+	SSU16_SMI = 0x03ff
+};
+
+#define SSU8_VALID_START(c)		\
+	(((c) & 0xc0) != SSU8_SX)
+#define SSU16_SIMPLE(c)				\
+	(((unsigned short)(c)) < SSU16_HS0 ||	\
+	 ((unsigned short)(c)) > SSU16_LSN)
+#define SSU16_VALID_HS(c)		\
+	(((c) & SSU16_SM) == SSU16_HS0)
+#define SSU16_VALID_LS(c)		\
+	(((c) & SSU16_SM) == SSU16_LS0)
+#define SSU16_TO_U32(hs, ls)					\
+	((((hs) & SSU16_SMI) << 10) | ((ls) & SSU16_SMI))
 
 size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off, size_t *enc_errors);
 size_t sc_utf8_count_chars(const char *s, const size_t s_size, size_t *enc_errors);
 size_t sc_wc_to_utf8_size(const int32_t c);
-size_t sc_wc_to_utf8(const int c, char *s, const size_t off, const size_t max_off);
-size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off, int *unicode_out, int *encoding_errors);
+size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off, const size_t max_off);
+size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off, int *unicode_out, int32_t *encoding_errors);
 size_t sc_unicode_count_to_utf8_size(const char *, const size_t off, const size_t max_off, const size_t unicode_count, size_t *actual_unicode_count);
 ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off, const size_t s_size, int32_t (*ssc_toX)(const int32_t));
 int32_t sc_tolower(const int32_t c);

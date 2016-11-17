@@ -714,12 +714,17 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 static int test_ss_cpy_wn()
 {
 	int res = 0;
-	wchar_t t[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e, 0x15f, 0xa2,
-			0x20ac, 0xf1, 0 };
+	const uint32_t t32[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e,
+				 0x15f, 0xa2, 0x20ac, 0x24b62, 0 };
+	const uint16_t t16[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e,
+				 0x15f, 0xa2, 0x20ac, 0xd800 | (uint16_t)(0x24b62 >> 10),
+				 0xdc00 | (uint16_t)(0x24b62 & 0x3ff), 0 };
+	const wchar_t *t = sizeof(wchar_t) == 2 ? (wchar_t *)t16 :
+						  (wchar_t *)t32;
 	#define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
 	#define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
 	#define TU8C3 U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F U8_CENT_00A2
-	#define TU8D2 U8_EURO_20AC U8_S_N_TILDE_F1
+	#define TU8D2 U8_EURO_20AC U8_HAN_24B62
 	#define TU8ALL11 TU8A3 TU8B3 TU8C3 TU8D2
 	ss_t *a = ss_dup_c("hello"), *b_a3 = ss_dup_c(TU8A3),
 	     *b_b3 = ss_dup_c(TU8B3), *b_c3 = ss_dup_c(TU8C3),
@@ -730,9 +735,15 @@ static int test_ss_cpy_wn()
 	res |= !ss_cmp(a, b_b3) ? 0 : 2;
 	ss_cpy_wn(&a, t + 6, 3);
 	res |= !ss_cmp(a, b_c3) ? 0 : 4;
-	ss_cpy_wn(&a, t + 9, 2);
+	if (sizeof(wchar_t) == 2)
+		ss_cpy_wn(&a, t + 9, 3);
+	else
+		ss_cpy_wn(&a, t + 9, 2);
 	res |= !ss_cmp(a, b_d2) ? 0 : 8;
-	ss_cpy_wn(&a, t, 11);
+	if (sizeof(wchar_t) == 2)
+		ss_cpy_wn(&a, t, 12);
+	else
+		ss_cpy_wn(&a, t, 11);
 	res |= !ss_cmp(a, b_all11) ? 0 : 16;
 	res |= !strcmp(TU8ALL11, ss_to_c(b_all11)) ? 0 : 32;
 	res |= ss_len_u(b_a3) == 3 && ss_len_u(b_b3) == 3 &&
@@ -1268,7 +1279,7 @@ static int test_ss_to_c(const char *in)
 static int test_ss_to_w(const char *in)
 {
 	ss_t *a = ss_dup_c(in);
-	const size_t ssa = ss_len(a);
+	const size_t ssa = ss_len(a) * (sizeof(wchar_t) == 2 ? 2 : 1);
 	wchar_t *out = a ? (wchar_t *)s_malloc(sizeof(wchar_t) * (ssa + 1)) :
 			  NULL;
 	size_t out_size = 0;
@@ -3658,8 +3669,7 @@ int main()
 	STEST_ASSERT(test_ss_dup_printf_va("abc1helloFFFFFFFF", 512,
 					   "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_dup_char('a', "a"));
-	if (sizeof(wchar_t) > 2)
-		STEST_ASSERT(test_ss_dup_char(0x24b62, U8_HAN_24B62));
+	STEST_ASSERT(test_ss_dup_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_dup_read("abc"));
 	STEST_ASSERT(test_ss_dup_read("a\nb\tc\rd\te\ff"));
 	STEST_ASSERT(test_ss_cpy(""));
@@ -3692,8 +3702,7 @@ int main()
 	STEST_ASSERT(test_ss_cpy_printf_va("abc1helloFFFFFFFF", 512,
 	       			    "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_cpy_char('a', "a"));
-	if (sizeof(wchar_t) > 2)
-		STEST_ASSERT(test_ss_cpy_char(0x24b62, U8_HAN_24B62));
+	STEST_ASSERT(test_ss_cpy_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_cat("hello", "all"));
 	STEST_ASSERT(test_ss_cat_substr());
 	STEST_ASSERT(test_ss_cat_substr_u());

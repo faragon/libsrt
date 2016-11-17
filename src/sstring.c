@@ -310,7 +310,7 @@ static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
 }
 
 static size_t ss_utf8_to_wc(const char *s, const size_t off,
-			    const size_t max_off, int *unicode_out,
+			    const size_t max_off, int32_t *unicode_out,
 			    ss_t *s_unicode_error_out)
 {
 	int encoding_errors = 0;
@@ -1511,7 +1511,37 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 		size_t i = 0,
 		       char_count = 0;
 		for (; i < src_size; i++) {
-			size_t l = sc_wc_to_utf8(src[i], utf8,
+			int32_t uc32;
+			if (sizeof(wchar_t) == 2) { /* UTF-16 */
+				wchar_t h = src[i];
+				/*
+				 * Basic Multilingual Plane (BMP), or
+				 * full Unicode
+				 */
+				if (SSU16_SIMPLE(h)) {
+					uc32 = (int32_t)h;
+				} else {
+					/*
+					 * BEHAVIOR: ignore or cut incomplete
+					 * UTF-16 characters
+					 */
+					if (!SSU16_VALID_HS(h))
+						continue;
+					if (i + 1 == src_size)
+						break;
+					wchar_t l = src[i + 1];
+					if (!SSU16_VALID_LS(l))
+						continue;
+					i++;
+					/*
+					 * Once validated, convert it
+					 */
+					uc32 = SSU16_TO_U32(h, l);
+				}
+			} else { /* UTF-32 */
+				uc32 = (int32_t)src[i];
+			}
+			size_t l = sc_wc_to_utf8(uc32, utf8,
 						 0, SSU8_MAX_SIZE);
 			memcpy(ss_get_buffer(*s) + ss_size(*s), utf8, l);
 			inc_size(*s, l);
@@ -1763,9 +1793,20 @@ const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 		const char *p = ss_get_buffer_r(s);
 		const size_t ss = ss_size(s);
 		for (; i < ss && i < nmax;) {
-			int c = 0;
+			int32_t c = 0;
 			size_t l = ss_utf8_to_wc(p, i, ss, &c, NULL);
-			o[o_s++] = c;
+			if (sizeof(wchar_t) == 2) {
+				if ((c & ~0xffff) == 0) { /* simple */
+					o[o_s++] = (wchar_t)c;
+				} else { /* full */
+					if (i + 1 == nmax) /* cut input */
+						break;
+					o[o_s++] = SSU16_HS0 | (c >> 10);
+					o[o_s++] = SSU16_LS0 | (c & 0x3ffff);
+				}
+			} else {
+				o[o_s++] = c;
+			}
 			i += l;
 		}
 		if (o_s == nmax)

@@ -108,7 +108,7 @@ size_t sc_wc_to_utf8_size(const int32_t c)
 		c <= 0x1fffff? 4 : c <= 0x3ffffff? 5 : 6;
 }
 
-size_t sc_wc_to_utf8(const int c, char *s, const size_t off,
+size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
 		     const size_t max_off)
 {
 	const size_t len = sc_wc_to_utf8_size(c);
@@ -140,10 +140,10 @@ size_t sc_wc_to_utf8(const int c, char *s, const size_t off,
 /* BEHAVIOR: always return a character. For broken UTF-8, return the first
    byte as character. */
 size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
-		     int *unicode_out, int *encoding_errors)
+		     int32_t *unicode_out, int *encoding_errors)
 {
 	size_t c_sz = 1;
-	int out = 0;
+	int32_t out = 0;
 	if (s && off < max_off && unicode_out) {
 		const int c = s[off];
 		if (SSU8_SZ1(c)) {

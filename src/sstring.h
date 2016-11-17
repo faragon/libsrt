@@ -232,10 +232,10 @@ ss_t *ss_dup_cn(const char *src, const size_t src_size);
 /* #API: |Duplicate from C String (ASCII-z)|C string|output result|O(n)|1;2| */
 ss_t *ss_dup_c(const char *src);
 
-/* #API: |Duplicate from Unicode "wide char" string|"wide char" string; number of characters|output result|O(n)|1;2| */
+/* #API: |Duplicate from Unicode "wide char" string (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|"wide char" string; number of characters|output result|O(n)|1;2| */
 ss_t *ss_dup_wn(const wchar_t *src, const size_t src_size);
 
-/* #API: |Duplicate from "wide char" Unicode string|"wide char" string|output result|O(n)|1;2| */
+/* #API: |Duplicate from "wide char" Unicode string (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|"wide char" string|output result|O(n)|1;2| */
 ss_t *ss_dup_w(const wchar_t *src);
 
 /* #API: |Duplicate from integer|integer|output result|O(1)|1;2| */
@@ -362,7 +362,7 @@ ss_t *ss_cpy_c(ss_t **s, ...)
 */
 ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...);
 
-/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|1;2| */
+/* #API: |Overwrite string with "wide char" Unicode string copy (strict aliasing is assumed) (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|output string; input string ("wide char" Unicode); input string number of characters|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Overwrite string with integer to string copy|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */
@@ -456,7 +456,7 @@ ss_t *ss_cpy_ltrim(ss_t **s, const ss_t *src);
 ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src);
 
 /*
-#API: |Overwrite string with multiple C "wide char" Unicode string copy (strict aliasing is assumed)|output string; input strings (one or more C "wide char" strings)|output string reference (optional usage)|O(n)|1;2|
+#API: |Overwrite string with multiple C "wide char" Unicode string copy (strict aliasing is assumed) (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|output string; input strings (one or more C "wide char" strings)|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cpy_w(ss_t **s, ...)
 */
 ss_t *ss_cpy_w_aux(ss_t **s, const wchar_t *s1, ...);
@@ -499,12 +499,12 @@ ss_t *ss_cat_c(ss_t **s, const char *s1, ...)
 ss_t *ss_cat_c_aux(ss_t **s, const char *s1, ...);
 
 /*
-#API: |Concatenate multiple "wide char" C strings (Unicode character mode)|output string; input "wide char" C string; optional input "wide char" C strings|output string reference (optional usage)|O(n)|1;2|
+#API: |Concatenate multiple "wide char" C strings (Unicode character mode)|output string; input "wide char" C string (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t); optional input "wide char" C strings|output string reference (optional usage)|O(n)|1;2|
 ss_t *ss_cat_w(ss_t **s, const char *s1, ...)
 */
 ss_t *ss_cat_w_aux(ss_t **s, const wchar_t *s1, ...);
 
-/* #API: |Concatenate "wide char" C substring (Unicode character mode)|output string; input "wide char" C string; input string size (characters)|output string reference (optional usage)|O(n)|1;2| */
+/* #API: |Concatenate "wide char" C substring (Unicode character mode)|output string; input "wide char" C string; input string size (characters) (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size);
 
 /* #API: |Concatenate integer|output string; integer (any signed integer size)|output string reference (optional usage)|O(n)|1;2| */
@@ -716,7 +716,7 @@ ss_t *ss_rtrim(ss_t **s);
 /* #API: |Give a C-compatible zero-ended string reference (byte/UTF-8 mode)|input string|Zero-ended C compatible string reference (UTF-8)|O(1)|1;2| */
 const char *ss_to_c(const ss_t *s);
 
-/* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)|1;2| */
+/* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode) (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)|1;2| */
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n);
 
 /*
