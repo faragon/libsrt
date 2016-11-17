@@ -150,7 +150,8 @@ else
 			CFLAGS += -Wall -Wextra # -Werror
 		endif
 		ifeq ($(CLANG), 1)
-			CFLAGS += -Weverything -Wno-old-style-cast
+			CFLAGS += -Weverything -Wno-old-style-cast \
+				  -Wno-format-nonliteral
 		endif
 		CFLAGS += -pedantic
 	endif
