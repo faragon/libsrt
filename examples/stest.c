@@ -1941,13 +1941,13 @@ static int test_sv_cpy()
 	sv_cpy(&v1, v2);
 	sv_cpy(&v1a3, v2);
 	sv_cpy(&v1a24, v2);
-	res |= (sv_size(v1) == 3 ? 0 : 1<<31);
-	res |= (sv_size(v1a3) == 0 ? 0 : 1<<30);
-	res |= (sv_size(v1a24) == 3 ? 0 : 1<<29);
+	res |= (sv_size(v1) == 3 ? 0 : 1<<25);
+	res |= (sv_size(v1a3) == 0 ? 0 : 1<<26);
+	res |= (sv_size(v1a24) == 3 ? 0 : 1<<27);
 	res |= (sv_at_i(v1, 0) == 1 && sv_at_i(v1, 1) == 2 &&
 		sv_at_i(v1, 2) == 3 ? 0 : 1<<28);
 	res |= (sv_at_i(v1a24, 0) == 1 && sv_at_i(v1a24, 1) == 2 &&
-		sv_at_i(v1a24, 2) == 3 ? 0 : 1<<27);
+		sv_at_i(v1a24, 2) == 3 ? 0 : 1<<29);
 	sv_free(&v1, &v2);
 	return res;
 }
@@ -2970,7 +2970,7 @@ static int test_sm_delete_s()
 	return res;
 }
 
-sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
+static sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 {
 	(void)k;
 	(void)v;
@@ -2979,7 +2979,7 @@ sbool_t cback_i32i32(int32_t k, int32_t v, void *context)
 	return S_TRUE;
 }
 
-sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
+static sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 {
 	(void)k;
 	(void)v;
@@ -2988,7 +2988,7 @@ sbool_t cback_ss(const ss_t *k, const ss_t *v, void *context)
 	return S_TRUE;
 }
 
-sbool_t cback_i32(int32_t k, void *context)
+static sbool_t cback_i32(int32_t k, void *context)
 {
 	(void)k;
 	if (context)
@@ -2996,7 +2996,7 @@ sbool_t cback_i32(int32_t k, void *context)
 	return S_TRUE;
 }
 
-sbool_t cback_u32(uint32_t k, void *context)
+static sbool_t cback_u32(uint32_t k, void *context)
 {
 	(void)k;
 	if (context)
@@ -3004,7 +3004,7 @@ sbool_t cback_u32(uint32_t k, void *context)
 	return S_TRUE;
 }
 
-sbool_t cback_i(int64_t k, void *context)
+static sbool_t cback_i(int64_t k, void *context)
 {
 	(void)k;
 	if (context)
@@ -3012,13 +3012,14 @@ sbool_t cback_i(int64_t k, void *context)
 	return S_TRUE;
 }
 
-sbool_t cback_s(const ss_t *k, void *context)
+static sbool_t cback_s(const ss_t *k, void *context)
 {
 	(void)k;
 	if (context)
 		(*((size_t *)context))++;
 	return S_TRUE;
 }
+
 #define TEST_SM_IT_X(n, id, et, itk, itv, cmpkf, cmpvf, k1, v1, k2, v2, k3, v3,\
 		     res)						       \
 	sm_t *m_##id = sm_alloc(et, 0), *m_a##id = sm_alloca(et, 3);	       \
