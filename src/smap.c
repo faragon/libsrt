@@ -192,6 +192,10 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 	return NULL;
 }
 
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#endif
+
 SM_ENUM_INORDER_XX(sm_itr_ii32, sm_it_ii32_t, SM_II32, int32_t,
 		   cmp_ni_i((const struct SMapi *)cn, kmin),
 		   cmp_ni_i((const struct SMapi *)cn, kmax),

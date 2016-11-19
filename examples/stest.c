@@ -172,6 +172,9 @@ MK_TEST_SS_DUP_CPY_CAT_CODEC(dec_esc_squote)
 
 static int test_sb(size_t nelems)
 {
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#endif
 	sb_t *a = sb_alloca(nelems), *b = sb_alloc(0);
 	#define TEST_SB(bs, ne) 	\
 		sb_eval(&bs, ne);	\
@@ -1286,7 +1289,7 @@ static int test_ss_to_w(const char *in)
 	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);
 	res |= (((ssa > 0 && out_size > 0) || ssa == out_size) ? 0 : 4);
 	if (!res) {
-		char b1[16384], b2[16384];
+		char b1[4096], b2[4096];
 		int sb1i = sprintf(b1, "%s", ss_to_c(a));
 		int sb2i = sprintf(b2, "%ls", out);
 		size_t sb1 = sb1i >= 0 ? (size_t)sb1i : 0,
@@ -2331,6 +2334,10 @@ static int test_sv_push_pop_set_i()
 	enum eSV_Type t[] = { SV_I8, SV_I16, SV_I32, SV_I64 };
 	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#pragma warning(disable: 6263)
+#endif
 		size_t as = 10;
 		sv_t *a = sv_alloc_t(t[i], as);
 		sv_t *b = sv_alloca_t(t[i], as);
@@ -3653,6 +3660,9 @@ int main()
 	ss_t *co = ss_alloca(256);
 	int j;
 	for (j = 0; j < 5; j++) {
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6263)
+#endif
 		ss_enc_lzw(&co, ci[j]);
 		MK_TEST_SS_DUP_CPY_CAT(enc_lzw, dec_lzw, ci[j], co);
 		ss_enc_rle(&co, ci[j]);

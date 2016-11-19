@@ -31,6 +31,9 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 	ss_cat_printf(log, 512, "sv_t: t: %s, elem size: " FMT_ZU ", sz: "
 		      FMT_ZU ", { ", sv_type_to_label(t), elem_size, elems);
 	size_t i = 0;
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#endif
 	ss_t *aux = ss_alloca(elem_size * 2);
 	const char *buf = (const char *)sv_get_buffer_r(v);
 	for (; i < elems; i++) {

@@ -10,6 +10,10 @@
 #include "smset.h"
 #include "saux/scommon.h"
 
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#endif
+
 SM_ENUM_INORDER_XX(sms_itr_i32, sms_it_i32_t, SM0_I32, int32_t,
 		   cmp_ni_i((const struct SMapi *)cn, kmin),
 		   cmp_ni_i((const struct SMapi *)cn, kmax),

@@ -559,6 +559,9 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	 * so it will fit always in the stack (e.g. (2^32)-1 nodes would require
 	 * allocating less than 1KB of stack space for the path).
 	 */
+#ifdef _MSC_VER /* supress alloca() warning */
+#pragma warning(disable: 6255)
+#endif
 	struct STreeScan *p = (struct STreeScan *)
 					alloca(sizeof(struct STreeScan) *
 					       (rbt_max_depth + 3));

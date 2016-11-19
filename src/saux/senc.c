@@ -847,6 +847,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					/* Case of node with 1 element, growing
 					 * to N-element node.
 					 */
+#ifdef _MSC_VER
+#pragma warning(disable: 6001)
+#endif
 					g[groups_in_use].refs[0] =
 							-node_lutref[curr_node];
 					g[groups_in_use].childs[0] =
@@ -858,6 +861,9 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 					       -SLZW_CODE_LIMIT - groups_in_use;
 					groups_in_use++; /* alloc new group */
 				} else {
+#ifdef _MSC_VER
+#pragma warning(disable: 6001)
+#endif
 					int ng = -(node_lutref[curr_node] +
 						   SLZW_CODE_LIMIT);
 					unsigned char nrefs = g[ng].nrefs;
@@ -871,7 +877,7 @@ size_t senc_lzw(const unsigned char *s, const size_t ss, unsigned char *o)
 						memset(&lut_stack[new_lut], 0,
 						       sizeof(lut_stack[0]));
 #ifdef _MSC_VER
-#pragma warning(suppress: 6001)
+#pragma warning(disable: 6001)
 #endif
 						for (j = 0; j < SLZW_EPG; j++)
 							lut_stack[new_lut]
