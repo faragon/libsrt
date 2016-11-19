@@ -217,20 +217,3 @@ int main(int argc, const char **argv)
 
 #endif /* #ifndef S_BUILD_CRC32_TABLES */
 
-#ifdef STANDALONE_TEST
-#define SHBUF_SIZE (16 * 1024)
-int main(int argc, const char **argv)
-{
-	uint32_t crc = 0;
-	char buf[SHBUF_SIZE];
-	size_t l = 0;
-	do
-	{
-		l = fread(buf, 1, SHBUF_SIZE, stdin);
-		crc = sh_crc32(crc, buf, l);
-	} while (l);
-	printf("%08x\n", crc);
-	return 0;
-}
-#endif
-
