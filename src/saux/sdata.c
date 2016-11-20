@@ -13,24 +13,17 @@
 /*
  * Allocation heuristic configuration
  *
- * SD_GROW_CACHE_MIN_ELEMS (e.g. 1024): number of elements that can be asumed
- * is going to be cheap to be copied because of being covered by data cache
- * fetch + write back.
- * SD_GROW_PCT_CACHED (e.g. 25%): if in the case of cached region, when not
- * having available space, allocate at least 25% the current allocated memory.
- * SD_GROW_PCT_NONCACHED (e.g. 100%): similar to the previous case, but when
- * elements are over SD_GROW_CACHE_MIN_ELEMS, increase the allocation in 100%.
+ * SD_GROW_PCT (e.g. 25%): if possible, allocate at least 25% the current
+ * allocated memory.
+ * SD_GROW_MAX_INC: maximum amount of over-incremented elements.
  */
 
 #ifdef S_MINIMAL
-#define SD_GROW_CACHE_MIN_ELEMS	  16
-#define SD_GROW_PCT_CACHED	   5
-#define SD_GROW_PCT_NONCACHED	  10
+#define SD_GROW_PCT	10
 #else
-#define SD_GROW_CACHE_MIN_ELEMS	4096
-#define SD_GROW_PCT_CACHED	  25
-#define SD_GROW_PCT_NONCACHED	  50
+#define SD_GROW_PCT	25
 #endif
+#define SD_GROW_MAX_INC	1000000
 
 static sd_t sd_void0 = EMPTY_SDataFull;
 sd_t *sd_void = &sd_void0;
@@ -138,16 +131,9 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 			sd_set_alloc_errors(*d);
 			return curr_max_size;
 		}
-#ifdef SD_ENABLE_HEURISTIC_GROW
-		size_t grow_pct = max_size < SD_GROW_CACHE_MIN_ELEMS ?
-		SD_GROW_PCT_CACHED : SD_GROW_PCT_NONCACHED;
-		size_t inc = s_size_t_pct(max_size, grow_pct);
-		/*
-			* On 32-bit systems, over 2GB allocations the
-			* heuristic increment will be in 16MB steps
-			*/
-		if (s_size_t_overflow(max_size, inc))
-			inc = 16 * 1024 * 1024;
+#ifdef SD_ENABLE_HEURISTIC_GROWTH
+		size_t inc = s_size_t_pct(max_size, SD_GROW_PCT);
+		inc = S_MIN(inc, SD_GROW_MAX_INC);
 		if (!s_size_t_overflow(max_size, inc))
 			max_size += inc;
 #endif

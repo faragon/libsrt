@@ -1700,7 +1700,7 @@ static int test_sv_len()
 	return res;
 }
 
-#ifdef SD_ENABLE_HEURISTIC_GROW
+#ifdef SD_ENABLE_HEURISTIC_GROWTH
 #define SDCMP >=
 #else
 #define SDCMP ==
