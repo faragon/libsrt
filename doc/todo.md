@@ -23,17 +23,12 @@ Long-term
 
 * Dynamic disk/RAM (mmap) allocators
  * allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
-* Read-only types
- * Optimized read-only tree, map, vector, and sorted vector
 * Vector enhancements
  * st\_shl and st\_shr (shifting elements on a vector, without real data shift)
 * Map enhancements
  * Apply function to map: for all, for range, etc.
- * Add a (k=\*, void) new types to smap (e.g for cases of existence check)
 * Tree enhancements
  * Make last-inserted nodes cache, in order to speed-up delete.
- * Iterator: In addition to the callback, add an iterator for traversal.
- * min, max, range query
  * Compare, subtract, add.
 * String enhancements
  * Store string search hash at string end (mark it with flag)
@@ -45,10 +40,8 @@ Long-term
  * Unicode: to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
 * Other
  * Bindings for other languages
-* Write examples
- * Key-value database: string/int-string/int key-value), zero alloc case (key/value fitting on fixed-size node), KKV (key-key-value)
 * C++ wrapper
- * Benefits: stack allocation for complex structures and memory savings because of pointer-less internal organization
+ * Benefits: stack allocation, lower memory usage.
 
 Never (?)
 ---
