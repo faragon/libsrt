@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
+libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
@@ -25,7 +25,7 @@ Generic advantages
 ===
 
 * Ease of use
- * Use strings, vectors, maps, and bit sets in a similar way to higher level languages.
+ * Use strings, vectors, maps, sets, and bit sets in a similar way to higher level languages.
 
 * Space-optimized
  * Dynamic one-block linear addressing space.
@@ -134,7 +134,6 @@ String-specific disadvantages/limitations
 ===
 
 * No reference counting support. Rationale: simplicity.
-* ss\_t has not string precomputed hash support, yet. So searching on trees when keys are strings is not yet optimal (it will be almost as fast as searching for an integer).
 
 Vector-specific advantages (sv\_t)
 ===
