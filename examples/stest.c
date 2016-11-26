@@ -1521,7 +1521,7 @@ static int test_ss_misc()
 	 * memory allocation fails:
 	 */
 #if UINTPTR_MAX == 0xffffffff
-	size_t gs = ss_grow(&a, (size_t)4 * 1000 * 1000 * 1000);
+	size_t gs = ss_grow(&a, (size_t)0xffffff00);
 #elif UINTPTR_MAX > 0xffffffff
 	size_t gs = ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
 #endif
