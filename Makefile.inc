@@ -55,7 +55,8 @@ endif
 
 CFLAGS =
 CXXFLAGS =
-LDFLAGS = -lrt
+LDFLAGS =
+LDLIBS = -lrt
 COMMON_FLAGS = -pipe
 
 # Configure compiler context
@@ -199,12 +200,12 @@ endif
 
 ifeq ($(HAS_PNG), 1)
 	COMMON_FLAGS += -DHAS_PNG
-	LDFLAGS += -lz -lpng
+	LDLIBS += -lz -lpng
 endif
 
 ifeq ($(HAS_JPG), 1)
 	COMMON_FLAGS += -DHAS_JPG
-	LDFLAGS += -ljpeg
+	LDLIBS += -ljpeg
 endif
 
 ifeq ($(HAS_LL1), 1)
@@ -217,7 +218,6 @@ endif
 
 CFLAGS += $(COMMON_FLAGS) -Isrc
 CXXFLAGS += $(COMMON_FLAGS) -Isrc
-
 LDFLAGS += $(COMMON_FLAGS)
 
 ifdef ADD_CFLAGS
