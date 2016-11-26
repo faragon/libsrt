@@ -53,6 +53,9 @@ ifndef HAS_LL1
 	HAS_LL1 = 0
 endif
 
+CFLAGS =
+CXXFLAGS =
+LDFLAGS = -lrt
 COMMON_FLAGS = -pipe
 
 # Configure compiler context
@@ -76,6 +79,7 @@ endif
 CPP_MODE = 0
 GNUC = 0
 CLANG = 0
+
 ifeq ($(CC), gcc)
 	GNUC = 1
 endif
@@ -94,12 +98,6 @@ endif
 ifeq ($(CC), tcc)
 	PROFILING = 0
 else
-	ifeq ($(CPP11), 1)
-		CPP_MODE = 1
-	endif
-	ifeq ($(CPP0X), 1)
-		CPP_MODE = 1
-	endif
 	ifeq ($(CPP_MODE), 1)
 		ifeq ($(CPP11), 1)
 			CFLAGS += -std=c++11
@@ -120,6 +118,14 @@ else
 			endif
 		endif
 	endif
+
+	ifeq ($(CPP11), 1)
+		CXXFLAGS += -std=c++11
+	endif
+	ifeq ($(CPP0X), 1)
+		CXXFLAGS += -std=c++0x
+	endif
+
 	ifeq ($(PEDANTIC), 1)
 		ifeq ($(GNUC), 1)
 			CFLAGS += -Wall -Wextra # -Werror
@@ -128,28 +134,28 @@ else
 			CFLAGS += -Weverything -Wno-old-style-cast \
 				  -Wno-format-nonliteral
 		endif
-		CFLAGS += -pedantic
+		COMMON_FLAGS += -pedantic
 	endif
 	ifeq ($(GNUC), 1)
-		CFLAGS += -Wstrict-aliasing
+		COMMON_FLAGS += -Wstrict-aliasing
 	endif
 endif
 ifeq ($(DEBUG), 1)
-	CFLAGS += -O0 -ggdb -DS_DEBUG
+	COMMON_FLAGS += -O0 -ggdb -DS_DEBUG
 	ifeq ($(MINIMAL), 1)
-		CFLAGS += -DS_MINIMAL
+		COMMON_FLAGS += -DS_MINIMAL
 	endif
 else
 	ifeq ($(MINIMAL), 1)
-		CFLAGS += -Os -DS_MINIMAL
+		COMMON_FLAGS += -Os -DS_MINIMAL
 	else
-		CFLAGS += -O2
+		COMMON_FLAGS += -O2
 	endif
 endif
 ifeq ($(PROFILING), 1)
-	CFLAGS += -ggdb
+	COMMON_FLAGS += -ggdb
 	# gcov flags:
-	CFLAGS += -fprofile-arcs -ftest-coverage
+	COMMON_FLAGS += -fprofile-arcs -ftest-coverage
 	LDFLAGS += -lgcov -coverage
 	# gprof flags:
 	COMMON_FLAGS += -pg
@@ -206,13 +212,19 @@ ifeq ($(HAS_LL1), 1)
 endif
 
 ifeq ($(GNUC), 1)
-	CFLAGS += $(GCC_COMMON_FLAGS)
+	COMMON_FLAGS += $(GCC_COMMON_FLAGS)
 endif
 
-CFLAGS += $(COMMON_FLAGS) -Isrc $(EXTRA_CFLAGS)
+CFLAGS += $(COMMON_FLAGS) -Isrc
+CXXFLAGS += $(COMMON_FLAGS) -Isrc
+
 LDFLAGS += $(COMMON_FLAGS)
 
 ifdef ADD_CFLAGS
 	CFLAGS += $(ADD_CFLAGS)
+endif
+
+ifdef ADD_CXXFLAGS
+	CXXFLAGS += $(ADD_CXXFLAGS)
 endif
 
