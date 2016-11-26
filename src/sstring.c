@@ -256,7 +256,10 @@ size_t ss_grow(ss_t **s, const size_t extra_size)
 	RETURN_IF(!s, 0);
 	RETURN_IF(!(*s), ss_reserve(s, extra_size));
 	size_t size = ss_size(*s);
-	ASSERT_RETURN_IF(s_size_t_overflow(size, extra_size), 0);
+	if (s_size_t_overflow(size, extra_size)) {
+		ss_set_alloc_errors(*s);
+		return 0;
+	}
 	/*
 	* If passing from small struct to full struct,
 	* we'll have to update the unicode cached size.
