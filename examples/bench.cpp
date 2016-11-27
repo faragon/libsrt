@@ -57,7 +57,7 @@ void ctest_map_ii64(size_t count)
 {
 	sm_t *m = sm_alloc(SM_II, 0);
 	for (size_t i = 0; i < count; i++)
-		sm_insert_ii32(&m, (int64_t)i, (int64_t)i);
+		sm_insert_ii(&m, (int64_t)i, (int64_t)i);
 	sm_free(&m);
 }
 
@@ -152,6 +152,7 @@ int main(int argc, char *argv[])
 {
 	BENCH_INIT;
 	size_t count = 1000000;
+	printf("Insert %zu elements, and then, release memory.\n", count);
 	BENCH_FN(ctest_map_ii32, count);
 	BENCH_FN(cxxtest_map_ii32, count);
 #if __cplusplus >= 201103L
