@@ -79,9 +79,10 @@ typedef void (*st_rewrite_t)(stn_t *node, const stn_t *new_data, const sbool_t e
 #NOTAPI: |Allocate tree (stack)|node compare function; node size; space preallocated to store n elements|allocated tree|O(1)|0;2|
 sv_t *st_alloca(st_cmp_t cmp_f, const size_t elem_size, const size_t max_size)
 */
-#define st_alloca(cmp_f, elem_size, max_size)				       \
-	st_alloc_raw(cmp_f, S_TRUE,					       \
-		     alloca(sd_alloc_size(sizeof(st_t), elem_size, max_size)), \
+#define st_alloca(cmp_f, elem_size, max_size)				\
+	st_alloc_raw(cmp_f, S_TRUE,					\
+		     alloca(sd_alloc_size_raw(sizeof(st_t), elem_size,	\
+					      max_size)),		\
 		     elem_size, max_size)
 
 st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf,

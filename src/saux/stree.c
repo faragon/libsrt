@@ -232,7 +232,8 @@ st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
 
 st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
 {
-	size_t alloc_size = sd_alloc_size(sizeof(st_t), elem_size, init_size, S_FALSE);
+	size_t alloc_size = sd_alloc_size_raw(sizeof(st_t), elem_size,
+					      init_size, S_FALSE);
 	return st_alloc_raw(cmp_f, S_FALSE, s_malloc(alloc_size), elem_size,
 			    init_size);
 }

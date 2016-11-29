@@ -58,6 +58,9 @@ extern "C" {
 	S_INLINE size_t pfix##_max_size(const pfix##_t *c) {		       \
 		return stpfix##_max_size((const sd_t *)c);		       \
 	}								       \
+	S_INLINE size_t pfix##_alloc_size(const pfix##_t *c) {		       \
+		return stpfix##_alloc_size((const sd_t *)c);		       \
+	}								       \
 	S_INLINE size_t pfix##_get_buffer_size(const pfix##_t *c) {	       \
 		return stpfix##_size((const sd_t *)c) *			       \
 		       stpfix##_elem_size((const sd_t *)c);		       \
@@ -313,6 +316,12 @@ S_INLINE size_t sd_elem_size(const sd_t *d)
 	return d->elem_size;
 }
 
+S_INLINE size_t sd_alloc_size(const sd_t *d)
+{
+	RETURN_IF(!d, 0);
+	return d->header_size + d->elem_size * d->max_size;
+}
+
 S_INLINE uint8_t sdx_szt_to_u8_sat(size_t v)
 {
 	return v <= 255 ? (uint8_t)v : 255;
@@ -410,6 +419,11 @@ S_INLINE size_t sdx_elem_size(const sd_t *d)
 	return 1; /* Implicit value */
 }
 
+S_INLINE size_t sdx_alloc_size(const sd_t *d)
+{
+	return sdx_header_size(d) + sdx_elem_size(d) * sdx_max_size(d);
+}
+
 /* Checks if structure container switch is required
  * -1: full to small
  * 0: no changes
@@ -424,7 +438,7 @@ S_INLINE int sdx_chk_st_change(const sd_t *d, size_t new_max_size)
 		(new_max_size > curr_max_size ? 1 : -1) : 0;
 }
 
-S_INLINE size_t sd_alloc_size(uint8_t header_size, size_t elem_size, size_t size, const sbool_t dyn_st)
+S_INLINE size_t sd_alloc_size_raw(uint8_t header_size, size_t elem_size, size_t size, const sbool_t dyn_st)
 {
 	if (dyn_st && size < 255) {
 		S_ASSERT(elem_size == 1);

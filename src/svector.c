@@ -127,8 +127,8 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 			   const size_t init_size,
 			   const sv_cmp_t f)
 {
-	const size_t alloc_size = sd_alloc_size(sizeof(sv_t), elem_size,
-						init_size, S_FALSE);
+	const size_t alloc_size = sd_alloc_size_raw(sizeof(sv_t), elem_size,
+						    init_size, S_FALSE);
 	return sv_alloc_raw(t, S_FALSE, s_malloc(alloc_size),
 			    elem_size, init_size, f);
 }

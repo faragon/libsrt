@@ -36,8 +36,8 @@ sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size,
 	       const size_t initial_reserve, const sbool_t dyn_st,
 	       const size_t extra_tail_bytes)
 {
-	size_t alloc_size = sd_alloc_size(header_size, elem_size,
-					  initial_reserve, dyn_st);
+	size_t alloc_size = sd_alloc_size_raw(header_size, elem_size,
+					      initial_reserve, dyn_st);
 	sd_t *d = (sd_t *)s_malloc(alloc_size + extra_tail_bytes);
 	if (d) {
 		sd_reset(d, header_size, elem_size, initial_reserve, S_FALSE,
@@ -144,8 +144,8 @@ S_INLINE size_t sd_reserve_aux(sd_t **d, size_t max_size,
 					full_header_size :
 					curr_hdr_size;
 		size_t elem_size = sdx_elem_size(*d);
-		size_t as = sd_alloc_size(full_header_size,
-						elem_size, max_size, is_dyn);
+		size_t as = sd_alloc_size_raw(full_header_size,
+					      elem_size, max_size, is_dyn);
 		sd_t *d_next = (sd_t *)s_realloc(*d, as + extra_tail_bytes);
 		if (!d_next) {
 			S_ERROR("sd_reserve: not enough memory");
@@ -190,9 +190,9 @@ sd_t *sd_shrink(sd_t **d, const size_t extra_tail_bytes)
 	size_t max_size = sd_max_size(*d);
 	size_t new_max_size = (*d)->size;
 	if (new_max_size < max_size) {
-		size_t as = sd_alloc_size((*d)->header_size,
-					  (*d)->elem_size, new_max_size,
-					  S_FALSE);
+		size_t as = sd_alloc_size_raw((*d)->header_size,
+					      (*d)->elem_size, new_max_size,
+					      S_FALSE);
 		sd_t *d_next = (sd_t *)s_realloc(*d, as + extra_tail_bytes);
 		if (d_next) {
 			*d = d_next;

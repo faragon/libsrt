@@ -108,8 +108,8 @@ sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
 */
 #define sm_alloca(type, max_size)						\
 	sm_alloc_raw(type, S_TRUE,						\
-		     alloca(sd_alloc_size(sizeof(sm_t), sm_elem_size(type),	\
-					  max_size, S_FALSE)),			\
+		     alloca(sd_alloc_size_raw(sizeof(sm_t), sm_elem_size(type),	\
+					      max_size, S_FALSE)),		\
 		     sm_elem_size(type), max_size)
 
 sm_t *sm_alloc_raw0(const enum eSM_Type0 t, const sbool_t ext_buf, void *buffer, const size_t elem_size, const size_t max_size);

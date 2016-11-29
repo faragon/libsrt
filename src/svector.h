@@ -77,15 +77,15 @@ sv_t *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_reserve)
 #API: |Allocate generic vector (stack)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2|
 sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve, const sv_cmp_t f)
 */
-#define sv_alloca(elem_size, max_size, cmp_f)				      \
-	sv_alloc_raw(SV_GEN, S_TRUE,					      \
-		     alloca(sd_alloc_size(sizeof(sv_t), elem_size, max_size,  \
-					  S_FALSE)),			      \
+#define sv_alloca(elem_size, max_size, cmp_f)				\
+	sv_alloc_raw(SV_GEN, S_TRUE,					\
+		     alloca(sd_alloc_size_raw(sizeof(sv_t), elem_size,	\
+					      max_size, S_FALSE)),	\
 		     elem_size, max_size, cmp_f)
-#define sv_alloca_t(type, max_size)					      \
-	sv_alloc_raw(type, S_TRUE,					      \
-		     alloca(sd_alloc_size(sizeof(sv_t), sv_elem_size(type),   \
-			    max_size, S_FALSE)),			      \
+#define sv_alloca_t(type, max_size)					       \
+	sv_alloc_raw(type, S_TRUE,					       \
+		     alloca(sd_alloc_size_raw(sizeof(sv_t), sv_elem_size(type),\
+			    max_size, S_FALSE)),			       \
 		     sv_elem_size(type), max_size, NULL)
 
 sv_t *sv_alloc_raw(const enum eSV_Type t, const sbool_t ext_buf, void *buffer, const size_t elem_size, const size_t max_size, const sv_cmp_t f);

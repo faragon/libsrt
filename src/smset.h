@@ -60,10 +60,10 @@ typedef sbool_t (*sms_it_s_t)(const ss_t *, void *context);
 #API: |Allocate set (stack)|set type; initial reserve|set|O(1)|1;2|
 sms_t *sms_alloca(const enum eSMS_Type t, const size_t n);
 */
-#define sms_alloca(type, max_size)						\
-	sms_alloc_raw(type, S_TRUE,						\
-		     alloca(sd_alloc_size(sizeof(sms_t), sm_elem_size(type),	\
-					  max_size, S_FALSE)),			\
+#define sms_alloca(type, max_size)					\
+	sms_alloc_raw(type, S_TRUE,					\
+		      alloca(sd_alloc_size_raw(sizeof(sms_t),		\
+			     sm_elem_size(type), max_size, S_FALSE)),	\
 		     sm_elem_size(type), max_size)
 
 S_INLINE sms_t *sms_alloc_raw(const enum eSMS_Type t, const sbool_t ext_buf, void *buffer, const size_t elem_size, const size_t max_size)

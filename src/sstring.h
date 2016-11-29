@@ -155,7 +155,7 @@ ss_t *ss_alloca(const size_t max_size)
  * +1 extra byte allocated for the \0 required by ss_to_c()
  */
 #define	ss_alloca(max_size)						   \
-	ss_alloc_into_ext_buf(alloca(sd_alloc_size(sizeof(ss_t), 1,	   \
+	ss_alloc_into_ext_buf(alloca(sd_alloc_size_raw(sizeof(ss_t), 1,	   \
 						   max_size, S_TRUE) + 1), \
 			      max_size)
 
