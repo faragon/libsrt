@@ -115,13 +115,13 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		sprintf(k, FMT_I, ((const struct SMapI *)cn)->k);
 		break;
 	case SM_SI:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapSI *)cn)->x.k);
+		sprintf(k, "%s",
+			ss_to_c(((const struct SMapSI *)cn)->x.k));
 		break;
 	case SM_SS:
 	case SM_SP:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapS *)cn)->k);
+		sprintf(k, "%s",
+			ss_to_c(((const struct SMapS *)cn)->k));
 		break;
 	}
 	switch (tp->t->d.sub_type) {
@@ -132,16 +132,16 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		sprintf(v, FMT_I, ((const struct SMapSI *)cn)->v);
 		break;
 	case SM_IS:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapIS *)cn)->v);
+		sprintf(k, "%s",
+			ss_to_c(((const struct SMapIS *)cn)->v));
 		break;
 	case SM_IP:
 		sprintf(k, "%p",
 			(const void *)((const struct SMapIP *)cn)->v);
 		break;
 	case SM_SS:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapSS *)cn)->v);
+		sprintf(k, "%s",
+			ss_to_c(((const struct SMapSS *)cn)->v));
 		break;
 	case SM_SP:
 		sprintf(k, "%p",
