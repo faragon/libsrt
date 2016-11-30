@@ -150,6 +150,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\saux\sbitio.c" />
     <ClCompile Include="..\..\src\saux\schar.c" />
+    <ClCompile Include="..\..\src\saux\scommon.c" />
     <ClCompile Include="..\..\src\saux\sdata.c" />
     <ClCompile Include="..\..\src\saux\sdbg.c" />
     <ClCompile Include="..\..\src\saux\senc.c" />
