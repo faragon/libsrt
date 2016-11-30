@@ -193,10 +193,10 @@ S_INLINE sbool_t sms_insert_s(sms_t **s, const ss_t *k)
         RETURN_IF(!s, S_FALSE);
         struct SMapS n;
 #if 1 /* workaround */
-        n.k = ss_dup(k);
+	SMStrSet(&n.k, k);
 	sbool_t ins_ok = st_insert((st_t **)s, (const stn_t *)&n);
 	if (!ins_ok)
-		ss_free(&n.k);
+		SMStrFree(&n.k);
 	return ins_ok;
 #else
 	/* TODO: rw_add_SMS_S */

@@ -31,7 +31,7 @@ static int cmp_I(const struct SMapI *a, const struct SMapI *b)
 
 static int cmp_s(const struct SMapS *a, const struct SMapS *b)
 {
-	return ss_cmp(a->k, b->k);
+	return ss_cmp(SMStrGet(&a->k), SMStrGet(&b->k));
 }
 
 static void rw_inc_SM_II32(stn_t *node, const stn_t *new_data,
@@ -61,8 +61,9 @@ static void rw_add_SM_SP(stn_t *node, const stn_t *new_data,
 	struct SMapSP *n = (struct SMapSP *)node;
 	const struct SMapSP *m = (const struct SMapSP *)new_data;
 	if (!existing)
-		n->x.k = NULL;
-	ss_cpy(&n->x.k, m->x.k);
+		SMStrSet(&n->x.k, SMStrGet(&m->x.k));
+	else
+		SMStrUpdate(&n->x.k, SMStrGet(&m->x.k));
 }
 
 static void rw_add_SM_SS(stn_t *node, const stn_t *new_data,
@@ -70,10 +71,13 @@ static void rw_add_SM_SS(stn_t *node, const stn_t *new_data,
 {
 	struct SMapSS *n = (struct SMapSS *)node;
 	const struct SMapSS *m = (const struct SMapSS *)new_data;
-	if (!existing)
-		n->x.k = n->v = NULL;
-	ss_cpy(&n->x.k, m->x.k);
-	ss_cpy(&n->v, m->v);
+	if (!existing) {
+		SMStrSet(&n->x.k, SMStrGet(&m->x.k));
+		SMStrSet(&n->v, SMStrGet(&m->v));
+	} else {
+		SMStrUpdate(&n->x.k, SMStrGet(&m->x.k));
+		SMStrUpdate(&n->v, SMStrGet(&m->v));
+	}
 }
 
 static void rw_add_SM_SI(stn_t *node, const stn_t *new_data,
@@ -82,8 +86,9 @@ static void rw_add_SM_SI(stn_t *node, const stn_t *new_data,
 	struct SMapSI *n = (struct SMapSI *)node;
 	const struct SMapSI *m = (const struct SMapSI *)new_data;
 	if (!existing)
-		n->x.k = NULL;
-	ss_cpy(&n->x.k, m->x.k);
+		SMStrSet(&n->x.k, SMStrGet(&m->x.k));
+	else
+		SMStrUpdate(&n->x.k, SMStrGet(&m->x.k));
 }
 
 static void rw_inc_SM_SI(stn_t *node, const stn_t *new_data,
@@ -97,17 +102,18 @@ static void rw_inc_SM_SI(stn_t *node, const stn_t *new_data,
 
 static void aux_is_delete(void *node)
 {
-	ss_free(&((struct SMapIS *)node)->v);
+	SMStrFree(&((struct SMapIS *)node)->v);
 }
 
 static void aux_sx_delete(void *node)
 {
-	ss_free(&((struct SMapS *)node)->k);
+	SMStrFree(&((struct SMapS *)node)->k);
 }
 
 static void aux_ss_delete(void *node)
 {
-	ss_free(&((struct SMapSS *)node)->x.k, &((struct SMapSS *)node)->v);
+	SMStrFree(&((struct SMapSS *)node)->x.k);
+	SMStrFree(&((struct SMapSS *)node)->v);
 }
 
 struct SV2X { sv_t *kv, *vv; };
@@ -218,7 +224,7 @@ SM_ENUM_INORDER_XX(sm_itr_is, sm_it_is_t, SM_IS, int64_t,
 		   cmp_nI_I((const struct SMapI *)cn, kmin),
 		   cmp_nI_I((const struct SMapI *)cn, kmax),
 		   f(((const struct SMapI *)cn)->k,
-		     ((const struct SMapIS *)cn)->v, context))
+		     SMStrGet(&((const struct SMapIS *)cn)->v), context))
 
 SM_ENUM_INORDER_XX(sm_itr_ip, sm_it_ip_t, SM_IP, int64_t,
 		   cmp_nI_I((const struct SMapI *)cn, kmin),
@@ -229,19 +235,19 @@ SM_ENUM_INORDER_XX(sm_itr_ip, sm_it_ip_t, SM_IP, int64_t,
 SM_ENUM_INORDER_XX(sm_itr_si, sm_it_si_t, SM_SI, const ss_t *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(((const struct SMapS *)cn)->k,
+		   f(SMStrGet(&((const struct SMapS *)cn)->k),
 		     ((const struct SMapSI *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_ss, sm_it_ss_t, SM_SS, const ss_t *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(((const struct SMapS *)cn)->k,
-		     ((const struct SMapSS *)cn)->v, context))
+		   f(SMStrGet(&((const struct SMapS *)cn)->k),
+		     SMStrGet(&((const struct SMapSS *)cn)->v), context))
 
 SM_ENUM_INORDER_XX(sm_itr_sp, sm_it_sp_t, SM_SP, const ss_t *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(((const struct SMapS *)cn)->k,
+		   f(SMStrGet(&((const struct SMapS *)cn)->k),
 		     ((const struct SMapSP *)cn)->v, context))
 
 /*
@@ -359,22 +365,22 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 		for (i = 0; i < ss; i++) {
 			const struct SMapIS *ms = (const struct SMapIS *)st_enum_r(src, i);
 			struct SMapIS *mt = (struct SMapIS *)st_enum(*m, i);
-			mt->v = ss_dup(ms->v);
+			SMStrSet(&mt->v, SMStrGet(&ms->v));
 		}
 		break;
 	case SM0_S: case SM0_SI: case SM0_SP:
 		for (i = 0; i < ss; i++) {
 			const struct SMapS *ms = (const struct SMapS *)st_enum_r(src, i);
 			struct SMapS *mt = (struct SMapS *)st_enum(*m, i);
-			mt->k = ss_dup(ms->k);
+			SMStrSet(&mt->k, SMStrGet(&ms->k));
 		}
 		break;
 	case SM0_SS:
 		for (i = 0; i < ss; i++) {
 			const struct SMapSS *ms = (const struct SMapSS *)st_enum_r(src, i);
 			struct SMapSS *mt = (struct SMapSS *)st_enum(*m, i);
-			mt->x.k = ss_dup(ms->x.k);
-			mt->v = ss_dup(ms->v);
+			SMStrSet(&mt->x.k, SMStrGet(&ms->x.k));
+			SMStrSet(&mt->v, SMStrGet(&ms->v));
 		}
 		break;
 	case SM0_II32: case SM0_UU32: case SM0_II: case SM0_IP:
@@ -426,7 +432,7 @@ const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 	n.x.k = k;
 	const struct SMapIS *nr =
 			(const struct SMapIS *)st_locate(m, (const stn_t *)&n);
-	return nr ? nr->v : 0; /* BEHAVIOR */
+	return nr ? SMStrGet(&nr->v) : 0; /* BEHAVIOR */
 }
 
 const void *sm_at_ip(const sm_t *m, const int64_t k)
@@ -443,7 +449,7 @@ int64_t sm_at_si(const sm_t *m, const ss_t *k)
 {
 	RETURN_IF(!m || m->d.sub_type != SM_SI, 0);
 	struct SMapSI n;
-	n.x.k = (ss_t *)k;	/* not going to be overwritten */
+	SMStrSetRef(&n.x.k, k);
 	const struct SMapSI *nr =
 			(const struct SMapSI *)st_locate(m, &n.x.n);
 	return nr ? nr->v : 0; /* BEHAVIOR */
@@ -453,17 +459,17 @@ const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 {
 	RETURN_IF(!m || m->d.sub_type != SM_SS, ss_void);
 	struct SMapSS n;
-	n.x.k = (ss_t *)k;	/* not going to be overwritten */
+	SMStrSetRef(&n.x.k, k);
 	const struct SMapSS *nr =
 			(const struct SMapSS *)st_locate(m, &n.x.n);
-	return nr ? nr->v : ss_void;
+	return nr ? SMStrGet(&nr->v) : ss_void;
 }
 
 const void *sm_at_sp(const sm_t *m, const ss_t *k)
 {
 	RETURN_IF(!m || m->d.sub_type != SM_SP, NULL);
 	struct SMapSP n;
-	n.x.k = (ss_t *)k;	/* not going to be overwritten */
+	SMStrSetRef(&n.x.k, k);
 	const struct SMapSP *nr =
 			(const struct SMapSP *)st_locate(m, &n.x.n);
 	return nr ? nr->v : NULL;
@@ -492,8 +498,8 @@ sbool_t sm_count_i(const sm_t *m, const int64_t k)
 sbool_t sm_count_s(const sm_t *m, const ss_t *k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
-	struct SMapSX n;
-	n.k = k;
+	struct SMapS n;
+	SMStrSetRef(&n.k, k);
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
 }
 
@@ -567,10 +573,10 @@ sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v)
 	struct SMapIS n;
 	n.x.k = k;
 #if 1 /* workaround */
-	n.v = ss_dup(v);
+	SMStrSet(&n.v, v);
 	sbool_t ins_ok = st_insert((st_t **)m, (const stn_t *)&n);
 	if (!ins_ok)
-		ss_free(&n.v);
+		SMStrFree(&n.v);
 	return ins_ok;
 #else
 	/* TODO: rw_add_SM_IS */
@@ -593,7 +599,7 @@ S_INLINE sbool_t sm_insert_si_aux(sm_t **m, const ss_t *k,
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSI n;
-	n.x.k = (ss_t *)k;
+	SMStrSetRef(&n.x.k, k);
 	n.v = v;
 	sbool_t r = st_insert_rw((st_t **)m, (const stn_t *)&n, rw_f);
 	return r;
@@ -613,8 +619,8 @@ sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSS n;
-	n.x.k = (ss_t *)k;
-	n.v = (ss_t *)v;
+	SMStrSetRef(&n.x.k, k);
+	SMStrSetRef(&n.v, v);
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_add_SM_SS);
 }
 
@@ -622,7 +628,7 @@ sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
 	struct SMapSP n;
-	n.x.k = (ss_t *)k;
+	SMStrSetRef(&n.x.k, k);
 	n.v = v;
 	return st_insert_rw((st_t **)m, (const stn_t *)&n, rw_add_SM_SP);
 }
@@ -666,7 +672,7 @@ sbool_t sm_delete_s(sm_t *m, const ss_t *k)
 {
 	stn_callback_t callback = NULL;
 	struct SMapS sx;
-	sx.k = (ss_t *)k;	/* not going to be overwritten */
+	SMStrSetRef(&sx.k, k);
 	switch (m->d.sub_type) {
 		case SM0_SS:
 			callback = aux_ss_delete;

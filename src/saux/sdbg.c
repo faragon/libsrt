@@ -116,12 +116,12 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		break;
 	case SM_SI:
 		sprintf(k, "%s",
-			ss_to_c(((const struct SMapSI *)cn)->x.k));
+			ss_to_c(SMStrGet(&((const struct SMapSI *)cn)->x.k)));
 		break;
 	case SM_SS:
 	case SM_SP:
 		sprintf(k, "%s",
-			ss_to_c(((const struct SMapS *)cn)->k));
+			ss_to_c(SMStrGet(&((const struct SMapS *)cn)->k)));
 		break;
 	}
 	switch (tp->t->d.sub_type) {
@@ -133,7 +133,7 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		break;
 	case SM_IS:
 		sprintf(k, "%s",
-			ss_to_c(((const struct SMapIS *)cn)->v));
+			ss_to_c(SMStrGet(&((const struct SMapIS *)cn)->v)));
 		break;
 	case SM_IP:
 		sprintf(k, "%p",
@@ -141,7 +141,7 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		break;
 	case SM_SS:
 		sprintf(k, "%s",
-			ss_to_c(((const struct SMapSS *)cn)->v));
+			ss_to_c(SMStrGet(&((const struct SMapSS *)cn)->v)));
 		break;
 	case SM_SP:
 		sprintf(k, "%p",

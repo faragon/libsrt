@@ -72,18 +72,35 @@ enum eSM_Type
 	SM_SP	= SM0_SP
 };
 
+#ifndef S_DISABLE_SM_STRING_OPTIMIZATION
+#define S_ENABLE_SM_STRING_OPTIMIZATION
+#endif
+
+#ifdef S_ENABLE_SM_STRING_OPTIMIZATION
+#define SMStrRaw	24
+#define SMStrAllocSize	(SMStrRaw - 1)
+#define SMStrMaxSize	(SMStrAllocSize - 5)
+#define SMStr_Null	0
+#define SMStr_Direct	1
+#define SMStr_Indirect	2
+struct SMStrD { uint8_t t; uint8_t s_raw[SMStrAllocSize]; };
+struct SMStrI { uint8_t t; ss_t *s; };
+union SMStr { uint8_t t; struct SMStrD d; struct SMStrI i; };
+#else
+union SMStr { ss_t *s; };
+#endif
+
 struct SMapI { stn_t n; int64_t k; };
-struct SMapS { stn_t n; ss_t *k; };
+struct SMapS { stn_t n; union SMStr k; };
 struct SMapi { stn_t n; int32_t k; };
 struct SMapu { stn_t n; uint32_t k; };
-struct SMapSX { stn_t n; const ss_t *k; };
 struct SMapii { struct SMapi x; int32_t v; };
 struct SMapuu { struct SMapu x; uint32_t v; };
 struct SMapII { struct SMapI x; int64_t v; };
-struct SMapIS { struct SMapI x; ss_t *v; };
+struct SMapIS { struct SMapI x; union SMStr v; };
 struct SMapIP { struct SMapI x; const void *v; };
 struct SMapSI { struct SMapS x; int64_t v; };
-struct SMapSS { struct SMapS x; ss_t *v; };
+struct SMapSS { struct SMapS x; union SMStr v; };
 struct SMapSP { struct SMapS x; const void *v; };
 
 typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
@@ -316,6 +333,92 @@ size_t sm_itr_sp(const sm_t *m, const ss_t *key_min, const ss_t *key_max, sm_it_
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv);
 
 /*
+ * Auxiliary inlined functions
+ */
+
+#ifdef S_ENABLE_SM_STRING_OPTIMIZATION
+
+S_INLINE const ss_t *SMStrGet(const union SMStr *s)
+{
+	return !s || s->t == SMStr_Null ? ss_void :
+	       s->t == SMStr_Direct ? (const ss_t *)s->d.s_raw : s->i.s;
+}
+
+S_INLINE void SMStrUpdate(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr) {
+		if (sstr->t == SMStr_Indirect)
+			ss_cpy(&sstr->i.s, s);
+		else {
+			const size_t ss = ss_size(s);
+			if (ss <= SMStrMaxSize) {
+				ss_t *s_out = (ss_t *)sstr->d.s_raw;
+				ss_alloc_into_ext_buf(s_out, SMStrMaxSize);
+				sstr->t = SMStr_Direct;
+				ss_cpy(&s_out, s);
+			} else {
+				sstr->t = SMStr_Indirect;
+				sstr->i.s = ss_dup(s);
+			}
+		}
+	}
+}
+
+S_INLINE void SMStrSet(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr) {
+		sstr->t = SMStr_Null;
+		SMStrUpdate(sstr, s);
+	}
+}
+
+S_INLINE void SMStrSetRef(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr) {
+		sstr->t = SMStr_Indirect;
+		sstr->i.s = (ss_t *)s; /* CONSTNESS */
+	}
+}
+
+S_INLINE void SMStrFree(union SMStr *sstr) {
+	if (sstr && sstr->t == SMStr_Indirect)
+		ss_free(&sstr->i.s);
+}
+
+#else
+
+S_INLINE const ss_t *SMStrGet(const union SMStr *s)
+{
+	return s ? s->s : ss_void;
+}
+
+S_INLINE void SMStrUpdate(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr)
+		ss_cpy(&sstr->s, s);
+}
+
+S_INLINE void SMStrSet(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr)
+		sstr->s = ss_dup(s);
+}
+
+S_INLINE void SMStrSetRef(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr)
+		sstr->s = (ss_t *)s; /* CONSTNESS */
+}
+
+S_INLINE void SMStrFree(union SMStr *sstr)
+{
+	if (sstr)
+		ss_free(&sstr->s);
+}
+
+#endif /* #ifdef S_ENABLE_SM_STRING_OPTIMIZATION */
+
+/*
  * Unordered enumeration is inlined in order to get almost as fast
  * as array access after compiler optimization.
  */
@@ -370,7 +473,7 @@ S_INLINE int64_t sm_it_ii_v(const sm_t *m, const stndx_t i)
 /* #API: |Enumerate integer-string map values|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const ss_t *sm_it_is_v(const sm_t *m, const stndx_t i)
 {
-	S_SM_ENUM_AUX_V(SM_IS, struct SMapIS, m, i, n->v, ss_void);
+	S_SM_ENUM_AUX_V(SM_IS, struct SMapIS, m, i, SMStrGet(&n->v), ss_void);
 }
 
 /* #API: |Enumerate integer-pointer map values|map; element, 0 to n - 1|pointer|O(1)|1;2| */
@@ -382,7 +485,7 @@ S_INLINE const void *sm_it_ip_v(const sm_t *m, const stndx_t i)
 /* #API: |Enumerate string-* map keys|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const ss_t *sm_it_s_k(const sm_t *m, const stndx_t i)
 {
-	S_SM_ENUM_AUX_K(struct SMapS, m, i, n->k, ss_void);
+	S_SM_ENUM_AUX_K(struct SMapS, m, i, SMStrGet(&n->k), ss_void);
 }
 
 /* #API: |Enumerate string-integer map values|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
@@ -394,7 +497,7 @@ S_INLINE int64_t sm_it_si_v(const sm_t *m, const stndx_t i)
 /* #API: |Enumerate string-string map values|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const ss_t *sm_it_ss_v(const sm_t *m, const stndx_t i)
 {
-	S_SM_ENUM_AUX_V(SM_SS, struct SMapSS, m, i, n->v, ss_void);
+	S_SM_ENUM_AUX_V(SM_SS, struct SMapSS, m, i, SMStrGet(&n->v), ss_void);
 }
 
 /* #API: |Enumerate string-pointer map|map; element, 0 to n - 1|pointer|O(1)|1;2| */
@@ -510,7 +613,7 @@ S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
 
 S_INLINE int cmp_ns_s(const struct SMapS *a, const ss_t *b)
 {
-	return ss_cmp(a->k, b);
+	return ss_cmp(SMStrGet(&a->k), b);
 }
 
 #ifdef __cplusplus

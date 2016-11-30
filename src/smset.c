@@ -32,5 +32,5 @@ SM_ENUM_INORDER_XX(sms_itr_i, sms_it_i_t, SM0_I, int64_t,
 SM_ENUM_INORDER_XX(sms_itr_s, sms_it_s_t, SM0_S, const ss_t *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(((const struct SMapS *)cn)->k, context))
+		   f(SMStrGet(&((const struct SMapS *)cn)->k), context))
 
