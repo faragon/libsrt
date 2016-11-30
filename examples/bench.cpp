@@ -33,7 +33,8 @@
 	       (unsigned)(BENCH_TIME_MS % 1000))
 #else
 #define BENCH_INIT
-#define BENCH_FN(test_fn, count, nread, delete_all)
+#define BENCH_FN(test_fn, count, nread, delete_all)	\
+	test_fn(count, nread, delete_all)
 #define BENCH_TIME_US 0
 #endif
 #define BENCH_TIME_MS (BENCH_TIME_US / 1000)
