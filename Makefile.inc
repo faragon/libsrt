@@ -202,6 +202,11 @@ ifeq ($(UNAME_M), armv7l)
 	COMMON_FLAGS += -march=armv7-a
 endif
 
+# ARM v8
+ifeq ($(UNAME_M), armv8l)
+	COMMON_FLAGS += -march=armv8-a
+endif
+
 ifeq ($(HAS_PNG), 1)
 	COMMON_FLAGS += -DHAS_PNG
 	LDLIBS += -lz -lpng
