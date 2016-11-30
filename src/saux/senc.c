@@ -11,7 +11,9 @@
 #include "sbitio.h"
 #include <stdlib.h>
 
+#ifndef SLZW_ENABLE_RLE
 #define SLZW_ENABLE_RLE		1
+#endif
 #define SLZW_USE_STOP_CODE	0
 #define SLZW_DEBUG		0
 

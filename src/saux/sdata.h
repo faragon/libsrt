@@ -25,7 +25,9 @@ extern "C" {
  * Define SD_ENABLE_HEURISTIC_GROWTH for enabling pre-allocation heuristics.
  */
 
+#ifndef SD_DISABLE_HEURISTIC_GROWTH
 #define SD_ENABLE_HEURISTIC_GROWTH
+#endif
 
 /*
  * Macros
