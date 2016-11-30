@@ -33,9 +33,16 @@ extern "C" {
 	#define S_NOT_UTF8_SPRINTF
 #endif
 
-#if !defined(BSD4_3) && !defined(BSD4_4) && !defined(__FreeBSD__) && !defined(_MSC_VER)
+#if !defined(BSD4_3) && !defined(BSD4_4) && !defined(__FreeBSD__) && \
+    !defined(_MSC_VER) && !defined(__MINGW32__)
 	#include <alloca.h>
 #endif
+
+#ifdef __MINGW32__
+	#include <malloc.h>
+	#define snprintf(str, size, ...) sprintf(str, __VA_ARGS__)
+#endif
+
 #include <stddef.h>
 #include <stdarg.h>
 #include <string.h>

@@ -53,12 +53,6 @@ ifndef HAS_LL1
 	HAS_LL1 = 0
 endif
 
-CFLAGS =
-CXXFLAGS =
-LDFLAGS =
-LDLIBS = -lrt
-COMMON_FLAGS = -pipe
-
 # Configure compiler context
 
 ifndef UNAME
@@ -77,9 +71,19 @@ ifndef OCTEON
 	endif
 endif
 
+CFLAGS =
+CXXFLAGS =
+LDLIBS =
+LDFLAGS =
+COMMON_FLAGS = -pipe
 CPP_MODE = 0
 GNUC = 0
 CLANG = 0
+
+ifeq (,$(findstring mingw,$(CC)))
+	# Add librt for all but for mingw case
+	LDLIBS = -lrt
+endif
 
 ifeq ($(CC), gcc)
 	GNUC = 1
