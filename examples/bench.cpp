@@ -10,6 +10,7 @@
 #include "../src/libsrt.h"
 #include <map>
 #include <set>
+#include <vector>
 #include <string>
 #if __cplusplus >= 201103L
 #include <unordered_map>
@@ -381,6 +382,74 @@ void cxxtest_set_s64(size_t count, size_t read_ntimes, bool delete_all)
 		}
 }
 
+void ctest_vector_i(enum eSV_Type t, size_t count, size_t read_ntimes, bool delete_all)
+{
+	sv_t *v = sv_alloc_t(t, 0);
+	for (size_t i = 0; i < count; i++)
+		sv_push_i(&v, (int32_t)i);
+	for (size_t j = 0; j < read_ntimes; j++)
+		for (size_t i = 0; i < count; i++)
+			(void)sv_at_i(v, i);
+	if (delete_all)
+		for (size_t i = 0; i < count; i++)
+			(void)sv_pop_i(v);
+	sv_free(&v);
+}
+
+void ctest_vector_i8(size_t count, size_t read_ntimes, bool delete_all)
+{
+	ctest_vector_i(SV_I32, count, read_ntimes, delete_all);
+}
+
+void ctest_vector_i16(size_t count, size_t read_ntimes, bool delete_all)
+{
+	ctest_vector_i(SV_I16, count, read_ntimes, delete_all);
+}
+
+void ctest_vector_i32(size_t count, size_t read_ntimes, bool delete_all)
+{
+	ctest_vector_i(SV_I32, count, read_ntimes, delete_all);
+}
+
+void ctest_vector_i64(size_t count, size_t read_ntimes, bool delete_all)
+{
+	ctest_vector_i(SV_I64, count, read_ntimes, delete_all);
+}
+
+template <typename T>
+void cxxtest_vector(size_t count, size_t read_ntimes, bool delete_all)
+{
+	std::vector <T> v;
+	for (size_t i = 0; i < count; i++)
+		v.push_back((T)i);
+	for (size_t j = 0; j < read_ntimes; j++)
+		for (size_t i = 0; i < count; i++)
+			(void)v.at(i);
+	if (delete_all)
+		for (size_t i = 0; i < count; i++)
+			(void)v.pop_back();
+}
+
+void cxxtest_vector_i8(size_t count, size_t read_ntimes, bool delete_all)
+{
+	cxxtest_vector<int8_t>(count, read_ntimes, delete_all);
+}
+
+void cxxtest_vector_i16(size_t count, size_t read_ntimes, bool delete_all)
+{
+	cxxtest_vector<int16_t>(count, read_ntimes, delete_all);
+}
+
+void cxxtest_vector_i32(size_t count, size_t read_ntimes, bool delete_all)
+{
+	cxxtest_vector<int32_t>(count, read_ntimes, delete_all);
+}
+
+void cxxtest_vector_i64(size_t count, size_t read_ntimes, bool delete_all)
+{
+	cxxtest_vector<int64_t>(count, read_ntimes, delete_all);
+}
+
 int main(int argc, char *argv[])
 {
 	BENCH_INIT;
@@ -426,6 +495,14 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxxtest_set_s16, count[i], nread[i], delete_all[i]);
 		BENCH_FN(ctest_set_s64, count[i], nread[i], delete_all[i]);
 		BENCH_FN(cxxtest_set_s64, count[i], nread[i], delete_all[i]);
+		BENCH_FN(ctest_vector_i8, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxxtest_vector_i8, count[i], nread[i], delete_all[i]);
+		BENCH_FN(ctest_vector_i16, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxxtest_vector_i16, count[i], nread[i], delete_all[i]);
+		BENCH_FN(ctest_vector_i32, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxxtest_vector_i32, count[i], nread[i], delete_all[i]);
+		BENCH_FN(ctest_vector_i64, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxxtest_vector_i64, count[i], nread[i], delete_all[i]);
 	}
 	return 0;
 }
