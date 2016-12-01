@@ -344,24 +344,12 @@ S_INLINE const ss_t *SMStrGet(const union SMStr *s)
 	       s->t == SMStr_Direct ? (const ss_t *)s->d.s_raw : s->i.s;
 }
 
+void SMStrUpdate_unsafe(union SMStr *sstr, const ss_t *s);
+
 S_INLINE void SMStrUpdate(union SMStr *sstr, const ss_t *s)
 {
-	if (sstr) {
-		if (sstr->t == SMStr_Indirect)
-			ss_cpy(&sstr->i.s, s);
-		else {
-			const size_t ss = ss_size(s);
-			if (ss <= SMStrMaxSize) {
-				ss_t *s_out = (ss_t *)sstr->d.s_raw;
-				ss_alloc_into_ext_buf(s_out, SMStrMaxSize);
-				sstr->t = SMStr_Direct;
-				ss_cpy(&s_out, s);
-			} else {
-				sstr->t = SMStr_Indirect;
-				sstr->i.s = ss_dup(s);
-			}
-		}
-	}
+	if (sstr)
+		SMStrUpdate_unsafe(sstr, s);
 }
 
 S_INLINE void SMStrSet(union SMStr *sstr, const ss_t *s)

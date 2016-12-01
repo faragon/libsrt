@@ -742,3 +742,25 @@ ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 	return r;
 }
 
+#ifdef S_ENABLE_SM_STRING_OPTIMIZATION
+
+void SMStrUpdate_unsafe(union SMStr *sstr, const ss_t *s)
+{
+	if (sstr->t == SMStr_Indirect)
+		ss_cpy(&sstr->i.s, s);
+	else {
+		const size_t ss = ss_size(s);
+		if (ss <= SMStrMaxSize) {
+			ss_t *s_out = (ss_t *)sstr->d.s_raw;
+			ss_alloc_into_ext_buf(s_out, SMStrMaxSize);
+			sstr->t = SMStr_Direct;
+			ss_cpy(&s_out, s);
+		} else {
+			sstr->t = SMStr_Indirect;
+			sstr->i.s = ss_dup(s);
+		}
+	}
+}
+
+#endif
+
