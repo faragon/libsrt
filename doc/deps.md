@@ -19,14 +19,15 @@ When using the C library
 * memset
 * qsort
 * realloc
-* remove (stest)
+* remove (stest.c)
 * snprintf
 * sprintf
+* __stack_chk_fail
 * stdout
+* strcpy (sdbg.c)
 * strlen
 * strstr
 * towlower
 * vsnprintf
 * wcslen
-
 
