@@ -338,7 +338,7 @@ S_INLINE sbool_t sdx_dyn_st(const sd_t *d)
 {
 	RETURN_IF(!d, S_FALSE);
 	return d->f.st_mode == SData_DynFull || d->f.st_mode == SData_DynSmall ?
-	S_TRUE : S_FALSE;
+	       S_TRUE : S_FALSE;
 }
 
 S_INLINE void sdx_set_max_size(sd_t *d, const size_t max_size)
