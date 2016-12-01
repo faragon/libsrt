@@ -237,3 +237,8 @@ ifdef ADD_CXXFLAGS
 	CXXFLAGS += $(ADD_CXXFLAGS)
 endif
 
+ifdef ADD_FLAGS
+	CFLAGS += $(ADD_FLAGS)
+	CXXFLAGS += $(ADD_FLAGS)
+endif
+

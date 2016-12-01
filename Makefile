@@ -41,7 +41,11 @@ HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a
 TEST	= stest
-EXAMPLES = counter enc table imgc bench
+EXAMPLES = counter enc table imgc
+ifeq (,$(findstring tcc,$(CC)))
+	# Add CPP targets only if not using TCC
+	EXAMPLES += bench
+endif
 EXES	= $(TEST) $(EXAMPLES)
 
 # Rules for building: library, test, examples
