@@ -67,7 +67,8 @@ extern "C" {
  */
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L || \
-    __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800
+    __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800 || \
+    (defined(__APPLE_CC__) && __APPLE_CC__ >= 5658)
 	#define S_C99_SUPPORT
 #endif
 
@@ -82,6 +83,8 @@ extern "C" {
 	#else
 		#define S_INLINE inline static
 	#endif
+	#define __STDC_FORMAT_MACROS /* req for clang 3.4 */
+	#include <inttypes.h>
 #elif defined(S_MODERN_COMPILER)
 	#define S_INLINE __inline__ static
 #else
@@ -156,11 +159,13 @@ extern "C" {
 		#define FMTSZ_T unsigned int
 	#endif
 #else
-	#define FMT_ZI "%zi"
-	#define FMT_ZU "%zu"
-	#if S_BPWORD >= 8
-		#define FMT_I FMT_ZI
+	#ifdef S_C99_SUPPORT
+		#define FMT_ZI "%zi"
+		#define FMT_ZU "%zu"
+		#define FMT_I "%" PRId64
 	#else
+		#define FMT_ZI "%lli"
+		#define FMT_ZU "%llu"
 		#define FMT_I "%lli"
 	#endif
 	#define FMTSZ_T ssize_t

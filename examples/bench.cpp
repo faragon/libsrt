@@ -18,7 +18,8 @@
 #include <unordered_map>
 #endif
 
-#if defined(__linux__) || defined(__unix__) || defined(_POSIX_VERSION)
+#if (defined(__linux__) || defined(__unix__) || defined(_POSIX_VERSION)) && \
+    !defined(__APPLE_CC__)
 #include <time.h>
 #include <stdio.h>
 #define BENCH_INIT		\

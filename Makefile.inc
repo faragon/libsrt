@@ -81,8 +81,10 @@ GNUC = 0
 CLANG = 0
 
 ifeq (,$(findstring mingw,$(CC)))
-	# Add librt for all but for mingw case
-	LDLIBS = -lrt
+	ifeq (,$(findstring Darwin,$(UNAME)))
+		# Add librt for all but for mingw and Darwin cases
+		LDLIBS = -lrt
+	endif
 endif
 
 ifeq ($(CC), gcc)
