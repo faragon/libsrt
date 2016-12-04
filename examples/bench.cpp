@@ -10,6 +10,7 @@
 #include "../src/libsrt.h"
 #include "utf8_examples.h"
 #include <algorithm>
+#include <bitset>
 #include <map>
 #include <set>
 #include <string>
@@ -45,6 +46,7 @@
 #define BENCH_TIME_MS (BENCH_TIME_US / 1000)
 #define BENCH_TIME_US_I ((unsigned)(BENCH_TIME_US / 1000000))
 #define BENCH_TIME_US_D ((unsigned)(BENCH_TIME_US % 1000000))
+#define S_TEST_ELEMS 1000000
 
 bool libsrt_map_ii32(size_t count, size_t read_ntimes, bool delete_all)
 {
@@ -932,11 +934,140 @@ bool cxx_string_loweruppercase_utf8(size_t count, size_t read_ntimes,
 					 read_ntimes, delete_all);
 }
 
+const char *cat_test[7] = {
+	"In a village of La Mancha, the name of which I have no desire to call "
+	"to mind, there lived not long since one of those gentlemen that keep a"
+	" lance in the lance-rack, an old buckler, a lean hack, and a greyhound"
+	" for coursing. ",
+	"An olla of rather more beef than mutton, a salad on most nights, scrap"
+	"s on Saturdays, lentils on Fridays, and a pigeon or so extra on Sunday"
+	"s, made away with three-quarters of his income. ",
+	"The rest of it went in a doublet of fine cloth and velvet breeches and"
+	" shoes to match for holidays, while on week-days he made a brave figur"
+	"e in his best homespun.i ",
+	"He had in his house a housekeeper past forty, a niece under twenty, an"
+	"d a lad for the field and market-place, who used to saddle the hack as"
+	" well as handle the bill-hook. ",
+	"The age of this gentleman of ours was bordering on fifty; he was of a "
+	"hardy habit, spare, gaunt-featured, a very early riser and a great spo"
+	"rtsman. ",
+	"They will have it his surname was Quixada or Quesada (for here there i"
+	"s some difference of opinion among the authors who write on the subjec"
+	"t), although from reasonable conjectures it seems plain that he was ca"
+	"lled Quexana. ",
+	"This, however, is of but little importance to our tale; it will be eno"
+	"ugh not to stray a hair's breadth from the truth in the telling of it."
+	};
+const size_t cat_test_ops = sizeof(cat_test) / sizeof(cat_test[0]);
+
+bool libsrt_string_cat(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || read_ntimes, false);
+	ss_t *s[cat_test_ops], *out = NULL;
+	for (size_t i = 0; i < cat_test_ops; i++)
+		s[i] = ss_dup_c(cat_test[i]);
+	for (size_t i = 0; i < count; i++)
+		ss_cat(&out, s[0], s[1], s[2], s[3], s[4], s[5], s[6]);
+	for (size_t i = 0; i < cat_test_ops; i++)
+		ss_free(&s[i]);
+	ss_free(&out);
+	return true;
+}
+
+bool c_string_cat(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || read_ntimes, false);
+	char out[32 * 1024]; /* yes, not safe, just for the benchmark */
+	for (size_t i = 0; i < count; i++) {
+		out[0] = 0;
+		for (size_t k = 0; k < cat_test_ops; k++)
+			strcat(out, cat_test[k]);
+	}
+	return true;
+}
+
+bool cxx_string_cat(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || read_ntimes, false);
+        std::string s[cat_test_ops], out;
+	for (size_t i = 0; i < cat_test_ops; i++)
+		s[i] = cat_test[i];
+	for (size_t i = 0; i < count; i++)
+		out = s[0] + s[1] + s[2] + s[3] + s[4] + s[5] + s[6];
+	return true;
+}
+
+#if 0 /* it is too low (2 orders of magnitude slower tan plain std::string) */
+bool cxx_stringstream_cat(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || read_ntimes, false);
+        std::string s[cat_test_ops], out;
+	std::stringstream ss;
+	for (size_t i = 0; i < cat_test_ops; i++)
+		s[i] = cat_test[i];
+	for (size_t i = 0; i < count; i++) {
+		ss << s[0] << s[1] << s[2] << s[3] << s[4] << s[5] << s[6];
+		out = ss.str();
+	}
+	return true;
+}
+#endif
+
+bool libsrt_bitset(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all, false);
+	sb_t *b = sb_alloc(count);
+	for (size_t i = 0; i < count; i++)
+		sb_set(&b, i);
+	for (size_t j = 0; j < read_ntimes; j++)
+		for (size_t i = 0; i < count; i++)
+			sb_test(b, i) || putchar(0);
+	sb_free(&b);
+	return true;
+}
+
+bool cxx_bitset(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all, false);
+	std::bitset <S_TEST_ELEMS/*count*/> b; // Compile-time size required
+	std::map <int32_t, int32_t> m;
+	for (size_t i = 0; i < count; i++)
+		b[i] = 1;
+	for (size_t j = 0; j < read_ntimes; j++)
+		for (size_t i = 0; i < count; i++)
+			b[i] || putchar(0);
+	return true;
+}
+
+bool libsrt_bitset_popcount100(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || !read_ntimes, false);
+	sb_t *b = sb_alloc(count);
+	for (size_t i = 0; i < count; i++)
+		sb_set(&b, i);
+	for (size_t j = 0; j < read_ntimes * 100; j++)
+		sb_popcount(b) || putchar(0);
+	sb_free(&b);
+	return true;
+}
+
+bool cxx_bitset_popcount100(size_t count, size_t read_ntimes, bool delete_all)
+{
+	RETURN_IF(delete_all || !read_ntimes, false);
+	std::bitset <S_TEST_ELEMS/*count*/> b; // Compile-time size required
+	std::map <int32_t, int32_t> m;
+	for (size_t i = 0; i < count; i++)
+		b[i] = 1;
+	for (size_t j = 0; j < read_ntimes * 100; j++)
+		b.count() || putchar(0);
+	return true;
+}
+
 int main(int argc, char *argv[])
 {
 	BENCH_INIT;
 	const size_t ntests = 3,
-		     count[ntests] = { 1000000, 1000000, 1000000 },
+		     count[ntests] = { S_TEST_ELEMS, S_TEST_ELEMS, S_TEST_ELEMS },
 		     nread[ntests] = { 0, 10, 0 };
 	bool delete_all[ntests] = { false, false, true };
 	char label[ntests][512];
@@ -1025,6 +1156,13 @@ int main(int argc, char *argv[])
 		BENCH_FN(libsrt_string_loweruppercase_utf8, count[i], nread[i], delete_all[i]);
 		BENCH_FN(c_string_loweruppercase_utf8, count[i], nread[i], delete_all[i]);
 		BENCH_FN(cxx_string_loweruppercase_utf8, count[i], nread[i], delete_all[i]);
+		BENCH_FN(libsrt_bitset, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxx_bitset, count[i], nread[i], delete_all[i]);
+		BENCH_FN(libsrt_bitset_popcount100, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxx_bitset_popcount100, count[i], nread[i], delete_all[i]);
+		BENCH_FN(libsrt_string_cat, count[i], nread[i], delete_all[i]);
+		BENCH_FN(c_string_cat, count[i], nread[i], delete_all[i]);
+		BENCH_FN(cxx_string_cat, count[i], nread[i], delete_all[i]);
 	}
 	return 0;
 }
