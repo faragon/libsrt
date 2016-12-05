@@ -177,6 +177,7 @@ Test-covered platforms
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
+| x86, x86-64 (Core2Duo) | 32, 64 | little | yes | Darwin 11.4.2 | gcc, g++, clang, clang++ | none | manual |
 | ARMv5 (ARM926EJ-S) | 32 | little | no | Arch Linux | gcc, g++, clang, clang++ | none | manual |
 | ARMv5 (Feroceon) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++ | none | manual |
 | ARMv6 (ARM1176JZF-S) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
