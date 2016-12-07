@@ -23,6 +23,7 @@
     !defined(__APPLE_CC__)
 #include <time.h>
 #include <stdio.h>
+#include <unistd.h>
 #define BENCH_INIT		\
 	struct timespec ta, tb;	\
 	bool t_res = false
@@ -38,11 +39,15 @@
 		       #test_fn, count, 			\
 		       BENCH_TIME_US_I, BENCH_TIME_US_D);	\
 	fflush(stdout)
+#define HOLD_EXEC(tid)				\
+	if (TIdTest(tid, TId_SleepForever))	\
+		for (; true; sleep(1))
 #else
 #define BENCH_INIT
 #define BENCH_FN(test_fn, count, tid)	\
 	test_fn(count, tid)
 #define BENCH_TIME_US 0
+#define HOLD_EXEC(tid)
 #endif
 #define BENCH_TIME_MS (BENCH_TIME_US / 1000)
 #define BENCH_TIME_US_I ((unsigned)(BENCH_TIME_US / 1000000))
@@ -52,6 +57,7 @@
 #define TId_Base		(1<<0)
 #define TId_Read10Times		(1<<1)
 #define TId_DeleteOneByOne	(1<<2)
+#define TId_SleepForever	(1<<3)
 #define TId2Count(id) ((id & TId_Read10Times) != 0 ? 10 : 0)
 #define TIdTest(id, key) ((id & key) == key)
 
@@ -68,6 +74,7 @@ bool libsrt_map_ii32(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			sm_delete_i(m, (int32_t)i);
+	HOLD_EXEC(tid);
 	sm_free(&m);
 	return true;
 }
@@ -85,6 +92,7 @@ bool cxx_map_ii32(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int32_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -101,6 +109,7 @@ bool libsrt_map_ii64(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			sm_delete_i(m, (int64_t)i);
+	HOLD_EXEC(tid);
 	sm_free(&m);
 	return true;
 }
@@ -118,6 +127,7 @@ bool cxx_map_ii64(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int64_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -141,6 +151,7 @@ bool libsrt_map_s16(size_t count, int tid)
 			ss_printf(&btmp, 512, "%016i", (int)i);
 			sm_delete_s(m, btmp);
 		}
+	HOLD_EXEC(tid);
 	sm_free(&m);
 	return true;
 }
@@ -165,6 +176,7 @@ bool cxx_map_s16(size_t count, int tid)
 			sprintf(btmp, "%016i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -188,6 +200,7 @@ bool libsrt_map_s64(size_t count, int tid)
 			ss_printf(&btmp, 512, "%064i", (int)i);
 			sm_delete_s(m, btmp);
 		}
+	HOLD_EXEC(tid);
 	sm_free(&m);
 	return true;
 }
@@ -212,6 +225,7 @@ bool cxx_map_s64(size_t count, int tid)
 			sprintf(btmp, "%064i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -230,6 +244,7 @@ bool cxx_umap_ii32(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int32_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -246,6 +261,7 @@ bool cxx_umap_ii64(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int64_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -269,6 +285,7 @@ bool cxx_umap_s16(size_t count, int tid)
 			sprintf(btmp, "%016i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -292,6 +309,7 @@ bool cxx_umap_s64(size_t count, int tid)
 			sprintf(btmp, "%064i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -310,6 +328,7 @@ bool libsrt_set_i32(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			sms_delete_i(m, (int32_t)i);
+	HOLD_EXEC(tid);
 	sms_free(&m);
 	return true;
 }
@@ -327,6 +346,7 @@ bool cxx_set_i32(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int32_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -343,6 +363,7 @@ bool libsrt_set_i64(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			sms_delete_i(m, (int64_t)i);
+	HOLD_EXEC(tid);
 	sms_free(&m);
 	return true;
 }
@@ -360,6 +381,7 @@ bool cxx_set_i64(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			m.erase((int64_t)i);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -383,6 +405,7 @@ bool libsrt_set_s16(size_t count, int tid)
 			ss_printf(&btmp, 512, "%016i", (int)i);
 			sms_delete_s(m, btmp);
 		}
+	HOLD_EXEC(tid);
 	sms_free(&m);
 	return true;
 }
@@ -407,6 +430,7 @@ bool cxx_set_s16(size_t count, int tid)
 			sprintf(btmp, "%016i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -430,6 +454,7 @@ bool libsrt_set_s64(size_t count, int tid)
 			ss_printf(&btmp, 512, "%064i", (int)i);
 			sms_delete_s(m, btmp);
 		}
+	HOLD_EXEC(tid);
 	sms_free(&m);
 	return true;
 }
@@ -454,6 +479,7 @@ bool cxx_set_s64(size_t count, int tid)
 			sprintf(btmp, "%064i", (int)i);
 			m.erase(btmp);
 		}
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -470,6 +496,7 @@ bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)sv_pop_i(v);
+	HOLD_EXEC(tid);
 	sv_free(&v);
 	return true;
 }
@@ -508,6 +535,7 @@ bool cxx_vector(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)v.pop_back();
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -550,6 +578,7 @@ bool libsrt_vector_gen(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)sv_pop(v);
+	HOLD_EXEC(tid);
 	sv_free(&v);
 	return true;
 }
@@ -568,6 +597,7 @@ bool cxx_vector_gen(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)v.pop_back();
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -1024,6 +1054,7 @@ bool libsrt_bitset(size_t count, int tid)
 		for (size_t i = 0; i < count; i++)
 			sb_test(b, i) || putchar(0);
 	sb_free(&b);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -1037,6 +1068,7 @@ bool cxx_bitset(size_t count, int tid)
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
 			b[i] || putchar(0);
+	HOLD_EXEC(tid);
 	return true;
 }
 
@@ -1048,6 +1080,7 @@ bool libsrt_bitset_popcount100(size_t count, int tid)
 		sb_set(&b, i);
 	for (size_t j = 0; j < TId2Count(tid) * 100; j++)
 		sb_popcount(b) || putchar(0);
+	HOLD_EXEC(tid);
 	sb_free(&b);
 	return true;
 }
@@ -1061,6 +1094,7 @@ bool cxx_bitset_popcount100(size_t count, int tid)
 		b[i] = 1;
 	for (size_t j = 0; j < TId2Count(tid) * 100; j++)
 		b.count() || putchar(0);
+	HOLD_EXEC(tid);
 	return true;
 }
 
