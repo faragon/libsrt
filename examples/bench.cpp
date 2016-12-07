@@ -29,14 +29,15 @@
 #define BENCH_TIME_US				\
 	((tb.tv_sec - ta.tv_sec) * 1000000 +	\
 	 (tb.tv_nsec - ta.tv_nsec) / 1000)
-#define BENCH_FN(test_fn, count, tid	)		\
-	clock_gettime(CLOCK_REALTIME, &ta);		\
-	t_res = test_fn(count, tid);			\
-	clock_gettime(CLOCK_REALTIME, &tb);		\
-	if (t_res)					\
-		printf("| %s | %zu | %u.%06u |\n",	\
-		       #test_fn, count, 		\
-		       BENCH_TIME_US_I, BENCH_TIME_US_D)
+#define BENCH_FN(test_fn, count, tid	)			\
+	clock_gettime(CLOCK_REALTIME, &ta);			\
+	t_res = test_fn(count, tid);				\
+	clock_gettime(CLOCK_REALTIME, &tb);			\
+	if (t_res)						\
+		printf("| %s | %zu | - | %u.%06u |\n",		\
+		       #test_fn, count, 			\
+		       BENCH_TIME_US_I, BENCH_TIME_US_D);	\
+	fflush(stdout)
 #else
 #define BENCH_INIT
 #define BENCH_FN(test_fn, count, tid)	\
