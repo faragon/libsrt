@@ -1072,30 +1072,50 @@ bool cxx_bitset(size_t count, int tid)
 	return true;
 }
 
-bool libsrt_bitset_popcount100(size_t count, int tid)
+bool libsrt_bitset_popcountN(size_t pc_count, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	sb_t *b = sb_alloc(count);
 	for (size_t i = 0; i < count; i++)
 		sb_set(&b, i);
-	for (size_t j = 0; j < TId2Count(tid) * 100; j++)
+	for (size_t j = 0; j < pc_count; j++)
 		sb_popcount(b) || putchar(0);
 	HOLD_EXEC(tid);
 	sb_free(&b);
 	return true;
 }
 
-bool cxx_bitset_popcount100(size_t count, int tid)
+bool cxx_bitset_popcountN(size_t pc_count, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	std::bitset <S_TEST_ELEMS/*count*/> b; // Compile-time size required
 	std::map <int32_t, int32_t> m;
 	for (size_t i = 0; i < count; i++)
 		b[i] = 1;
-	for (size_t j = 0; j < TId2Count(tid) * 100; j++)
+	for (size_t j = 0; j < pc_count; j++)
 		b.count() || putchar(0);
 	HOLD_EXEC(tid);
 	return true;
+}
+
+bool libsrt_bitset_popcount100(size_t count, int tid)
+{
+	return libsrt_bitset_popcountN(100, count, tid);
+}
+
+bool cxx_bitset_popcount100(size_t count, int tid)
+{
+	return cxx_bitset_popcountN(100, count, tid);
+}
+
+bool libsrt_bitset_popcount10000(size_t count, int tid)
+{
+	return libsrt_bitset_popcountN(10000, count, tid);
+}
+
+bool cxx_bitset_popcount10000(size_t count, int tid)
+{
+	return cxx_bitset_popcountN(10000, count, tid);
 }
 
 int main(int argc, char *argv[])
@@ -1193,6 +1213,8 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_bitset, count[i], tid[i]);
 		BENCH_FN(libsrt_bitset_popcount100, count[i], tid[i]);
 		BENCH_FN(cxx_bitset_popcount100, count[i], tid[i]);
+		BENCH_FN(libsrt_bitset_popcount10000, count[i], tid[i]);
+		BENCH_FN(cxx_bitset_popcount10000, count[i], tid[i]);
 		BENCH_FN(libsrt_string_cat, count[i], tid[i]);
 		BENCH_FN(c_string_cat, count[i], tid[i]);
 		BENCH_FN(cxx_string_cat, count[i], tid[i]);
