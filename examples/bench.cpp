@@ -503,7 +503,7 @@ bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 
 bool libsrt_vector_i8(size_t count, int tid)
 {
-	return libsrt_vector_i(SV_I32, count, tid);
+	return libsrt_vector_i(SV_I8, count, tid);
 }
 
 bool libsrt_vector_i16(size_t count, int tid)
@@ -1113,7 +1113,7 @@ int main(int argc, char *argv[])
 	snprintf(label[2], 512, "Insert or process %zu elements, delete all "
 		 "elements one by one, cleanup", count[1]);
 	for (size_t i = 0; i < ntests; i++) {
-		printf("\n%s\n| Test | Insert count | Memory (MB) | Execution "
+		printf("\n%s\n| Test | Insert count | Memory (MiB) | Execution "
 		       "time (s) |\n|:---:|:---:|:---:|:---:|\n", label[i]);
 		BENCH_FN(libsrt_map_ii32, count[i], tid[i]);
 		BENCH_FN(cxx_map_ii32, count[i], tid[i]);
