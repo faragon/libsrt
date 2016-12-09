@@ -356,7 +356,7 @@ bool libsrt_set_i64(size_t count, int tid)
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
 	sms_t *m = sms_alloc(SMS_I, 0);
 	for (size_t i = 0; i < count; i++)
-		sms_insert_i32(&m, (int64_t)i);
+		sms_insert_i(&m, (int64_t)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
 			(void)sms_count_i(m, (int64_t)i);
