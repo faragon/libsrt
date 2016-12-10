@@ -4,19 +4,23 @@
 Short-term
 ---
 
-* Security: check size\_t overflow on every function (e.g. off + size -> overflow)
+* Safety
+ * Check data type on vector and map/set operations
+* Security
+ * check size\_t overflow on every function (e.g. off + size -> overflow)
 * Debug
- * Add sm_t prettyprinting
+ * Add sm\_t, sms\_t, etc. prettyprinting
 * Tests
- * sm_t: sm_itr_i32, sm_itr_u32, sm_itr_i, sm_itr_s
- * all tests using both stack and heap space
- * add grow from NULL tests
- * add tests for every operation related to Unicode caching.
- * add tests covering expansion between small/medium/full strings
- * check case Unicode size (add tests: e.g. erasing with overflow, etc.)
- * aliasing: stack, lower/middle/upper case checks, etc.
- * add checks for all corner cases (!)
- * reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
+ * All tests using both stack and heap space
+ * Add grow from NULL tests for all cases
+ * Add tests for every operation related to Unicode caching.
+ * Add tests covering expansion between small/medium/full strings
+ * Check case Unicode size (add tests: e.g. erasing with overflow, etc.)
+ * Aliasing: stack, lower/middle/upper case checks, etc.
+ * Add checks for all corner cases (!)
+ * Reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
+* Other
+ * Quote strings (e.g. like in sds)
 
 Long-term
 ---
@@ -25,21 +29,14 @@ Long-term
  * allocd: new allocators supporting dynamic memory mapping. I.e. instead of having a fixed-size memory mapped area, allow to map dynamically (for that 'realloc' callbacks should be added).
 * Vector enhancements
  * st\_shl and st\_shr (shifting elements on a vector, without real data shift)
-* Map enhancements
- * Apply function to map: for all, for range, etc.
 * Tree enhancements
  * Make last-inserted nodes cache, in order to speed-up delete.
- * Compare, subtract, add.
 * String enhancements
  * Store string search hash at string end (mark it with flag)
  * Search multiple targets on string keeping with O(m * n) worst search time (not O(n^2), but cheap one-pass)
  * Cache Rabin-Karpin hashes for amortized cost when repeating search with same target ("needle").
  * Add SSE 4.2 SIMD intrinsics for increasing from 1GB/s up to the saturation of the memory bus (e.g. 10GB/s per core at 3GHz) \-not 100% sure if that much will be possible, but I have some ideas\-
- * Quote strings (e.g. like in sds)
- * String analysis (naive Bayes, weight/entropy)
  * Unicode: to_title, fold_case and normalize. http://www.boost.org/doc/libs/1_51_0/libs/locale/doc/html/conversions.html http://en.wikipedia.org/wiki/Capitalization http://ftp.unicode.org/Public/UNIDATA/CaseFolding.txt
-* Other
- * Bindings for other languages
 * C++ wrapper
  * Benefits: stack allocation, lower memory usage.
 
