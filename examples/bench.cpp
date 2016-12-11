@@ -659,7 +659,7 @@ bool cxx_string_search(const char *haystack, const char *needle,
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	std::string h = haystack, n = needle;
 	for (size_t i = 0; i < count; i++)
-		h.find(needle);
+		h.find(n);
 	return true;
 }
 
