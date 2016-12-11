@@ -663,68 +663,52 @@ bool cxx_string_search(const char *haystack, const char *needle,
 	return true;
 }
 
-bool libsrt_string_search_easymatch_long_1a(size_t count,
-					    int tid)
+bool libsrt_string_search_easymatch_long_1a(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_easymatch1_long,
-				    needle_easymatch1a, count,
-				    tid);
+				    needle_easymatch1a, count, tid);
 }
 
-bool libsrt_string_search_easymatch_long_1b(size_t count,
-					    int tid)
+bool libsrt_string_search_easymatch_long_1b(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_easymatch1_long,
-				    needle_easymatch1b, count,
-				    tid);
+				    needle_easymatch1b, count, tid);
 }
 
-bool libsrt_string_search_easymatch_long_2a(size_t count,
-					    int tid)
+bool libsrt_string_search_easymatch_long_2a(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_easymatch2_long,
-				    needle_easymatch2a, count,
-				    tid);
+				    needle_easymatch2a, count, tid);
 }
 
-bool libsrt_string_search_easymatch_long_2b(size_t count,
-					    int tid)
+bool libsrt_string_search_easymatch_long_2b(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_easymatch2_long,
-				    needle_easymatch2b, count,
-				    tid);
+				    needle_easymatch2b, count, tid);
 }
 
-bool libsrt_string_search_hardmatch_long_1a(size_t count,
-					    int tid)
+bool libsrt_string_search_hardmatch_long_1a(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_hardmatch1_long,
-				    needle_hardmatch1a, count,
-				    tid);
+				    needle_hardmatch1a, count, tid);
 }
 
-bool libsrt_string_search_hardmatch_long_1b(size_t count,
-					    int tid)
+bool libsrt_string_search_hardmatch_long_1b(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_hardmatch1_long,
-				    needle_hardmatch1b, count,
-				    tid);
+				    needle_hardmatch1b, count, tid);
 }
 
-bool libsrt_string_search_hardmatch_short_1a(size_t count,
-					     int tid)
+bool libsrt_string_search_hardmatch_short_1a(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_hardmatch1_short,
-				    needle_hardmatch1a, count,
-				    tid);
+				    needle_hardmatch1a, count, tid);
 }
 
-bool libsrt_string_search_hardmatch_short_1b(size_t count,
-					     int tid)
+bool libsrt_string_search_hardmatch_short_1b(size_t count, int tid)
 {
 	return libsrt_string_search(haystack_hardmatch1_short,
-				    needle_hardmatch1b, count,
-				    tid);
+				    needle_hardmatch1b, count, tid);
 }
 
 bool libsrt_string_search_hardmatch_long_2(size_t count, int tid)
@@ -751,8 +735,7 @@ bool c_string_search_easymatch_long_1b(size_t count, int tid)
 			       count, tid);
 }
 
-bool c_string_search_easymatch_long_2a(size_t count,
-				       int tid)
+bool c_string_search_easymatch_long_2a(size_t count, int tid)
 {
 	return c_string_search(haystack_easymatch2_long, needle_easymatch2a,
 			       count, tid);
@@ -842,8 +825,7 @@ bool cxx_string_search_hardmatch_short_1a(size_t count, int tid)
 				 count, tid);
 }
 
-bool cxx_string_search_hardmatch_short_1b(size_t count,
-					  int tid)
+bool cxx_string_search_hardmatch_short_1b(size_t count, int tid)
 {
 	return cxx_string_search(haystack_hardmatch1_short, needle_hardmatch1b,
 				 count, tid);
@@ -935,8 +917,7 @@ bool cxx_string_loweruppercase(const char *in, size_t count, int tid)
 
 bool libsrt_string_loweruppercase_ascii(size_t count, int tid)
 {
-	return libsrt_string_loweruppercase(case_test_ascii_str, count,
-					    tid);
+	return libsrt_string_loweruppercase(case_test_ascii_str, count, tid);
 }
 
 bool libsrt_string_loweruppercase_utf8(size_t count, int tid)
@@ -959,8 +940,7 @@ bool cxx_string_loweruppercase_ascii(size_t count, int tid)
 	return cxx_string_loweruppercase(case_test_ascii_str, count, tid);
 }
 
-bool cxx_string_loweruppercase_utf8(size_t count,
-				    int tid)
+bool cxx_string_loweruppercase_utf8(size_t count, int tid)
 {
 	return cxx_string_loweruppercase(case_test_utf8_str, count, tid);
 }
