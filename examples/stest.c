@@ -2800,28 +2800,28 @@ static int test_sm_cpy()
 	return res;
 }
 
-#define TEST_SM_X_COUNT(T, v)				\
-	int res = 0;					\
-	uint32_t i, tcount = 100;			\
-	sm_t *m = sm_alloc(T, tcount);			\
-	for (i = 0; i < tcount; i++)			\
-		sm_insert_uu32(&m, (unsigned)i, v);	\
-	for (i = 0; i < tcount; i++)			\
-		if (!sm_count_u(m, i)) {		\
-			res = 1 + (int)i;		\
-			break;				\
-		}					\
-	sm_free(&m);					\
+#define TEST_SM_X_COUNT(T, insf, cntf, v)	\
+	int res = 0;				\
+	uint32_t i, tcount = 100;		\
+	sm_t *m = sm_alloc(T, tcount);		\
+	for (i = 0; i < tcount; i++)		\
+		insf(&m, (unsigned)i, v);	\
+	for (i = 0; i < tcount; i++)		\
+		if (!cntf(m, i)) {		\
+			res = 1 + (int)i;	\
+			break;			\
+		}				\
+	sm_free(&m);				\
 	return res;
 
 static int test_sm_count_u()
 {
-	TEST_SM_X_COUNT(SM_UU32, 1);
+	TEST_SM_X_COUNT(SM_UU32, sm_insert_uu32, sm_count_u, 1);
 }
 
 static int test_sm_count_i()
 {
-	TEST_SM_X_COUNT(SM_II32, 1);
+	TEST_SM_X_COUNT(SM_II32, sm_insert_ii32, sm_count_i, 1);
 }
 
 static int test_sm_count_s()
