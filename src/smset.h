@@ -163,7 +163,7 @@ S_INLINE sbool_t sms_count_s(const sms_t *s, const ss_t *k)
 /* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_i32(sms_t **s, const int32_t k)
 {
-        RETURN_IF(!s, S_FALSE);
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
         struct SMapi n;
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
@@ -172,7 +172,7 @@ S_INLINE sbool_t sms_insert_i32(sms_t **s, const int32_t k)
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_u32(sms_t **s, const uint32_t k)
 {
-        RETURN_IF(!s, S_FALSE);
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
         struct SMapu n;
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
@@ -181,7 +181,7 @@ S_INLINE sbool_t sms_insert_u32(sms_t **s, const uint32_t k)
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_i(sms_t **s, const int64_t k)
 {
-        RETURN_IF(!s, S_FALSE);
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
         struct SMapI n;
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
@@ -190,7 +190,7 @@ S_INLINE sbool_t sms_insert_i(sms_t **s, const int64_t k)
 /* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_s(sms_t **s, const ss_t *k)
 {
-        RETURN_IF(!s, S_FALSE);
+        RETURN_IF(!s  || (*s)->d.sub_type != SMS_S, S_FALSE);
         struct SMapS n;
 #if 1 /* workaround */
 	SMStrSet(&n.k, k);
