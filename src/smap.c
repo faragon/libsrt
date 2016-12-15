@@ -198,6 +198,11 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 	return NULL;
 }
 
+S_INLINE sbool_t sm_chk_t(const sm_t *m, int t)
+{
+	return m && m->d.sub_type == t ? S_TRUE : S_FALSE;
+}
+
 #ifdef _MSC_VER /* supress alloca() warning */
 #pragma warning(disable: 6255)
 #endif
@@ -331,7 +336,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 	RETURN_IF(ss > ST_NDX_MAX, NULL); /* BEHAVIOR */
 	if (*m) {
 		sm_clear(*m);
-		if ((*m)->d.sub_type != t) {
+		if (!sm_chk_t(*m, t)) {
 			/*
 			 * Case of changing map type, reusing allocated memory,
 			 * but changing container configuration.
@@ -397,7 +402,7 @@ sm_t *sm_cpy(sm_t **m, const sm_t *src)
 
 int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_II32, 0);
+	RETURN_IF(!sm_chk_t(m, SM_II32), 0);
 	struct SMapii n;
 	n.x.k = k;
 	const struct SMapii *nr =
@@ -407,7 +412,7 @@ int32_t sm_at_ii32(const sm_t *m, const int32_t k)
 
 uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_UU32, 0);
+	RETURN_IF(!sm_chk_t(m, SM_UU32), 0);
 	struct SMapuu n;
 	n.x.k = k;
 	const struct SMapuu *nr =
@@ -417,7 +422,7 @@ uint32_t sm_at_uu32(const sm_t *m, const uint32_t k)
 
 int64_t sm_at_ii(const sm_t *m, const int64_t k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_II, 0);
+	RETURN_IF(!sm_chk_t(m, SM_II), 0);
 	struct SMapII n;
 	n.x.k = k;
 	const struct SMapII *nr =
@@ -427,7 +432,7 @@ int64_t sm_at_ii(const sm_t *m, const int64_t k)
 
 const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_IS, ss_void);
+	RETURN_IF(!sm_chk_t(m, SM_IS), ss_void);
 	struct SMapIS n;
 	n.x.k = k;
 	const struct SMapIS *nr =
@@ -437,7 +442,7 @@ const ss_t *sm_at_is(const sm_t *m, const int64_t k)
 
 const void *sm_at_ip(const sm_t *m, const int64_t k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_IP, NULL);
+	RETURN_IF(!sm_chk_t(m, SM_IP), NULL);
 	struct SMapIP n;
 	n.x.k = k;
 	const struct SMapIP *nr =
@@ -447,7 +452,7 @@ const void *sm_at_ip(const sm_t *m, const int64_t k)
 
 int64_t sm_at_si(const sm_t *m, const ss_t *k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_SI, 0);
+	RETURN_IF(!sm_chk_t(m, SM_SI), 0);
 	struct SMapSI n;
 	SMStrSetRef(&n.x.k, k);
 	const struct SMapSI *nr =
@@ -457,7 +462,7 @@ int64_t sm_at_si(const sm_t *m, const ss_t *k)
 
 const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_SS, ss_void);
+	RETURN_IF(!sm_chk_t(m, SM_SS), ss_void);
 	struct SMapSS n;
 	SMStrSetRef(&n.x.k, k);
 	const struct SMapSS *nr =
@@ -467,7 +472,7 @@ const ss_t *sm_at_ss(const sm_t *m, const ss_t *k)
 
 const void *sm_at_sp(const sm_t *m, const ss_t *k)
 {
-	RETURN_IF(!m || m->d.sub_type != SM_SP, NULL);
+	RETURN_IF(!sm_chk_t(m, SM_SP), NULL);
 	struct SMapSP n;
 	SMStrSetRef(&n.x.k, k);
 	const struct SMapSP *nr =
@@ -690,7 +695,7 @@ sbool_t sm_delete_s(sm_t *m, const ss_t *k)
 
 ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 {
-	RETURN_IF(!kv || !vv, 0);
+	RETURN_IF(!m || !kv || !vv, 0);
 	struct SV2X v2x = { *kv, *vv };
 	st_traverse traverse_f = NULL;
 	enum eSV_Type kt, vt;
@@ -703,11 +708,11 @@ ssize_t sm_sort_to_vectors(const sm_t *m, sv_t **kv, sv_t **vv)
 		break;
 	case SM_II: case SM_IS: case SM_IP:
 		kt = SV_I64;
-		vt = m->d.sub_type == SM_II ? SV_I64 : SV_GEN;
+		vt = sm_chk_t(m, SM_II) ? SV_I64 : SV_GEN;
 		break;
 	case SM_SI: case SM_SS: case SM_SP:
 		kt = SV_GEN;
-		vt = m->d.sub_type == SM_SI ? SV_I64 : SV_GEN;
+		vt = sm_chk_t(m, SM_SI) ? SV_I64 : SV_GEN;
 		break;
 	default: return 0; /* BEHAVIOR: invalid type */
 	}
