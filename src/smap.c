@@ -515,7 +515,7 @@ sbool_t sm_count_s(const sm_t *m, const ss_t *k)
 S_INLINE sbool_t sm_insert_ii32_aux(sm_t **m, const int32_t k,
 				    const int32_t v, const st_rewrite_t rw_f)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II32), S_FALSE);
 	struct SMapii n;
 	n.x.k = k;
 	n.v = v;
@@ -535,7 +535,7 @@ sbool_t sm_inc_ii32(sm_t **m, const int32_t k, const int32_t v)
 S_INLINE sbool_t sm_insert_uu32_aux(sm_t **m, const uint32_t k,
 				    const uint32_t v, const st_rewrite_t rw_f)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_UU32), S_FALSE);
 	struct SMapuu n;
 	n.x.k = k;
 	n.v = v;
@@ -555,7 +555,7 @@ sbool_t sm_inc_uu32(sm_t **m, const uint32_t k, const uint32_t v)
 S_INLINE sbool_t sm_insert_ii_aux(sm_t **m, const int64_t k,
 			          const int64_t v, const st_rewrite_t rw_f)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II), S_FALSE);
 	struct SMapII n;
 	n.x.k = k;
 	n.v = v;
@@ -574,7 +574,7 @@ sbool_t sm_inc_ii(sm_t **m, const int64_t k, const int64_t v)
 
 sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_IS), S_FALSE);
 	struct SMapIS n;
 	n.x.k = k;
 #if 1 /* workaround */
@@ -592,7 +592,7 @@ sbool_t sm_insert_is(sm_t **m, const int64_t k, const ss_t *v)
 
 sbool_t sm_insert_ip(sm_t **m, const int64_t k, const void *v)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_IP), S_FALSE);
 	struct SMapIP n;
 	n.x.k = k;
 	n.v = v;
@@ -602,7 +602,7 @@ sbool_t sm_insert_ip(sm_t **m, const int64_t k, const void *v)
 S_INLINE sbool_t sm_insert_si_aux(sm_t **m, const ss_t *k,
 				  const int64_t v, const st_rewrite_t rw_f)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SI), S_FALSE);
 	struct SMapSI n;
 	SMStrSetRef(&n.x.k, k);
 	n.v = v;
@@ -622,7 +622,7 @@ sbool_t sm_inc_si(sm_t **m, const ss_t *k, const int64_t v)
 
 sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SS), S_FALSE);
 	struct SMapSS n;
 	SMStrSetRef(&n.x.k, k);
 	SMStrSetRef(&n.v, v);
@@ -631,7 +631,7 @@ sbool_t sm_insert_ss(sm_t **m, const ss_t *k, const ss_t *v)
 
 sbool_t sm_insert_sp(sm_t **m, const ss_t *k, const void *v)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SP), S_FALSE);
 	struct SMapSP n;
 	SMStrSetRef(&n.x.k, k);
 	n.v = v;
