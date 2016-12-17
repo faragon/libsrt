@@ -690,6 +690,8 @@ sbool_t sm_delete_s(sm_t *m, const ss_t *k)
 		case SM0_S: case SM0_SP: case SM0_SI:
 			callback = aux_sx_delete;
 			break;
+		default:
+			return S_FALSE;
 	}
 	return st_delete(m, (const stn_t *)&sx, callback);
 }
