@@ -203,6 +203,11 @@ S_INLINE sbool_t sm_chk_t(const sm_t *m, int t)
 	return m && m->d.sub_type == t ? S_TRUE : S_FALSE;
 }
 
+S_INLINE sbool_t sm_i32_range(const int64_t k)
+{
+	return k >= SINT32_MIN && k <= SINT32_MAX ? S_TRUE : S_FALSE;
+}
+
 #ifdef _MSC_VER /* supress alloca() warning */
 #pragma warning(disable: 6255)
 #endif
@@ -651,7 +656,7 @@ sbool_t sm_delete_i(sm_t *m, const int64_t k)
 	stn_callback_t callback = NULL;
 	switch (m->d.sub_type) {
 	case SM0_I32: case SM0_II32:
-		RETURN_IF(k > SINT32_MAX || k < SINT32_MIN, S_FALSE);
+		RETURN_IF(!sm_i32_range(k), S_FALSE);
 		n_i32.k = (int32_t)k;
 		n = (const stn_t *)&n_i32;
 		break;
