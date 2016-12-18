@@ -198,6 +198,14 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 	return NULL;
 }
 
+S_INLINE sbool_t sm_chk_sx(const sm_t *m)
+{
+	RETURN_IF(!m, S_FALSE);
+	int t = m->d.sub_type;
+	return t == SM0_SS || t == SM0_SI || t == SM0_SP || t == SM0_S ?
+	       S_TRUE : S_FALSE;
+}
+
 S_INLINE sbool_t sm_chk_t(const sm_t *m, int t)
 {
 	return m && m->d.sub_type == t ? S_TRUE : S_FALSE;
@@ -507,7 +515,7 @@ sbool_t sm_count_i(const sm_t *m, const int64_t k)
 
 sbool_t sm_count_s(const sm_t *m, const ss_t *k)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!sm_chk_sx(m), S_FALSE);
 	struct SMapS n;
 	SMStrSetRef(&n.k, k);
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
