@@ -198,6 +198,14 @@ static st_cmp_t type2cmpf(const enum eSM_Type0 t)
 	return NULL;
 }
 
+S_INLINE sbool_t sm_chk_Ix(const sm_t *m)
+{
+	RETURN_IF(!m, S_FALSE);
+	int t = m->d.sub_type;
+	return t == SM0_II || t == SM0_IS || t == SM0_IP || t == SM0_I ?
+	       S_TRUE : S_FALSE;
+}
+
 S_INLINE sbool_t sm_chk_sx(const sm_t *m)
 {
 	RETURN_IF(!m, S_FALSE);
@@ -508,9 +516,19 @@ sbool_t sm_count_u(const sm_t *m, const uint32_t k)
 sbool_t sm_count_i(const sm_t *m, const int64_t k)
 {
 	ASSERT_RETURN_IF(!m, S_FALSE);
-	struct SMapI n;
-	n.k = k;
-	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
+	const stn_t *n;
+	struct SMapI n1;
+	struct SMapi n2;
+	if (sm_chk_Ix(m)) {
+		n1.k = k;
+		n = (const stn_t *)&n1;
+	} else {
+		RETURN_IF((!sm_chk_t(m, SM0_II32) && !sm_chk_t(m, SM0_I32)) ||
+			  !sm_i32_range(k), S_FALSE);
+		n2.k = (int32_t)k;
+		n = (const stn_t *)&n2;
+	}
+	return st_locate(m, n) ? S_TRUE : S_FALSE;
 }
 
 sbool_t sm_count_s(const sm_t *m, const ss_t *k)
