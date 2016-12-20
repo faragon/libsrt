@@ -507,7 +507,7 @@ const void *sm_at_sp(const sm_t *m, const ss_t *k)
 
 sbool_t sm_count_u(const sm_t *m, const uint32_t k)
 {
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	ASSERT_RETURN_IF(!sm_chk_t(m, SM0_UU32) && !sm_chk_t(m, SM0_U32), S_FALSE);
 	struct SMapuu n;
 	n.x.k = k;
 	return st_locate(m, (const stn_t *)&n) ? S_TRUE : S_FALSE;
