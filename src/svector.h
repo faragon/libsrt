@@ -206,7 +206,7 @@ sv_t *sv_erase(sv_t **v, const size_t off, const size_t n);
 sv_t *sv_resize(sv_t **v, const size_t n);
 
 /* #API: |Sort vector|input/output vector|output vector reference (optional usage)|relies on libc "qsort" implementation, e.g. glibc implements introsort (O(n log n)), musl does smoothsort (O(n log n)), etc.|1;2| */
-sv_t *sv_sort(sv_t **v);
+sv_t *sv_sort(sv_t *v);
 
 /*
  * Search

@@ -2219,7 +2219,7 @@ static int test_sv_resize()
 	sv_t *v = alloc(type, 0 CMPF);					 \
 	push(&v, c); push(&v, b); push(&v, a); push(&v, a); push(&v, b); \
 	push(&v, c); push(&v, c); push(&v, b); push(&v, a);		 \
-	sv_sort(&v);							 \
+	sv_sort(v);							 \
 	int v##i, v##r = 0;						 \
 	for (v##i = 1; v##i < 9 && v##r <= 0; v##i++)			 \
 		v##r = sv_cmp(v, (size_t)(v##i - 1), (size_t)v##i);	 \

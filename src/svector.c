@@ -427,11 +427,11 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 	return aux_resize(v, S_FALSE, (v ? *v : NULL), n);
 }
 
-sv_t *sv_sort(sv_t **v)
+sv_t *sv_sort(sv_t *v)
 {
-	RETURN_IF(!v || !*v || !(*v)->vx.cmpf, sv_check(v));
-	qsort(sv_get_buffer(*v), sv_size(*v), (*v)->d.elem_size, (*v)->vx.cmpf);
-	return *v;
+	RETURN_IF(!v || !v->vx.cmpf, sv_check(&v));
+	qsort(sv_get_buffer(v), sv_size(v), v->d.elem_size, v->vx.cmpf);
+	return v;
 }
 
 /*
