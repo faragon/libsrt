@@ -4,8 +4,6 @@
 Short-term
 ---
 
-* Safety
- * Check data type on vector and map/set operations
 * Security
  * check size\_t overflow on every function (e.g. off + size -> overflow)
 * Debug
