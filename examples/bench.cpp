@@ -852,18 +852,13 @@ const char
 
 bool libsrt_string_loweruppercase(const char *in, size_t count, int tid)
 {
-	RETURN_IF(tid, false);
+	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	ss_t *s = ss_alloca(95);
 	ss_cpy(&s, ss_crefa(in));
 	for (size_t i = 0; i < count; i++) {
 		ss_tolower(&s);
 		ss_toupper(&s);
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++){
-			ss_tolower(&s);
-			ss_toupper(&s);
-		}
 	return true;
 }
 
