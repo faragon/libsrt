@@ -58,6 +58,7 @@
 #define TId_Read10Times		(1<<1)
 #define TId_DeleteOneByOne	(1<<2)
 #define TId_SleepForever	(1<<3)
+#define TId_Sort10Times		(1<<4)
 #define TId2Count(id) ((id & TId_Read10Times) != 0 ? 10 : 0)
 #define TIdTest(id, key) ((id & key) == key)
 
@@ -486,7 +487,8 @@ bool cxx_set_s64(size_t count, int tid)
 bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
+		  !TIdTest(tid, TId_DeleteOneByOne) && !TIdTest(tid, TId_Sort10Times),
+		  false);
 	sv_t *v = sv_alloc_t(t, 0);
 	for (size_t i = 0; i < count; i++)
 		sv_push_i(&v, (int32_t)i);
@@ -496,6 +498,9 @@ bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)sv_pop_i(v);
+	if (TIdTest(tid, TId_Sort10Times))
+		for (size_t i = 0; i < 10; i++)
+			sv_sort(v);
 	HOLD_EXEC(tid);
 	sv_free(&v);
 	return true;
@@ -525,7 +530,8 @@ template <typename T>
 bool cxx_vector(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
+		  !TIdTest(tid, TId_DeleteOneByOne) && !TIdTest(tid, TId_Sort10Times),
+		  false);
 	std::vector <T> v;
 	for (size_t i = 0; i < count; i++)
 		v.push_back((T)i);
@@ -535,6 +541,9 @@ bool cxx_vector(size_t count, int tid)
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
 			(void)v.pop_back();
+	if (TIdTest(tid, TId_Sort10Times))
+		for (size_t i = 0; i < 10; i++)
+			std::sort(v.begin(), v.end());
 	HOLD_EXEC(tid);
 	return true;
 }
@@ -1096,17 +1105,20 @@ bool cxx_bitset_popcount10000(size_t count, int tid)
 int main(int argc, char *argv[])
 {
 	BENCH_INIT;
-	const size_t ntests = 3,
+	const size_t ntests = 4,
 		     count[ntests] = { S_TEST_ELEMS, S_TEST_ELEMS,
-				       S_TEST_ELEMS };
-	int tid[ntests] = { TId_Base, TId_Read10Times, TId_DeleteOneByOne };
+				       S_TEST_ELEMS, S_TEST_ELEMS };
+	int tid[ntests] = { TId_Base, TId_Read10Times, TId_DeleteOneByOne,
+			    TId_Sort10Times };
 	char label[ntests][512];
 	snprintf(label[0], 512, "Insert or process %zu elements, cleanup",
 		 count[0]);
 	snprintf(label[1], 512, "Insert %zu elements, read all elements %i "
 		 "times, cleanup", count[1], TId2Count(tid[1]));
 	snprintf(label[2], 512, "Insert or process %zu elements, delete all "
-		 "elements one by one, cleanup", count[1]);
+		 "elements one by one, cleanup", count[2]);
+	snprintf(label[3], 512, "Insert or process %zu elements, sort, "
+		 "cleanup", count[3]);
 	for (size_t i = 0; i < ntests; i++) {
 		printf("\n%s\n| Test | Insert count | Memory (MiB) | Execution "
 		       "time (s) |\n|:---:|:---:|:---:|:---:|\n", label[i]);
