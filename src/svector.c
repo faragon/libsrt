@@ -427,10 +427,41 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 	return aux_resize(v, S_FALSE, (v ? *v : NULL), n);
 }
 
+#define BUILD_COUNT_SORT_x8(FN, T, OFF)					\
+	S_INLINE void FN(T *b, size_t elems)				\
+	{								\
+		size_t i, j, cnt[256];					\
+		if (b && elems > 0) {					\
+			memset(cnt, 0, sizeof(cnt));			\
+			for (i = 0; i < elems; i++)			\
+				cnt[b[i] + OFF]++;			\
+			for (i = j = 0; j < 256 && i < elems; j++)	\
+				if (cnt[j]) {				\
+					memset(b + i, j - OFF, cnt[j]);	\
+					i += cnt[j];			\
+				}					\
+		}							\
+	}
+
+#ifndef S_MINIMAL
+BUILD_COUNT_SORT_x8(sort_i8, int8_t, 128);
+BUILD_COUNT_SORT_x8(sort_u8, uint8_t, 0);
+#endif
+
 sv_t *sv_sort(sv_t *v)
 {
-	RETURN_IF(!v || !v->vx.cmpf, sv_check(&v));
-	qsort(sv_get_buffer(v), sv_size(v), v->d.elem_size, v->vx.cmpf);
+	RETURN_IF(!v || !v->vx.cmpf, sv_check(v ? &v : NULL));
+	void *buf = (void *)sv_get_buffer(v);
+	size_t buf_size = sv_size(v), elem_size = v->d.elem_size;
+#ifndef S_MINIMAL
+	switch (v->d.sub_type) {
+	case SV_I8: sort_i8((int8_t *)buf, buf_size); break;
+	case SV_U8: sort_u8((uint8_t *)buf, buf_size); break;
+	default: qsort(buf, buf_size, elem_size, v->vx.cmpf); break;
+	}
+#else
+	qsort(buf, buf_size, elem_size, v->vx.cmpf);
+#endif
 	return v;
 }
 
