@@ -516,14 +516,29 @@ bool libsrt_vector_i8(size_t count, int tid)
 	return libsrt_vector_i(SV_I8, count, tid);
 }
 
+bool libsrt_vector_u8(size_t count, int tid)
+{
+	return libsrt_vector_i(SV_U8, count, tid);
+}
+
 bool libsrt_vector_i16(size_t count, int tid)
 {
 	return libsrt_vector_i(SV_I16, count, tid);
 }
 
+bool libsrt_vector_u16(size_t count, int tid)
+{
+	return libsrt_vector_i(SV_U16, count, tid);
+}
+
 bool libsrt_vector_i32(size_t count, int tid)
 {
 	return libsrt_vector_i(SV_I32, count, tid);
+}
+
+bool libsrt_vector_u32(size_t count, int tid)
+{
+	return libsrt_vector_i(SV_U32, count, tid);
 }
 
 bool libsrt_vector_i64(size_t count, int tid)
@@ -562,14 +577,29 @@ bool cxx_vector_i8(size_t count, int tid)
 	return cxx_vector<int8_t>(count, tid);
 }
 
+bool cxx_vector_u8(size_t count, int tid)
+{
+	return cxx_vector<uint8_t>(count, tid);
+}
+
 bool cxx_vector_i16(size_t count, int tid)
 {
 	return cxx_vector<int16_t>(count, tid);
 }
 
+bool cxx_vector_u16(size_t count, int tid)
+{
+	return cxx_vector<uint16_t>(count, tid);
+}
+
 bool cxx_vector_i32(size_t count, int tid)
 {
 	return cxx_vector<int32_t>(count, tid);
+}
+
+bool cxx_vector_u32(size_t count, int tid)
+{
+	return cxx_vector<uint32_t>(count, tid);
 }
 
 bool cxx_vector_i64(size_t count, int tid)
@@ -591,7 +621,7 @@ int sv_cmp_StrGenTest(const void *a, const void *b)
 struct StrGenTestCpp
 {
 	uint8_t raw[32];
-	bool operator < (const StrGenTestCpp &against) {
+	bool operator < (const StrGenTestCpp &against) const {
 		return memcmp(raw, against.raw, sizeof(raw)) < 0;
 	}
 };
@@ -1188,10 +1218,16 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_set_s64, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_i8, count[i], tid[i]);
 		BENCH_FN(cxx_vector_i8, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_u8, count[i], tid[i]);
+		BENCH_FN(cxx_vector_u8, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_i16, count[i], tid[i]);
 		BENCH_FN(cxx_vector_i16, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_u16, count[i], tid[i]);
+		BENCH_FN(cxx_vector_u16, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_i32, count[i], tid[i]);
 		BENCH_FN(cxx_vector_i32, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_u32, count[i], tid[i]);
+		BENCH_FN(cxx_vector_u32, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_i64, count[i], tid[i]);
 		BENCH_FN(cxx_vector_i64, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_gen, count[i], tid[i]);

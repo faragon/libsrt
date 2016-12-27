@@ -444,8 +444,8 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 	}
 
 #ifndef S_MINIMAL
-BUILD_COUNT_SORT_x8(sort_i8, int8_t, 128);
-BUILD_COUNT_SORT_x8(sort_u8, uint8_t, 0);
+BUILD_COUNT_SORT_x8(sort_i8, int8_t, 128)
+BUILD_COUNT_SORT_x8(sort_u8, uint8_t, 0)
 #endif
 
 sv_t *sv_sort(sv_t *v)
