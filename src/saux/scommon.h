@@ -626,6 +626,34 @@ S_INLINE void s_memcpy6(void *o, const void *i)
 	s_memcpy2((char *)o + 4, (const char *)i + 4);
 }
 
+/*
+ * Least/most significant bit
+ */
+
+#define BUILD_S_LSB(FN, T)		\
+	S_INLINE T FN(T v)		\
+	{				\
+		return v & (~v + 1);	\
+	}
+
+#define BUILD_S_MSB(FN, T, NBITS)			\
+	S_INLINE T FN(T v)				\
+	{						\
+		int i;					\
+		for (i = 1; i < NBITS / 2; i <<= 1)	\
+			v |= (v >> i);			\
+		return v & ~(v >> 1);			\
+	}
+
+BUILD_S_LSB(s_lsb8, uint8_t)
+BUILD_S_LSB(s_lsb16, uint16_t)
+BUILD_S_LSB(s_lsb32, uint32_t)
+BUILD_S_LSB(s_lsb64, uint64_t)
+BUILD_S_MSB(s_msb8, uint8_t, 8)
+BUILD_S_MSB(s_msb16, uint16_t, 16)
+BUILD_S_MSB(s_msb32, uint32_t, 32)
+BUILD_S_MSB(s_msb64, uint64_t, 64)
+
 #ifdef __cplusplus
 }      /* extern "C" { */
 #endif
