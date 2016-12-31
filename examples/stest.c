@@ -3484,6 +3484,59 @@ static int test_sbitio()
 	return res;
 }
 
+static int test_lsb_msb()
+{
+	uint8_t tv8[9] =
+		{ 0x00, 0x01, 0x0f, 0x01, 0x0f, 0x80, 0xf0, 0x80, 0xf0 },
+		tv8l[9] =
+		{ 0x00, 0x01, 0x01, 0x01, 0x01, 0x80, 0x10, 0x80, 0x10 },
+		tv8m[9] =
+		{ 0x00, 0x01, 0x08, 0x01, 0x08, 0x80, 0x80, 0x80, 0x80 };
+	uint16_t tv16[9] =
+		{ 0x0000, 0x0001, 0x000f, 0x0ff1, 0x0fff, 0x8000, 0xf000,
+		  0x8ff0, 0xfff0 },
+		 tv16l[9] =
+		{ 0x0000, 0x0001, 0x0001, 0x0001, 0x0001, 0x8000, 0x1000,
+		  0x0010, 0x0010 },
+		 tv16m[9] =
+		{ 0x0000, 0x0001, 0x0008, 0x0800, 0x0800, 0x8000, 0x8000,
+		  0x8000, 0x8000 };
+	uint32_t tv32[9] =
+		{ 0x00000000, 0x00000001, 0x0000000f, 0x0ffffff1, 0x0fffffff,
+		  0x80000000, 0xf0000000, 0x8ffffff0, 0xfffffff0 },
+		 tv32l[9] =
+		{ 0x00000000, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
+		  0x80000000, 0x10000000, 0x00000010, 0x00000010 },
+		 tv32m[9] =
+		{ 0x00000000, 0x00000001, 0x00000008, 0x08000000, 0x08000000,
+		  0x80000000, 0x80000000, 0x80000000, 0x80000000 };
+	uint64_t tv64[9] =
+		{ 0x0000000000000000, 0x0000000000000001, 0x000000000000000f,
+		  0x0ffffffffffffff1, 0x0fffffffffffffff, 0x8000000000000000,
+		  0xf000000000000000, 0x8ffffffffffffff0, 0xfffffffffffffff0 },
+		 tv64l[9] =
+		{ 0x0000000000000000, 0x0000000000000001, 0x0000000000000001,
+		  0x0000000000000001, 0x0000000000000001, 0x8000000000000000,
+		  0x1000000000000000, 0x0000000000000010, 0x0000000000000010 },
+		 tv64m[9] =
+		{ 0x0000000000000000, 0x0000000000000001, 0x0000000000000008,
+		  0x0800000000000000, 0x0800000000000000, 0x8000000000000000,
+		  0x8000000000000000, 0x8000000000000000, 0x8000000000000000 };
+	int res = 0, i;
+	#define LSBMSB_TEST(tvx, tvxl, tvxm, lsb, msb, err)		\
+		for (i = 0; i < sizeof(tvx)/sizeof(tvx[0]); i++)	\
+		if (lsb(tvx[i]) != tvxl[i] || msb(tvx[i]) != tvxm[i]) {	\
+			res |= err;					\
+			break;						\
+		}
+	LSBMSB_TEST(tv8, tv8l, tv8m, s_lsb8, s_msb8, 1<<0)
+	LSBMSB_TEST(tv16, tv16l, tv16m, s_lsb16, s_msb16, 1<<1)
+	LSBMSB_TEST(tv32, tv32l, tv32m, s_lsb32, s_msb32, 1<<2)
+	LSBMSB_TEST(tv64, tv64l, tv64m, s_lsb64, s_msb64, 1<<3)
+	#undef LSBMSB_TEST
+	return res;
+}
+
 /*
  * Test execution
  */
@@ -3924,6 +3977,7 @@ int main()
 	STEST_ASSERT(test_endianess());
 	STEST_ASSERT(test_alignment());
 	STEST_ASSERT(test_sbitio());
+	STEST_ASSERT(test_lsb_msb());
 	/*
 	 * Report
 	 */
