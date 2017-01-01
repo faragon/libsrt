@@ -3,7 +3,7 @@
  *
  * Benchmarks of libsrt vs C++ STL
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2017, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
@@ -551,6 +551,11 @@ bool libsrt_vector_i64(size_t count, int tid)
 	return libsrt_vector_i(SV_I64, count, tid);
 }
 
+bool libsrt_vector_u64(size_t count, int tid)
+{
+	return libsrt_vector_i(SV_U64, count, tid);
+}
+
 template <typename T>
 bool cxx_vector(size_t count, int tid)
 {
@@ -613,6 +618,11 @@ bool cxx_vector_u32(size_t count, int tid)
 bool cxx_vector_i64(size_t count, int tid)
 {
 	return cxx_vector<int64_t>(count, tid);
+}
+
+bool cxx_vector_u64(size_t count, int tid)
+{
+	return cxx_vector<uint64_t>(count, tid);
 }
 
 struct StrGenTest
@@ -1253,6 +1263,8 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_vector_u32, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_i64, count[i], tid[i]);
 		BENCH_FN(cxx_vector_i64, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_u64, count[i], tid[i]);
+		BENCH_FN(cxx_vector_u64, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_gen, count[i], tid[i]);
 		BENCH_FN(cxx_vector_gen, count[i], tid[i]);
 		BENCH_FN(libsrt_string_search_easymatch_long_1a, count[i], tid[i]);

@@ -29,14 +29,14 @@
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
 #   and not GNU make). If not installed, use: pkg install gmake
 #
-# Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2017 F. Aragon. All rights reserved.
 #
 
 include Makefile.inc
 
 VPATH   = src:src/saux:examples
-SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c svector.c stree.c \
-	  smap.c smset.c shash.c sbitio.c scommon.c
+SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c ssort.c svector.c \
+	  stree.c smap.c smset.c shash.c sbitio.c scommon.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
 LIBSRT	= libsrt.a

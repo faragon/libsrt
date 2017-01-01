@@ -3,12 +3,13 @@
  *
  * Vector handling.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2017, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */ 
 
 #include "svector.h"
 #include "saux/scommon.h"
+#include "saux/ssort.h"
 
 #ifndef SV_DEFAULT_SIGNED_VAL
 #define SV_DEFAULT_SIGNED_VAL 0
@@ -427,30 +428,6 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 	return aux_resize(v, S_FALSE, (v ? *v : NULL), n);
 }
 
-#define BUILD_COUNT_SORT_x8(FN, T, CNT_T, OFF)				\
-	S_INLINE void FN(T *b, size_t elems)				\
-	{								\
-		size_t i, j;						\
-		CNT_T cnt[256];						\
-		if (b && elems > 0) {					\
-			memset(cnt, 0, sizeof(cnt));			\
-			for (i = 0; i < elems; i++)			\
-				cnt[b[i] + OFF]++;			\
-			for (i = j = 0; j < 256 && i < elems; j++)	\
-				if (cnt[j]) {				\
-					memset(b + i, j - OFF, cnt[j]);	\
-					i += cnt[j];			\
-				}					\
-		}							\
-	}
-
-#ifndef S_MINIMAL
-BUILD_COUNT_SORT_x8(sort_i8, int8_t, size_t, 128)
-BUILD_COUNT_SORT_x8(sort_u8, uint8_t, size_t, 0)
-BUILD_COUNT_SORT_x8(sort_i8_small, int8_t, uint8_t, 128)
-BUILD_COUNT_SORT_x8(sort_u8_small, uint8_t, uint8_t, 0)
-#endif
-
 sv_t *sv_sort(sv_t *v)
 {
 	RETURN_IF(!v || !v->vx.cmpf, sv_check(v ? &v : NULL));
@@ -458,20 +435,15 @@ sv_t *sv_sort(sv_t *v)
 	size_t buf_size = sv_size(v), elem_size = v->d.elem_size;
 #ifndef S_MINIMAL
 	switch (v->d.sub_type) {
-	case SV_I8:
-		if (buf_size < 256)
-			sort_i8_small((int8_t *)buf, buf_size);
-		else
-			sort_i8((int8_t *)buf, buf_size);
-		break;
-	case SV_U8:
-		if (buf_size < 256)
-			sort_u8_small((uint8_t *)buf, buf_size);
-		else
-			sort_u8((uint8_t *)buf, buf_size);
-		break;
-	default:
-		qsort(buf, buf_size, elem_size, v->vx.cmpf);
+	case SV_I8:  ssort_i8((int8_t *)buf, buf_size); break;
+	case SV_U8:  ssort_u8((uint8_t *)buf, buf_size); break;
+	case SV_I16: ssort_i16((int16_t *)buf, buf_size); break;
+	case SV_U16: ssort_u16((uint16_t *)buf, buf_size); break;
+	case SV_I32: ssort_i32((int32_t *)buf, buf_size); break;
+	case SV_U32: ssort_u32((uint32_t *)buf, buf_size); break;
+	case SV_I64: ssort_i64((int64_t *)buf, buf_size); break;
+	case SV_U64: ssort_u64((uint64_t *)buf, buf_size); break;
+	default:     qsort(buf, buf_size, elem_size, v->vx.cmpf);
 	}
 #else
 	qsort(buf, buf_size, elem_size, v->vx.cmpf);
