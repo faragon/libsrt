@@ -17,7 +17,7 @@ Notes on libsrt space and time complexity
  * Time complexity for string search: O(n)  -fast, using Rabin-Karp algorithm with dynamic hash function change-
 * libsrt vectors (sv\_t)
  * Overhead: 5 * sizeof(size\_t) bytes
- * Time complexity for sort: same as provided C library qsort() function
+ * Time complexity for sort: O(n) for 8-bit (counting sort), O(n log n) for 16/32/64 bit elements (MSD binary radix sort), and same as provided C library qsort() function for generic elements
 * libsrt maps (sm\_t)
  * Overhead (global): 6 * sizeof(size\_t) bytes
  * Overhead (per map element): 8 bytes (31 bits x 2 for tree left/right, 1 bit for red/black, 1 bit unused)
@@ -216,6 +216,71 @@ CPU: Intel Core i5-3330 @3GHz with 6MB L3 cache
 | libsrt\_vector\_gen | 1000000 | 35.740 | 0.024923 |
 | cxx\_vector\_gen | 1000000 | 34.368 | 0.013153 |
 
+Insert or process 1000000 elements, sort 10 times, cleanup
+| Test | Insert count | Memory (MiB) | Execution time (s) |
+|:---:|:---:|:---:|:---:|
+| libsrt\_vector\_i8 | 1000000 | - | 0.027646 |
+| cxx\_vector\_i8 | 1000000 | - | 0.137919 |
+| libsrt\_vector\_u8 | 1000000 | - | 0.026851 |
+| cxx\_vector\_u8 | 1000000 | - | 0.150012 |
+| libsrt\_vector\_i16 | 1000000 | - | 0.145145 |
+| cxx\_vector\_i16 | 1000000 | - | 0.145665 |
+| libsrt\_vector\_u16 | 1000000 | - | 0.132487 |
+| cxx\_vector\_u16 | 1000000 | - | 0.171347 |
+| libsrt\_vector\_i32 | 1000000 | - | 0.183137 |
+| cxx\_vector\_i32 | 1000000 | - | 0.150832 |
+| libsrt\_vector\_u32 | 1000000 | - | 0.168793 |
+| cxx\_vector\_u32 | 1000000 | - | 0.151224 |
+| libsrt\_vector\_i64 | 1000000 | - | 0.189893 |
+| cxx\_vector\_i64 | 1000000 | - | 0.161692 |
+| libsrt\_vector\_u64 | 1000000 | - | 0.190136 |
+| cxx\_vector\_u64 | 1000000 | - | 0.161340 |
+| libsrt\_vector\_gen | 1000000 | - | 1.265519 |
+| cxx\_vector\_gen | 1000000 | - | 2.052374 |
+
+Insert or process 1000000 elements (reverse order), sort 10 times, cleanup
+| Test | Insert count | Memory (MiB) | Execution time (s) |
+|:---:|:---:|:---:|:---:|
+| libsrt\_vector\_i8 | 1000000 | - | 0.027181 |
+| cxx\_vector\_i8 | 1000000 | - | 0.138454 |
+| libsrt\_vector\_u8 | 1000000 | - | 0.027344 |
+| cxx\_vector\_u8 | 1000000 | - | 0.149571 |
+| libsrt\_vector\_i16 | 1000000 | - | 0.146363 |
+| cxx\_vector\_i16 | 1000000 | - | 0.144867 |
+| libsrt\_vector\_u16 | 1000000 | - | 0.132561 |
+| cxx\_vector\_u16 | 1000000 | - | 0.173561 |
+| libsrt\_vector\_i32 | 1000000 | - | 0.182960 |
+| cxx\_vector\_i32 | 1000000 | - | 0.148663 |
+| libsrt\_vector\_u32 | 1000000 | - | 0.169118 |
+| cxx\_vector\_u32 | 1000000 | - | 0.149012 |
+| libsrt\_vector\_i64 | 1000000 | - | 0.188534 |
+| cxx\_vector\_i64 | 1000000 | - | 0.160186 |
+| libsrt\_vector\_u64 | 1000000 | - | 0.190392 |
+| cxx\_vector\_u64 | 1000000 | - | 0.159374 |
+| libsrt\_vector\_gen | 1000000 | - | 1.263054 |
+| cxx\_vector\_gen | 1000000 | - | 2.050574 |
+
+Insert or process 100 elements, sort 10000 times, cleanup
+| Test | Insert count | Memory (MiB) | Execution time (s) |
+|:---:|:---:|:---:|:---:|
+| libsrt\_vector\_i8 | 100 | - | 0.005072 |
+| cxx\_vector\_i8 | 100 | - | 0.005851 |
+| libsrt\_vector\_u8 | 100 | - | 0.003463 |
+| cxx\_vector\_u8 | 100 | - | 0.006403 |
+| libsrt\_vector\_i16 | 100 | - | 0.009031 |
+| cxx\_vector\_i16 | 100 | - | 0.005912 |
+| libsrt\_vector\_u16 | 100 | - | 0.007740 |
+| cxx\_vector\_u16 | 100 | - | 0.006440 |
+| libsrt\_vector\_i32 | 100 | - | 0.008450 |
+| cxx\_vector\_i32 | 100 | - | 0.006515 |
+| libsrt\_vector\_u32 | 100 | - | 0.007627 |
+| cxx\_vector\_u32 | 100 | - | 0.006043 |
+| libsrt\_vector\_i64 | 100 | - | 0.008802 |
+| cxx\_vector\_i64 | 100 | - | 0.006336 |
+| libsrt\_vector\_u64 | 100 | - | 0.009422 |
+| cxx\_vector\_u64 | 100 | - | 0.006278 |
+| libsrt\_vector\_gen | 100 | - | 0.041418 |
+| cxx\_vector\_gen | 100 | - | 0.048459 |
 
 32-bit g++ 5.2.1 (x86\_32, Linux Ubuntu 15.10 x86\_64)
 ===
