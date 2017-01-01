@@ -141,7 +141,10 @@ Vector-specific advantages (sv\_t)
 * Variable-length concatenation and push functions.
 * Allow explicit size for allocation (8, 16, 32, 64 bits) with size-agnostic generic signed/unsigned functions (easier coding).
 * Allow variable-size generic element.
-* Sorting.
+* Sorting
+ * O(n) for 8-bit elements (counting sort algorithm), much faster than GNU/Clang qsort() (C), and faster than GNU/Clang std::vector sort (C++)
+ * O(n log n) -pseudo O(n)- for 16/32/64-bit elements (in-place MSD binary radix sort algorithm), 2x-3x faster than GNU/Clang qsort() (C), performing similar to GNU/Clang std::vector sort (C++)
+ * O(n log n) for generic elements using the C library (qsort())
 
 Vector-specific disadvantages/limitations
 ===
