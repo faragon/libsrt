@@ -216,7 +216,8 @@ CPU: Intel Core i5-3330 @3GHz with 6MB L3 cache
 | libsrt\_vector\_gen | 1000000 | 35.740 | 0.024923 |
 | cxx\_vector\_gen | 1000000 | 34.368 | 0.013153 |
 
-Insert or process 1000000 elements, sort 10 times, cleanup
+* Insert or process 1000000 elements, sort 10 times, cleanup
+
 | Test | Insert count | Memory (MiB) | Execution time (s) |
 |:---:|:---:|:---:|:---:|
 | libsrt\_vector\_i8 | 1000000 | - | 0.027646 |
@@ -238,7 +239,8 @@ Insert or process 1000000 elements, sort 10 times, cleanup
 | libsrt\_vector\_gen | 1000000 | - | 1.265519 |
 | cxx\_vector\_gen | 1000000 | - | 2.052374 |
 
-Insert or process 1000000 elements (reverse order), sort 10 times, cleanup
+* Insert or process 1000000 elements (reverse order), sort 10 times, cleanup
+
 | Test | Insert count | Memory (MiB) | Execution time (s) |
 |:---:|:---:|:---:|:---:|
 | libsrt\_vector\_i8 | 1000000 | - | 0.027181 |
@@ -260,7 +262,8 @@ Insert or process 1000000 elements (reverse order), sort 10 times, cleanup
 | libsrt\_vector\_gen | 1000000 | - | 1.263054 |
 | cxx\_vector\_gen | 1000000 | - | 2.050574 |
 
-Insert or process 100 elements, sort 10000 times, cleanup
+* Insert or process 100 elements, sort 10000 times, cleanup
+
 | Test | Insert count | Memory (MiB) | Execution time (s) |
 |:---:|:---:|:---:|:---:|
 | libsrt\_vector\_i8 | 100 | - | 0.005072 |
