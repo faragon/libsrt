@@ -433,7 +433,10 @@ sv_t *sv_sort(sv_t *v)
 	RETURN_IF(!v || !v->vx.cmpf, sv_check(v ? &v : NULL));
 	void *buf = (void *)sv_get_buffer(v);
 	size_t buf_size = sv_size(v), elem_size = v->d.elem_size;
-#ifndef S_MINIMAL
+	/*
+	 * TODO/FIXME: integer sort optimizations disabled, until validated
+	 */
+#if 0/*ndef S_MINIMAL*/
 	switch (v->d.sub_type) {
 	case SV_I8:  ssort_i8((int8_t *)buf, buf_size); break;
 	case SV_U8:  ssort_u8((uint8_t *)buf, buf_size); break;
