@@ -462,6 +462,7 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 	const size_t size = sv_size(v);
 	const void *p = sv_get_buffer_r(v);
 	const size_t elem_size = v->d.elem_size;
+	RETURN_IF(!elem_size, S_NPOS);
 	const size_t off_max = size * v->d.elem_size;
 	size_t i = off * elem_size;
 	for (; i < off_max; i += elem_size)
