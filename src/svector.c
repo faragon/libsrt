@@ -436,7 +436,7 @@ sv_t *sv_sort(sv_t *v)
 	/*
 	 * TODO/FIXME: integer sort optimizations disabled, until validated
 	 */
-#if 0/*ndef S_MINIMAL*/
+#ifndef S_MINIMAL
 	switch (v->d.sub_type) {
 	case SV_I8:  ssort_i8((int8_t *)buf, buf_size); break;
 	case SV_U8:  ssort_u8((uint8_t *)buf, buf_size); break;

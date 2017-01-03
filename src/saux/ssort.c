@@ -56,10 +56,12 @@
 	{						\
 		SORT2F(b);				\
 		SORT2F(b + 2);				\
-		if (b[1] > b[2]) {			\
-			SWAPF(b, 0, 3);			\
-			SWAPF(b, 1, 4);			\
-		}					\
+		if (b[2] < b[0])			\
+			SWAPF(b, 0, 2);			\
+		SORT2F(b + 1);				\
+		if (b[2] < b[1])			\
+			SWAPF(b, 1, 2);			\
+		SORT2F(b + 2);				\
 	}
 
 #define BUILD_MSD_RADIX_SORT(FN, T, MSBF, SWPF, S2F, S3F, S4F, OFF)	\

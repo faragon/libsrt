@@ -2227,11 +2227,30 @@ static int test_sv_resize()
 		    v##r <= 0 ? 0 : 2 << (ntest * 3);			 \
 	sv_free(&v);
 
+#define BUILD_CMPF(FN, T)				\
+	int FN(const void *a, const void *b)		\
+	{						\
+		return *(T *)(a) < *(T *)(b) ? -1 :	\
+		       *(T *)(a) == *(T *)(b) ? 0 : 1;	\
+	}
+
+BUILD_CMPF(cmp8i, int8_t)
+BUILD_CMPF(cmp8u, uint8_t)
+BUILD_CMPF(cmp16i, int16_t)
+BUILD_CMPF(cmp16u, uint16_t)
+BUILD_CMPF(cmp32i, int32_t)
+BUILD_CMPF(cmp32u, uint32_t)
+BUILD_CMPF(cmp64i, int64_t)
+BUILD_CMPF(cmp64u, uint64_t)
+
 static int test_sv_sort()
 {
 	int res = 0;
 	const int r = 12, s = 34, t = -1;
 	const unsigned tu = 11;
+	/*
+	 * Generic sort tests
+	 */
 	TEST_SV_SORT(z, 0, sv_alloc, sv_push,
 		sizeof(struct AA), AA_CMPF, &a1, &a2, &a1);
 	TEST_SV_SORT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s, t);
@@ -2241,7 +2260,62 @@ static int test_sv_sort()
 	TEST_SV_SORT(f, 5, sv_alloc_t, sv_push_i, SV_I32, X_CMPF, r, s, t);
 	TEST_SV_SORT(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, r, s, tu);
 	TEST_SV_SORT(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, r, s, t);
-	TEST_SV_SORT(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, r, s, tu);
+	TEST_SV_SORT(j, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, r, s, tu);
+	/*
+	 * Integer-specific sort tests
+	 */
+	sv_t *v8i = sv_alloc_t(SV_I8, 0), *v8u = sv_alloc_t(SV_U8, 0),
+	     *v16i = sv_alloc_t(SV_I16, 0), *v16u = sv_alloc_t(SV_U16, 0),
+	     *v32i = sv_alloc_t(SV_I32, 0), *v32u = sv_alloc_t(SV_U32, 0),
+	     *v64i = sv_alloc_t(SV_I64, 0), *v64u = sv_alloc_t(SV_U64, 0);
+	int i, nelems = 1000;
+	int8_t *r8i = (int8_t *)malloc(nelems * sizeof(int8_t));
+	uint8_t *r8u = (uint8_t *)malloc(nelems * sizeof(uint8_t));
+	int16_t *r16i = (int16_t *)malloc(nelems * sizeof(int16_t));
+	uint16_t *r16u = (uint16_t *)malloc(nelems * sizeof(uint16_t));
+	int32_t *r32i = (int32_t *)malloc(nelems * sizeof(int32_t));
+	uint32_t *r32u = (uint32_t *)malloc(nelems * sizeof(uint32_t));
+	int64_t *r64i = (int64_t *)malloc(nelems * sizeof(int64_t));
+	uint64_t *r64u = (uint64_t *)malloc(nelems * sizeof(uint64_t));
+	for (i = 0; i < nelems; i += 2) {
+		sv_push_i(&v8i, i & 0xff); sv_push_u(&v8u, i & 0xff);
+		sv_push_i(&v16i, i); sv_push_u(&v16u, i);
+		sv_push_i(&v32i, i); sv_push_u(&v32u, i);
+		sv_push_i(&v64i, i); sv_push_u(&v64u, i);
+		r8i[i] = i & 0xff; r8u[i] = i & 0xff; r16i[i] = i;
+		r16u[i] = i; r32i[i] = i; r32u[i] = i; r64i[i] = i; r64u[i] = i;
+	}
+	for (i = 1; i < nelems; i += 2) {
+		sv_push_i(&v8i, i & 0xff); sv_push_u(&v8u, i & 0xff);
+		sv_push_i(&v16i, i); sv_push_u(&v16u, i);
+		sv_push_i(&v32i, i); sv_push_u(&v32u, i);
+		sv_push_i(&v64i, i); sv_push_u(&v64u, i);
+		r8i[i] = i & 0xff; r8u[i] = i & 0xff; r16i[i] = i;
+		r16u[i] = i; r32i[i] = i; r32u[i] = i; r64i[i] = i; r64u[i] = i;
+	}
+	sv_sort(v8i); sv_sort(v8u); sv_sort(v16i); sv_sort(v16u);
+	sv_sort(v32i); sv_sort(v32u); sv_sort(v64i); sv_sort(v64u);
+	qsort(r8i, nelems, 1, cmp8i);
+	qsort(r8u, nelems, 1, cmp8u);
+	qsort(r16i, nelems, 2, cmp16i);
+	qsort(r16u, nelems, 2, cmp16u);
+	qsort(r32i, nelems, 4, cmp32i);
+	qsort(r32u, nelems, 4, cmp32u);
+	qsort(r64i, nelems, 8, cmp64i);
+	qsort(r64u, nelems, 8, cmp64u);
+	for (i = 0; i < nelems; i ++) {
+		res |= sv_at_i(v8i, i) == r8i[i] &&
+		       sv_at_u(v8u, i) == r8u[i] &&
+		       sv_at_i(v16i, i) == i &&
+		       sv_at_u(v16u, i) == i &&
+		       sv_at_i(v32i, i) == i &&
+		       sv_at_u(v32u, i) == i &&
+		       sv_at_i(v64i, i) == i &&
+		       sv_at_u(v64u, i) == i ? 0 : 1 << 31;
+	}
+	sv_free(&v8i, &v8u, &v16i, &v16u, &v32i, &v32u, &v64i, &v64u);
+	free(r8i); free(r8u); free(r16i); free(r16u);
+	free(r32i); free(r32u); free(r64i); free(r64u);
 	return res;
 }
 
