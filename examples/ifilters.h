@@ -225,7 +225,39 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 #define INLINE_RGB_ROW_CNT(OP, s, p, p0, t, blks, ps, i, T)	\
 	OP(t, s, (const T *)p0);				\
 	for (i = ps; i < blks; i += ps)				\
-		OP(t + i, s + i, p + i - ps);
+		OP(t + i, s + i, p + i - ps)
+
+#define INLINE_MONO_SUB_LOOP(a, b, c, i, mx, res)	\
+	for (i = 0; i < mx; i++)			\
+		res |= (c[i] = a[i] - b[i])
+
+#define INLINE_RGB_SUB_LOOP(a, b, c, i, mx, inc, res)	   \
+	for (i = 0; i < mx; i += inc)			   \
+		res |= ((c[i] = a[i] - b[i]) |		   \
+		        (c[i + 1] = a[i + 1] - b[i + 1]) | \
+		        (c[i + 2] = a[i + 2] - b[i + 2]))
+
+#define INLINE_MONO_DIFF_LOOP(a, b, c, i, mx, res)	\
+	for (i = 0; i < mx; i++)			\
+		c[i] = a[i] == b[i] ? 0 : 0xff
+
+#define INLINE_RGB_DIFF_LOOP(a, b, c, i, mx, res)		\
+	for (i = 0; i < mx; i += 3)				\
+		if (a[i] == b[i] && a[i + 1] == b[i + 1] &&	\
+		    a[i + 2] == b[i + 2])			\
+			c[i] = c[i + 1] = c[i + 2] = 0;		\
+		else						\
+			c[i] = c[i + 1] = c[i + 2] = 0xff
+
+#define INLINE_RGBA_DIFF_LOOP(a, b, c, i, mx, res)		\
+	for (i = 0; i < mx; i += 4) {				\
+		if (a[i] == b[i] && a[i + 1] == b[i + 1] &&	\
+		    a[i + 2] == b[i + 2])			\
+			c[i] = c[i + 1] = c[i + 2] = 0;		\
+		else						\
+			c[i] = c[i + 1] = c[i + 2] = 0xff;	\
+		c[i + 3] = 0xff;				\
+	}
 
 BUILD_HALG(hrgb2dpcm, HDALG_LOOP, DPCM_ENC, s)
 BUILD_HALG(hdpcm2rgb, HDALG_LOOP, DPCM_DEC, t)

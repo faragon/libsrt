@@ -37,9 +37,12 @@ include Makefile.inc
 VPATH   = src:src/saux:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c ssort.c svector.c \
 	  stree.c smap.c smset.c shash.c sbitio.c scommon.c
+ESOURCES= imgtools.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
+EOBJECTS= $(ESOURCES:.c=.o)
 LIBSRT	= libsrt.a
+ELIBSRT = elibsrt.a
 TEST	= stest
 EXAMPLES = counter enc table imgc
 ifeq (,$(findstring tcc,$(CC)))
@@ -54,7 +57,9 @@ all: $(EXES) run_tests
 $(OBJECTS): $(HEADERS)
 $(LIBSRT): $(OBJECTS)
 	ar rcs $(LIBSRT) $(OBJECTS)
-$(EXES): $% $(LIBSRT)
+$(ELIBSRT): $(EOBJECTS)
+	ar rcs $(ELIBSRT) $(EOBJECTS)
+$(EXES): $% $(ELIBSRT) $(LIBSRT)
 
 run_tests: stest
 	@./$(TEST)
