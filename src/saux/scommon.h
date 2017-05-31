@@ -68,7 +68,8 @@ extern "C" {
 
 #if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L || \
     __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800 || \
-    (defined(__APPLE_CC__) && __APPLE_CC__ >= 5658)
+    (defined(__APPLE_CC__) && __APPLE_CC__ >= 5658) || \
+	defined(__GNUC__)
 	#define S_C99_SUPPORT
 #endif
 
