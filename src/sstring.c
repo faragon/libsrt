@@ -865,11 +865,13 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 	if (h && max_bytes > 0) {
 		size_t ss = ss_size(*s),
 			    off = cat ? ss : 0,
-			    max_off = off + max_bytes,
+			    max_off = s_size_t_overflow(off, max_bytes) ?
+					S_NPOS : off + max_bytes,
 			    def_buf = 16384,
 			    buf_size;
 		for (; off < max_off;) {
-			buf_size = off + def_buf < max_off ? def_buf :
+			buf_size = !s_size_t_overflow(off, def_buf) &&
+				   off + def_buf < max_off ? def_buf :
 							     max_off - off;
 			if (cat && (*s)->d.f.ext_buffer) {
 				size_t cap = ss_capacity_left(*s);
