@@ -49,6 +49,9 @@ endif
 ifndef HAS_JPG
 	HAS_JPG = 0
 endif
+ifdef HAS_JPEG
+	HAS_JPG = $(HAS_JPEG)
+endif
 ifndef HAS_LL1
 	HAS_LL1 = 0
 endif
@@ -209,9 +212,18 @@ ifeq ($(UNAME_M), armv8l)
 	COMMON_FLAGS += -march=armv8-a
 endif
 
-ifeq ($(HAS_PNG), 1)
-	COMMON_FLAGS += -DHAS_PNG
-	LDLIBS += -lz -lpng
+ifneq ($(HAS_PNG), 0)
+	COMMON_FLAGS += -DHAS_PNG=$(HAS_PNG)
+	LDLIBS += -lz
+	ifeq ($(HAS_PNG), 16)
+		LDLIBS += -lpng16
+	else
+		ifeq ($(HAS_PNG), 15)
+			LDLIBS += -lpng15
+		else
+			LDLIBS += -lpng
+		endif
+	endif
 endif
 
 ifeq ($(HAS_JPG), 1)

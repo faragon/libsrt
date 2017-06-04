@@ -44,7 +44,7 @@ EOBJECTS= $(ESOURCES:.c=.o)
 LIBSRT	= libsrt.a
 ELIBSRT = elibsrt.a
 TEST	= stest
-EXAMPLES = counter enc table imgc
+EXAMPLES = counter enc table imgc imgd
 ifeq (,$(findstring tcc,$(CC)))
 	# Add CPP targets only if not using TCC
 	EXAMPLES += bench
@@ -64,7 +64,7 @@ $(EXES): $% $(ELIBSRT) $(LIBSRT)
 run_tests: stest
 	@./$(TEST)
 clean:
-	@rm -f $(OBJECTS) $(LIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out \
+	@rm -f $(OBJECTS) $(LIBSRT) $(ELIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out \
 	       callgrind* out\.txt clang_analysis.txt *\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 
