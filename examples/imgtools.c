@@ -25,8 +25,6 @@ enum ImgTypes file_type(const char *file_name)
 	       !strncmp(file_name + sf, "raw", 3) ? IMG_raw : IMG_error;
 }
 
-
-
 /* TGA codec start */
 
 enum TGA_DCRGB_Offs { TGA_ID = 0, TGA_CMAP = 1, TGA_TYPE = 2, TGA_W = 12,
@@ -209,17 +207,20 @@ static size_t aux_png_get_depth(const png_structp s, const png_infop pi)
 		8 : png_get_bit_depth(s, pi);
 }
 
-static sbool_t aux_png2rbi(const png_structp s, const png_infop pi, struct RGB_Info *ri)
+static sbool_t aux_png2rbi(const png_structp s, const png_infop pi,
+			   struct RGB_Info *ri)
 {
 	RETURN_IF(!s || !ri, S_FALSE);
 	size_t depth = aux_png_get_depth(s, pi), chn = aux_png_get_chn(s, pi);
-	rgbi_set(ri, png_get_image_width(s, pi), png_get_image_height(s, pi), depth * chn, chn);
+	rgbi_set(ri, png_get_image_width(s, pi), png_get_image_height(s, pi),
+		 depth * chn, chn);
 	return rgbi_valid(ri);
 }
 
 static size_t aux_png_row_size(const png_structp s, const png_infop pi)
 {
-	return aux_png_get_chn(s, pi) * (png_get_image_width(s, pi) * aux_png_get_depth(s, pi)) / 8;
+	return aux_png_get_chn(s, pi) * (png_get_image_width(s, pi) *
+	       aux_png_get_depth(s, pi)) / 8;
 }
 
 static sbool_t aux_png_set_rows(png_bytep *rows, const png_structp s,
@@ -236,7 +237,8 @@ static sbool_t aux_png_read_set_rows(png_bytep *rows, const png_structp s,
 				     const png_infop pi, ss_t **rgb)
 {
 	RETURN_IF(!rows || !pi || !rgb, S_FALSE);
-	size_t rs = aux_png_row_size(s, pi), rgb_size = rs * png_get_image_height(s, pi);
+	size_t rs = aux_png_row_size(s, pi),
+	       rgb_size = rs * png_get_image_height(s, pi);
 	RETURN_IF(ss_reserve(rgb, rgb_size) < rgb_size, S_FALSE);
 	ss_set_size(*rgb, rgb_size);
 	return aux_png_set_rows(rows, s, pi, ss_get_buffer(*rgb));
@@ -258,11 +260,13 @@ static size_t png2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *png)
 	}
 	if ((png_get_color_type(s, pi) & PNG_COLOR_MASK_PALETTE) != 0)
 		png_set_expand(s); /* pal: expand to RGB */
-	png_bytep *rows = (png_bytep *)alloca(sizeof(png_bytep) * png_get_image_height(s, pi));
+	png_bytep *rows = (png_bytep *)alloca(sizeof(png_bytep) *
+			  png_get_image_height(s, pi));
 	if (aux_png_read_set_rows(rows, s, pi, rgb)) {
 		size_t i = png_set_interlace_handling(s);
 		for (; i > 0; i--)
-			png_read_rows(s, rows, NULL, png_get_image_height(s, pi));
+			png_read_rows(s, rows, NULL,
+				      png_get_image_height(s, pi));
 		png_read_end(s, pi);
 		out_size = ss_size(*rgb);
 	}
@@ -288,7 +292,8 @@ static size_t rgb2png(ss_t **png, const ss_t *rgb, const struct RGB_Info *ri)
 	png_set_filter(s, PNG_FILTER_TYPE_BASE, PNG_ALL_FILTERS);
 	png_set_compression_level(s, Z_BEST_COMPRESSION);
 	png_write_info(s, pi);
-	png_bytep *rows = (png_bytep *)alloca(sizeof(png_bytep) * png_get_image_height(s, pi));
+	png_bytep *rows = (png_bytep *)alloca(sizeof(png_bytep) *
+			  png_get_image_height(s, pi));
 	if (aux_png_set_rows(rows, s, pi, ss_get_buffer_r(rgb))) {
 		png_write_image(s, rows);
 		png_write_end(s, pi);
@@ -661,8 +666,8 @@ size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 	return r;
 }
 
-int rgbdiff(ss_t **out, const const ss_t *rgb0, const struct RGB_Info *ri0,
-	   const const ss_t *rgb1, const struct RGB_Info *ri1)
+int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
+	    const ss_t *rgb1, const struct RGB_Info *ri1)
 {
 	RETURN_IF(!out || !rgb0 || !rgb1 || !rgbi_cmp(ri0, ri1), 1);
 	ss_reserve(out, ri0->bmp_size);
@@ -687,6 +692,4 @@ int rgbdiff(ss_t **out, const const ss_t *rgb0, const struct RGB_Info *ri0,
 	}
 	return res;
 }
-
-
 

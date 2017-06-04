@@ -58,10 +58,13 @@ enum Filters
 	F_GSUB = 15, F_RGSUB = 16, F_BSUB = 17, F_RBSUB = 18, F_NumElems
 };
 
-size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in, enum ImgTypes in_type);
-size_t rgb2type(ss_t **out, enum ImgTypes out_type, const ss_t *rgb, const struct RGB_Info *ri, const int filter);
+size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in,
+	       enum ImgTypes in_type);
+size_t rgb2type(ss_t **out, enum ImgTypes out_type, const ss_t *rgb,
+		const struct RGB_Info *ri, const int filter);
 enum ImgTypes file_type(const char *file_name);
-int rgbdiff(ss_t **out, const const ss_t *rgb0, const struct RGB_Info *ri0, const const ss_t *rgb1, const struct RGB_Info *ri1);
+int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
+	    const ss_t *rgb1, const struct RGB_Info *ri1);
 
 #endif  /* IMGTOOLS_H */
 

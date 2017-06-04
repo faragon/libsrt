@@ -79,7 +79,6 @@ int main(int argc, const char **argv)
 	return exit_code ? exit_with_error(argv, exit_msg, exit_code) : 0;
 }
 
-
 static int exit_with_error(const char **argv, const char *msg,
 			   const int exit_code)
 {
@@ -102,5 +101,4 @@ static int exit_with_error(const char **argv, const char *msg,
 		v0, v0);
 	return exit_code;
 }
-
 
