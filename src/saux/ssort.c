@@ -64,16 +64,16 @@
 		SORT2F(b + 2);				\
 	}
 
-#define BUILD_MSD_RADIX_SORT(FN, T, MSBF, SWPF, S2F, S3F, S4F, OFF)	\
-	static void FN##_aux(T acc, T msd_bit, T *b, size_t elems)	\
+#define BUILD_MSD_RADIX_SORT(FN, T, TC, MSBF, SWPF, S2F, S3F, S4F, OFF)	\
+	static void FN##_aux(TC acc, TC msd_bit, T *b, size_t elems)	\
 	{								\
-		T aux;							\
+		TC aux;							\
 		size_t i = 0, j = elems - 1;				\
 		for (; i < elems; i++) {				\
-			aux = b[i] + (OFF);				\
+			aux = (TC)b[i] + (OFF);				\
 			if ((aux & msd_bit) != 0) {			\
-				for (; ((b[j] + (OFF)) & msd_bit) != 0	\
-				       && i < j; j--);			\
+				for (; (((TC)b[j] + (OFF)) &		\
+                                        msd_bit) != 0 && i < j; j--);	\
 				if (j <= i)				\
 					break;				\
 				SWPF(b, i, j);				\
@@ -104,9 +104,10 @@
 	static void FN(T *b, size_t elems)				\
 	{								\
 		size_t i;						\
-		T acc = 0;						\
+		TC acc = 0;						\
 		for (i = 1; i < elems; i++)				\
-			acc |= ((b[i - 1] + (OFF)) ^ (b[i] + (OFF)));	\
+			acc |= (((TC)b[i - 1] + (OFF)) ^ ((TC)b[i] +	\
+							  (OFF)));	\
 		if (acc)						\
 			FN##_aux(acc, MSBF(acc), b, elems);    		\
 	}
@@ -141,18 +142,18 @@ BUILD_SWAP(s_swap_u64, uint64_t)
 BUILD_SORT2(s_sort2_u64, uint64_t, s_swap_u64)
 BUILD_SORT3(s_sort3_u64, uint64_t, s_swap_u64, s_sort2_u64)
 BUILD_SORT4(s_sort4_u64, uint64_t, s_swap_u64, s_sort2_u64)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i16, int16_t, s_msb16, s_swap_i16,
-		     s_sort2_i16, s_sort3_i16, s_sort4_i16, 1<<15)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u16, uint16_t, s_msb16, s_swap_u16,
-		     s_sort2_u16, s_sort3_u16, s_sort4_u16, 0)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i32, int32_t, s_msb32, s_swap_i32,
-		     s_sort2_i32, s_sort3_i32, s_sort4_i32, 1<<31)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u32, uint32_t, s_msb32, s_swap_u32,
-		     s_sort2_u32, s_sort3_u32, s_sort4_u32, 0)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i64, int64_t, s_msb64, s_swap_i64,
-		     s_sort2_i64, s_sort3_i64, s_sort4_i64, 1LL<<63)
-BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u64, uint64_t, s_msb64, s_swap_u64,
-		     s_sort2_u64, s_sort3_u64, s_sort4_u64, 0)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i16, int16_t, uint16_t, s_msb16,
+		     s_swap_i16, s_sort2_i16, s_sort3_i16, s_sort4_i16, 1<<15)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u16, uint16_t, uint16_t, s_msb16,
+		     s_swap_u16, s_sort2_u16, s_sort3_u16, s_sort4_u16, 0)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i32, int32_t, uint32_t, s_msb32,
+		     s_swap_i32, s_sort2_i32, s_sort3_i32, s_sort4_i32, 1<<31)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u32, uint32_t, uint32_t, s_msb32,
+		     s_swap_u32, s_sort2_u32, s_sort3_u32, s_sort4_u32, 0)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i64, int64_t, uint64_t, s_msb64,
+		     s_swap_i64, s_sort2_i64, s_sort3_i64, s_sort4_i64, 1LL<<63)
+BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u64, uint64_t, uint64_t, s_msb64,
+		     s_swap_u64, s_sort2_u64, s_sort3_u64, s_sort4_u64, 0)
 
 /*
  * Sort functions
