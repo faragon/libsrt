@@ -2306,12 +2306,12 @@ static int test_sv_sort()
 	for (i = 0; i < nelems; i ++) {
 		res |= sv_at_i(v8i, i) == r8i[i] &&
 		       sv_at_u(v8u, i) == r8u[i] &&
-		       sv_at_i(v16i, i) == i &&
-		       sv_at_u(v16u, i) == i &&
-		       sv_at_i(v32i, i) == i &&
-		       sv_at_u(v32u, i) == i &&
-		       sv_at_i(v64i, i) == i &&
-		       sv_at_u(v64u, i) == i ? 0 : 1 << 31;
+		       (int)sv_at_i(v16i, i) == i &&
+		       (int)sv_at_u(v16u, i) == i &&
+		       (int)sv_at_i(v32i, i) == i &&
+		       (int)sv_at_u(v32u, i) == i &&
+		       (int)sv_at_i(v64i, i) == i &&
+		       (int)sv_at_u(v64u, i) == i ? 0 : 1 << 31;
 	}
 	sv_free(&v8i, &v8u, &v16i, &v16u, &v32i, &v32u, &v64i, &v64u);
 	free(r8i); free(r8u); free(r16i); free(r16u);
@@ -3585,18 +3585,19 @@ static int test_lsb_msb()
 		{ 0x00000000, 0x00000001, 0x00000008, 0x08000000, 0x08000000,
 		  0x80000000, 0x80000000, 0x80000000, 0x80000000 };
 	uint64_t tv64[9] =
-		{ 0x0000000000000000, 0x0000000000000001, 0x000000000000000f,
-		  0x0ffffffffffffff1, 0x0fffffffffffffff, 0x8000000000000000,
-		  0xf000000000000000, 0x8ffffffffffffff0, 0xfffffffffffffff0 },
+		{ 0x0000000000000000LL, 0x0000000000000001LL, 0x000000000000000fLL,
+		  0x0ffffffffffffff1LL, 0x0fffffffffffffffLL, 0x8000000000000000LL,
+		  0xf000000000000000LL, 0x8ffffffffffffff0LL, 0xfffffffffffffff0LL },
 		 tv64l[9] =
-		{ 0x0000000000000000, 0x0000000000000001, 0x0000000000000001,
-		  0x0000000000000001, 0x0000000000000001, 0x8000000000000000,
-		  0x1000000000000000, 0x0000000000000010, 0x0000000000000010 },
+		{ 0x0000000000000000LL, 0x0000000000000001LL, 0x0000000000000001LL,
+		  0x0000000000000001LL, 0x0000000000000001LL, 0x8000000000000000LL,
+		  0x1000000000000000LL, 0x0000000000000010LL, 0x0000000000000010LL },
 		 tv64m[9] =
-		{ 0x0000000000000000, 0x0000000000000001, 0x0000000000000008,
-		  0x0800000000000000, 0x0800000000000000, 0x8000000000000000,
-		  0x8000000000000000, 0x8000000000000000, 0x8000000000000000 };
-	int res = 0, i;
+		{ 0x0000000000000000LL, 0x0000000000000001LL, 0x0000000000000008LL,
+		  0x0800000000000000LL, 0x0800000000000000LL, 0x8000000000000000LL,
+		  0x8000000000000000LL, 0x8000000000000000LL, 0x8000000000000000LL };
+	int res = 0;
+	size_t i;
 	#define LSBMSB_TEST(tvx, tvxl, tvxm, lsb, msb, err)		\
 		for (i = 0; i < sizeof(tvx)/sizeof(tvx[0]); i++)	\
 		if (lsb(tvx[i]) != tvxl[i] || msb(tvx[i]) != tvxm[i]) {	\
