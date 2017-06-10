@@ -85,20 +85,22 @@
 			size_t elems0 = i, elems1 = elems - elems0;	\
 			if (elems0 > 4 || elems1 > 4)			\
 				msd_bit = MSBF(acc);			\
-			if (elems0 > 1)					\
+			if (elems0 > 1)	{				\
 				if (elems0 > 4)				\
 					FN##_aux(acc, msd_bit,		\
 						 b, elems0);		\
 				else if (elems0 == 4) S4F(b);		\
 				else if (elems0 == 3) S3F(b);		\
 				else		      S2F(b);		\
-			if (elems1 > 1)					\
+			}						\
+			if (elems1 > 1) {				\
 				if (elems1 > 4)				\
 					FN##_aux(acc, msd_bit,		\
 						 b + i, elems1);	\
 				else if (elems1 == 4) S4F(b + i);	\
 				else if (elems1 == 3) S3F(b + i);	\
 				else		      S2F(b + i);	\
+			}						\
 		}							\
 	}								\
 	static void FN(T *b, size_t elems)				\
