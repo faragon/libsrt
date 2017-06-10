@@ -20,7 +20,7 @@ unsigned slog2(uint64_t i)
 			test = !!(i & mask);			\
 			o |= test * bits;			\
 			i = test * (i >> bits) | !test * i;
-	SLOG2STEP(0xffffffff00000000, 32);
+	SLOG2STEP(0xffffffff00000000LL, 32);
 	SLOG2STEP(0xffff0000, 16);
 	SLOG2STEP(0xff00, 8);
 	SLOG2STEP(0xf0, 4);
