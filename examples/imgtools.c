@@ -666,6 +666,9 @@ size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 	return r;
 }
 
+#define CFF2 (char)0xff
+#define CFF4 (short)0xffff
+
 int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
 	    const ss_t *rgb1, const struct RGB_Info *ri1)
 {
@@ -682,12 +685,12 @@ int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
 	size_t i = 0;
 	const size_t mx = ri0->Bpc == 1 ? ri0->bmp_size : ri0->bmp_size / 2;
 	switch (ri0->Bpp) {
-	case 1:	INLINE_MONO_DIFF_LOOP(c0, c1, c2, i, mx, res); break;
-	case 2:	INLINE_MONO_DIFF_LOOP(s0, s1, s2, i, mx, res); break;
-	case 3:	INLINE_RGB_DIFF_LOOP(c0, c1, c2, i, mx, res); break;
-	case 4:	INLINE_RGBA_DIFF_LOOP(c0, c1, c2, i, mx, res); break;
-	case 6:	INLINE_RGB_DIFF_LOOP(s0, s1, s2, i, mx, res); break;
-	case 8:	INLINE_RGBA_DIFF_LOOP(s0, s1, s2, i, mx, res); break;
+	case 1:	INLINE_MONO_DIFF_LOOP(c0, c1, c2, CFF2, i, mx, res); break;
+	case 2:	INLINE_MONO_DIFF_LOOP(s0, s1, s2, CFF4, i, mx, res); break;
+	case 3:	INLINE_RGB_DIFF_LOOP(c0, c1, c2, CFF2, i, mx, res); break;
+	case 4:	INLINE_RGBA_DIFF_LOOP(c0, c1, c2, CFF2, i, mx, res); break;
+	case 6:	INLINE_RGB_DIFF_LOOP(s0, s1, s2, CFF4, i, mx, res); break;
+	case 8:	INLINE_RGBA_DIFF_LOOP(s0, s1, s2, CFF4, i, mx, res); break;
 	default: res = 1; break;
 	}
 	return res;

@@ -237,26 +237,26 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		        (c[i + 1] = a[i + 1] - b[i + 1]) | \
 		        (c[i + 2] = a[i + 2] - b[i + 2]))
 
-#define INLINE_MONO_DIFF_LOOP(a, b, c, i, mx, res)	\
+#define INLINE_MONO_DIFF_LOOP(a, b, c, ffs, i, mx, res)	\
 	for (i = 0; i < mx; i++)			\
-		c[i] = a[i] == b[i] ? 0 : 0xff
+		c[i] = a[i] == b[i] ? 0 : ffs
 
-#define INLINE_RGB_DIFF_LOOP(a, b, c, i, mx, res)		\
+#define INLINE_RGB_DIFF_LOOP(a, b, c, ffs, i, mx, res)		\
 	for (i = 0; i < mx; i += 3)				\
 		if (a[i] == b[i] && a[i + 1] == b[i + 1] &&	\
 		    a[i + 2] == b[i + 2])			\
 			c[i] = c[i + 1] = c[i + 2] = 0;		\
 		else						\
-			c[i] = c[i + 1] = c[i + 2] = 0xff
+			c[i] = c[i + 1] = c[i + 2] = ffs
 
-#define INLINE_RGBA_DIFF_LOOP(a, b, c, i, mx, res)		\
+#define INLINE_RGBA_DIFF_LOOP(a, b, c, ffs, i, mx, res)		\
 	for (i = 0; i < mx; i += 4) {				\
 		if (a[i] == b[i] && a[i + 1] == b[i + 1] &&	\
 		    a[i + 2] == b[i + 2])			\
 			c[i] = c[i + 1] = c[i + 2] = 0;		\
 		else						\
-			c[i] = c[i + 1] = c[i + 2] = 0xff;	\
-		c[i + 3] = 0xff;				\
+			c[i] = c[i + 1] = c[i + 2] = ffs;	\
+		c[i + 3] = ffs;					\
 	}
 
 BUILD_HALG(hrgb2dpcm, HDALG_LOOP, DPCM_ENC, s)

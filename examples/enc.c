@@ -19,7 +19,7 @@ static int syntax_error(const char **argv, const int exit_code)
 	const char *v0 = argv[0];
 	fprintf(stderr,
 		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
-		"-eu|-du|-er|-dr|-ez|-dz|-crc32]\nExamples:\n"
+		"-eu|-du|-er|-dr|-ez|-dz|-crc32|-adler32]\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
@@ -28,9 +28,10 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s -eu <in >out.url.esc\n%s -du <in.url.esc >out\n"
 		"%s -er <in >in.r\n%s -dr <in.r >out\n"
 		"%s -ez <in >in.z\n%s -dz <in.z >out\n"
-		"%s -crc32 <in\n%s -crc32 <in >out\n",
+		"%s -crc32 <in\n%s -crc32 <in >out\n"
+		"%s -adler32 <in\n%s -adler32 <in >out\n",
 		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
-		v0, v0, v0, v0, v0, v0, v0);
+		v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
@@ -38,12 +39,21 @@ int main(int argc, const char **argv)
 {
 	if (argc < 2)
 		return syntax_error(argv, 1);
+	uint32_t acc;
+	uint32_t (*f32)(const ss_t *, uint32_t, size_t, size_t) = NULL;
 	if (!strncmp(argv[1], "-crc32", 6)) {
-		uint32_t crc = 0, buf_size = 8192;
+		acc = S_CRC32_INIT;
+		f32 = ss_crc32r;
+	} else if (!strncmp(argv[1], "-adler32", 8)) {
+		acc = S_ADLER32_INIT;
+		f32 = ss_adler32r;
+	}
+	if (f32) {
+		uint32_t buf_size = 8192;
 		ss_t *buf = ss_alloca(buf_size);
 		while (ss_read(&buf, stdin, buf_size))
-			crc = ss_crc32r(buf, crc, 0, S_NPOS);
-		printf("%08x\n", crc);
+			acc = f32(buf, acc, 0, S_NPOS);
+		printf("%08x\n", acc);
 		return 0;
 	}
 	ss_t *in = ss_alloc(IBUF_SIZE * 2), *out = ss_alloc(IBUF_SIZE * 2);
