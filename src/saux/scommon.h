@@ -223,6 +223,8 @@ BUILD_SINT_CMPF(scmp_ptr, const void *)
 #define S_NULL_WC	L"(null)"
 #define S_TRUE		(1)
 #define S_FALSE		(0)
+#define S_CRC32_INIT     0
+#define S_ADLER32_INIT   1
 #define SINT32_MAX	((int32_t)0x7fffffff)
 #define SINT32_MIN	((int32_t)0x80000000)
 #define SUINT32_MAX	((uint32_t)-1)

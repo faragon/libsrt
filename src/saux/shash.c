@@ -28,6 +28,7 @@
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
+	RETURN_IF(!buf, S_CRC32_INIT);
 	const uint8_t *p = (const uint8_t *)buf;
 	size_t i, j;
 	crc = ~crc;
@@ -52,6 +53,7 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
+	RETURN_IF(!buf, S_CRC32_INIT);
 	size_t i = 0;
 	const uint8_t *p = (const uint8_t *)buf;
 	crc = ~crc;
@@ -116,6 +118,41 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 }
 
 #endif /* #ifdef S_MINIMAL */
+
+#define ADLER32_BASE	65521	/* Largest prime below 2^16 */
+#define ADLER32_NMAX	 5552
+
+uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
+{
+	RETURN_IF(!buf0, S_ADLER32_INIT);
+	size_t remaining = buf_size, k;
+	const unsigned char *buf = (const unsigned char *)buf0;
+	uint32_t s1 = (adler & 0xffff), s2 = (adler >> 16) & 0xffff;
+	for (; remaining > 0; s1 %= ADLER32_BASE, s2 %= ADLER32_BASE) {
+		k = remaining < ADLER32_NMAX ? remaining : ADLER32_NMAX;
+		remaining -= k;
+		for (; k >= 16; buf += 16, k -= 16) {
+			s1 += buf[ 0]; s2 += s1;
+			s1 += buf[ 1]; s2 += s1;
+			s1 += buf[ 2]; s2 += s1;
+			s1 += buf[ 3]; s2 += s1;
+			s1 += buf[ 4]; s2 += s1;
+			s1 += buf[ 5]; s2 += s1;
+			s1 += buf[ 6]; s2 += s1;
+			s1 += buf[ 7]; s2 += s1;
+			s1 += buf[ 8]; s2 += s1;
+			s1 += buf[ 9]; s2 += s1;
+			s1 += buf[10]; s2 += s1;
+			s1 += buf[11]; s2 += s1;
+			s1 += buf[12]; s2 += s1;
+			s1 += buf[13]; s2 += s1;
+			s1 += buf[14]; s2 += s1;
+			s1 += buf[15]; s2 += s1;
+		}
+		for (; k > 0; k--, s1 += *buf++, s2 += s1);
+	}
+	return (s2 << 16) | s1;
+}
 
 #else
 

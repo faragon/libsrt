@@ -821,8 +821,15 @@ ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset, const size_t 
 /* #API: |String CRC-32 checksum|string|32-bit hash|O(n)|1;2| */
 uint32_t ss_crc32(const ss_t *s);
 
-/* #API: |CRC-32 checksum for substring|string; CRC resulting from previous chained CRC calls (use 0 for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
+/* #API: |CRC-32 checksum for substring|string; CRC resulting from previous chained CRC calls (use S_CRC32_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
 uint32_t ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2);
+
+/* #API: |String Adler32 checksum|string|32-bit hash|O(n)|1;2| */
+uint32_t ss_adler32(const ss_t *s);
+
+/* #API: |Adler32 checksum for substring|string; Adler32 resulting from previous chained Adler32 calls (use S_ADLER32_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
+uint32_t ss_adler32r(const ss_t *s, uint32_t adler, size_t off1, size_t off2);
+
 
 /*
  * Inlined functions

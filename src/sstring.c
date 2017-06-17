@@ -2125,3 +2125,17 @@ uint32_t ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2)
 	return sh_crc32(crc, ss_get_buffer_r(s) + off1, offx - off1);
 }
 
+uint32_t ss_adler32(const ss_t *s)
+{
+	return ss_adler32r(s, 0, 0, S_NPOS);
+}
+
+uint32_t ss_adler32r(const ss_t *s, uint32_t adler, size_t off1, size_t off2)
+{
+	RETURN_IF(!s || off1 >= off2, 0);
+	size_t ss = ss_size(s);
+	RETURN_IF(off1 >= ss, 0);
+	size_t offx = off2 == S_NPOS ? ss : off2;
+	return sh_adler32(adler, ss_get_buffer_r(s) + off1, offx - off1);
+}
+

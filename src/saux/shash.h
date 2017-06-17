@@ -25,8 +25,10 @@ extern "C" {
 
 #include "scommon.h"
 
-/* #notAPI: |CRC-32 (0xedb88320 polynomial)|CRC accumulator;buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+/* #notAPI: |CRC-32 (0xedb88320 polynomial)|CRC accumulator (for offset 0 must be 0);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size);
+/* #notAPI: |Adler32 checksum|Adler32 accumulator (for offset 0 must be 1);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+uint32_t sh_adler32(uint32_t adler, const void *buf, size_t buf_size);
 
 #ifdef __cplusplus
 }      /* extern "C" { */
