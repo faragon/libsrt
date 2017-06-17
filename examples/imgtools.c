@@ -41,6 +41,7 @@ static sbool_t valid_tga(const char *h)
 static sbool_t tga_rgb_swap(const size_t bpp, const size_t buf_size,
 			    const char *s, char *t)
 {
+	RETURN_IF(!s || !t, S_FALSE);
 	size_t i;
 	switch (bpp) {
 	case 24:for (i = 0; i < buf_size; i += 3)
