@@ -314,9 +314,8 @@ static size_t rgb2png(ss_t **png, const ss_t *rgb, const struct RGB_Info *ri)
 #define JPG_QUALITY		95
 #define JPG_SUBS_HQ
 
-static void jpg_error_exit(j_common_ptr jc)
+static void jpg_error_exit(j_common_ptr /*jc*/)
 {
-	jc = jc; /* pedantic */
 	fprintf(stderr, "jpeg critical error (!)\n");
 	exit(1);
 }
