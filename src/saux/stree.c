@@ -208,7 +208,8 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 		if (l == r)
 			return is_red(t, ndx) ? l : l + 1;
 #ifdef DEBUG_stree
-		fprintf(stderr, "st_assert: height mismatch l %u r %u\n", l, r);
+		fprintf(stderr, "st_assert: height mismatch l %u r %u\n",
+			(unsigned)l, (unsigned)r);
 #endif
 		return 0;
 	}

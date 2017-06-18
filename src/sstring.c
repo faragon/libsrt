@@ -1708,7 +1708,6 @@ ss_t *ss_check(ss_t **s)
 	const size_t ss = ss_size(*s), ssmax = ss_max_size(*s);
 	S_ASSERT(ss <= ssmax);
 	if (ss > ssmax) { /* This should never happen */
-		S_ASSERT(ss > ssmax);
 		ss_set_size(*s, ssmax);
 		set_unicode_size_cached(*s, S_FALSE); /* Invalidate cache */
 	}

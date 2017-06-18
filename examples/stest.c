@@ -3962,7 +3962,8 @@ int main()
 			int32_t l = sc_tolower((int)i);
 			if (l != l0) {
 				fprintf(stderr, "Warning: sc_tolower(%x): %x "
-					"[%x system reported]\n", i, l, l0);
+					"[%x system reported]\n", i,
+					(unsigned)l, (unsigned)l0);
 				test_tolower++;
 			}
 		}
@@ -3975,7 +3976,8 @@ int main()
 				u = sc_toupper((int)i);
 			if (u != u0) {
 				fprintf(stderr, "Warning sc_toupper(%x): %x "
-					"[%x system reported]\n", i, u, u0);
+					"[%x system reported]\n", i,
+					(unsigned)u, (unsigned)u0);
 				test_toupper++;
 			}
 		}

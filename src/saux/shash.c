@@ -225,7 +225,7 @@ int main(int argc, const char **argv)
 	for (i = 0; i < 16; i++) {
 		printf("\t{\n\t");
 		for (j = 0; j < 256; j++) {
-			printf("0x%08x", c32t[i][j]);
+			printf("0x%08x", (unsigned)c32t[i][j]);
 			if (j < 255) {
 				if ((j % rows) == (rows - 1))
 					printf(",\n\t");
