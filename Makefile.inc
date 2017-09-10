@@ -177,6 +177,9 @@ ifeq ($(FORCE32), 1)
 	ifeq ($(UNAME_M), x86_64)
 		COMMON_FLAGS += -m32
 	endif
+	ifeq ($(UNAME_M), ppc64)
+		COMMON_FLAGS += -m32
+	endif
 	ifeq ($(UNAME_M), mips64)
 		ifeq ($(OCTEON), 1)
 			GCC_COMMON_FLAGS += -march=octeon
@@ -185,6 +188,9 @@ ifeq ($(FORCE32), 1)
 		endif
 	endif
 else
+	ifeq ($(UNAME_M), ppc64)
+		COMMON_FLAGS += -m64
+	endif
 	ifeq ($(UNAME_M), mips64)
 		GCC_COMMON_FLAGS += -mabi=64
 		ifeq ($(OCTEON), 1)
