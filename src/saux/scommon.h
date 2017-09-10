@@ -133,8 +133,8 @@ extern "C" {
 #define S_ROR32(a, c) ((a) >> (c) | (a) << (32 - (c)))
 #define S_NBIT(n) (1 << n)
 #define S_NBITMASK(n) (S_NBIT(n) - 1)
-#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
-#define S_BSWAP32(a) __builtin_bswap32(a)
+#if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 3
+#define S_BSWAP32(a) __builtin_bswap32(a) /* Added in GCC 4.3 */
 #else
 #define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 | ((a) & 0xff0000) >> 8)
 #endif
