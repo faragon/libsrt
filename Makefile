@@ -56,9 +56,9 @@ EXES	= $(TEST) $(EXAMPLES)
 all: $(EXES) run_tests
 $(OBJECTS): $(HEADERS)
 $(LIBSRT): $(OBJECTS)
-	ar rcs $(LIBSRT) $(OBJECTS)
+	ar rcs $@ $^
 $(ELIBSRT): $(EOBJECTS)
-	ar rcs $(ELIBSRT) $(EOBJECTS)
+	ar rcs $@ $^
 $(EXES): $% $(ELIBSRT) $(LIBSRT)
 
 run_tests: stest
