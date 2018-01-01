@@ -3,8 +3,8 @@
  *
  * Buffer hashing
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "shash.h"
@@ -53,13 +53,15 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
+	size_t i, bsX;
+	const uint8_t *p;
 	RETURN_IF(!buf, S_CRC32_INIT);
-	size_t i = 0;
-	const uint8_t *p = (const uint8_t *)buf;
+	i = 0;
+	p = (const uint8_t *)buf;
 	crc = ~crc;
 #if S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 || \
     S_CRC32_SLC == 16
-	size_t bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
+	bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
 	for (; i < bsX; i += S_CRC32_SLC) {
 		uint32_t a = S_LD_U32(p + i) ^ S_LTOH_U32(crc)
 	#if S_CRC32_SLC >= 8
@@ -124,10 +126,14 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 
 uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 {
+	uint32_t s1, s2;
+	size_t remaining, k;
+	const unsigned char *buf;
 	RETURN_IF(!buf0, S_ADLER32_INIT);
-	size_t remaining = buf_size, k;
-	const unsigned char *buf = (const unsigned char *)buf0;
-	uint32_t s1 = (adler & 0xffff), s2 = (adler >> 16) & 0xffff;
+	remaining = buf_size;
+	buf = (const unsigned char *)buf0;
+	s1 = (adler & 0xffff);
+	s2 = (adler >> 16) & 0xffff;
 	for (; remaining > 0; s1 %= ADLER32_BASE, s2 %= ADLER32_BASE) {
 		k = remaining < ADLER32_NMAX ? remaining : ADLER32_NMAX;
 		remaining -= k;
@@ -157,7 +163,7 @@ uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 #else
 
 /*
- * gcc shash.c -DS_BUILD_CRC32_TABLES ; ./a.out >scrc32.h
+ * gcc shash.c -DS_BUILD_CRC32_TABLES -o a ; ./a >scrc32.h
  */
 int main(int argc, const char **argv)
 {
@@ -187,8 +193,8 @@ int main(int argc, const char **argv)
 				c32t[s][i] = (c32t[s - 1][i] >> 8) ^ \
 				c32t[0][c32t[s - 1][i] & 0xff];
 			C32L(1); C32L(2); C32L(3); C32L(4); C32L(5); C32L(6);
-			C32L(7); C32L(8); C32L(9); C32L(10); C32L(11); C32L(12);
-			C32L(13); C32L(14); C32L(15);
+			C32L(7); C32L(8); C32L(9); C32L(10); C32L(11);
+			C32L(12); C32L(13); C32L(14); C32L(15);
 		}
 	}
 	/*
@@ -198,12 +204,10 @@ int main(int argc, const char **argv)
 	       " * scrc32.h\n"
 	       " *\n"
 	       " * Precomputed CRC-32 for polynomial 0x%08x\n"
-	       " * (gcc shash.c -DS_BUILD_CRC32_TABLES ; ./a.out >scrc32.h)\n"
+	       " * (gcc shash.c -DS_BUILD_CRC32_TABLES -o a; ./a >scrc32.h)\n"
 	       " *\n"
-	       " * Copyright (c) 2015-2016, F. Aragon. All rights reserved. "
-							"Released under\n"
-	       " * the BSD 3-Clause License (see the doc/LICENSE file "
-							"included).\n"
+	       " * " LIBSRT_COPYRIGHT "\n"
+	       " * " LIBSRT_LICENSE "\n"
 	       " */\n\n"
 	       "#ifndef SCRC32_H\n"
 	       "#define SCRC32_H\n\n"

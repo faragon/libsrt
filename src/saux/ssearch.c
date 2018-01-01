@@ -3,8 +3,8 @@
  *
  * Real-time string search using the Rabin-Karp algorithm.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "ssearch.h"
@@ -44,7 +44,7 @@
 	}
 #ifdef S_ENABLE_FIND_CSUM_FAST_TO_SLOW_ALGORITHM_SWITCH
 #define S_FIND_CSUM_ALG_SWITCH_SETUP	\
-	size_t csum_collision_off = 0, csum_collision_count = 0;
+	size_t csum_collision_off = 0, csum_collision_count = 0
 #define S_FIND_CSUM_ALG_SWITCH S_FCSUM_RETURN_CHECK_W_ALGORITHM_SWITCH
 #else
 #define S_FIND_CSUM_ALG_SWITCH_SETUP
@@ -55,19 +55,25 @@
  * ss_find_csum_* templates for pipeline fill phase
  */
 #ifdef S_ENABLE_FIND_CSUM_FIRST_CHAR_LOCATION_OPTIMIZATION
-#define S_FIND_SET_START	\
+#define S_FIND_SET_START		\
+	size_t i;			\
+	const char *stm1;		\
+	unsigned int target, current;	\
 	const char *s = (const char *)memchr(s0 + off, *t, ss - off);
 #else
-#define S_FIND_SET_START \
+#define S_FIND_SET_START	 	\
+	size_t i;			\
+	const char *stm1;		\
+	unsigned int target, current;	\
 	const char *s = (const char *)(s0 + off);
 #endif
 #define S_FIND_CSUM_PIPELINE1(alg)		\
 	S_FIND_SET_START;			\
 	if (!s || (ss - (size_t)(s - s0)) < ts)	\
 		return S_NPOS;			\
-	size_t i = 1;				\
-	const char *stm1 = s0 + ss - 1;		\
-	unsigned int target = 0, current = 0;
+	i = 1;					\
+	stm1 = s0 + ss - 1;			\
+	target = 0, current = 0;
 #ifdef S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
 #define S_FIND_CSUM_PIPELINE2(alg)		\
 	for (; (i + 4) < ts; i += 4) {		\
@@ -130,10 +136,10 @@ size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss,
 size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
 			 const char *t, const size_t ts)
 {
+	S_FIND_CSUM_ALG_SWITCH_SETUP;
 	S_FIND_CSUM_PIPELINE1(FCSUM_FAST);
 	S_FIND_CSUM_PIPELINE2(FCSUM_FAST);
 	S_FIND_CSUM_PIPELINE3(FCSUM_FAST);
-	S_FIND_CSUM_ALG_SWITCH_SETUP;
 	S_FIND_CSUM_SEARCH1(FCSUM_FAST, S_FIND_CSUM_ALG_SWITCH);
 	S_FIND_CSUM_SEARCH2(FCSUM_FAST, S_FIND_CSUM_ALG_SWITCH);
 	return S_NPOS;
@@ -168,19 +174,23 @@ size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
 size_t ss_find_bf(const char *s0, const size_t off, const size_t ss,
 		  const char *t, const size_t ts)
 {
+	char t0;
+	const char *s, *s_top, *t_top, *sa, *ta;
 	RETURN_IF(!ss, S_NPOS);
-	const char t0 = t[0],
-		  *s = s0 + off, *s_top = s0 + ss - ts,
-		  *t_top = t + ts,
-		  *sa, *ta;
+	t0 = t[0];
+	s = s0 + off;
+	s_top = s0 + ss - ts;
+	t_top = t + ts;
 	for (; s <= s_top;) {
 		if (!((*s++ == t0) || (s_top >= (s + 24) &&
-		    ((*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
-		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
-		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
-		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
+		    ((*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
+		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
+		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
+		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
+		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0)||
 		     (*s++==t0)||(*s++==t0)||(*s++==t0)||(*s++==t0))))) {
-			s = (const char *)memchr(s, t0, (size_t)(s_top - s) + 1);
+			s = (const char *)
+				memchr(s, t0, (size_t)(s_top - s) + 1);
 			if (!s)
 				return S_NPOS;
 			s++;
@@ -228,10 +238,11 @@ size_t ss_find_bmh(const char *s0, const size_t off, const size_t ss0,
  * Using libc. Supports string-only (no raw data search, just for benchmarks)
  */
 size_t ss_find_libc(const char *s, const size_t off, const size_t ss,
-						const char *t, const size_t ts)
+		    const char *t, const size_t ts)
 {
+	const char *l;
 	RETURN_IF(!ss || !ts, S_NPOS);
-	const char *l = strstr(s + off, t);
+	l = strstr(s + off, t);
 	return l ? (size_t)(l - s) : S_NPOS;
 }
 

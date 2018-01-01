@@ -3,8 +3,8 @@
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "schar.h"
@@ -63,11 +63,13 @@
 size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
 			 size_t *enc_errors)
 {
+	int c;
+	size_t char_size;
 	if (!s || off >= max_off)
 		return 0;
-	const int c = s[off];
-	size_t char_size = SSU8_SZ1(c)? 1 : SSU8_SZ2(c)? 2 : SSU8_SZ3(c)? 3 :
-			   SSU8_SZ4(c)? 4 : SSU8_SZ5(c)? 5 : SSU8_SZ6(c)? 6 : 1;
+	c = s[off];
+	char_size = SSU8_SZ1(c)? 1 : SSU8_SZ2(c)? 2 : SSU8_SZ3(c)? 3 :
+		    SSU8_SZ4(c)? 4 : SSU8_SZ5(c)? 5 : SSU8_SZ6(c)? 6 : 1;
 	RETURN_IF((off + char_size) <= max_off, char_size);
 	/* BEHAVIOR:
 	 * On encoding errors, increase the error count, and return 1 as size
@@ -80,12 +82,13 @@ size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
 size_t sc_utf8_count_chars(const char *s, const size_t s_size,
 			   size_t *enc_errors)
 {
+	union s_u32 m1;
+	size_t i, unicode_sz, size_cutted;
 	if (!s || !s_size)
 		return 0;
-	size_t i = 0, unicode_sz = 0;
+	i = unicode_sz = 0;
 #ifdef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
-	const size_t size_cutted = s_size >= 6 ? s_size - 6 : 0;
-	union s_u32 m1;
+	size_cutted = s_size >= 6 ? s_size - 6 : 0;
 	m1.b[0] = m1.b[1] = m1.b[2] = m1.b[3] = SSU8_M1;
 	for (; i < size_cutted;) {
 		if ((S_LD_U32(s + i) & m1.a32) == 0) {
@@ -190,9 +193,11 @@ size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
 				     const size_t unicode_count,
 				     size_t *actual_unicode_count)
 {
+	size_t i, unicode_size;
 	if (!s || off >= max_off)
 		return 0;
-	size_t i = off, unicode_size = 0;
+	i = off;
+	unicode_size = 0;
 	for (;	i < max_off && unicode_size < unicode_count;
 		i += sc_utf8_char_size(s, i, max_off, NULL), unicode_size++);
 	if (actual_unicode_count)
@@ -205,10 +210,10 @@ ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
 				     int32_t (*ssc_toX)(const int32_t))
 {
 	int uchr = 0;
-	size_t i = off;
+	size_t i = off, char_size;
 	ssize_t caseXsize = 0;
 	for (; i < s_size;) {
-		const size_t char_size = sc_utf8_to_wc(s, i, s_size, &uchr, NULL);
+		char_size = sc_utf8_to_wc(s, i, s_size, &uchr, NULL);
 		i += char_size;
 		caseXsize += ((ssize_t)sc_wc_to_utf8_size(ssc_toX(uchr)) -
 			      (ssize_t)char_size);
@@ -461,6 +466,7 @@ int32_t sc_tolower(const int32_t c)
 					RE(c, 0xa7ab, 0x25c);
 					RE(c, 0xa7ac, 0x261);
 					RE(c, 0xa7ad, 0x26c);
+					RE(c, 0xa7ae, 0x26a);
 					RE(c, 0xa7b0, 0x29e);
 					RE(c, 0xa7b1, 0x287);
 					RE(c, 0xa7b2, 0x29d);
@@ -474,8 +480,10 @@ int32_t sc_tolower(const int32_t c)
 		}
 		return c;
 	case 8: /* >= 0x10428 */
+		RR(c, 0x104b0, 0x104d3, c + 0x28);
 		RR(c, 0x10c80, 0x10cb2, c + 0x40);
 		RR(c, 0x118a0, 0x118bf, c + 0x20);
+		RR(c, 0x1e900, 0x1e921, c + 0x22);
 		return c;
 	}
 	return c;
@@ -555,7 +563,8 @@ int32_t sc_toupper(const int32_t c)
 			RE(c, 0x260, 0x193); RE(c, 0x261, 0xa7ac);
 			RE(c, 0x263, 0x194); RE(c, 0x265, 0xa78d);
 			RE(c, 0x266, 0xa7aa); RE(c, 0x268, 0x197);
-			RE(c, 0x269, 0x196); RE(c, 0x26b, 0x2c62);
+			RE(c, 0x269, 0x196); RE(c, 0x26a, 0xa7ae);
+			RE(c, 0x26b, 0x2c62);
 			RE(c, 0x26c, 0xa7ad);
 			return c;
 		} else if (c < 0x280) {
@@ -615,6 +624,15 @@ int32_t sc_toupper(const int32_t c)
 		}
 		RE(c, 0x523, 0x522); RR(c, 0x561, 0x586, c - 0x30);
 		RRO(c, 0x525, 0x52f, c - 1); RR(c, 0x13f8, 0x13fd, c - 8);
+		RE(c, 0x1c80, 0x412);
+		RE(c, 0x1c81, 0x414);
+		RE(c, 0x1c82, 0x41e);
+		RE(c, 0x1c83, 0x421);
+		RE(c, 0x1c84, 0x422);
+		RE(c, 0x1c85, 0x422);
+		RE(c, 0x1c86, 0x42a);
+		RE(c, 0x1c87, 0x462);
+		RE(c, 0x1c88, 0xa64a);
 		RE(c, 0x1d79, 0xa77d); RE(c, 0x1d7d, 0x2c63);
 		RR(c, 0x1e01, 0x1e95, c - (c % 2)); RE(c, 0x1e9b, 0x1e60);
 		return c;
@@ -705,8 +723,10 @@ int32_t sc_toupper(const int32_t c)
 		}
 		return c;
 	case 8: /* >= 0x10450 */
+		RR(c, 0x104d8, 0x104fb, c - 0x28);
 		RR(c, 0x10cc0, 0x10cf2, c - 0x40);
 		RR(c, 0x118c0, 0x118df, c - 0x20);
+		RR(c, 0x1e922, 0x1e943, c - 0x22);
 		return c;
 	}
 	return c;
@@ -737,15 +757,16 @@ size_t sc_parallel_toX(const char *s, size_t off, const size_t max,
 		       char *o, int32_t (*ssc_toX)(const int32_t))
 {
 	const int op_mod = ssc_toX == sc_tolower? 1 : 0;
-	union s_u32 m1;
-	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
 	const uint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
 	const uint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
 	const size_t szm4 = max & (size_t)(~3);
+	uint32_t a, b;
+	union s_u32 m1;
+	m1.b[0] = m1.b[1] =  m1.b[2] = m1.b[3] = SSU8_SX;
 	for (; off < szm4; off += 4) {
-		const uint32_t a = S_LD_U32(s + off);
+		a = S_LD_U32(s + off);
 		if ((a & m1.a32) == 0) {
-			uint32_t b = (msk1 & a) + msk4;
+			b = (msk1 & a) + msk4;
 			b = (msk1 & b) + msk2;
 			b = ((b & ~a) >> 2) & msk3;
 			S_ST_U32(o, op_mod ? a + b : a - b);

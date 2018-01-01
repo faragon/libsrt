@@ -3,7 +3,7 @@
  *
  * Benchmarks of libsrt vs C++ STL
  *
- * Copyright (c) 2015-2017, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2018, F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
@@ -52,7 +52,7 @@
 #define BENCH_TIME_MS (BENCH_TIME_US / 1000)
 #define BENCH_TIME_US_I ((unsigned)(BENCH_TIME_US / 1000000))
 #define BENCH_TIME_US_D ((unsigned)(BENCH_TIME_US % 1000000))
-#define S_TEST_ELEMS 1000000
+#define S_TEST_ELEMS 500000
 #define S_TEST_ELEMS_SHORT (S_TEST_ELEMS / 10000)
 
 #define TId_Base		(1<<0)
@@ -719,8 +719,7 @@ const char
 	"bcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab"
 	"cdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcba",
 	*haystack_hardmatch3_long =
-	U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES
-	U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES "1234567890",
+	U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES "1234567890",
 	*needle_easymatch1a = " a ",
 	*needle_easymatch1b = "conversations?",
 	*needle_easymatch2a = U8_HAN_611B,
@@ -1309,9 +1308,9 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_bitset_popcount100, count[i], tid[i]);
 		BENCH_FN(libsrt_bitset_popcount10000, count[i], tid[i]);
 		BENCH_FN(cxx_bitset_popcount10000, count[i], tid[i]);
-		BENCH_FN(libsrt_string_cat, count[i], tid[i]);
-		BENCH_FN(c_string_cat, count[i], tid[i]);
-		BENCH_FN(cxx_string_cat, count[i], tid[i]);
+		BENCH_FN(libsrt_string_cat, count[i] / 10, tid[i]);
+		BENCH_FN(c_string_cat, count[i] / 10, tid[i]);
+		BENCH_FN(cxx_string_cat, count[i] / 10, tid[i]);
 	}
 	return 0;
 }

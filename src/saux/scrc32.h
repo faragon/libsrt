@@ -2,10 +2,10 @@
  * scrc32.h
  *
  * Precomputed CRC-32 for polynomial 0xedb88320
- * (gcc shash.c -DS_BUILD_CRC32_TABLES ; ./a.out >scrc32.h)
+ * (gcc shash.c -DS_BUILD_CRC32_TABLES -o a; ./a >scrc32.h)
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #ifndef SCRC32_H

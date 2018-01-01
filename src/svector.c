@@ -3,8 +3,8 @@
  *
  * Vector handling.
  *
- * Copyright (c) 2015-2017, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */ 
 
 #include "svector.h"
@@ -62,10 +62,10 @@ static T_SVSTX svstx_f[SV_LAST_INT + 1] = {	svsti8, (T_SVSTX)svstu8,
  * Pop-related function pointers
  */
 
-#define SV_LDx(f, TL, TO)						\
-	static TO f(const void *ld, const size_t index)			\
-	{								\
-		return (TO)(((TL *)ld)[index]);				\
+#define SV_LDx(f, TL, TO)					\
+	static TO f(const void *ld, const size_t index)		\
+	{							\
+		return (TO)(((TL *)ld)[index]);			\
 	}
 
 SV_LDx(svldi8, const signed char, int64_t)
@@ -185,8 +185,9 @@ static sd_t *aux_dup_sd(const sd_t *d)
 
 static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_size)
 {
+	const sv_t *s;
 	ASSERT_RETURN_IF(!v, 0);
-	const sv_t *s = *v && *v != sv_void ? *v : NULL;
+	s = *v && *v != sv_void ? *v : NULL;
 	if (s == NULL) { /* reserve from NULL/sv_void */
 		ASSERT_RETURN_IF(!src, 0);
 		*v = src->d.sub_type == SV_GEN ?
@@ -200,19 +201,21 @@ static size_t aux_reserve(sv_t **v, const sv_t *src, const size_t max_size)
 static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		     const size_t ss0)
 {
+	size_t s_src, ss, at, out_size, raw_space, new_max_size;
+	sbool_t aliasing;
 	ASSERT_RETURN_IF(!v, sv_void);
 	if (!*v)  /* duplicate source */
 		return *v = (sv_t *)aux_dup_sd((const sd_t *)src);
-	const size_t s_src = sv_size(src),
-		     ss = s_src < ss0 ? s_src : ss0;
+	s_src = sv_size(src);
+	ss = s_src < ss0 ? s_src : ss0;
 	if (src && (*v)->d.sub_type == src->d.sub_type) {
-		const sbool_t aliasing = *v == src;
-		const size_t at = (cat && *v) ? sv_size(*v) : 0;
+		aliasing = *v == src;
+		at = (cat && *v) ? sv_size(*v) : 0;
 		if (s_size_t_overflow(at, ss)) {
 			sd_set_alloc_errors((sd_t *)*v);
 			return *v;
 		}
-		const size_t out_size = at + ss;
+		out_size = at + ss;
 		if (aux_reserve(v, src, out_size) >= out_size) {
 			if (!aliasing)
 				sv_copy_elems(*v, at, src, 0, ss);
@@ -225,13 +228,14 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 		RETURN_IF(cat, sv_check(v)); /* BEHAVIOR: cat wrong type */
 		sv_clear(*v);
 		RETURN_IF(!src, sv_check(v)); /* BEHAVIOR: null input */
-		size_t raw_space = (*v)->d.elem_size * (*v)->d.max_size,
-		       new_max_size = raw_space / src->d.elem_size;
+		raw_space = (*v)->d.elem_size * (*v)->d.max_size;
+		new_max_size = raw_space / src->d.elem_size;
 		(*v)->d.elem_size = src->d.elem_size;
 		(*v)->d.max_size = new_max_size;
 		(*v)->d.sub_type = src->d.sub_type;
 		(*v)->vx.cmpf = src->vx.cmpf;
-		if (sv_reserve(v, ss) >= ss) { /* BEHAVIOR: only if enough space */
+		if (sv_reserve(v, ss) >= ss) {
+			/* BEHAVIOR: only if enough space */
 			sv_copy_elems(*v, 0, src, 0, ss);
 			sv_set_size(*v, ss);
 		}
@@ -242,14 +246,16 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
                        const size_t off, const size_t n)
 {
+	size_t ss0, at, src_size, erase_size, out_size;
+	sbool_t overflow;
 	ASSERT_RETURN_IF(!v, sv_void);
 	if (!src)
 		src = sv_void;
-	const size_t ss0 = sv_size(src),
+	ss0 = sv_size(src);
 	at = (cat && *v) ? sv_size(*v) : 0;
-	const sbool_t overflow = off + n > ss0;
-	const size_t src_size = overflow ? ss0 - off : n,
-		     erase_size = ss0 - off - src_size;
+	overflow = off + n > ss0;
+	src_size = overflow ? ss0 - off : n,
+	erase_size = ss0 - off - src_size;
 	if (*v == src) { /* BEHAVIOR: aliasing: copy-only */
 		if (off + n >= ss0) { /* tail clean cut */
 			sv_set_size(*v, off);
@@ -258,7 +264,7 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 			sv_set_size(*v, ss0 - n);
 		}
 	} else { /* copy or cat */
-		const size_t out_size = at + off + erase_size;
+		out_size = at + off + erase_size;
 		if (aux_reserve(v, src, out_size) >= out_size) {
 			sv_copy_elems(*v, at, src, 0, off);
 			sv_copy_elems(*v, at + off, src, off + n, erase_size);
@@ -271,23 +277,27 @@ static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
 static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 			const size_t n0)
 {
+	void *po;
+	const void *psrc;
+	sbool_t aliasing;
+	size_t src_size, at, n, out_size, elem_size;
 	RETURN_IF(!v, sv_void);
 	if (!src) {
 		RETURN_IF(cat, sv_check(v));
 		sv_clear(*v);
 		return *v;
 	}
-	const size_t src_size = sv_size(src),
-		     at = (cat && *v) ? sv_size(*v) : 0;
-	const size_t n = n0 < src_size ? n0 : src_size;
+	src_size = sv_size(src);
+	at = (cat && *v) ? sv_size(*v) : 0;
+	n = n0 < src_size ? n0 : src_size;
 	if (!s_size_t_overflow(at, n)) { /* overflow check */
-		const size_t out_size = at + n;
-		const sbool_t aliasing = *v == src;
+		out_size = at + n;
+		aliasing = *v == src;
 		if (aux_reserve(v, src, out_size) >= out_size) {
 			if (!aliasing) {
-				void *po = sv_get_buffer(*v);
-				const void *psrc = sv_get_buffer_r(src);
-				const size_t elem_size = src->d.elem_size;
+				po = sv_get_buffer(*v);
+				psrc = sv_get_buffer_r(src);
+				elem_size = src->d.elem_size;
 				s_copy_elems(po, at, psrc, 0, n, elem_size);
 			}
 			sv_set_size(*v, out_size);
@@ -301,6 +311,8 @@ static char *ptr_to_elem(sv_t *v, const size_t i)
 	return (char *)sv_get_buffer(v) + i * v->d.elem_size;
 }
 
+/* WARNING: this is intentionally unprotected.
+ */
 static const char *ptr_to_elem_r(const sv_t *v, const size_t i)
 {
 	return (const char *)sv_get_buffer_r(v) + i * v->d.elem_size;
@@ -319,8 +331,9 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const sbool_t ext_buf, void *buffer,
 		   const size_t elem_size, const size_t max_size,
 		   const sv_cmp_t f)
 {
+	sv_t *v;
 	RETURN_IF(!elem_size || !buffer, sv_void);
-        sv_t *v = (sv_t *)buffer;
+        v = (sv_t *)buffer;
 	sd_reset((sd_t *)v, sizeof(sv_t), elem_size, max_size, ext_buf,
 		 S_FALSE);
 	v->d.sub_type = t;
@@ -329,7 +342,7 @@ sv_t *sv_alloc_raw(const enum eSV_Type t, const sbool_t ext_buf, void *buffer,
 }
 
 sv_t *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve,
-		 const sv_cmp_t f)
+	       const sv_cmp_t f)
 {
 	return sv_alloc_base(SV_GEN, elem_size, initial_num_elems_reserve, f);
 }
@@ -386,12 +399,14 @@ sv_t *sv_cpy_resize(sv_t **v, const sv_t *src, const size_t n)
 
 sv_t *sv_cat_aux(sv_t **v, const sv_t *v1, ...)
 {
-	ASSERT_RETURN_IF(!v, sv_void);
-	const sv_t *v0 = *v;
-	const size_t v0s = v0 ? sv_size(v0) : 0;
         va_list ap;
+	const sv_t *v0, *next;
+	size_t v0s;
+	ASSERT_RETURN_IF(!v, sv_void);
+	v0 = *v;
+	v0s = v0 ? sv_size(v0) : 0;
         va_start(ap, v1);
-        const sv_t *next = v1;
+        next = v1;
         while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
                 if (next) { /* cat next with aliasing check */
 			const sv_t *nexta = next == v0 ? *v : next;
@@ -430,9 +445,12 @@ sv_t *sv_resize(sv_t **v, const size_t n)
 
 sv_t *sv_sort(sv_t *v)
 {
+	void *buf;
+	size_t buf_size, elem_size;
 	RETURN_IF(!v || !v->vx.cmpf, sv_check(v ? &v : NULL));
-	void *buf = (void *)sv_get_buffer(v);
-	size_t buf_size = sv_size(v), elem_size = v->d.elem_size;
+	buf = (void *)sv_get_buffer(v);
+	buf_size = sv_size(v);
+	elem_size = v->d.elem_size;
 	/*
 	 * TODO/FIXME: integer sort optimizations disabled, until validated
 	 */
@@ -460,14 +478,16 @@ sv_t *sv_sort(sv_t *v)
 
 size_t sv_find(const sv_t *v, const size_t off, const void *target)
 {
+	size_t pos, size, elem_size, off_max, i;
+	const void *p;
 	RETURN_IF(!v || v->d.sub_type > SV_GEN, S_NPOS);
-	size_t pos = S_NPOS;
-	const size_t size = sv_size(v);
-	const void *p = sv_get_buffer_r(v);
-	const size_t elem_size = v->d.elem_size;
+	pos = S_NPOS;
+	size = sv_size(v);
+	p = sv_get_buffer_r(v);
+	elem_size = v->d.elem_size;
 	RETURN_IF(!elem_size, S_NPOS);
-	const size_t off_max = size * v->d.elem_size;
-	size_t i = off * elem_size;
+	off_max = size * v->d.elem_size;
+	i = off * elem_size;
 	for (; i < off_max; i += elem_size)
 		if (!memcmp((const char *)p + i, target, elem_size))
 			return i / elem_size;	/* found */
@@ -475,10 +495,10 @@ size_t sv_find(const sv_t *v, const size_t off, const void *target)
 }
 
 #define SV_FIND_iu(v, off, target)					\
-	RETURN_IF(!v || v->d.sub_type > SV_U64, S_NPOS);		\
 	char i8; unsigned char u8; short i16; unsigned short u16;	\
 	int i32; unsigned u32; int64_t i64; uint64_t u64;		\
 	void *src;							\
+	RETURN_IF(!v || v->d.sub_type > SV_U64, S_NPOS);		\
 	switch (v->d.sub_type) {					\
 	case SV_I8: i8 = (char)target; src = &i8; break;		\
 	case SV_U8: u8 = (unsigned char)target; src = &u8; break;	\
@@ -512,24 +532,28 @@ size_t sv_find_u(const sv_t *v, const size_t off, const uint64_t target)
 int sv_ncmp(const sv_t *v1, const size_t v1off, const sv_t *v2,
 	    const size_t v2off, const size_t n)
 {
+	int r;
+	const char *v1p, *v2p;
+	size_t sv1, sv2, sv1_left, sv2_left, cmp_len, cmp_bytes;
 	ASSERT_RETURN_IF(!v1 && !v2, 0);
 	ASSERT_RETURN_IF(!v1, -1);
 	ASSERT_RETURN_IF(!v2, 1);
-	const size_t sv1 = sv_size(v1), sv2 = sv_size(v2),
-		     sv1_left = v1off < sv1 ? sv1 - v1off : 0,
-		     sv2_left = v2off < sv2 ? sv2 - v2off : 0,
-		     cmp_len = S_MIN3(n, sv1_left, sv2_left),
-		     cmp_bytes = v1->d.elem_size * cmp_len;
-	const char *v1p = ptr_to_elem_r(v1, v1off),
-		   *v2p = ptr_to_elem_r(v2, v2off);
-	int r = memcmp(v1p, v2p, cmp_bytes);
+	sv1 = sv_size(v1), sv2 = sv_size(v2);
+	sv1_left = v1off < sv1 ? sv1 - v1off : 0;
+	sv2_left = v2off < sv2 ? sv2 - v2off : 0;
+	cmp_len = S_MIN3(n, sv1_left, sv2_left);
+	cmp_bytes = v1->d.elem_size * cmp_len;
+	v1p = ptr_to_elem_r(v1, v1off);
+	v2p = ptr_to_elem_r(v2, v2off);
+	r = memcmp(v1p, v2p, cmp_bytes);
 	return r || cmp_len == n ? r : sv1 > sv2 ? 1 : -1;
 }
 
 int sv_cmp(const sv_t *v, const size_t a_off, const size_t b_off)
 {
+	size_t vs;
 	ASSERT_RETURN_IF(!v, 0);
-	const size_t vs = sv_size(v);
+	vs = sv_size(v);
 	RETURN_IF(a_off >= vs && b_off >= vs, 0);
 	RETURN_IF(a_off >= vs, 1);
 	RETURN_IF(b_off >= vs, -1);
@@ -550,11 +574,13 @@ const void *sv_at(const sv_t *v, const size_t index)
 	RETURN_IF(v->d.sub_type > SV_LAST_INT, SV_DEFAULT_SIGNED_VAL)
 
 #define SV_IU_AT(T, def_val)					\
+	size_t size;						\
+	const void *p;						\
 	RETURN_IF(!v, def_val);					\
 	SV_AT_INT_CHECK(v);					\
-	const size_t size = sv_size(v);				\
+	size = sv_size(v);					\
 	RETURN_IF(index >= size, def_val);			\
-	const void *p = sv_get_buffer_r(v);			\
+	p = sv_get_buffer_r(v);					\
 	return (T)(svldx_f[(int)v->d.sub_type](p, index));
 
 int64_t sv_at_i(const sv_t *v, const size_t index)
@@ -622,31 +648,38 @@ sbool_t sv_set_u(sv_t **v, const size_t index, uint64_t value)
 	RETURN_IF(!v || !sv_grow(v, n), S_FALSE);
 #define SV_INT_CHECK(v)	\
 	RETURN_IF((*v)->d.sub_type > SV_LAST_INT, S_FALSE);
+#define SV_PUSH_START_VARS	\
+	size_t sz;		\
+	char *p
 #define SV_PUSH_START(v)		\
-	const size_t sz = sv_size(*v);	\
-	char *p = ptr_to_elem(*v, sz);
+	sz = sv_size(*v);	\
+	p = ptr_to_elem(*v, sz);
 
 #define SV_PUSH_END(v, n)	\
 	sv_set_size(*v, sz + n);
 
 sbool_t sv_push_raw(sv_t **v, const void *src, const size_t n)
 {
+	SV_PUSH_START_VARS;
+	size_t elem_size;
 	RETURN_IF(!src || !n, S_FALSE);
 	SV_PUSH_GROW(v, n);
 	SV_PUSH_START(v);
 	SV_PUSH_END(v, n);
-	const size_t elem_size = (*v)->d.elem_size;
+	elem_size = (*v)->d.elem_size;
 	memcpy(p, src, elem_size * n);
 	return S_TRUE;
 }
 
 size_t sv_push_aux(sv_t **v, const void *c1, ...)
 {
-	RETURN_IF(!v || !*v, S_FALSE);
-	size_t op_cnt = 0;
         va_list ap;
+	size_t op_cnt;
+	const void *next;
+	RETURN_IF(!v || !*v, S_FALSE);
+	op_cnt = 0;
         va_start(ap, c1);
-        const void *next = c1;
+        next = c1;
         while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
                 if (next && sv_push_raw(v, next, 1))
 			op_cnt++;
@@ -658,6 +691,7 @@ size_t sv_push_aux(sv_t **v, const void *c1, ...)
 
 sbool_t sv_push_i(sv_t **v, const int64_t c)
 {
+	SV_PUSH_START_VARS;
 	SV_PUSH_GROW(v, 1);
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
@@ -668,6 +702,7 @@ sbool_t sv_push_i(sv_t **v, const int64_t c)
 
 sbool_t sv_push_u(sv_t **v, const uint64_t c)
 {
+	SV_PUSH_START_VARS;
 	SV_PUSH_GROW(v, 1);
 	SV_INT_CHECK(v);
 	SV_PUSH_START(v);
@@ -685,16 +720,18 @@ sbool_t sv_push_u(sv_t **v, const uint64_t c)
  */
 
 #define SV_POP_START(def_val)			\
+	size_t sz;				\
+	char *p;				\
 	ASSERT_RETURN_IF(!v, def_val);		\
-	const size_t sz = sv_size(v);		\
+	sz = sv_size(v);			\
 	ASSERT_RETURN_IF(!sz, def_val);		\
-	char *p = ptr_to_elem(v, sz - 1);
+	p = ptr_to_elem(v, sz - 1);
 
 #define SV_POP_END		\
 	sv_set_size(v, sz - 1);
 
-#define SV_POP_IU(T)						\
-	SV_AT_INT_CHECK(v);					\
+#define SV_POP_IU(T)					\
+	SV_AT_INT_CHECK(v);				\
 	return (T)(svldx_f[(int)v->d.sub_type](p,  0));
 
 void *sv_pop(sv_t *v)

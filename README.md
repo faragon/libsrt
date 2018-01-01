@@ -177,7 +177,7 @@ Test-covered platforms
 
 | ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
 | --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
-| x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
+| x86, x86-64 (Core i5) | 32, 64 | little | yes | Linux Ubuntu 12.04/14.04/17.10 | gcc, g++, tcc, clang, clang++ | Valgrind, clang, Coverity | Travis CI (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | Windows | Visual Studio Express 2013, AppVeyor's VS | VS | AppVeyor (automatic, every public commit) |
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
 | x86, x86-64 (Core2Duo) | 32, 64 | little | yes | Darwin 11.4.2 | gcc, g++, clang, clang++ | none | manual |
@@ -187,21 +187,14 @@ Test-covered platforms
 | ARMv7-A (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
 | ARMv8-A (Cortex A53) | 64 | little | yes | Debian 8.5 "Jessie" | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | EdgeOS v1.6.0 (Linux Vyatta-based using Debian 7 "Wheezy" packages) | gcc, g++, clang, clang++ | Valgrind, clang | manual |
+| MIPS (EE R5900) | 32 | little | no | Playstation 2 Linux (Red Hat based) | gcc, g++ 2.95.2 | none | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
-
-Coming soon (systems that require some changes in the test, e.g. because RAM/ROM constraints, etc.):
-
-| ISA | Word size | Endianess | Unaligned memory access HW support | OS | Compilers | Code analysis | Test coverage |
-| --- | --------- | --------- | ---------------------------------- | --- | --------- | ------------- | ------------- |
-| ARMv6-M (Cortex M0) | 32 | little | no | none | gcc | none | manual |
-| ARMv7-M (Cortex M3) | 32 | little | no | RT-Thread OS | gcc | none | manual |
-| MIPS32 r2, MIPS16e M14K (PIC32-EMZ64) | 32 | little | no | none | gcc | none | manual |
-| MIPS32 (mips24k) | 32 | big | no | OpenWrt (Chaos Calmer, r47374) | gcc | none | manual |
+| PowerPC, PPC64 (Cell) | 32, 64 | big | yes | Yellow Dog Linux 6.2 (Red Hat based) | gcc, g++ 4.1.2 | none | manual |
 
 License
 ===
 
-Copyright (c) 2015-2016, F. Aragon. All rights reserved.
+Copyright (c) 2015-2018, F. Aragon. All rights reserved.
 Released under the BSD 3-Clause License (see the LICENSE file included).
 
 Contact

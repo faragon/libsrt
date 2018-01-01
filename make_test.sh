@@ -21,7 +21,8 @@
 #
 # libsrt build, test, and documentation generation.
 #
-# Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+# Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
 if (($# == 1)) && (($1 >= 1 && $1 < 32)) ; then TMUX=$1 ; else TMUX=31 ; fi
@@ -52,7 +53,6 @@ TEST_CC[18]=${TEST_CC[0]}
 TEST_CC[19]=${TEST_CC[0]}
 TEST_CC[20]=${TEST_CC[0]}
 TEST_CC[21]=${TEST_CC[0]}
-TEST_CC[22]=${TEST_CC[0]}
 TEST_CXX[0]="g++"
 TEST_CXX[1]="g++"
 TEST_CXX[2]="g++"
@@ -75,7 +75,6 @@ TEST_CXX[18]=${TEST_CXX[0]}
 TEST_CXX[19]=${TEST_CXX[0]}
 TEST_CXX[20]=${TEST_CXX[0]}
 TEST_CXX[21]=${TEST_CXX[0]}
-TEST_CXX[22]=${TEST_CXX[0]}
 TEST_FLAGS[0]="C99=1 PEDANTIC=1"
 TEST_FLAGS[1]="PROFILING=1"
 TEST_FLAGS[2]="C99=0"
@@ -98,7 +97,6 @@ TEST_FLAGS[18]=${TEST_FLAGS[0]}" ADD_FLAGS=-DS_CRC32_SLC=8"
 TEST_FLAGS[19]=${TEST_FLAGS[0]}" ADD_FLAGS=-DS_CRC32_SLC=12"
 TEST_FLAGS[20]=${TEST_FLAGS[0]}" ADD_FLAGS=-DS_CRC32_SLC=16"
 TEST_FLAGS[21]=${TEST_FLAGS[0]}" ADD_FLAGS=-DSD_DISABLE_HEURISTIC_GROWTH"
-TEST_FLAGS[22]=${TEST_FLAGS[0]}" ADD_FLAGS=-DSLZW_ENABLE_RLE=0"
 TEST_DO_UT[0]="all"
 TEST_DO_UT[1]="all"
 TEST_DO_UT[2]="all"
@@ -121,7 +119,6 @@ TEST_DO_UT[18]=${TEST_DO_UT[0]}
 TEST_DO_UT[19]=${TEST_DO_UT[0]}
 TEST_DO_UT[20]=${TEST_DO_UT[0]}
 TEST_DO_UT[21]=${TEST_DO_UT[0]}
-TEST_DO_UT[22]=${TEST_DO_UT[0]}
 INNER_LOOP_FLAGS[0]=""
 INNER_LOOP_FLAGS[1]="DEBUG=1"
 INNER_LOOP_FLAGS[2]="MINIMAL=1"
@@ -141,7 +138,7 @@ fi
 if [ $(uname) = Darwin ] ; then # OSX CPU count
 	NPROCS=$(sysctl hw.ncpu | awk '{print $2}')
 fi
-if (( NPROCS > MJOBS )) ; then MJOBS=$NPROCS ; fi
+if (( NPROCS > MJOBS )) ; then MJOBS=$((2 * $NPROCS)) ; fi
 
 echo "make_test.sh running..."
 

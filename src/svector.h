@@ -12,8 +12,8 @@ extern "C" {
  * #DOC Vector handling functions for managing integer data and
  * #DOC generic data.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */ 
 
 #include "saux/sdata.h"
@@ -79,12 +79,12 @@ sv_t *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve, 
 */
 #define sv_alloca(elem_size, max_size, cmp_f)				\
 	sv_alloc_raw(SV_GEN, S_TRUE,					\
-		     alloca(sd_alloc_size_raw(sizeof(sv_t), elem_size,	\
+		     s_alloca(sd_alloc_size_raw(sizeof(sv_t), elem_size,	\
 					      max_size, S_FALSE)),	\
 		     elem_size, max_size, cmp_f)
 #define sv_alloca_t(type, max_size)					       \
 	sv_alloc_raw(type, S_TRUE,					       \
-		     alloca(sd_alloc_size_raw(sizeof(sv_t), sv_elem_size(type),\
+		     s_alloca(sd_alloc_size_raw(sizeof(sv_t), sv_elem_size(type),\
 			    max_size, S_FALSE)),			       \
 		     sv_elem_size(type), max_size, NULL)
 

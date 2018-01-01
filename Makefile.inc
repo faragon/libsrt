@@ -5,7 +5,8 @@
 #
 # Platforms: POSIX systems (Linux, BSDs/Unix/Unix-like, etc.)
 #
-# Copyright (c) 2015-2016 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+# Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
 # Makefile parameters
@@ -63,6 +64,9 @@ ifndef UNAME
 endif
 ifndef UNAME_M
 	UNAME_M = $(shell uname -m)
+endif
+ifndef UNAME_P
+	UNAME_P = $(shell uname -p)
 endif
 ifndef OCTEON
 	OCTEON = 0
@@ -123,7 +127,7 @@ else
 				CFLAGS += -std=c99
 			else
 				ifeq ($(C90), 1)
-					CFLAGS += -std=c89
+					CFLAGS += -std=c89 -DS_C90
 				endif
 			endif
 		endif
@@ -159,7 +163,7 @@ else
 	ifeq ($(MINIMAL), 1)
 		COMMON_FLAGS += -Os -DS_MINIMAL
 	else
-		COMMON_FLAGS += -O2
+		COMMON_FLAGS += -O3
 	endif
 endif
 ifeq ($(PROFILING), 1)
@@ -188,9 +192,6 @@ ifeq ($(FORCE32), 1)
 		endif
 	endif
 else
-	ifeq ($(UNAME_M), ppc64)
-		COMMON_FLAGS += -m64
-	endif
 	ifeq ($(UNAME_M), mips64)
 		GCC_COMMON_FLAGS += -mabi=64
 		ifeq ($(OCTEON), 1)
@@ -198,6 +199,9 @@ else
 		else
 			GCC_COMMON_FLAGS += -mips64
 		endif
+	endif
+	ifeq ($(UNAME_M), ppc64)
+		COMMON_FLAGS += -m64
 	endif
 endif
 

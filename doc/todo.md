@@ -1,9 +1,6 @@
 "to do" list
 ===
 
-Short-term
----
-
 * Security
  * check size\_t overflow on every function (e.g. off + size -> overflow)
 * Debug
@@ -17,10 +14,6 @@ Short-term
  * Aliasing: stack, lower/middle/upper case checks, etc.
  * Add checks for all corner cases
  * Reentrancy: 1) write size afterwards, 2) in case of buffer switch, point those cases in the "behavior" section.
-
-Mid-term
----
-
 * Tree enhancements
  * Make last-inserted nodes cache, in order to speed-up delete.
 * String enhancements

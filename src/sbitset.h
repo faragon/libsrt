@@ -14,8 +14,8 @@ extern "C" {
  * #DOC it takes O(1) for the computation, as a record of bit set/clear is
  * #DOC kept.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Features:
  * - Fast: over 300 million bit set per second on i5-3330 @3GHz
@@ -91,11 +91,14 @@ S_INLINE size_t sb_popcount(const sb_t *b)
 
 S_INLINE int sb_test(const sb_t *b, const size_t nth)
 {
+	size_t pos, mask;
+	const unsigned char *buf;
 	S_ASSERT(b);
 	RETURN_IF(!b, 0);
-	const size_t pos = nth / 8, mask = (size_t)1 << (nth % 8);
+	pos = nth / 8;
+	mask = (size_t)1 << (nth % 8);
 	RETURN_IF(pos >= sv_size(b), 0);
-	const unsigned char *buf = (const unsigned char *)sv_get_buffer_r(b);
+	buf = (const unsigned char *)sv_get_buffer_r(b);
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
@@ -103,6 +106,7 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 
 S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
+	size_t ss;
 	S_ASSERT(b);
 	if (b) {
 		unsigned char *buf;
@@ -120,7 +124,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 				S_ERROR("not enough memory");
 				return;
 			}
-			size_t ss = sv_size(*b);
+			ss = sv_size(*b);
 			buf = (unsigned char *)sv_get_buffer(*b);
 			memset(buf + ss, 0, pinc - ss);
 			sv_set_size(*b, pinc);
@@ -142,7 +146,8 @@ S_INLINE void sb_reset(sb_t **b, const size_t nth)
 	if (b && *b) {
 		const size_t pos = nth / 8;
 		if (pos < sv_size(*b)) {
-			unsigned char *buf = (unsigned char *)sv_get_buffer(*b);
+			unsigned char *buf =
+				(unsigned char *)sv_get_buffer(*b);
 			size_t mask = (size_t)1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;

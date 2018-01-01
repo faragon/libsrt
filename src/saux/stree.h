@@ -14,9 +14,8 @@ extern "C" {
  * #DOC tight memory usage, being implemented as a vector, so pinter
  * #DOC usage is avoided.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
- *
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "sdata.h"
@@ -81,7 +80,7 @@ sv_t *st_alloca(st_cmp_t cmp_f, const size_t elem_size, const size_t max_size)
 */
 #define st_alloca(cmp_f, elem_size, max_size)				\
 	st_alloc_raw(cmp_f, S_TRUE,					\
-		     alloca(sd_alloc_size_raw(sizeof(st_t), elem_size,	\
+		     s_alloca(sd_alloc_size_raw(sizeof(st_t), elem_size,	\
 					      max_size)),		\
 		     elem_size, max_size)
 

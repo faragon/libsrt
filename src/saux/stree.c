@@ -12,8 +12,8 @@
  *   suitable for memory-mapped storage when using nodes without references
  *   (e.g. key and value being integers, or constant-size containers).
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "stree.h"
@@ -75,9 +75,10 @@ static stndx_t get_lr(const stn_t *n, const enum STNDir d)
 static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
 			    enum STNDir *d)
 {
+	stn_t *cn;
 	if (t->root == son->x)
 		return son->n;
-	stn_t *cn = get_node(t, t->root);
+	cn = get_node(t, t->root);
 	for (; cn && cn->x.l != son->x && cn->r != son->x;)
 		cn = get_node(t, get_lr(cn,
 					t->cmp_f(cn, son->n) < 0 ?
@@ -187,9 +188,11 @@ static void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
  */
 static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 {
+	size_t l, r;
+	const stn_t *n;
 	ASSERT_RETURN_IF(!t, 0);
 	RETURN_IF(ndx == ST_NIL, 1);
-	const stn_t *n = get_node_r(t, ndx);
+	n = get_node_r(t, ndx);
 	if (is_red(t, ndx) && (is_red(t, n->x.l) || is_red(t, n->r))) {
 #ifdef DEBUG_stree
 		fprintf(stderr, "st_assert: violation: two red nodes\n");
@@ -203,7 +206,8 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 #endif
 		return 0;
 	}
-	size_t l = st_assert_aux(t, n->x.l), r = st_assert_aux(t, n->r);
+	l = st_assert_aux(t, n->x.l);
+	r = st_assert_aux(t, n->r);
 	if (l && r) {
 		if (l == r)
 			return is_red(t, ndx) ? l : l + 1;
@@ -223,9 +227,11 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
 		   const size_t elem_size, const size_t max_size)
 {
+	st_t *t;
 	RETURN_IF(!cmp_f || !elem_size || !buffer, (st_t *)sd_void);
-	st_t *t = (st_t *)buffer;
-	sd_reset((sd_t *)t, sizeof(st_t), elem_size, max_size, ext_buf, S_FALSE);
+	t = (st_t *)buffer;
+	sd_reset((sd_t *)t, sizeof(st_t), elem_size, max_size, ext_buf,
+		 S_FALSE);
 	t->cmp_f = cmp_f;
 	t->root = 0;
 	return t;
@@ -245,9 +251,10 @@ st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
 
 st_t *st_dup(const st_t *t)
 {
-	ASSERT_RETURN_IF(!t, NULL);
-	st_t *t2 = st_alloc(t->cmp_f, t->d.elem_size, t->d.size);
-	ASSERT_RETURN_IF(!t2, NULL); /* FIXME: non-safe; TODO: add void const */
+	st_t *t2;
+	RETURN_IF(!t, NULL);
+	t2 = st_alloc(t->cmp_f, t->d.elem_size, t->d.size);
+	RETURN_IF(!t2, NULL);
 	memcpy(t2, t, t->d.header_size + t->d.size * t->d.elem_size);
 	return t2;
 }
@@ -259,9 +266,19 @@ sbool_t st_insert(st_t **tt, const stn_t *n)
 
 sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 {
+	st_t *t;
+	stn_t auxn = EMPTY_STN;
+	size_t ts, c, cp, cpp, cppp;
+	enum STNDir ld = ST_Left;	/* last walk direction */
+	enum STNDir d = ST_Left;	/* current walk direction */
+	struct NodeContext w[CW_SIZE];
+	sbool_t done = S_FALSE;
+	enum STNDir xld;
+	stndx_t pd, v;
+	int64_t cmp;
 	ASSERT_RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
-	st_t *t = *tt;
-	const size_t ts = st_size(t);
+	t = *tt;
+	ts = st_size(t);
 	ASSERT_RETURN_IF(ts >= ST_NIL, S_FALSE);
 	/*
 	 * Trivial case: insert node into empty tree
@@ -281,22 +298,25 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	/*
 	 * Prepare a 4-level node tracking window
 	 */
-	stn_t auxn = EMPTY_STN;
 	auxn.r = t->root;
-	struct NodeContext w[CW_SIZE] = {
-		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
-		{ ST_NIL, &auxn },	/* cppp: cn parent parent parent node */
-		{ ST_NIL, NULL },	/* cpp: cn parent parent node */
-		{ ST_NIL, NULL } };	/* cp: cn parent node */
-	size_t c = 0;
-	enum STNDir ld = ST_Left;	/* last walk direction */
-	enum STNDir d = ST_Left;	/* current walk direction */
+	/* c: current node (cn) */
+	w[0].x = t->root;
+	w[0].n = get_node(t, t->root);
+	/* cppp: cn parent parent parent node */
+	w[1].x = ST_NIL;
+	w[1].n = &auxn;
+	/* cpp: cn parent parent node */
+	w[2].x = ST_NIL;
+	w[2].n = NULL;
+	/* cp: cn parent node */
+	w[3].x = ST_NIL;
+	w[3].n = NULL;
+	c = 0;
 	/*
 	 * Search loop
 	 */
-	sbool_t done = S_FALSE;
 	for (;;) {
-		const size_t cp = (c + 3) % CW_SIZE;
+		cp = (c + 3) % CW_SIZE;
 		/* Leave found? update tree, copy data, update size */
 		if (w[c].x == ST_NIL) {
 			/* New node: */
@@ -320,12 +340,12 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 				STN_SET_RBB(t, w[c].n);
 		}
 		/* Check for double red case (current and parent are red) */
-		const size_t cpp = (c + 2) % CW_SIZE,
-			     cppp = (c + 1) % CW_SIZE;
+		cpp = (c + 2) % CW_SIZE;
+		cppp = (c + 1) % CW_SIZE;
 		if (w[cpp].n && w[c].n->x.is_red && w[cp].n->x.is_red) {
-			const enum STNDir xld = cd(ld);
-			const stndx_t pd = get_lr(w[cp].n, ld);
-			const stndx_t v = w[c].x == pd ?
+			xld = cd(ld);
+			pd = get_lr(w[cp].n, ld);
+			v = w[c].x == pd ?
 				rot1x(t, w[cpp].n, w[cpp].x, xld, ld) :
 				rot2x(t, w[cpp].n, w[cpp].x, xld, ld);
 			if (w[cppp].n) {
@@ -339,7 +359,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		}
 		if (done)
 			break;
-		const int64_t cmp = t->cmp_f(w[c].n, n);
+		cmp = t->cmp_f(w[c].n, n);
 		if (!cmp) {
 			if (rw_f)
 				rw_f(w[c].n, n, S_TRUE);
@@ -360,31 +380,53 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 
 sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 {
+	size_t ts0;
+	stndx_t ts;
+	stn_t auxn = EMPTY_STN;
+	stndx_t c, cp, cpp, cppp;
+	struct NodeContext found = { ST_NIL, NULL };
+	enum STNDir d0 = ST_Right;
+	struct NodeContext w[CW_SIZE];
+	int64_t cmp;
+	enum STNDir d;
+	stndx_t nd;
+	stn_t *ndn;
+	stndx_t y;
+	enum STNDir xd, xd0, d2;
+	stndx_t s, sz;
+	stn_t *yn, *sn, *cpp_d2n;
 	ASSERT_RETURN_IF(!t || !n, S_FALSE);
 	/* Check empty tree: */
-	const size_t ts0 = st_size(t);
+	ts0 = st_size(t);
 	RETURN_IF(ts0 == 0 || ts0 >= ST_NIL, S_FALSE);
-	stndx_t ts = (stndx_t)ts0;
+	ts = (stndx_t)ts0;
 	/*
 	 * Prepare a 4-level node tracking window (in this case a 3-level
 	 * would be enough, using 4 in order to avoid the division by 3,
 	 * which is more expensive than by 4 in many CPUs).
 	 */
-	stn_t auxn = EMPTY_STN;
 	auxn.r = t->root;
-	struct NodeContext w[CW_SIZE] = {
-		{ t->root, get_node(t, t->root) }, /* c: current node (cn) */
-		{ ST_NIL, NULL },    /* cppp: cn parent parent parent node */
-		{ ST_NIL, NULL },    /* cpp: cn parent parent node */
-		{ ST_NIL, &auxn } }; /* cp: cn parent node */
-	stndx_t c = 0, cp = 3, cpp = 2, cppp = 1;
-	struct NodeContext found = { ST_NIL, NULL };
-	enum STNDir d0 = ST_Right;
+	/* c: current node (cn) */
+	w[0].x = t->root;
+	w[0].n = get_node(t, t->root);
+	/* cppp: cn parent parent parent node */
+	w[1].x = ST_NIL;
+	w[1].n = NULL;
+	/* cpp: cn parent parent node */
+	w[2].x = ST_NIL;
+	w[2].n = NULL;
+	/* cp: cn parent node */
+	w[3].x = ST_NIL;
+	w[3].n =  &auxn;
+	c = 0;
+	cp = 3;
+	cpp = 2;
+	cppp = 1;
 	/* Search loop */
 	for (;;) {
 		/* Compare node key with given target */
-		const int64_t cmp = t->cmp_f(w[c].n, n);
-		const enum STNDir d = cmp < 0 ? ST_Right : ST_Left;
+		cmp = t->cmp_f(w[c].n, n);
+		d = cmp < 0 ? ST_Right : ST_Left;
 		if (!cmp) {
 			S_ASSERT(found.n == NULL);
 			if (ts == 1) { /* Trivial case: one node */
@@ -397,14 +439,13 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 		}
 		for (;;) {
 			/* Push child red node down */
-			stndx_t nd = get_lr(w[c].n, d);
-			stn_t *ndn = get_node(t, nd);
+			nd = get_lr(w[c].n, d);
+			ndn = get_node(t, nd);
 			if (w[c].n->x.is_red || (ndn && ndn->x.is_red))
 				break;
-			const enum STNDir xd = cd(d);
+			xd = cd(d);
 			if (is_red(t, get_lr(w[c].n, xd))) {
-				stndx_t y;
-				stn_t *yn = rot1x_y(t, w[c].n, w[c].x, d,
+				yn = rot1x_y(t, w[c].n, w[c].x, d,
 						    xd, &y);
 				if (w[cp].n)
 					set_lr(w[cp].n, d0, y);
@@ -416,11 +457,11 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 				break;
 			}
 			/* s/sn: same-parent brother node */
-			const enum STNDir xd0 = cd(d0);
-			const stndx_t s = get_lr(w[cp].n, xd0);
+			xd0 = cd(d0);
+			s = get_lr(w[cp].n, xd0);
 			if (s == ST_NIL)
 				break;
-			stn_t *sn = get_node(t, s);
+			sn = get_node(t, s);
 			if (!is_red(t, get_lr(sn, xd0)) &&
 			    !is_red(t, get_lr(sn, d0))) {
 				/* Color flip */
@@ -431,7 +472,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			}
 			if (!w[cpp].n)
 				break;
-			const enum STNDir d2 = w[cpp].n->r == w[cp].x ?
+			d2 = w[cpp].n->r == w[cp].x ?
 						ST_Right : ST_Left;
 			if (is_red(t, get_lr(sn, d0))) {
 				const stndx_t y = rot2x(t, w[cp].n, w[cp].x,
@@ -446,7 +487,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 					st_checkfix_root(t, w[cp].x, y);
 				}
 			}
-			stn_t *cpp_d2n = get_node(t, get_lr(w[cpp].n, d2));
+			cpp_d2n = get_node(t, get_lr(w[cpp].n, d2));
 			/* Fix coloring */
 			STN_SET_RBB(t, cpp_d2n);
 			w[c].n->x.is_red = cpp_d2n->x.is_red;
@@ -495,7 +536,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 		 * for a stack space.
 		 */
 		S_ASSERT(ts - 1 < ST_NIL );
-		const stndx_t sz = ts - 1; /* BEHAVIOR */
+		sz = ts - 1; /* BEHAVIOR */
 		if (w[c].x != sz) {
 			enum STNDir d = ST_Left;
 			const struct NodeContext ct = { sz, get_node(t, sz) };
@@ -551,21 +592,22 @@ enum eTMode
 static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			 const enum eTMode m)
 {
-	ASSERT_RETURN_IF(!t, -1);
-	const size_t ts = st_size(t);
-	RETURN_IF(!ts, S_FALSE);
+	size_t ts, rbt_max_depth;
+	struct STreeScan *p;
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
-	size_t rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
+	int f_pre, f_ino, f_post;
+	const stn_t *cn_aux;
+	ASSERT_RETURN_IF(!t, -1);
+	ts = st_size(t);
+	RETURN_IF(!ts, S_FALSE);
+	rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
 	/*
 	 * DF path length takes twice the logarithm of the number of nodes,
-	 * so it will fit always in the stack (e.g. (2^32)-1 nodes would require
-	 * allocating less than 1KB of stack space for the path).
+	 * so it will fit always in the stack (e.g. (2^32)-1 [(2^64)-1] nodes
+	 * would require allocating less than 1KB [2KB] of stack space for the
+	 * path)
 	 */
-#ifdef _MSC_VER /* supress alloca() warning */
-#pragma warning(disable: 6255)
-#endif
-	struct STreeScan *p = (struct STreeScan *)
-					alloca(sizeof(struct STreeScan) *
+	p = (struct STreeScan *)s_alloca(sizeof(struct STreeScan) *
 					       (rbt_max_depth + 3));
 	ASSERT_RETURN_IF(!p, -1);
 	if (f)
@@ -573,10 +615,9 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	p[0].p = ST_NIL;
 	p[0].c = t->root;
 	p[0].s = STS_ScanStart;
-	const stn_t *cn_aux;
-	int f_pre = f && m == TR_Preorder;
-	int f_ino = f && m == TR_Inorder;
-	int f_post = f && m == TR_Postorder;
+	f_pre = f && m == TR_Preorder;
+	f_ino = f && m == TR_Inorder;
+	f_post = f && m == TR_Postorder;
 	for (; tp.level >= 0;) {
 		if (tp.level > tp.max_level)
 			tp.max_level = tp.level;
@@ -606,7 +647,8 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 				if (cn_aux->r != ST_NIL) {
 					p[tp.level].s = STS_ScanRight;
 					tp.level++;
-					cn_aux = get_node_r(t, p[tp.level - 1].c);
+					cn_aux = get_node_r(t,
+							    p[tp.level - 1].c);
 					p[tp.level].c = cn_aux->r;
 				} else {
 					if (f_post) {
@@ -676,23 +718,27 @@ ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context)
 
 ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 {
-	ASSERT_RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
-	const size_t ts = st_size(t);
-	RETURN_IF(!ts, 0);	/* empty */
+	size_t ts, i, le, ne;
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
-	sv_t *curr = sv_alloc_t(SV_U32, ts/2),
-	     *next = sv_alloc_t(SV_U32, ts/2);
+	sv_t *curr, *next;
+	stndx_t n;
+	const stn_t *node;
+	sv_t *tmp;
+	ASSERT_RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
+	ts = st_size(t);
+	RETURN_IF(!ts, 0);	/* empty */
+	curr = sv_alloc_t(SV_U32, ts / 2);
+	next = sv_alloc_t(SV_U32, ts / 2);
 	sv_push_u(&curr, t->root);
 	for (;; tp.max_level = ++tp.level) {
 		if (f) {
 			tp.c = ST_NIL; /* report starting new tree level */
 			f(&tp);
 		}
-		size_t i = 0;
-		size_t le = sv_size(curr);
+		le = sv_size(curr);
 		for (i = 0; i < le; i++) {
-			stndx_t n = (stndx_t)sv_at_u(curr, i);
-			const stn_t *node = get_node_r(t, n);
+			n = (stndx_t)sv_at_u(curr, i);
+			node = get_node_r(t, n);
 			if (f) {
 				tp.c = n;
 				f(&tp);
@@ -702,10 +748,10 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 			if (node->r != ST_NIL)
 				sv_push_u(&next, node->r);
 		}
-		size_t ne = sv_size(next);
+		ne = sv_size(next);
 		if (ne == 0)	/* next level is empty */
 			break;
-		sv_t *tmp = curr;
+		tmp = curr;
 		curr = next;
 		next = tmp;
 		sv_set_size(next, 0);

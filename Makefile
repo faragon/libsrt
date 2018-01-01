@@ -29,14 +29,15 @@
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
 #   and not GNU make). If not installed, use: pkg install gmake
 #
-# Copyright (c) 2015-2017 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+# Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
 include Makefile.inc
 
 VPATH   = src:src/saux:examples
 SOURCES	= sdata.c sdbg.c senc.c sstring.c schar.c ssearch.c ssort.c svector.c \
-	  stree.c smap.c smset.c shash.c sbitio.c scommon.c
+	  stree.c smap.c smset.c shash.c scommon.c
 ESOURCES= imgtools.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) examples/*.h
 OBJECTS	= $(SOURCES:.c=.o)
@@ -47,8 +48,18 @@ TEST	= stest
 EXAMPLES = counter enc table imgc imgd
 ifeq (,$(findstring tcc,$(CC)))
 	# Add CPP targets only if not using TCC
+	EN_BENCH = 1
+endif
+ifeq ($(UNAME_M), mips)
+	# Disable CPP targets on MIPS with unknown processor (e.g. PS2)
+	ifeq ($(UNAME_P), unknown)
+		EN_BENCH = 0
+	endif
+endif
+ifeq ($(EN_BENCH), 1)
 	EXAMPLES += bench
 endif
+
 EXES	= $(TEST) $(EXAMPLES)
 
 # Rules for building: library, test, examples
@@ -67,4 +78,4 @@ clean:
 	@rm -f $(OBJECTS) $(LIBSRT) $(ELIBSRT) *\.o *\.dSYM *\.gcno *\.gcda *\.out \
 	       callgrind* out\.txt clang_analysis.txt *\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
-
+.PHONY: clean all run_tests

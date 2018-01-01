@@ -3,8 +3,8 @@
  *
  * Image processing example using libsrt
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Observations:
  * - In order to have PNG and JPEG support: make imgc HAS_JPG=1 HAS_PNG=1
@@ -41,8 +41,8 @@ static sbool_t valid_tga(const char *h)
 static sbool_t tga_rgb_swap(const size_t bpp, const size_t buf_size,
 			    const char *s, char *t)
 {
-	RETURN_IF(!s || !t, S_FALSE);
 	size_t i;
+	RETURN_IF(!s || !t, S_FALSE);
 	switch (bpp) {
 	case 24:for (i = 0; i < buf_size; i += 3)
 			t[i] = s[i + 2], t[i + 1] = s[i + 1], t[i + 2] = s[i];
@@ -59,12 +59,14 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 {
 	const char *t = ss_get_buffer_r(tga);
 	const size_t ts = ss_size(tga);
+	size_t rgb_bytes;
+	ssize_t i;
 	RETURN_IF(ts < TGA_RGBHDR || !valid_tga(t), 0);
 	rgbi_set(ri, S_LD_LE_U16(t + TGA_W), S_LD_LE_U16(t + TGA_H),
 		 (size_t)t[TGA_BPP], t[TGA_TYPE] == TGA_RAW_GRAY ? 1 :
 							(size_t)t[TGA_BPP]/8);
 	RETURN_IF(!rgbi_valid(ri), 0);
-	size_t rgb_bytes = ri->row_size * ri->height;
+	rgb_bytes = ri->row_size * ri->height;
 	RETURN_IF(ts < rgb_bytes + TGA_RGBHDR, 0);
 	RETURN_IF(ss_reserve(rgb, rgb_bytes) < rgb_bytes, 0);
 	if ((t[TGA_DESC] & TGA_TOP_LEFT) != 0) {
@@ -76,7 +78,7 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 				     ss_get_buffer(*rgb));
 	} else {
 		ss_set_size(*rgb, 0);
-		ssize_t i = (ssize_t)((ri->height - 1) * ri->row_size);
+		i = (ssize_t)((ri->height - 1) * ri->row_size);
 		for (; i >= 0; i -= ri->row_size)
 			if (ri->chn == 1)
 				ss_cat_cn(rgb, t + TGA_RGBHDR + i,
@@ -92,11 +94,13 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 
 static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 {
+	size_t buf_size;
+	char *h;
 	RETURN_IF(!rgb || (!rgbi_valid(ri) && (ri->bpp / ri->chn) != 8), 0);
 	RETURN_IF(ri->chn != 1 && ri->chn != 3 && ri->chn != 4, 0);
-	size_t buf_size = ri->bmp_size + TGA_RGBHDR;
+	buf_size = ri->bmp_size + TGA_RGBHDR;
 	RETURN_IF(ss_reserve(tga, buf_size) < buf_size, 0);
-	char *h = ss_get_buffer(*tga);
+	h = ss_get_buffer(*tga);
 	memset(h, 0, TGA_RGBHDR);
 	h[TGA_ID] = TGA_NO_X_INFO;
 	h[TGA_CMAP] = TGA_NO_CMAP;
@@ -131,13 +135,17 @@ static sbool_t rgbi_valid_for_ppm(const struct RGB_Info *ri)
 
 static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 {
+	const char *p;
+	size_t f[PPM_NFIELDS];
+	size_t ps, off, nf, nl, nl2, i;
 	RETURN_IF(!ppm || !ri, 0);
-	const char *p = ss_get_buffer_r(ppm);
-	size_t ps = ss_size(ppm);
+	p = ss_get_buffer_r(ppm);
+	ps = ss_size(ppm);
 	ri->chn = p[1] == '5' ? 1 : p[1] == '6' ? 3 : 0;
 	RETURN_IF(ps < 16 || p[0] != 'P' || !ri->chn, 0);
-	size_t off = 2, nf = 0, nl, nl2, i = 0;
-	size_t f[PPM_NFIELDS];
+	off = 2;
+	nf = 0;
+	i = 0;
 	for (; i != S_NPOS && nf < PPM_NFIELDS && off < ps; off = nl + 1) {
 		nl = ss_findc(ppm, off, '\n');
 		if (nl == S_NPOS)
@@ -164,8 +172,9 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 
 static size_t rgb2ppm(ss_t **ppm, const ss_t *rgb, const struct RGB_Info *ri)
 {
+	int colors_per_channel;
 	RETURN_IF(!ppm || !rgb || !rgbi_valid_for_ppm(ri), 0);
-	int colors_per_channel = (1 << (ri->bpp / ri->chn)) - 1;
+	colors_per_channel = (1 << (ri->bpp / ri->chn)) - 1;
 	ss_printf(ppm, 512, "P%i %i %i %i\n", (ri->chn == 1 ? 5 : 6),
 		  (int)ri->width, (int)ri->height, colors_per_channel);
 	ss_cat(ppm, rgb);
@@ -314,9 +323,9 @@ static size_t rgb2png(ss_t **png, const ss_t *rgb, const struct RGB_Info *ri)
 #define JPG_QUALITY		95
 #define JPG_SUBS_HQ
 
-static void jpg_error_exit(j_common_ptr /*jc*/)
+static void jpg_error_exit(j_common_ptr jc)
 {
-	fprintf(stderr, "jpeg critical error (!)\n");
+	fprintf(stderr, "jpeg critical error (!) jc: %p\n", jc);
 	exit(1);
 }
 
@@ -561,16 +570,18 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 
 #define RGBC2_COUNT_LOOP(i, p, ss, ps, bs, off, out) {			\
 	sb_clear(bs);							\
-	size_t off2 = (off + 1) % 3;					\
+	off2 = (off + 1) % 3;						\
 	for (i = 0; i < ss && sb_popcount(bs) < 1 << 16; i += ps) {	\
-		unsigned c = ((unsigned)p[i + off] & 0xff) |		\
-			     ((unsigned)p[i + off2] & 0xff) << 8;	\
+		c = ((unsigned)p[i + off] & 0xff) |			\
+		     ((unsigned)p[i + off2] & 0xff) << 8;		\
 		sb_set(&bs, c);						\
 	}								\
 	out = sb_popcount(bs); }
 
 static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 {
+	size_t off2;
+	unsigned pixels, l, r, c;
 	if (rgb && ri) {
 		const size_t ss = ss_size(rgb);
 		size_t cmax = ri->bpp == 32 ? 0xffffffff :
@@ -589,9 +600,9 @@ static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 		default:
 			break;
 		}
-		unsigned pixels = (unsigned)(ri->width * ri->height);
-		unsigned l = (unsigned)((uqp * 100) / pixels),
-			 r = (unsigned)(((uqp * 10000) / pixels) % 100);
+		pixels = (unsigned)(ri->width * ri->height);
+		l = (unsigned)((uqp * 100) / pixels);
+		r = (unsigned)(((uqp * 10000) / pixels) % 100);
 		printf("%ix%i %i bpp, %i chn; %u px; %u unique px"
 		       " (%u.%u%%)", (int)ri->width, (int)ri->height,
 		       (int)ri->bpp, (int)ri->chn, pixels,
@@ -633,6 +644,7 @@ size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in,
 size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 	        const struct RGB_Info *ri, const int f)
 {
+	size_t r;
 	ss_t *rgb_aux = NULL;
 	const ss_t *rgb;
 	switch (f) {	/* Apply filter, if any */
@@ -656,12 +668,12 @@ size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 	default:rgb = rgb0;
 		break;
 	}
-	size_t r = ot == IMG_tga ? rgb2tga(out, rgb, ri) :
-		   ot == IMG_ppm || ot == IMG_pgm ? rgb2ppm(out, rgb, ri) :
-		   IF_PNG(ot == IMG_png ? rgb2png(out, rgb, ri) :)
-		   IF_JPG(ot == IMG_jpg ? rgb2jpg(out, rgb, ri) :)
-		   ot == IMG_raw ? ss_size(ss_cpy(out, rgb)) :
-		   ot == IMG_none ? rgb_info(rgb, ri) : 0;
+	r = ot == IMG_tga ? rgb2tga(out, rgb, ri) :
+	    ot == IMG_ppm || ot == IMG_pgm ? rgb2ppm(out, rgb, ri) :
+	    IF_PNG(ot == IMG_png ? rgb2png(out, rgb, ri) :)
+	    IF_JPG(ot == IMG_jpg ? rgb2jpg(out, rgb, ri) :)
+	    ot == IMG_raw ? ss_size(ss_cpy(out, rgb)) :
+	    ot == IMG_none ? rgb_info(rgb, ri) : 0;
 	ss_free(&rgb_aux);
 	return r;
 }
@@ -672,18 +684,24 @@ size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
 	    const ss_t *rgb1, const struct RGB_Info *ri1)
 {
+	int res;
+	const char *c0, *c1;
+	char *c2;
+	const short *s0, *s1;
+	short *s2;
+	size_t i, mx;
 	RETURN_IF(!out || !rgb0 || !rgb1 || !rgbi_cmp(ri0, ri1), 1);
 	ss_reserve(out, ri0->bmp_size);
 	ss_set_size(*out, ri0->bmp_size);
 	RETURN_IF(ss_size(*out) != ri0->bmp_size, 2);
-	int res = 0;
-	const char *c0 = ss_get_buffer_r(rgb0), *c1 = ss_get_buffer_r(rgb1);
-	char *c2 = ss_get_buffer(*out);
-	const short *s0 = (const short *)ss_get_buffer_r(rgb0),
-		    *s1 = (const short *)ss_get_buffer_r(rgb1);
-	short *s2 = (short *)ss_get_buffer(*out);
-	size_t i = 0;
-	const size_t mx = ri0->Bpc == 1 ? ri0->bmp_size : ri0->bmp_size / 2;
+	res = 0;
+	c0 = ss_get_buffer_r(rgb0);
+	c1 = ss_get_buffer_r(rgb1);
+	c2 = ss_get_buffer(*out);
+	s0 = (const short *)ss_get_buffer_r(rgb0);
+	s1 = (const short *)ss_get_buffer_r(rgb1);
+	s2 = (short *)ss_get_buffer(*out);
+	mx = ri0->Bpc == 1 ? ri0->bmp_size : ri0->bmp_size / 2;
 	switch (ri0->Bpp) {
 	case 1:	INLINE_MONO_DIFF_LOOP(c0, c1, c2, CFF2, i, mx, res); break;
 	case 2:	INLINE_MONO_DIFF_LOOP(s0, s1, s2, CFF4, i, mx, res); break;

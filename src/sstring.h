@@ -16,11 +16,11 @@ extern "C" {
  * #DOC and as raw data when calling the functions not using Unicode
  * #DOC interpretation (ss_len()/ss_size()). Strings below 256 bytes take just
  * #DOC 5 bytes for internal structure, and 5 * sizeof(size_t) for bigger
- * #DOC strings. Unicode-size is cached between operations, when possible, so
+ * #DOC strings. Unicode size is cached between operations, when possible, so
  * #DOC in those cases UTF-8 string length computation would be O(1).
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "svector.h"
@@ -61,7 +61,8 @@ struct SStringRef
  * Types
  */
 
-typedef struct SString ss_t;		/* Opaque structures (accessors are provided) */
+/* Opaque structures (accessors are provided) */
+typedef struct SString ss_t;
 typedef struct SStringRef ss_ref_t;
 
 /*
@@ -155,7 +156,7 @@ ss_t *ss_alloca(const size_t max_size)
  * +1 extra byte allocated for the \0 required by ss_to_c()
  */
 #define	ss_alloca(max_size)						   \
-	ss_alloc_into_ext_buf(alloca(sd_alloc_size_raw(sizeof(ss_t), 1,	   \
+	ss_alloc_into_ext_buf(s_alloca(sd_alloc_size_raw(sizeof(ss_t), 1,  \
 						   max_size, S_TRUE) + 1), \
 			      max_size)
 
@@ -168,7 +169,7 @@ const ss_t *ss_cref(ss_ref_t *s_ref, const char *c_str);
 const ss_t *ss_crefa(const char *c_str)
 */
 #define ss_crefa(c_str)	\
-	ss_cref((ss_ref_t *)alloca(sizeof(ss_ref_t)), c_str)
+	ss_cref((ss_ref_t *)s_alloca(sizeof(ss_ref_t)), c_str)
 
 /* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: when using raw references when calling ss_to_c() will return a "" string (safety)), so, if you need a reference to the internal raw buffer use ss_get_buffer_r() instead|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|ss_t string derived from ss_ref_t|O(1)|1;2| */
 const ss_t *ss_ref_buf(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
@@ -177,7 +178,7 @@ const ss_t *ss_ref_buf(ss_ref_t *s_ref, const char *buf, const size_t buf_size);
 const ss_t *ss_refa_buf(const char *buf, const size_t buf_size)
 */
 #define ss_refa_buf(buf, buf_size)	\
-	ss_ref_buf((ss_ref_t *)alloca(sizeof(ss_ref_t)), buf, buf_size)
+	ss_ref_buf((ss_ref_t *)s_alloca(sizeof(ss_ref_t)), buf, buf_size)
 
 /* #API: |Get string reference from string reference container|string reference container|ss_t string derived from ss_ref_t|O(1)|1;2| */
 S_INLINE const ss_t *ss_ref(const ss_ref_t *s_ref)
@@ -256,11 +257,11 @@ ss_t *ss_dup_enc_hex(const ss_t *src);
 /* #API: |Duplicate string with hex encoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_enc_HEX(const ss_t *src);
 
-/* #API: |Duplicate string with LZW encoding|string|output result|O(n)|1;2| */
-ss_t *ss_dup_enc_lzw(const ss_t *src);
+/* #API: |Duplicate string with LZ encoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_lz(const ss_t *src);
 
-/* #API: |Duplicate string with RLE encoding|string|output result|O(n)|1;2| */
-ss_t *ss_dup_enc_rle(const ss_t *src);
+/* #API: |Duplicate string with LZ encoding (high compession)|string|output result|O(n)|1;2| */
+ss_t *ss_dup_enc_lzh(const ss_t *src);
 
 /* #API: |Duplicate string with JSON escape encoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_enc_esc_json(const ss_t *src);
@@ -283,11 +284,8 @@ ss_t *ss_dup_dec_b64(const ss_t *src);
 /* #API: |Duplicate string with hex decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_hex(const ss_t *src);
 
-/* #API: |Duplicate string with LZW decoding|string|output result|O(n)|1;2| */
-ss_t *ss_dup_dec_lzw(const ss_t *src);
-
-/* #API: |Duplicate string with RLE decoding|string|output result|O(n)|1;2| */
-ss_t *ss_dup_dec_rle(const ss_t *src);
+/* #API: |Duplicate string with LZ decoding|string|output result|O(n)|1;2| */
+ss_t *ss_dup_dec_lz(const ss_t *src);
 
 /* #API: |Duplicate string with JSON escape decoding|string|output result|O(n)|1;2| */
 ss_t *ss_dup_dec_esc_json(const ss_t *src);
@@ -383,11 +381,11 @@ ss_t *ss_cpy_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Overwrite string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string LZW encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_enc_lzw(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string LZ encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_lz(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string RLE encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_enc_rle(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string LZ encoded copy (high compression)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_enc_lzh(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_enc_esc_json(ss_t **s, const ss_t *src);
@@ -410,11 +408,8 @@ ss_t *ss_cpy_dec_b64(ss_t **s, const ss_t *src);
 /* #API: |Overwrite string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Overwrite string with input string LZW decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_dec_lzw(ss_t **s, const ss_t *src);
-
-/* #API: |Overwrite string with input string RLE decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cpy_dec_rle(ss_t **s, const ss_t *src);
+/* #API: |Overwrite string with input string LZ decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cpy_dec_lz(ss_t **s, const ss_t *src);
 
 /* #API: |Overwrite string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cpy_dec_esc_json(ss_t **s, const ss_t *src);
@@ -525,11 +520,11 @@ ss_t *ss_cat_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Concatenate string with input string hexadecimal (uppercase) encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string LZW encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_enc_lzw(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string LZ encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_lz(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string RLE encoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_enc_rle(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string LZ encoded copy (high compression)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_enc_lzh(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with input string JSON escape encoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_enc_esc_json(ss_t **s, const ss_t *src);
@@ -552,11 +547,8 @@ ss_t *ss_cat_dec_b64(ss_t **s, const ss_t *src);
 /* #API: |Concatenate string with input string hexadecimal (lowercase) decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Concatenate string with input string LZW decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_dec_lzw(ss_t **s, const ss_t *src);
-
-/* #API: |Concatenate string with input string RLE decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_cat_dec_rle(ss_t **s, const ss_t *src);
+/* #API: |Concatenate string with input string LZ decoded copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_cat_dec_lz(ss_t **s, const ss_t *src);
 
 /* #API: |Concatenate string with input string JSON escape decoding copy|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_cat_dec_esc_json(ss_t **s, const ss_t *src);
@@ -628,11 +620,11 @@ ss_t *ss_enc_hex(ss_t **s, const ss_t *src);
 /* #API: |Convert to hexadecimal (uppercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_HEX(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to LZW|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_enc_lzw(ss_t **s, const ss_t *src);
+/* #API: |Convert to LZ|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_enc_lz(ss_t **s, const ss_t *src);
 
-/* #API: |Convert to RLE|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_enc_rle(ss_t **s, const ss_t *src);
+/* #API: |Convert to LZ (high compression)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_enc_lzh(ss_t **s, const ss_t *src);
 
 /* #API: |Convert/escape for JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_enc_esc_json(ss_t **s, const ss_t *src);
@@ -655,11 +647,8 @@ ss_t *ss_dec_b64(ss_t **s, const ss_t *src);
 /* #API: |Decode from hexadecimal (lowercase)|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_hex(ss_t **s, const ss_t *src);
 
-/* #API: |Decode from LZW|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_dec_lzw(ss_t **s, const ss_t *src);
-
-/* #API: |Decode from RLE|output string; input string|output string reference (optional usage)|O(n)|1;2| */
-ss_t *ss_dec_rle(ss_t **s, const ss_t *src);
+/* #API: |Decode from LZ|output string; input string|output string reference (optional usage)|O(n)|1;2| */
+ss_t *ss_dec_lz(ss_t **s, const ss_t *src);
 
 /* #API: |Unescape from JSON encoding|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 ss_t *ss_dec_esc_json(ss_t **s, const ss_t *src);

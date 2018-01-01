@@ -148,7 +148,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\saux\sbitio.c" />
     <ClCompile Include="..\..\src\saux\schar.c" />
     <ClCompile Include="..\..\src\saux\scommon.c" />
     <ClCompile Include="..\..\src\saux\sdata.c" />
@@ -165,7 +164,6 @@
     <ClCompile Include="..\..\examples\stest.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\saux\sbitio.h" />
     <ClInclude Include="..\..\src\saux\schar.h" />
     <ClInclude Include="..\..\src\saux\scommon.h" />
     <ClInclude Include="..\..\src\saux\sdata.h" />

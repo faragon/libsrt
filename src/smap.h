@@ -32,8 +32,8 @@ extern "C" {
  * #DOC
  * #DOC 	SM_SP: string key, pointer value
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "sstring.h"
@@ -125,7 +125,7 @@ sm_t *sm_alloca(const enum eSM_Type t, const size_t n);
 */
 #define sm_alloca(type, max_size)						\
 	sm_alloc_raw(type, S_TRUE,						\
-		     alloca(sd_alloc_size_raw(sizeof(sm_t), sm_elem_size(type),	\
+		     s_alloca(sd_alloc_size_raw(sizeof(sm_t), sm_elem_size(type),	\
 					      max_size, S_FALSE)),		\
 		     sm_elem_size(type), max_size)
 
@@ -417,8 +417,9 @@ S_INLINE void SMStrFree(union SMStr *sstr)
 	return n_k
 
 #define S_SM_ENUM_AUX_V(t, NT, m, i, n_v, def_v)	\
+	const NT *n;					\
 	RETURN_IF(!m || t != m->d.sub_type, def_v);	\
-	const NT *n = (const NT *)st_enum_r(m, i);	\
+	n = (const NT *)st_enum_r(m, i);		\
 	RETURN_IF(!n, def_v);				\
 	return n_v
 
@@ -503,21 +504,24 @@ S_INLINE const void *sm_it_sp_v(const sm_t *m, const stndx_t i)
 	size_t FN(const sm_t *m, KEY_T kmin, KEY_T kmax, CALLBACK_T f,	     \
 		  void *context)					     \
 	{								     \
+		ssize_t level;						     \
+		size_t ts, nelems, rbt_max_depth;			     \
+		struct STreeScan *p;					     \
+		const stn_t *cn;					     \
+		int cmpmin, cmpmax;					     \
 		RETURN_IF(!m, 0); /* null tree */			     \
 		RETURN_IF(m->d.sub_type != MAP_TYPE, 0); /* wrong type */    \
-		const size_t ts = sm_size(m);				     \
+		ts = sm_size(m);					     \
 		RETURN_IF(!ts, S_FALSE); /* empty tree */		     \
-		ssize_t level = 0;					     \
-		size_t nelems = 0, rbt_max_depth = 2 * (slog2(ts) + 1);	     \
-		struct STreeScan *p = (struct STreeScan *)		     \
-					alloca(sizeof(struct STreeScan) *    \
+		level = 0;						     \
+		nelems = 0;						     \
+		rbt_max_depth = 2 * (slog2(ts) + 1);	     		     \
+		p = (struct STreeScan *)s_alloca(sizeof(struct STreeScan) *    \
 						 (rbt_max_depth + 3));	     \
 		ASSERT_RETURN_IF(!p, 0); /* BEHAVIOR: stack error */	     \
 		p[0].p = ST_NIL;					     \
 		p[0].c = m->root;					     \
 		p[0].s = STS_ScanStart;					     \
-		const stn_t *cn;					     \
-		int cmpmin, cmpmax;					     \
 		while (level >= 0) {					     \
 			S_ASSERT(level <= (ssize_t)rbt_max_depth);	     \
 			switch (p[level].s) {				     \

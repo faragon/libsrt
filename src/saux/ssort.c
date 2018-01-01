@@ -3,8 +3,8 @@
  *
  * Sorting algorithms
  *
- * Copyright (c) 2015-2017, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */ 
 
 #include "ssort.h"
@@ -23,7 +23,7 @@
 			cnt[b[i] + (OFF)]++;				\
 		for (i = j = 0; j < 256 && i < elems; j++)		\
 			if (cnt[j]) {					\
-				memset(b + i, j - (OFF), cnt[j]);	\
+				memset(b + i, (int)(j - (OFF)), cnt[j]);\
 				i += cnt[j];				\
 			}						\
 	}
@@ -153,7 +153,8 @@ BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i32, int32_t, uint32_t, s_msb32,
 BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u32, uint32_t, uint32_t, s_msb32,
 		     s_swap_u32, s_sort2_u32, s_sort3_u32, s_sort4_u32, 0)
 BUILD_MSD_RADIX_SORT(s_msd_radix_sort_i64, int64_t, uint64_t, s_msb64,
-		     s_swap_i64, s_sort2_i64, s_sort3_i64, s_sort4_i64, 1LL<<63)
+		     s_swap_i64, s_sort2_i64, s_sort3_i64, s_sort4_i64,
+		     1LL<<63)
 BUILD_MSD_RADIX_SORT(s_msd_radix_sort_u64, uint64_t, uint64_t, s_msb64,
 		     s_swap_u64, s_sort2_u64, s_sort3_u64, s_sort4_u64, 0)
 

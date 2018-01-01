@@ -3,8 +3,8 @@
  *
  * Image comparison/diff example using libsrt
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Observations:
  * - In order to have PNG and JPEG support: make imgc HAS_JPG=1 HAS_PNG=1
@@ -17,22 +17,25 @@ static int exit_with_error(const char **argv, const char *msg,
 
 int main(int argc, const char **argv)
 {
-	size_t in_size = 0;
+	size_t in_size = 0, enc_bytes, rgb1_bytes, rgb2_bytes;
+	ssize_t written;
 	struct RGB_Info ri1, ri2;
 	ss_t *iobuf = NULL, *rgb1_buf = NULL, *rgb2_buf = NULL, *rgb3_buf = NULL;
 	int exit_code = 2;
 	FILE *fin = NULL, *fout = NULL;
 	const char *exit_msg = "not enough parameters";
 	int filter = F_None;
+	sbool_t ro;
+	enum ImgTypes t_in1, t_in2, t_out;
 	#define IMGC_XTEST(test, m, c)	\
 		if (test) { exit_msg = m; exit_code = c; break; }
 	for (;;) {
 		if (argc < 2)
 			break;
-		sbool_t ro = argc < 3 ? S_TRUE : S_FALSE;
-		enum ImgTypes t_in1 = file_type(argv[1]),
-			      t_in2 = file_type(argv[2]),
-			      t_out = argc < 4 ? IMG_none : file_type(argv[3]);
+		ro = argc < 3 ? S_TRUE : S_FALSE;
+		t_in1 = file_type(argv[1]);
+		t_in2 = file_type(argv[2]);
+		t_out = argc < 4 ? IMG_none : file_type(argv[3]);
 		IMGC_XTEST(t_in1 == IMG_error || t_in2 == IMG_error ||
 			   t_out == IMG_error, "invalid parameters",
 			   t_in1 == IMG_error || t_in2 == IMG_error ? 3 : 4);
@@ -42,7 +45,7 @@ int main(int argc, const char **argv)
 		in_size = ss_size(iobuf);
 		IMGC_XTEST(!in_size, "input #1 read error", 5);
 
-		size_t rgb1_bytes = any2rgb(&rgb1_buf, &ri1, iobuf, t_in1);
+		rgb1_bytes = any2rgb(&rgb1_buf, &ri1, iobuf, t_in1);
 		IMGC_XTEST(!rgb1_bytes, "can not process input file #1", 6);
 
 		fclose(fin);
@@ -51,7 +54,7 @@ int main(int argc, const char **argv)
 		in_size = ss_size(iobuf);
 		IMGC_XTEST(!in_size, "input #2 read error", 7);
 
-		size_t rgb2_bytes = any2rgb(&rgb2_buf, &ri2, iobuf, t_in2);
+		rgb2_bytes = any2rgb(&rgb2_buf, &ri2, iobuf, t_in2);
 		IMGC_XTEST(!rgb2_bytes, "can not process input file #2", 8);
 
 		IMGC_XTEST(ss_size(rgb1_buf) != ss_size(rgb2_buf),
@@ -63,11 +66,11 @@ int main(int argc, const char **argv)
 			fprintf(stderr, "Image files %s and %s differ\n", argv[1], argv[2]);
 
 		if (t_out != IMG_none) {
-			size_t enc_bytes = rgb2type(&iobuf, t_out, rgb3_buf, &ri1, F_None);
+			enc_bytes = rgb2type(&iobuf, t_out, rgb3_buf, &ri1, F_None);
 			IMGC_XTEST(!enc_bytes, "output file encoding error", 10);
 
 			fout = fopen(argv[3], "wb+");
-			ssize_t written = ss_write(fout, iobuf, 0, ss_size(iobuf));
+			written = ss_write(fout, iobuf, 0, ss_size(iobuf));
 
 			IMGC_XTEST(!ro && (written < 0 ||
 				   (size_t)written != ss_size(iobuf)),
@@ -92,7 +95,7 @@ static int exit_with_error(const char **argv, const char *msg,
 		"images, 1: not matching.\nExamples:\n"
 		IF_PNG("\tDiff: %s input1.png input2.png output.ppm\n")
 		IF_JPG("\tDiff: %s input1.jpg input2.jpg output.tga\n")
-		"\tDiff: %s input.ppm output.tga\n",
+		"\tDiff: %s input1.ppm input2.tga output.tga\n",
 		exit_code, msg, v0, IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA) v0);
 	return exit_code;
 }

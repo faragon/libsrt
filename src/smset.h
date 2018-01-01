@@ -25,8 +25,8 @@ extern "C" {
  * #DOC 	SMS_S: string key
  * #DOC
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "sstring.h"
@@ -62,7 +62,7 @@ sms_t *sms_alloca(const enum eSMS_Type t, const size_t n);
 */
 #define sms_alloca(type, max_size)					\
 	sms_alloc_raw(type, S_TRUE,					\
-		      alloca(sd_alloc_size_raw(sizeof(sms_t),		\
+		      s_alloca(sd_alloc_size_raw(sizeof(sms_t),		\
 			     sm_elem_size(type), max_size, S_FALSE)),	\
 		     sm_elem_size(type), max_size)
 
@@ -163,8 +163,8 @@ S_INLINE sbool_t sms_count_s(const sms_t *s, const ss_t *k)
 /* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_i32(sms_t **s, const int32_t k)
 {
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
         struct SMapi n;
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
 }
@@ -172,8 +172,8 @@ S_INLINE sbool_t sms_insert_i32(sms_t **s, const int32_t k)
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_u32(sms_t **s, const uint32_t k)
 {
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
         struct SMapu n;
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
 }
@@ -181,8 +181,8 @@ S_INLINE sbool_t sms_insert_u32(sms_t **s, const uint32_t k)
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_i(sms_t **s, const int64_t k)
 {
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
         struct SMapI n;
+        RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
         n.k = k;
         return st_insert((st_t **)s, (const stn_t *)&n);
 }
@@ -190,11 +190,12 @@ S_INLINE sbool_t sms_insert_i(sms_t **s, const int64_t k)
 /* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE sbool_t sms_insert_s(sms_t **s, const ss_t *k)
 {
-        RETURN_IF(!s  || (*s)->d.sub_type != SMS_S, S_FALSE);
         struct SMapS n;
+	sbool_t ins_ok;
+        RETURN_IF(!s  || (*s)->d.sub_type != SMS_S, S_FALSE);
 #if 1 /* workaround */
 	SMStrSet(&n.k, k);
-	sbool_t ins_ok = st_insert((st_t **)s, (const stn_t *)&n);
+	ins_ok = st_insert((st_t **)s, (const stn_t *)&n);
 	if (!ins_ok)
 		SMStrFree(&n.k);
 	return ins_ok;

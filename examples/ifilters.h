@@ -3,8 +3,8 @@
  *
  * Image processing example using libsrt
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #ifndef IFILTERS_H
@@ -49,15 +49,22 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 	(t)[0] = (s)[0] + (s)[2], (t)[1] = (s)[1] + (s)[2], (t)[2] = (s)[2]
 
 #define ALG_COMMON(p)					\
+	size_t i, bs, rs;				\
+	const char *s;					\
+	char *t;					\
+	const short *sw;				\
+	short *tw;					\
+	const short *pw;				\
 	RETURN_IF(!rgb || !ri,0);			\
-	size_t i, bs = ri->bmp_size, rs = ri->row_size;	\
+	bs = ri->bmp_size;				\
+	rs = ri->row_size;				\
 	RETURN_IF(ss_reserve(dpcm, bs) < bs, 0);	\
 	ss_set_size(*dpcm, bs);				\
-	const char *s = ss_get_buffer_r(rgb);		\
-	char *t = ss_get_buffer(*dpcm);			\
-	const short *sw = (const short *)s;		\
-	short *tw = (short *)t;				\
-	const short *pw = (const short *)p;
+	s = ss_get_buffer_r(rgb);			\
+	t = ss_get_buffer(*dpcm);			\
+	sw = (const short *)s;				\
+	tw = (short *)t;				\
+	pw = (const short *)p;
 
 #define HDALG_LOOP(ps, i, s, t, p, OP, T)				\
 	rs = rs;							\

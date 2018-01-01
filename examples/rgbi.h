@@ -3,8 +3,8 @@
  *
  * RGB bitmap description. Image processing example for libsrt.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #ifndef RGBI_H
@@ -19,11 +19,13 @@ struct RGB_Info
 
 static sbool_t rgbi_valid(const struct RGB_Info *ri)
 {
-	return ri && ri->chn > 0 && ri->bpp >= 8 && ri->Bpp > 0 && ri->width > 0
-	       && ri->height > 0 && ri->row_size > 0 ? S_TRUE : S_FALSE;
+	return ri && ri->chn > 0 && ri->bpp >= 8 && ri->Bpp > 0 &&
+	       ri->width > 0 && ri->height > 0 && ri->row_size > 0 ? S_TRUE :
+								     S_FALSE;
 }
 
-static void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b, size_t c)
+static void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
+		     size_t c)
 {
 	if (i) {
 		i->width = w;

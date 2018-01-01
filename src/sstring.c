@@ -3,8 +3,8 @@
  *
  * String handling.
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "sstring.h"
@@ -47,14 +47,15 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 
 #define SS_CCAT_STACK 128
 
+#define SS_COPYCAT_AUX_VARS(TYPE)				\
+	va_list ap;						\
+	size_t *sizes, nargs = 0, extra_size, i,		\
+	       pstack[SS_CCAT_STACK],				\
+	       *pheap = NULL;					\
+	TYPE *next = s1
+
 #define SS_COPYCAT_AUX(s, cat, TYPE, s1, STRLEN, SS_CAT_XN)		\
 	for (; s1;) {							\
-		va_list ap;						\
-		size_t *sizes,						\
-		        pstack[SS_CCAT_STACK],				\
-		       *pheap = NULL;					\
-		TYPE *next = s1;					\
-		size_t nargs = 0;					\
 		va_start(ap, s1);					\
 		while (!s_varg_tail_ptr_tag(next)) { /* last el. tag */	\
 			next = (TYPE *)va_arg(ap, TYPE *);		\
@@ -73,9 +74,8 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 			sizes = pheap;					\
 		}							\
 		sizes[0] = STRLEN(s1);					\
-		size_t extra_size = sizes[0];				\
+		extra_size = sizes[0];				\
 		va_start(ap, s1);					\
-		size_t i;						\
 		for (i = 1; i < nargs; i++) {				\
 			next = va_arg(ap, TYPE *);			\
 			if (next) {					\
@@ -232,20 +232,22 @@ static ss_t *ss_reset(ss_t *s)
 
 size_t ss_reserve(ss_t **s, const size_t max_size)
 {
+	size_t ss, unicode_size, r;
+	sbool_t full_st;
 	RETURN_IF(!s, 0);
 	if (!*s) {
 		*s = ss_alloc(max_size);
 		RETURN_IF(!(*s), 0);
-		size_t ss = ss_max_size(*s);
+		ss = ss_max_size(*s);
 		return ss >= max_size ? max_size : 0;
 	}
 	/*
 	 * If passing from small struct to full struct,
 	 * we'll have to update the unicode cached size.
 	 */
-	size_t unicode_size = get_unicode_size(*s);
-	sbool_t full_st = sdx_full_st(&(*s)->d);
-	size_t r = sdx_reserve((sd_t **)s, max_size, sizeof(ss_t), 1);
+	unicode_size = get_unicode_size(*s);
+	full_st = sdx_full_st(&(*s)->d);
+	r = sdx_reserve((sd_t **)s, max_size, sizeof(ss_t), 1);
 	if (!full_st && r > 255)
 		set_unicode_size(*s, unicode_size);
 	return r;
@@ -253,9 +255,11 @@ size_t ss_reserve(ss_t **s, const size_t max_size)
 
 size_t ss_grow(ss_t **s, const size_t extra_size)
 {
+	size_t size, unicode_size, new_size;
+	sbool_t full_st;
 	RETURN_IF(!s, 0);
 	RETURN_IF(!(*s), ss_reserve(s, extra_size));
-	size_t size = ss_size(*s);
+	size = ss_size(*s);
 	if (s_size_t_overflow(size, extra_size)) {
 		ss_set_alloc_errors(*s);
 		return 0;
@@ -264,10 +268,10 @@ size_t ss_grow(ss_t **s, const size_t extra_size)
 	* If passing from small struct to full struct,
 	* we'll have to update the unicode cached size.
 	*/
-	size_t unicode_size = get_unicode_size(*s);
-	sbool_t full_st = sdx_full_st(&(*s)->d);
-	size_t new_size = sdx_reserve((sd_t **)s, size + extra_size,
-				      sizeof(ss_t), 1);
+	unicode_size = get_unicode_size(*s);
+	full_st = sdx_full_st(&(*s)->d);
+	new_size = sdx_reserve((sd_t **)s, size + extra_size,
+			      sizeof(ss_t), 1);
 	if (!full_st && new_size > 255)
 		set_unicode_size(*s, unicode_size);
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
@@ -277,9 +281,10 @@ size_t ss_grow(ss_t **s, const size_t extra_size)
 static ss_t *ss_cat_cn_raw(ss_t **s, const char *src, const size_t src_off,
 			   const size_t src_size, const size_t src_usize)
 {
+	size_t off;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src && src_size > 0) {
-		const size_t off = *s ? ss_size(*s) : 0;
+		off = *s ? ss_size(*s) : 0;
 		if (ss_grow(s, src_size) && *s) {
 			memmove(ss_get_buffer(*s) + off, src + src_off,
 				src_size);
@@ -306,9 +311,11 @@ static ss_t *ss_cat_aliasing(ss_t **s, const ss_t *s0, const size_t s0_size,
 
 static size_t get_cmp_size(const ss_t *s1, const ss_t *s2)
 {
+	size_t s1_size, s2_size;
 	if (!s1 || !s2)
 		return 0;
-	size_t s1_size = ss_size(s1), s2_size = ss_size(s2);
+	s1_size = ss_size(s1);
+	s2_size = ss_size(s2);
 	return S_MAX(s1_size, s2_size);
 }
 
@@ -328,20 +335,23 @@ static size_t ss_utf8_to_wc(const char *s, const size_t off,
 
 static ss_t *aux_toint(ss_t **s, const sbool_t cat, const int64_t num)
 {
+	int64_t n;
+	char *p, btmp[128];
+	size_t off, digits, at, out_size;
 	ASSERT_RETURN_IF(!s, ss_void);
-	char btmp[128], *p = btmp + sizeof(btmp) - 1;
-	int64_t n = num < 0 ? -num : num;
+	p = btmp + sizeof(btmp) - 1;
+	n = num < 0 ? -num : num;
 	do {
 		*p-- = '0' + n % 10;
 		n /= 10;
 	} while (n);
 	if (num < 0)
 		*p-- = '-';
-	const size_t off = (size_t)((p - (char *)btmp) + 1),
-		     digits = sizeof(btmp) - off,
-		     at = (cat && *s) ? ss_size(*s) : 0;
+	off = (size_t)((p - (char *)btmp) + 1);
+	digits = sizeof(btmp) - off;
+	at = (cat && *s) ? ss_size(*s) : 0;
 	SS_OVERFLOW_CHECK(s, at, digits);
-	const size_t out_size = at + digits;
+	out_size = at + digits;
         if (ss_reserve(s, out_size) >= out_size && *s) {
 		memcpy(ss_get_buffer(*s) + at, btmp + off, digits);
 		ss_set_size(*s, out_size);
@@ -353,18 +363,25 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const int64_t num)
 static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 			 int32_t (*towX)(int32_t))
 {
+	int c, c2;
+	size_t ss, sso_max, cached_usize, at, sso_req, i, i2, csize, csize2;
+	const char *ps;
+	char *po0, *po, *pout, u8[SSU8_MAX_SIZE];
+	ss_t *out;
+	sbool_t aliasing;
+	unsigned char is_cached_usize;
+	ssize_t extra;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t ss = ss_size(src),
-		     sso_max = *s ? ss_max_size(*s) : 0;
-	const char *ps = ss_get_buffer_r(src);
-	ss_t *out = NULL;
-	const sbool_t aliasing = *s == src;
-	unsigned char is_cached_usize = 0;
-	ssize_t extra = sc_utf8_calc_case_extra_size(ps, 0, ss, towX);
-	size_t cached_usize = 0,
-	       at;
+	ss = ss_size(src);
+	sso_max = *s ? ss_max_size(*s) : 0;
+	ps = ss_get_buffer_r(src);
+	out = NULL;
+	aliasing = *s == src;
+	is_cached_usize = 0;
+	extra = sc_utf8_calc_case_extra_size(ps, 0, ss, towX);
+	cached_usize = 0;
 	/* If possible, keep Unicode size cached: */
 	if (*s) {
 		if (is_unicode_size_cached(*s) && is_unicode_size_cached(src)) {
@@ -381,9 +398,8 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 		at = 0;
 	}
 	/* Check if it is necessary to allocate more memory: */
-	size_t sso_req = extra < 0 ? (at + ss - (size_t)(-extra)) :
-				     (at + ss + (size_t)extra);
-	char *po0;
+	sso_req = extra < 0 ? (at + ss - (size_t)(-extra)) :
+			     (at + ss + (size_t)extra);
 	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) {
 		if (*s && (*s)->d.f.ext_buffer) { /* BEHAVIOR */
 			S_ERROR("not enough memory: strings stored in the "
@@ -400,7 +416,7 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 				ss_set_alloc_errors(*s);
 			return ss_check(s);
 		}
-		char *pout = ss_get_buffer(out);
+		pout = ss_get_buffer(out);
 		if (at > 0) /* cat */
 			memcpy(pout, ss_get_buffer(*s), at);
 		po0 = pout + at;
@@ -408,17 +424,16 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 		po0 = ss_get_buffer(*s) + at;
 	}
 	/* Case conversion loop: */
-	size_t i = 0;
-	int c = 0;
-	char *po = po0,
-	      u8[SSU8_MAX_SIZE];
+	i = 0;
+	c = 0;
+	po = po0;
 	for (; i < ss;) {
 #ifdef S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
 		/*
 		 * Alignment is handled into sc_parallel_toX(),
 		 * so the cast to 32-bit container is not a problem.
 		 */
-		const size_t i2 = sc_parallel_toX(ps, i, ss, po, towX);
+		i2 = sc_parallel_toX(ps, i, ss, po, towX);
 		if (i != i2) {
 			po += (i2 - i);
 			i = i2;
@@ -426,9 +441,8 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 				break;
 		}
 #endif
-		const size_t csize = ss_utf8_to_wc(ps, i, ss, &c, *s);
-		const int c2 = towX(c);
-		size_t csize2;
+		csize = ss_utf8_to_wc(ps, i, ss, &c, *s);
+		c2 = towX(c);
 		if (c2 == c) {
 			csize2 = csize;
 			if (!aliasing)
@@ -461,27 +475,31 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 		       senc_f_t f, senc_f2_t f2)
 {
+	sbool_t aliasing;
+	const unsigned char *src_buf;
+	size_t in_size, at, enc_size, out_size;
+	ss_t *src_aux;
+	const ss_t *src1;
+	const unsigned char *s_in;
+	unsigned char *s_out;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	sbool_t aliasing = *s == src ? S_TRUE : S_FALSE;
-	const unsigned char *src_buf = (const unsigned char *)
-						ss_get_buffer_r(src);
-	size_t in_size = ss_size(src),
-	       at = (cat && *s) ? ss_size(*s) : 0,
-	       enc_size = f ? f(src_buf, in_size, NULL) :
-			       f2(src_buf, in_size, NULL, 0),
-	       out_size = at + enc_size;
+	aliasing = *s == src ? S_TRUE : S_FALSE;
+	src_buf = (const unsigned char *)ss_get_buffer_r(src);
+	in_size = ss_size(src);
+	at = (cat && *s) ? ss_size(*s) : 0;
+	enc_size = f ? f(src_buf, in_size, NULL) :
+			       f2(src_buf, in_size, NULL, 0);
+	out_size = at + enc_size;
 	if (ss_reserve(s, out_size) >= out_size) {
-		ss_t *src_aux = NULL;
-		const ss_t *src1;
+		src_aux = NULL;
 		if (aliasing) {
 			/*
 			 * For functions not supporting aliasing, use a
 			 * copy for the input
 			 */
-			if (f == senc_lzw || f == sdec_lzw ||
-			    f == senc_rle || f == sdec_rle) {
+			if (f == senc_lz || f == sdec_lz || f == senc_lzh) {
 				ss_cpy(&src_aux, *s);
 				src1 = src_aux;
 			} else
@@ -489,9 +507,8 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 		} else {
 			src1 = src;
 		}
-		const unsigned char *s_in =
-				(const unsigned char *)ss_get_buffer_r(src1);
-		unsigned char *s_out = (unsigned char *)ss_get_buffer(*s) + at;
+		s_in = (const unsigned char *)ss_get_buffer_r(src1);
+		s_out = (unsigned char *)ss_get_buffer(*s) + at;
 		enc_size = f ? f(s_in, in_size, s_out) :
 			       f2(s_in, in_size, s_out, enc_size);
 		if (at == 0) {
@@ -516,14 +533,17 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 		       const size_t off, const size_t n)
 {
+	size_t ss0, at, src_size, copy_size, out_size;
+	sbool_t overflow;
+	char *po;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t ss0 = ss_size(src),
-			   at = (cat && *s) ? ss_size(*s) : 0;
-	const sbool_t overflow = off + n > ss0;
-	const size_t src_size = overflow ? ss0 - off : n,
-		     copy_size = ss0 - off - src_size;
+	ss0 = ss_size(src);
+	at = (cat && *s) ? ss_size(*s) : 0;
+	overflow = off + n > ss0;
+	src_size = overflow ? ss0 - off : n;
+	copy_size = ss0 - off - src_size;
 	if (*s == src) { /* BEHAVIOR: aliasing: copy-only */
 		if (off + n >= ss0) { /* tail clean cut */
 			ss_set_size(*s, off);
@@ -534,9 +554,9 @@ static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 		}
 		set_unicode_size_cached(*s, S_FALSE);
 	} else { /* copy or cat */
-		const size_t out_size = at + off + copy_size;
+		out_size = at + off + copy_size;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
-			char *po = ss_get_buffer(*s);
+			po = ss_get_buffer(*s);
 			memcpy(po + at, ss_get_buffer_r(src), off);
 			memcpy(po + at + off,
 			       ss_get_buffer_r(src) + off + n, copy_size);
@@ -550,27 +570,31 @@ static ss_t *aux_erase(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 			 const size_t char_off, const size_t n)
 {
+	char *po;
+	const char *ps;
+	size_t sso0, ss0, head_size, actual_n, cus, cut_size, tail_size,
+	       out_size, prefix_usize, at;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const char *ps = ss_get_buffer_r(src);
-	const size_t sso0 = *s ? ss_size(*s) : 0,
-		     ss0 = ss_size(src),
-		     head_size = sc_unicode_count_to_utf8_size(ps, 0, ss0,
+	ps = ss_get_buffer_r(src);
+	sso0 = *s ? ss_size(*s) : 0;
+	ss0 = ss_size(src);
+	head_size = sc_unicode_count_to_utf8_size(ps, 0, ss0,
 							char_off, NULL);
 	RETURN_IF(head_size >= ss0, ss_check(s)); /* BEHAVIOR */
-	size_t actual_n = 0;
-	const size_t cus = *s ? get_unicode_size(*s) : 0,
-		     cut_size = sc_unicode_count_to_utf8_size(ps,
-				head_size, ss0, n, &actual_n),
-		     tail_size = ss0 - cut_size - head_size;
-	size_t out_size = ss0 - cut_size,
-	       prefix_usize = 0;
+	actual_n = 0;
+	cus = *s ? get_unicode_size(*s) : 0;
+	cut_size = sc_unicode_count_to_utf8_size(ps,
+				head_size, ss0, n, &actual_n);
+	tail_size = ss0 - cut_size - head_size;
+	out_size = ss0 - cut_size;
+	prefix_usize = 0;
 	if (*s == src) { /* aliasing: copy-only */
-		char *po = ss_get_buffer(*s);
+		po = ss_get_buffer(*s);
 		memmove(po + head_size, ps + head_size + cut_size, tail_size);
 	} else { /* copy/cat */
-		const size_t at = (cat && *s) ? ss_size(*s) : 0;
+		at = (cat && *s) ? ss_size(*s) : 0;
 		out_size += at;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *po = ss_get_buffer(*s);
@@ -598,6 +622,14 @@ static ss_t *aux_erase_u(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 			 const size_t off, const ss_t *s1, const ss_t *s2)
 {
+	ssize_t size_delta;
+	size_t at, l1, l2, i, l, out_size, nfound, i_next;
+	const char *p0, *p2;
+	ss_t *out;
+	sbool_t aliasing;
+	char *o, *o0;
+	typedef void (*memcpy_t)(void *, const void *, size_t);
+	memcpy_t f_cpy;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!s1)
 		s1 = ss_void;
@@ -605,20 +637,21 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		s2 = ss_void;
 	if (!src)
 		src = ss_void;
-	const size_t at = (cat && *s) ? ss_size(*s) : 0;
-	const char *p0 = ss_get_buffer_r(src),
-		   *p2 = ss_get_buffer_r(s2);
+	at = (cat && *s) ? ss_size(*s) : 0;
+	p0 = ss_get_buffer_r(src);
+	p2 = ss_get_buffer_r(s2);
 	RETURN_IF(!p0, ss_check(s)); /* BEHAVIOR: empty s1 */
-	const size_t l1 = ss_size(s1), l2 = ss_size(s2);
-	size_t i = off, l = ss_size(src);
-	ss_t *out = NULL;
-	ssize_t size_delta = l2 > l1 ? (ssize_t)(l2 - l1) :
-				      -(ssize_t)(l1 - l2);
-	sbool_t aliasing = S_FALSE;
-	size_t out_size = at + l;
-	char *o, *o0;
+	l1 = ss_size(s1);
+	l2 = ss_size(s2);
+	i = off;
+	l = ss_size(src);
+	out = NULL;
+	size_delta = l2 > l1 ? (ssize_t)(l2 - l1) :
+			      -(ssize_t)(l1 - l2);
+	aliasing = S_FALSE;
+	out_size = at + l;
 	if (l2 >= l1) { /* resize required */
-		size_t nfound = 0;
+		nfound = 0;
 		/* scan required size */
 		for (;; i+= l1, nfound++)
 			if ((i = ss_find(src, i, s1)) == S_NPOS)
@@ -650,8 +683,6 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 		o0 = o = ss_get_buffer(*s);
 		RETURN_IF(!o, ss_check(s));
 	}
-	typedef void (*memcpy_t)(void *, const void *, size_t);
-	memcpy_t f_cpy;
 	if (aliasing) {
 		f_cpy = (memcpy_t)memmove;
 	} else {
@@ -661,8 +692,8 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 			memcpy(o, p0, off);
 	}
 	o += off;
-	size_t i_next = s1 == s2? S_NPOS : /* no replace */
-			ss_find(src, i + off, s1);
+	i_next = s1 == s2? S_NPOS : /* no replace */
+		ss_find(src, i + off, s1);
 	for (i = off;;) {
 		/* before match copy: */
 		if (i_next == S_NPOS) {
@@ -692,13 +723,15 @@ static ss_t *aux_replace(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 			const size_t n, char fill_byte)
 {
+	size_t src_size, at, out_size;
+	sbool_t aliasing;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t src_size = ss_size(src),
-		     at = (cat && *s) ? ss_size(*s) : 0,
-		     out_size = at + n;  /* BEHAVIOR: n overflow TODO */
-	const sbool_t aliasing = *s == src;
+	src_size = ss_size(src);
+	at = (cat && *s) ? ss_size(*s) : 0;
+	out_size = at + n;  /* BEHAVIOR: n overflow TODO */
+	aliasing = *s == src;
 	if (src_size < n) { /* fill */
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *o = ss_get_buffer(*s);
@@ -728,20 +761,24 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 			  const size_t u_chars, int fill_char)
 {
+	const char *ps;
+	sbool_t aliasing;
+	size_t at, char_size, current_u_chars, srcs, new_elems, at_inc,
+	       out_size, i, actual_unicode_count, head_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t at = (cat && *s) ? ss_size(*s) : 0,
-		     char_size = sc_wc_to_utf8_size(fill_char),
-		     current_u_chars = ss_len_u(src);
+	at = (cat && *s) ? ss_size(*s) : 0;
+	char_size = sc_wc_to_utf8_size(fill_char);
+	current_u_chars = ss_len_u(src);
 	RETURN_IF(u_chars == current_u_chars, ss_check(s)); /* same */
-	const sbool_t aliasing = *s == src;
-	const size_t srcs = ss_size(src);
+	aliasing = *s == src;
+	srcs = ss_size(src);
 	if (current_u_chars < u_chars) { /* fill */
-		const size_t new_elems = u_chars - current_u_chars,
-			     at_inc = srcs + new_elems * char_size;
+		new_elems = u_chars - current_u_chars;
+		at_inc = srcs + new_elems * char_size;
 		SS_OVERFLOW_CHECK(s, at, at_inc);
-		const size_t out_size = at + at_inc;
+		out_size = at + at_inc;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			if (!cat && !aliasing) /* copy */
 				ss_clear(*s);
@@ -751,18 +788,18 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 				inc_unicode_size(*s, current_u_chars);
 				inc_size(*s, srcs);
 			}
-			size_t i = 0;
+			i = 0;
 			for (; i < new_elems; i++)
 				ss_cat_char(s, fill_char);
 		}
 	} else { /* cut */
-		const char *ps = ss_get_buffer_r(src);
-		size_t actual_unicode_count = 0;
-		const size_t head_size = sc_unicode_count_to_utf8_size(
-						ps, 0, srcs, u_chars,
-						&actual_unicode_count);
+		ps = ss_get_buffer_r(src);
+		actual_unicode_count = 0;
+		head_size = sc_unicode_count_to_utf8_size(
+					ps, 0, srcs, u_chars,
+					&actual_unicode_count);
 		SS_OVERFLOW_CHECK(s, at, head_size);
-		const size_t out_size = at + head_size;
+		out_size = at + head_size;
 		S_ASSERT(u_chars == actual_unicode_count);
 		if (!aliasing) { /* copy or cat */
 			if (ss_reserve(s, out_size) >= out_size && *s) {
@@ -782,16 +819,18 @@ static ss_t *aux_resize_u(ss_t **s, const sbool_t cat, ss_t *src,
 
 static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 {
+	size_t ss, at, cat_usize, i, out_size, src_usize;
+	sbool_t aliasing;
+	const char *ps;
+	char *pt;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t ss = ss_size(src);
+	ss = ss_size(src);
 	if (ss > 0) {
-		const sbool_t aliasing = *s == src;
-		const char *ps = ss_get_buffer_r(src);
-		size_t i = 0;
-		for (; i < ss && isspace(ps[i]); i++);
-		size_t at, cat_usize;
+		aliasing = *s == src;
+		ps = ss_get_buffer_r(src);
+		for (i = 0; i < ss && isspace(ps[i]); i++);
 		if (cat) {
 			if (*s) {
 				at = ss_size(*s);
@@ -802,10 +841,10 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 		} else {
 			at = cat_usize = 0;
 		}
-		const size_t out_size = at + ss - i,
-			     src_usize = get_unicode_size(src);
+		out_size = at + ss - i;
+		src_usize = get_unicode_size(src);
 		if (ss_reserve(s, out_size) >= out_size && *s) {
-			char *pt = ss_get_buffer(*s);
+			pt = ss_get_buffer(*s);
 			if (!aliasing) /* copy or cat: shift data */
 				memcpy(pt + at, ps + i, ss - i);
 			else
@@ -825,23 +864,26 @@ static ss_t *aux_ltrim(ss_t **s, const sbool_t cat, const ss_t *src)
 
 static ss_t *aux_rtrim(ss_t **s, const sbool_t cat, const ss_t *src)
 {
+	const char *ps;
+	sbool_t aliasing;
+	size_t ss, at, i, nspaces, copy_size, out_size, cat_usize, src_usize;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
-	const size_t ss = ss_size(src),
-		     at = (cat && *s) ? ss_size(*s) : 0;
+	ss = ss_size(src);
+	at = (cat && *s) ? ss_size(*s) : 0;
 	if (ss > 0) {
-		const sbool_t aliasing = *s == src;
-		const char *ps = ss_get_buffer_r(src);
-		size_t i = ss - 1;
+		aliasing = *s == src;
+		ps = ss_get_buffer_r(src);
+		i = ss - 1;
 		for (; i > 0 && isspace(ps[i]); i--);
 		if (isspace(ps[i]))
 			i--;
-		const size_t nspaces = ss - i - 1,
-			     copy_size = ss - nspaces,
-			     out_size = at + copy_size,
-			     cat_usize = cat ? get_unicode_size(*s) : 0,
-			     src_usize = *s ? get_unicode_size(*s) : 0;
+		nspaces = ss - i - 1;
+		copy_size = ss - nspaces;
+		out_size = at + copy_size;
+		cat_usize = cat ? get_unicode_size(*s) : 0;
+		src_usize = *s ? get_unicode_size(*s) : 0;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *pt = ss_get_buffer(*s);
 			if (!aliasing)
@@ -862,27 +904,28 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 			const size_t max_bytes)
 {
 	ssize_t l = 0;
+	size_t ss, off, max_off, def_buf, buf_size, cap, l0;
+	char *sc;
 	if (h && max_bytes > 0) {
-		size_t ss = ss_size(*s),
-			    off = cat ? ss : 0,
-			    max_off = s_size_t_overflow(off, max_bytes) ?
-					S_NPOS : off + max_bytes,
-			    def_buf = 16384,
-			    buf_size;
+		ss = ss_size(*s);
+		off = cat ? ss : 0;
+		max_off = s_size_t_overflow(off, max_bytes) ?
+			S_NPOS : off + max_bytes;
+		def_buf = 16384;
 		for (; off < max_off;) {
 			buf_size = !s_size_t_overflow(off, def_buf) &&
 				   off + def_buf < max_off ? def_buf :
 							     max_off - off;
 			if (cat && (*s)->d.f.ext_buffer) {
-				size_t cap = ss_capacity_left(*s);
+				cap = ss_capacity_left(*s);
 				buf_size = S_MIN(buf_size, cap);
 			}
 			if (ss_reserve(s, off + buf_size) >= off + buf_size) {
 				if (feof(h))
 					break;
-				char *sc = ss_get_buffer(*s);
-				size_t l0 = (size_t)fread(sc + off, 1,
-							      buf_size, h);
+				sc = ss_get_buffer(*s);
+				l0 = (size_t)fread(sc + off, 1,
+						      buf_size, h);
 				if (l0 > 0 && !ferror(h)) {
 					off += l0;
 					ss_set_size(*s, off);
@@ -945,8 +988,8 @@ static ssize_t aux_read(ss_t **s, const sbool_t cat, FILE *h,
 MK_SS_DUP_CPY_CAT(enc_b64, senc_b64, NULL)
 MK_SS_DUP_CPY_CAT(enc_hex, senc_hex, NULL)
 MK_SS_DUP_CPY_CAT(enc_HEX, senc_HEX, NULL)
-MK_SS_DUP_CPY_CAT(enc_lzw, senc_lzw, NULL)
-MK_SS_DUP_CPY_CAT(enc_rle, senc_rle, NULL)
+MK_SS_DUP_CPY_CAT(enc_lz, senc_lz, NULL)
+MK_SS_DUP_CPY_CAT(enc_lzh, senc_lzh, NULL)
 MK_SS_DUP_CPY_CAT(enc_esc_xml, NULL, senc_esc_xml)
 MK_SS_DUP_CPY_CAT(enc_esc_json, NULL, senc_esc_json)
 MK_SS_DUP_CPY_CAT(enc_esc_url, NULL, senc_esc_url)
@@ -955,8 +998,7 @@ MK_SS_DUP_CPY_CAT(enc_esc_squote, NULL, senc_esc_squote)
 
 MK_SS_DUP_CPY_CAT(dec_b64, sdec_b64, NULL)
 MK_SS_DUP_CPY_CAT(dec_hex, sdec_hex, NULL)
-MK_SS_DUP_CPY_CAT(dec_lzw, sdec_lzw, NULL)
-MK_SS_DUP_CPY_CAT(dec_rle, sdec_rle, NULL)
+MK_SS_DUP_CPY_CAT(dec_lz, sdec_lz, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_xml, sdec_esc_xml, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_json, sdec_esc_json, NULL)
 MK_SS_DUP_CPY_CAT(dec_esc_url, sdec_esc_url, NULL)
@@ -1017,21 +1059,25 @@ const ss_t *ss_ref_buf(ss_ref_t *s_ref, const char *buf, const size_t buf_size)
 
 int ss_at(const ss_t *s, size_t off)
 {
+	size_t ss;
 	RETURN_IF(!s, 0);
-	const size_t ss = ss_size(s);
+	ss = ss_size(s);
 	return off < ss ? ss_get_buffer_r(s)[off] : 0;
 }
 
 size_t ss_len_u(const ss_t *s)
 {
+	ss_t *ws;
+	size_t enc_errors, ss, cached_uc_size;
+	const char *p;
 	ASSERT_RETURN_IF(!s, 0);
 	if (is_unicode_size_cached(s))
 		return get_unicode_size(s);
 	/* Not cached, so cache it: */
-	size_t enc_errors = 0;
-	const char *p = ss_get_buffer_r(s);
-	const size_t ss = ss_size(s),
-		     cached_uc_size = sc_utf8_count_chars(p, ss, &enc_errors);
+	enc_errors = 0;
+	p = ss_get_buffer_r(s);
+	ss = ss_size(s);
+	cached_uc_size = sc_utf8_count_chars(p, ss, &enc_errors);
 	/*
 	 * BEHAVIOR:
 	 * Constness is kept regarding ss_t internal logical state. Said that,
@@ -1039,7 +1085,7 @@ size_t ss_len_u(const ss_t *s)
 	 * operation. This is required for allowing caching string
 	 * references (which are always 'const ss_t *', by construction)
 	 */
-	ss_t *ws = (ss_t *)s;
+	ws = (ss_t *)s;
 	set_unicode_size_cached(ws, S_TRUE);
 	set_unicode_size(ws, cached_uc_size);
 	if (enc_errors) {
@@ -1231,18 +1277,22 @@ ss_t *ss_cpy(ss_t **s, const ss_t *src)
 	return ss_cat(s, src);
 }
 
-ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
+ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off,
+		    const size_t n)
 {
+	char *ps;
+	size_t ss, copy_size;
 	RETURN_IF(!s, ss_void);
 	RETURN_IF(!src || !n, ss_reset(*s)); /* BEHAVIOR: empty */
 	if (*s == src) { /* aliasing */
-		char *ps = ss_get_buffer(*s);
-		const size_t ss = ss_size(*s);
+		ps = ss_get_buffer(*s);
+		ss = ss_size(*s);
 		RETURN_IF(off >= ss, ss_reset(*s)); /* BEHAVIOR: empty */
-		const size_t copy_size = S_MIN(ss - off, n);
+		copy_size = S_MIN(ss - off, n);
 		memmove(ps, ps + off, copy_size);
 		ss_set_size(*s, copy_size);
-		set_unicode_size_cached(*s, S_FALSE); /* BEHAVIOR: cache lost */
+		/* BEHAVIOR: cache lost */
+		set_unicode_size_cached(*s, S_FALSE);
 	} else {
 		ss_clear(*s);
 		ss_cat_substr(s, src, off, n);
@@ -1253,18 +1303,20 @@ ss_t *ss_cpy_substr(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 ss_t *ss_cpy_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 		      const size_t n)
 {
+	char *ps;
+	size_t actual_unicode_count, ss, off, n_size, copy_size;
 	RETURN_IF(!s, ss_void);
 	RETURN_IF(!src || !n, ss_reset(*s)); /* BEHAVIOR: empty */
 	if (*s == src) { /* aliasing */
-		char *ps = ss_get_buffer(*s);
-		size_t actual_unicode_count = 0;
-		const size_t ss = ss_size(*s);
-		const size_t off = sc_unicode_count_to_utf8_size(ps, 0,
-					ss, char_off, &actual_unicode_count);
-		const size_t n_size = sc_unicode_count_to_utf8_size(ps,
-			off, ss, n, &actual_unicode_count);
+		ps = ss_get_buffer(*s);
+		actual_unicode_count = 0;
+		ss = ss_size(*s);
+		off = sc_unicode_count_to_utf8_size(ps, 0,
+				ss, char_off, &actual_unicode_count);
+		n_size = sc_unicode_count_to_utf8_size(ps,
+				off, ss, n, &actual_unicode_count);
 		RETURN_IF(off >= ss, ss_reset(*s)); /* BEHAVIOR: empty */
-		const size_t copy_size = S_MIN(ss - off, n_size);
+		copy_size = S_MIN(ss - off, n_size);
 		memmove(ps, ps + off, copy_size);
 		ss_set_size(*s, copy_size);
 		if (n == actual_unicode_count) {
@@ -1291,6 +1343,7 @@ ss_t *ss_cpy_cn(ss_t **s, const char *src, const size_t src_size)
 
 ss_t *ss_cpy_c_aux(ss_t **s, const char *s1, ...)
 {
+	SS_COPYCAT_AUX_VARS(const char);
 	ASSERT_RETURN_IF(!s, ss_void);
 	SS_COPYCAT_AUX(s, S_FALSE, const char, s1, strlen, ss_cat_cn);
 	return ss_check(s);
@@ -1305,6 +1358,7 @@ ss_t *ss_cpy_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 
 ss_t *ss_cpy_w_aux(ss_t **s, const wchar_t *s1, ...)
 {
+	SS_COPYCAT_AUX_VARS(const wchar_t);
 	ASSERT_RETURN_IF(!s, ss_void);
 	SS_COPYCAT_AUX(s, S_FALSE, const wchar_t, s1, wcslen, ss_cat_wn);
 	return ss_check(s);
@@ -1371,13 +1425,13 @@ ss_t *ss_cpy_rtrim(ss_t **s, const ss_t *src)
 
 ss_t *ss_cpy_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
+	va_list ap;
 	RETURN_IF(!s, ss_void);
 	RETURN_IF((!size || !fmt) && ss_reset(*s), *s);
 	if (*s) {
 		ss_reserve(s, size);
 		ss_clear(*s);
 	}
-	va_list ap;
 	va_start(ap, fmt);
 	ss_cat_printf_va(s, size, fmt, ap);
 	va_end(ap);
@@ -1416,12 +1470,14 @@ ss_t *ss_cpy_read(ss_t **s, FILE *handle, const size_t max_bytes)
 
 ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 {
+	va_list ap;
+	size_t extra_size, nargs, ss0, uss0, i;
+	const ss_t *next, *s0;
 	RETURN_IF(!s, ss_void);
 	if (s1 && ss_size(s1) > 0) {
-		va_list ap;
-		size_t extra_size = 0, nargs = 0;
-		const ss_t *next = s1, *s0 = *s;
-
+		extra_size = nargs = 0;
+		next = s1;
+		s0 = *s;
 		va_start(ap, s1);
 		while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
 			if (next)
@@ -1430,18 +1486,19 @@ ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 			nargs++;
 		}
 		va_end(ap);
-		const size_t ss0 = *s ? ss_size(s0) : 0,
-			     uss0 = s0 ? get_unicode_size(s0) : 0;
+		ss0 = *s ? ss_size(s0) : 0;
+		uss0 = s0 ? get_unicode_size(s0) : 0;
 		if (ss_grow(s, extra_size)) {
 			ss_cat_aliasing(s, s0, ss0, uss0, s1);
 			if (nargs == 1)
 				return *s;
 			va_start(ap, s1);
-			size_t i = 1;
+			i = 1;
 			for (; i < nargs; i++) {
 				next = va_arg(ap, const ss_t *);
 				if (next)
-					ss_cat_aliasing(s, s0, ss0, uss0, next);
+					ss_cat_aliasing(s, s0, ss0, uss0,
+							next);
 			}
 			va_end(ap);
 		}
@@ -1452,16 +1509,17 @@ ss_t *ss_cat_aux(ss_t **s, const ss_t *s1, ...)
 ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 		    const size_t sub_size0)
 {
+	const char *src_str, *src_aux;
+	size_t src_unicode_size, srcs, sub_size, src_off;
 	ASSERT_RETURN_IF(!s, ss_void);
 	RETURN_IF(!src || !sub_size0, ss_check(s)); /* no changes */
-	const char *src_str = NULL, *src_aux;
-	size_t src_unicode_size = 0;
-	const size_t srcs = ss_size(src);
+	src_str = NULL;
+	srcs = ss_size(src);
 	RETURN_IF(sub_off >= srcs, ss_check(s)); /* no changes */
-	const size_t sub_size = sub_size0 == S_NPOS ||
-			       (sub_off + sub_size0) > srcs ?
-				(srcs - sub_off) : sub_size0,
-		     src_off = get_str_off(src) + sub_off;
+	sub_size = sub_size0 == S_NPOS ||
+		       (sub_off + sub_size0) > srcs ?
+			(srcs - sub_off) : sub_size0;
+	src_off = get_str_off(src) + sub_off;
 	if (*s == src && !(*s)->d.f.ext_buffer) {
 		/* Aliasing case: make grow the buffer in order
 		 * to keep the reference to the data valid. */
@@ -1479,18 +1537,20 @@ ss_t *ss_cat_substr(ss_t **s, const ss_t *src, const size_t sub_off,
 ss_t *ss_cat_substr_u(ss_t **s, const ss_t *src, const size_t char_off,
 		      const size_t n)
 {
+	const char *psrc;
+	size_t ssrc, off_size, actual_n, copy_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src) {
-		const char *psrc = ss_get_buffer_r(src);
-		const size_t ssrc = ss_size(src),
-			     off_size = sc_unicode_count_to_utf8_size(
+		psrc = ss_get_buffer_r(src);
+		ssrc = ss_size(src);
+		off_size = sc_unicode_count_to_utf8_size(
 						psrc, 0, ssrc, char_off, NULL);
 		/* BEHAVIOR: cut out of bounds, append nothing */
 		if (off_size >= ssrc)
 			return *s;
-		size_t actual_n = 0;
-		const size_t copy_size = sc_unicode_count_to_utf8_size(psrc,
-						off_size, ssrc, n, &actual_n);
+		actual_n = 0;
+		copy_size = sc_unicode_count_to_utf8_size(psrc,
+					off_size, ssrc, n, &actual_n);
 		ss_cat_cn_raw(s, psrc, off_size, copy_size, actual_n);
 	}
 	return ss_check(s);
@@ -1503,6 +1563,7 @@ ss_t *ss_cat_cn(ss_t **s, const char *src, const size_t src_size)
 
 ss_t *ss_cat_c_aux(ss_t **s, const char *s1, ...)
 {
+	SS_COPYCAT_AUX_VARS(const char);
 	ASSERT_RETURN_IF(!s, ss_void);
 	SS_COPYCAT_AUX(s, S_TRUE, const char, s1, strlen, ss_cat_cn);
 	return ss_check(s);
@@ -1510,15 +1571,17 @@ ss_t *ss_cat_c_aux(ss_t **s, const char *s1, ...)
 
 ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 {
+	int32_t uc32;
+	char utf8[SSU8_MAX_SIZE];
+	size_t i, char_count, l;
+	wchar_t h, cl;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src && ss_grow(s, src_size * SSU8_MAX_SIZE) && *s) {
-		char utf8[SSU8_MAX_SIZE];
-		size_t i = 0,
-		       char_count = 0;
+		i = 0;
+		char_count = 0;
 		for (; i < src_size; i++) {
-			int32_t uc32;
 			if (sizeof(wchar_t) == 2) { /* UTF-16 */
-				wchar_t h = src[i];
+				h = src[i];
 				/*
 				 * Basic Multilingual Plane (BMP), or
 				 * full Unicode
@@ -1534,20 +1597,20 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 						continue;
 					if (i + 1 == src_size)
 						break;
-					wchar_t l = src[i + 1];
-					if (!SSU16_VALID_LS(l))
+					cl = src[i + 1];
+					if (!SSU16_VALID_LS(cl))
 						continue;
 					i++;
 					/*
 					 * Once validated, convert it
 					 */
-					uc32 = SSU16_TO_U32(h, l);
+					uc32 = SSU16_TO_U32(h, cl);
 				}
 			} else { /* UTF-32 */
 				uc32 = (int32_t)src[i];
 			}
-			size_t l = sc_wc_to_utf8(uc32, utf8,
-						 0, SSU8_MAX_SIZE);
+			l = sc_wc_to_utf8(uc32, utf8,
+					  0, SSU8_MAX_SIZE);
 			memcpy(ss_get_buffer(*s) + ss_size(*s), utf8, l);
 			inc_size(*s, l);
 			char_count++;
@@ -1559,6 +1622,7 @@ ss_t *ss_cat_wn(ss_t **s, const wchar_t *src, const size_t src_size)
 
 ss_t *ss_cat_w_aux(ss_t **s, const wchar_t *s1, ...)
 {
+	SS_COPYCAT_AUX_VARS(const wchar_t);
 	ASSERT_RETURN_IF(!s, ss_void);
 	SS_COPYCAT_AUX(s, S_TRUE, const wchar_t, s1, wcslen, ss_cat_wn);
 	return ss_check(s);
@@ -1585,7 +1649,7 @@ ss_t *ss_cat_erase(ss_t **s, const ss_t *src, const size_t off, const size_t n)
 }
 
 ss_t *ss_cat_erase_u(ss_t **s, const ss_t *src, const size_t char_off,
-								const size_t n)
+		     const size_t n)
 {
 	return aux_erase_u(s, S_TRUE, src, char_off, n);
 }
@@ -1625,23 +1689,27 @@ ss_t *ss_cat_rtrim(ss_t **s, const ss_t *src)
 
 ss_t *ss_cat_printf(ss_t **s, const size_t size, const char *fmt, ...)
 {
-	ASSERT_RETURN_IF(!s, ss_void);
 	va_list ap;
+	ASSERT_RETURN_IF(!s, ss_void);
 	va_start(ap, fmt);
 	ss_cat_printf_va(s, size, fmt, ap);
 	va_end(ap);
 	return *s;
 }
 
-ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
+ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt,
+		       va_list ap)
 {
+	char *p;
+	size_t off;
+	int sz;
 	ASSERT_RETURN_IF(!s, ss_void);
 	S_ASSERT(s && size > 0 && fmt);
 	if (size > 0 && fmt) {
-		const size_t off = *s ? ss_size(*s) : 0;
+		off = *s ? ss_size(*s) : 0;
 		if (ss_grow(s, size)) {
-			char *p = ss_get_buffer(*s) + off;
-			const int sz = vsnprintf(p, size, fmt, ap);
+			p = ss_get_buffer(*s) + off;
+			sz = vsnprintf(p, size, fmt, ap);
 			if (sz >= 0)
 				inc_size(*s, (size_t)sz);
 			else
@@ -1656,8 +1724,8 @@ ss_t *ss_cat_printf_va(ss_t **s, const size_t size, const char *fmt, va_list ap)
 
 ss_t *ss_cat_char(ss_t **s, const int c)
 {
-	RETURN_IF(!s, ss_void);
 	char tmp[6];
+	RETURN_IF(!s, ss_void);
 	return ss_cat_cn(s, tmp, sc_wc_to_utf8(c, tmp, 0, sizeof(tmp)));
 }
 
@@ -1700,12 +1768,14 @@ void ss_clear(ss_t *s)
 
 ss_t *ss_check(ss_t **s)
 {
+	size_t ss, ssmax;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!*s) {
 		*s = ss_void;
 		return *s;
 	}
-	const size_t ss = ss_size(*s), ssmax = ss_max_size(*s);
+	ss = ss_size(*s);
+	ssmax = ss_max_size(*s);
 	S_ASSERT(ss <= ssmax);
 	if (ss > ssmax) { /* This should never happen */
 		ss_set_size(*s, ssmax);
@@ -1762,6 +1832,8 @@ ss_t *ss_rtrim(ss_t **s)
 
 const char *ss_to_c(const ss_t *s)
 {
+	char *buf;
+	size_t size;
 	ASSERT_RETURN_IF(!s || s->d.f.st_mode == SData_VoidData, "");
 	/*
 	 * BEHAVIOR:
@@ -1781,8 +1853,8 @@ const char *ss_to_c(const ss_t *s)
 	 * you'll have to put terminating 0 by yourself after every
 	 * ss_t on ROM or mmap'ed).
 	 */
-	char *buf = (char *)ss_get_buffer_r(s);
-	const size_t size = ss_size(s);
+	buf = (char *)ss_get_buffer_r(s);
+	size = ss_size(s);
 	buf[size] = 0; /* C string terminator */
 	return buf;
 }
@@ -1790,15 +1862,18 @@ const char *ss_to_c(const ss_t *s)
 const wchar_t *ss_to_w(const ss_t *s, wchar_t *o, const size_t nmax, size_t *n)
 {
 	wchar_t *o_aux = NULL;
+	size_t o_s, i, ss, l;
+	const char *p;
+	int32_t c;
 	S_ASSERT(s && o && nmax > 0);
 	if (s && o && nmax > 0) {
-		size_t o_s = 0,
-		       i = 0;
-		const char *p = ss_get_buffer_r(s);
-		const size_t ss = ss_size(s);
+		o_s = 0;
+		i = 0;
+		p = ss_get_buffer_r(s);
+		ss = ss_size(s);
 		for (; i < ss && i < nmax;) {
-			int32_t c = 0;
-			size_t l = ss_utf8_to_wc(p, i, ss, &c, NULL);
+			c = 0;
+			l = ss_utf8_to_wc(p, i, ss, &c, NULL);
 			if (sizeof(wchar_t) == 2) {
 				if ((c & ~0xffff) == 0) { /* simple */
 					o[o_s++] = (wchar_t)c;
@@ -1867,17 +1942,24 @@ size_t ss_find_cn(const ss_t *s, const size_t off, const char *t,
 size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off,
 		const ss_t *tgt)
 {
+	size_t ss, ts;
+	const char *s0, *t0;
 	RETURN_IF(!s || !tgt, S_NPOS);
-	const size_t ss = ss_real_off(s, max_off), ts = ss_size(tgt);
+	ss = ss_real_off(s, max_off);
+	ts = ss_size(tgt);
 	RETURN_IF(!ss || !ts || (off + ts) > ss, S_NPOS);
-	const char *s0 = ss_get_buffer_r(s), *t0 = ss_get_buffer_r(tgt);
+	s0 = ss_get_buffer_r(s);
+	t0 = ss_get_buffer_r(tgt);
 	return ss_find_csum_fast(s0, off, ss, t0, ts);
 }
 
+#define SS_FINDRX_AUX_VARS	\
+	const char *p0, *pm, *p
 #define SS_FINDRX_AUX(LOOP_STOP_COND) {					\
 	RETURN_IF(!s || off == S_NPOS || max_off < off, S_NPOS);	\
-	const char *p0 = ss_get_buffer_r(s), *p = p0 + off,			\
-		   *pm = p0 + ss_real_off(s, max_off);			\
+	p0 = ss_get_buffer_r(s);					\
+	p = p0 + off;							\
+	pm = p0 + ss_real_off(s, max_off);				\
 	for (; p < pm ; p++)			       			\
 		if (LOOP_STOP_COND)					\
 			break;						\
@@ -1885,47 +1967,51 @@ size_t ss_findr(const ss_t *s, const size_t off, const size_t max_off,
 
 size_t ss_findrb(const ss_t *s, const size_t off, const size_t max_off)
 {
+	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p == 9 || *p == 10 || *p == 13 || *p == 32);
 }
 
 size_t ss_findrc(const ss_t *s, const size_t off, const size_t max_off,
-		  const char c)
+		 const char c)
 {
+	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p == c);
 }
 
 size_t ss_findrcx(const ss_t *s, const size_t off, const size_t max_off,
 		  const unsigned char c_min, const unsigned char c_max)
 {
+	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p >= c_min && *p <= c_max);
 }
 
 size_t ss_findru(const ss_t *s, const size_t off, const size_t max_off,
 		 const int c)
 {
+	ss_t *tmps;
+	SS_FINDRX_AUX_VARS;
 	/* ASCII search */
 	if (c < 128)
 		SS_FINDRX_AUX(*p == c);
 	/* Unicode search */
 	RETURN_IF(!s || off == S_NPOS, S_NPOS);
-#ifdef _MSC_VER /* supress alloca() warning */
-#pragma warning(disable: 6255)
-#endif
-	ss_t *tmps = ss_alloca(6);
+	tmps = ss_alloca(6);
 	ss_cat_char(&tmps, c);
 	return ss_findr(s, off, max_off, tmps);
 }
 
 size_t ss_findrnb(const ss_t *s, const size_t off, const size_t max_off)
 {
+	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p != 9 && *p != 10 && *p != 13 && *p != 32);
 }
 
 size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off,
 		   const char *t, const size_t ts)
 {
+	size_t ss;
 	RETURN_IF(!s || !t, S_NPOS);
-	const size_t ss = ss_real_off(s, max_off);
+	ss = ss_real_off(s, max_off);
 	RETURN_IF(!ss || !ts || (off + ts) > ss, S_NPOS);
 	return ss_find_csum_fast(ss_get_buffer_r(s), off, ss, t, ts);
 }
@@ -1935,13 +2021,14 @@ size_t ss_findr_cn(const ss_t *s, const size_t off, const size_t max_off,
 size_t ss_split(const ss_t *src, const ss_t *separator,
 		ss_ref_t out_substrings[], const size_t max_refs)
 {
-	size_t i, nelems = 0;
+	size_t i, nelems = 0, off, sz;
 	const size_t src_size = ss_size(src), sep_size = ss_size(separator);
+	const char *p;
 	if (src_size > 0 && sep_size > 0) {
-		const char *p = ss_get_buffer_r(src);
+		p = ss_get_buffer_r(src);
 		for (i = 0; i < src_size;) {
-			const size_t off = ss_find(src, i, separator);
-			const size_t sz = (off != S_NPOS ? off : src_size) - i;
+			off = ss_find(src, i, separator);
+			sz = (off != S_NPOS ? off : src_size) - i;
 			if (nelems < max_refs) {
 				ss_ref_buf(&out_substrings[nelems], p + i, sz);
 				nelems++;
@@ -1964,10 +2051,10 @@ size_t ss_split(const ss_t *src, const ss_t *separator,
 
 int ss_printf(ss_t **s, size_t size, const char *fmt, ...)
 {
+	va_list ap;
 	int out_size = -1;
 	if (s && ss_reserve(s, size) >= size) {
 		ss_clear(*s);
-		va_list ap;
 		va_start(ap, fmt);
 		if (ss_cat_printf_va(s, size, fmt, ap))
 			out_size = (int)ss_size(*s); /* BEHAVIOR */
@@ -1993,12 +2080,13 @@ int ss_cmpi(const ss_t *s1, const ss_t *s2)
 int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 {
 	int res = 0;
+	size_t s1_size, s2_size, s1_n, s2_n;
 	S_ASSERT(s1 && s2);
 	if (s1 && s2) {
-		const size_t s1_size = ss_size(s1),
-			     s2_size = ss_size(s2),
-			     s1_n = S_MIN(s1_size, s1off + n) - s1off,
-			     s2_n = S_MIN(s2_size, n);
+		s1_size = ss_size(s1);
+		s2_size = ss_size(s2);
+		s1_n = S_MIN(s1_size, s1off + n) - s1off;
+		s2_n = S_MIN(s2_size, n);
 		res = memcmp(ss_get_buffer_r(s1) + s1off, ss_get_buffer_r(s2),
 			     S_MIN(s1_n, s2_n));
 		if (res == 0 && s1_n != s2_n)
@@ -2009,20 +2097,23 @@ int ss_ncmp(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 	return res;
 }
 
-int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
+int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2,
+	     const size_t n)
 {
-	int res = 0;
+	int res = 0, u1, u2, utf8_cut;
+	size_t s1_size, s2_size, s1_max, s2_max, i, j, chs1, chs2;
+	const char *s1_str, *s2_str;
 	S_ASSERT(s1 && s2);
 	if (s1 && s2) {
-		const size_t s1_size = ss_size(s1),
-			     s2_size = ss_size(s2),
-			     s1_max = S_MIN(s1_size, s1off + n),
-			     s2_max = S_MIN(s2_size, n);
-		const char *s1_str = ss_get_buffer_r(s1),
-			   *s2_str = ss_get_buffer_r(s2);
-		size_t i = s1off, j = 0;
-		int u1 = 0, u2 = 0, utf8_cut = 0;
-		size_t chs1, chs2;
+		s1_size = ss_size(s1);
+		s2_size = ss_size(s2);
+		s1_max = S_MIN(s1_size, s1off + n);
+		s2_max = S_MIN(s2_size, n);
+		s1_str = ss_get_buffer_r(s1);
+		s2_str = ss_get_buffer_r(s2);
+		i = s1off;
+		j = 0;
+		u1 = u2 = utf8_cut = 0;
 		for (; i < s1_max && j < s2_max;) {
 			chs1 = ss_utf8_to_wc(
 				s1_str, i, s1_max, &u1, NULL);
@@ -2056,11 +2147,14 @@ int ss_ncmpi(const ss_t *s1, const size_t s1off, const ss_t *s2, const size_t n)
 
 int ss_getchar(const ss_t *s, size_t *autoinc_off)
 {
+	size_t ss;
+	int c;
+	const char *p;
 	RETURN_IF(!s || !autoinc_off, EOF);
-	const size_t ss = ss_size(s);
+	ss = ss_size(s);
 	RETURN_IF(*autoinc_off >= ss, EOF);
-	int c = EOF;
-	const char *p = ss_get_buffer_r(s);
+	c = EOF;
+	p = ss_get_buffer_r(s);
 	*autoinc_off += ss_utf8_to_wc(p, *autoinc_off, ss, &c, NULL);
 	return c;
 }
@@ -2072,9 +2166,11 @@ int ss_putchar(ss_t **s, const int c)
 
 int ss_popchar(ss_t **s)
 {
+	size_t off;
+	char *s_str;
 	RETURN_IF(!s || !*s || ss_size(*s) == 0, EOF);
-	size_t off = ss_size(*s) - 1;
-	char *s_str = ss_get_buffer(*s);
+	off = ss_size(*s) - 1;
+	s_str = ss_get_buffer(*s);
 	for (; off != S_SIZET_MAX; off--) {
 		if (SSU8_VALID_START(s_str[off])) {
 			int u_char = EOF;
@@ -2099,10 +2195,11 @@ ssize_t ss_read(ss_t **s, FILE *handle, const size_t max_bytes)
 ssize_t ss_write(FILE *handle, const ss_t *s, const size_t offset,
 		 const size_t bytes)
 {
+	size_t ss, wr_size, ws;
 	RETURN_IF(!handle, -1);
-	size_t ss = s ? ss_size(s) : 0,
-	       wr_size = handle && offset >= ss ? 0 : S_MIN(ss - offset, bytes);
-	size_t ws = fwrite(ss_get_buffer_r(s), 1, wr_size, handle);
+	ss = s ? ss_size(s) : 0;
+	wr_size = handle && offset >= ss ? 0 : S_MIN(ss - offset, bytes);
+	ws = fwrite(ss_get_buffer_r(s), 1, wr_size, handle);
 	return ws > 0 && !ferror(handle) ? (ssize_t)ws : -1;
 }
 
@@ -2117,10 +2214,11 @@ uint32_t ss_crc32(const ss_t *s)
 
 uint32_t ss_crc32r(const ss_t *s, uint32_t crc, size_t off1, size_t off2)
 {
+	size_t ss, offx;
 	RETURN_IF(!s || off1 >= off2, 0);
-	size_t ss = ss_size(s);
+	ss = ss_size(s);
 	RETURN_IF(off1 >= ss, 0);
-	size_t offx = off2 == S_NPOS ? ss : off2;
+	offx = off2 == S_NPOS ? ss : off2;
 	return sh_crc32(crc, ss_get_buffer_r(s) + off1, offx - off1);
 }
 
@@ -2131,10 +2229,11 @@ uint32_t ss_adler32(const ss_t *s)
 
 uint32_t ss_adler32r(const ss_t *s, uint32_t adler, size_t off1, size_t off2)
 {
+	size_t ss, offx;
 	RETURN_IF(!s || off1 >= off2, 0);
-	size_t ss = ss_size(s);
+	ss = ss_size(s);
 	RETURN_IF(off1 >= ss, 0);
-	size_t offx = off2 == S_NPOS ? ss : off2;
+	offx = off2 == S_NPOS ? ss : off2;
 	return sh_adler32(adler, ss_get_buffer_r(s) + off1, offx - off1);
 }
 

@@ -3,8 +3,8 @@
  *
  * UTF8 constants used by libsrt tests and examples
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #ifndef UTF8_EXAMPLES_H
@@ -31,11 +31,11 @@
 #define U8_MIX_28_bytes		\
 	U8_MIX1 U8_HAN_611B
 
-#define U8_MANY_UNDERSCORES							\
-	"_____________________________________________________________________"	\
-	"_____________________________________________________________________"	\
-	"_____________________________________________________________________"	\
-	"_____________________________________________________________________"
+#define U8_MANY_UNDERSCORES						      \
+	"____________________________________________________________________"\
+	"____________________________________________________________________"\
+	"____________________________________________________________________"\
+	"____________________________________________________________________"
 
 #endif  /* UTF8_EXAMPLES_H */
 

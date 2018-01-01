@@ -3,8 +3,8 @@
  *
  * Table import/export between CSV/HTML/JSON formats example using libsrt
  *
- * Copyright (c) 2015-2016, F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * CSV (partial): http://tools.ietf.org/html/rfc4180
  *
@@ -50,12 +50,14 @@ static int exit_msg(const char **argv, const char *msg, const int code);
 
 int main(int argc, const char **argv)
 {
+	f_enc ef;
+	f_dec df;
 	RETURN_IF(argc < 2 || strlen(argv[1]) != 3 || argv[1][0] != '-',
 		  exit_msg(argv, "syntax error", 1));
-	f_enc ef = argv[1][2] == 'c' ? enc_csv : argv[1][2] == 'h' ? enc_html :
-		   argv[1][2] == 'j' ? enc_json : NULL;
-	f_dec df = argv[1][1] == 'c' ? csv2x : argv[1][1] == 'h' ? html2x :
-		   argv[1][1] == 'j' ? json2x : NULL;
+	ef = argv[1][2] == 'c' ? enc_csv : argv[1][2] == 'h' ? enc_html :
+	     argv[1][2] == 'j' ? enc_json : NULL;
+	df = argv[1][1] == 'c' ? csv2x : argv[1][1] == 'h' ? html2x :
+	     argv[1][1] == 'j' ? json2x : NULL;
 	RETURN_IF(!ef || !df, exit_msg(argv, "syntax error", 1));
 	RETURN_IF(df(stdin, stdout, ef) < 0, exit_msg(argv, "input error", 2));
 	return 0;
@@ -181,12 +183,13 @@ static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
 
 static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 {
-	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	size_t l, nl, qo, co, o, nfield = 0;
 	ssize_t nrow = 0;
 	sbool_t quote_opened = S_FALSE, quote_pending = S_FALSE,
 		fatal_error = S_FALSE;
+	sbool_t coqo, conl, qonl, qoco, nlqo, nlco;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, (size_t)nrow, nfield, field, &wb);
 	for (; ss_read(&rb, stdin, RBUF_SIZE) > 0;) {
 		if (ss_size(wb) > WBUF_SIZE &&
@@ -219,8 +222,10 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 			}
 			co = ss_findc(rb, o, ',');
 			nl = ss_findc(rb, o, '\n');
-			sbool_t coqo = co < qo, nlqo = nl < qo, nlco = nl < co,
-				conl = co < nl;
+			coqo = co < qo;
+			nlqo = nl < qo;
+			nlco = nl < co;
+			conl = co < nl;
 			if ((nlco && nlqo) || (conl && coqo)) {
 				size_t p = nlco && nlqo ? nl : co;
 				ss_cat_substr(&field, rb, o, p - o);
@@ -235,7 +240,8 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 				o = p + 1;
 				continue;
 			}
-			sbool_t qonl = qo < nl, qoco = qo < co;
+			qonl = qo < nl;
+			qoco = qo < co;
 			if (qonl && qoco) { /* qo nl (co) / qo co (nl) */
 				ss_cat_substr(&field, rb, o, qo - o);
 				o = qo + 1;
@@ -272,18 +278,18 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 {
 	enum eHTFSM { HTSearchTable, HTSearchRow, HTSearchField, HTFillField };
 	enum eHTFSM st = HTSearchTable;
-	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
-	size_t o = 0, p, q, nfield = 0, nrow = 0;
+	size_t o = 0, p, q, z, nfield = 0, nrow = 0, ss, ss0;
 	sbool_t fatal_error = S_FALSE;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
 	for (;;) {
 		ss_erase(&rb, 0, o);
-		const size_t ss0 = ss_size(rb),
-			     ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
+		ss0 = ss_size(rb);
+		ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
 		if (ss == ss0)
 			break;	/* EOF */
-		const size_t z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
+		z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
 		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
 			break;	/* write error */
@@ -360,19 +366,21 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 	enum eJSFSM { JSSearchOpen, JSSearchRow, JSSearchField, JSFillField,
 		      JSFillFieldQ };
 	enum eJSFSM st = JSSearchOpen;
-	RETURN_IF(!in_fd || !out_fd || !out_enc_f, -1);
 	size_t o = 0, p, q, r, s, nfield = 0, nrow = 0;
 	sbool_t fatal_error = S_FALSE, done = S_FALSE,
 		q_wins, r_wins;
 	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	size_t ss, ss0, z;
+	size_t ox, next_o;
+	RETURN_IF(!in_fd || !out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
 	while (!done) {
 		ss_erase(&rb, 0, o);
-		const size_t ss0 = ss_size(rb),
-			     ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
+		ss0 = ss_size(rb);
+		ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
 		if (ss == ss0)
 			break;	/* EOF */
-		const size_t z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
+		z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
 		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
 			break;	/* write error */
@@ -426,7 +434,6 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 				q_wins = q < r && q < s;
 				r_wins = r < q && r < s;
 				if (q_wins || r_wins) {
-					size_t ox, next_o;
 					if (q_wins) {
 						ox = q;
 						st = JSSearchField;
