@@ -164,7 +164,7 @@ extern "C" {
 #define S_NBIT(n) (1 << (n))
 #define S_NBIT64(n) ((uint64_t)1 << (n))
 #define S_NBITMASK(n) ((n) >= 32 ? 0xffffffff : S_NBIT(n) - 1)
-#define S_NBITMASK64(n) ((n) == 64 ? 0xffffffffffffffff : S_NBIT64(n) - 1)
+#define S_NBITMASK64(n) ((n) >= 64 ? 0xffffffffffffffff : S_NBIT64(n) - 1)
 #if S_BPWORD >= 8
 #define S_NBITMASK32(n) ((uint32_t)S_NBITMASK(n))
 #else

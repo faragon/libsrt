@@ -620,19 +620,19 @@ size_t sdec_esc_squote(const uint8_t *s, const size_t ss,
 #define LZOPR_L16S2_BITS	(16 - LZOPR_HDR_16S2_BITS - LZOPR_D16S2_BITS)
 
 /* 24-bit chunk: 20 */
-#define LZOPR_D24_BITS		19
+#define LZOPR_D24_BITS		20
 #define LZOPR_L24_BITS		(24 - LZOPR_HDR_24_BITS - LZOPR_D24_BITS)
 
 /* 24-bit chunk "S": 20 bits */
-#define LZOPR_D24S_BITS		13
+#define LZOPR_D24S_BITS		14
 #define LZOPR_L24S_BITS		(24 - LZOPR_HDR_24S_BITS - LZOPR_D24S_BITS)
 
 /* 24-bit chunk "S2": 20 bits */
-#define LZOPR_D24S2_BITS	15
+#define LZOPR_D24S2_BITS	16
 #define LZOPR_L24S2_BITS	(24 - LZOPR_HDR_24S2_BITS - LZOPR_D24S2_BITS)
 
 /* 24-bit chunk "S3": 20 bits */
-#define LZOPR_D24S3_BITS	17
+#define LZOPR_D24S3_BITS	18
 #define LZOPR_L24S3_BITS	(24 - LZOPR_HDR_24S3_BITS - LZOPR_D24S3_BITS)
 
 /* 32-bit chunk: 30 bits */
