@@ -12,9 +12,9 @@
 
 /* IBUF_SIZE: 3 * 4 because of LCM for b64 */
 #if S_BPWORD > 4
-#define IBUF_SIZE	(3 * 4 * 1000 * 1000 * 1000L)  /* 12 GB for 64 bit */
+#define IBUF_SIZE	(3 * 4 * 100 * 1000 * 1000L)  /* 1.2 GB for 64 bit */
 #else
-#define IBUF_SIZE	(3 * 4 * 150 * 1000) /* 1.8 MB  for 32 bit systems */
+#define IBUF_SIZE	(3 * 4 * 150 * 1000) /* 1.8 MB for 32 bit systems */
 #endif
 #define OBUF_SIZE	(IBUF_SIZE * 6) /* Max req: xml escape */
 #define ESC_MAX_SIZE	16
