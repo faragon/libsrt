@@ -666,7 +666,7 @@ size_t sdec_esc_squote(const uint8_t *s, const size_t ss,
 #if SIZE_MAX <= 0xffffffff
 #define LZOPR_D64_RANGE		SIZE_MAX
 #else
-#define LZOPR_D64_RANGE		(1L << LZOPR_D64_BITS)
+#define LZOPR_D64_RANGE		(1LL << LZOPR_D64_BITS)
 #endif
 #define LZOPR_L64_RANGE		(1 << LZOPR_L64_BITS)
 
