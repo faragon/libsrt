@@ -8,17 +8,11 @@
  */
 
 #include "../src/libsrt.h"
-#include "../src/saux/senc.h"
 
-/* IBUF_SIZE: 3 * 4 because of LCM for b64 */
-#if S_BPWORD > 4
-#define IBUF_SIZE	(3 * 4 * 100 * 1000 * 1000L)  /* 1.2 GB for 64 bit */
-#else
-#define IBUF_SIZE	(3 * 4 * 150 * 1000) /* 1.8 MB for 32 bit systems */
-#endif
-#define OBUF_SIZE	(IBUF_SIZE * 6) /* Max req: xml escape */
-#define ESC_MAX_SIZE	16
-#define XBUF_SIZE	(S_MAX(IBUF_SIZE, OBUF_SIZE) + ESC_MAX_SIZE)
+#define LZHBUF_SIZE	S_NPOS /* -ezh high compression: infinite buffer size */
+#define LZBUF_SIZE	1000000 /* -ezh fast compression: 1 MB buffer size */
+#define IBUF_SIZE	(3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
+#define ESC_MAX_SIZE	16 /* maximum size for an escape sequence: 16 bytes */
 
 #if SZ_DEBUG_STATS
 	extern size_t lz_st_lit[8], lz_st_lit_bytes;
@@ -59,11 +53,12 @@ int main(int argc, const char **argv)
 	sbool_t done;
 	uint32_t acc;
 	uint32_t (*f32)(const ss_t *, uint32_t, size_t, size_t) = NULL;
-	ss_t *in = ss_alloc(IBUF_SIZE * 2), *out = ss_alloc(IBUF_SIZE * 2);
+	ss_t *in = NULL, *out = NULL;
 	ss_t *(*ss_codec1_f)(ss_t **s, const ss_t *src) = NULL;
 	ss_t *(*ss_codec2_f)(ss_t **s, const ss_t *src) = NULL;
 	ss_t *(*ss_codec3_f)(ss_t **s, const ss_t *src) = NULL;
 	ss_t *(*ss_codec4_f)(ss_t **s, const ss_t *src) = NULL;
+	size_t lzbufsize = LZBUF_SIZE;
 	if (argc < 2)
 		return syntax_error(argv, 1);
 	if (!strncmp(argv[1], "-crc32", 6)) {
@@ -75,10 +70,10 @@ int main(int argc, const char **argv)
 	}
 	if (f32) {
 		uint32_t buf_size = 8192;
-		ss_t *buf = ss_alloca(buf_size);
-		while (ss_read(&buf, stdin, buf_size))
-			acc = f32(buf, acc, 0, S_NPOS);
+		while (ss_read(&in, stdin, IBUF_SIZE))
+			acc = f32(in, acc, 0, S_NPOS);
 		printf("%08x\n", acc);
+		ss_free(&in);
 		return 0;
 	}
 	if (!strncmp(argv[1], "-eb", 3))
@@ -103,9 +98,10 @@ int main(int argc, const char **argv)
 		ss_codec1_f = ss_enc_esc_url;
 	else if (!strncmp(argv[1], "-du", 4))
 		ss_codec2_f = ss_dec_esc_url;
-	else if (!strncmp(argv[1], "-ezh", 5))
+	else if (!strncmp(argv[1], "-ezh", 5)) {
 		ss_codec3_f = ss_enc_lzh;
-	else if (!strncmp(argv[1], "-ez", 4))
+		lzbufsize = LZHBUF_SIZE;
+	} else if (!strncmp(argv[1], "-ez", 4))
 		ss_codec3_f = ss_enc_lz;
 	else if (!strncmp(argv[1], "-dz", 4))
 		ss_codec4_f = ss_dec_lz;
@@ -116,6 +112,7 @@ int main(int argc, const char **argv)
 	cf = ss_codec1_f ? 1 : ss_codec2_f ? 2 :
 	     ss_codec3_f ? 3 : ss_codec4_f ? 4 : 0;
 	done = S_FALSE;
+	ss_reserve(&in, IBUF_SIZE);
 	while (!done) {
 		switch (cf) {
 		case 1:
@@ -133,6 +130,10 @@ int main(int argc, const char **argv)
 				ss_clear(in);
 				break;
 			}
+			/* For codecs handling escape characters it is
+			 * necessary to check the escape sequence is not cut
+			 * at boundaries.
+			 */
 			b = ss_get_buffer_r(in);
 			off = 0;
 			if (l > ESC_MAX_SIZE)
@@ -149,8 +150,8 @@ int main(int argc, const char **argv)
 			else
 				ss_clear(in);
 			break;
-		case 3: /* lz encoding */
-			ss_cpy_read(&in, stdin, IBUF_SIZE);
+		case 3: /* data compression */
+			ss_cpy_read(&in, stdin, lzbufsize);
 			l = ss_size(in);
 			if (!l) {
 				done = S_TRUE;
@@ -171,7 +172,7 @@ int main(int argc, const char **argv)
 			lo += l;
 			ss_clear(in);
 			break;
-		case 4: /* lz decoding */
+		case 4: /* data decompression */
 			l = fread(dle, 1, 1, stdin);
 			if (!l || ferror(stdin)) {
 				done = S_TRUE;
@@ -196,12 +197,6 @@ int main(int argc, const char **argv)
 			}
 			dlepc = dle;
 			lmax = s_ld_pk_u64(&dlepc, l);
-			if (lmax > XBUF_SIZE) {
-				fprintf(stderr, "Format error\n");
-				exit_code = 3;
-				done = S_TRUE;
-				continue;
-			}
 			ss_cpy_read(&in, stdin, lmax);
 			l = ss_size(in);
 			li += l;
