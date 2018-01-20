@@ -3838,7 +3838,7 @@ static int test_endianess()
 	union s_u32 be, le;
 	union s_u64 b, l;
 	uint32_t n = 0x00010203;
-	uint64_t n2 = 0x0001020304050607;
+	uint64_t n2 = 0x0001020304050607LL;
 	le.b[0] = be.b[3] = n & 0xff;
 	le.b[1] = be.b[2] = (n >> 8) & 0xff;
 	le.b[2] = be.b[1] = (n >> 16) & 0xff;

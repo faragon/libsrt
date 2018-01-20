@@ -62,6 +62,17 @@ Generic advantages
   * C++11 (and later) compatible (requiring alloca() function)
   * Endian-safe: the library works with any CPU endianess (tested with little and big endian, but it should work with other modes, e.g. with PDP endianess -not tested-)
   * POSIX builds (Linux, BSD's) require GNU Make (e.g. on FreeBSD use 'gmake' instead of 'make')
+  * Compatibility with old C compilers:
+    * Oldest GNU C compiler being tested is GCC 2.95.2 (1999)
+    * Other old compilers may work in C89 mode only if following language extensions are available:
+      * \_\_VA\_ARGS\_\_ macro
+      * alloca()
+      * type of bit-field in 'struct'
+      * %S printf extension (only for unit testing)
+  * Compatibility with old C++ compilers:
+    * It may work in C++98 mode only if following language extensions are available:
+    * Anonymous variadic macros
+    * Long long integer constant support (LL)
 
 Generic disadvantages/limitations
 ===
@@ -69,17 +80,6 @@ Generic disadvantages/limitations
 * Double pointer usage: because of using just one allocation, wrte operations require to address a double pointer, so in the case of reallocation the source pointer could be changed.
 
 * Concurrent read-only operations are safe, but concurrent read/write must be protected by the user (e.g. using mutexes or spinlocks). That can be seen as a disadvantage or as a "feature" (it is faster).
-
-* It may work in C89 mode only if following language extensions are available:
-  * \_\_VA\_ARGS\_\_ macro
-  * alloca()
-  * type of bit-field in 'struct'
-  * %S printf extension (only for unit testing)
-  * Format functions (\*printf) rely on system C library, so be aware if you write multi-platform software before using compiler-specific extensions or targetting different C standards).
-  * Allow mixed code and variable declaration
-* It may work in C++98 mode only if following language extensions are available:
-  * Anonymous variadic macros
-  * Long long integer constant (LL): required only for the tests, not by the library itself
 
 String-specific advantages (ss\_t)
 ===

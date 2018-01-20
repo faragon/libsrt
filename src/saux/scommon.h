@@ -164,7 +164,7 @@ extern "C" {
 #define S_NBIT(n) (1 << (n))
 #define S_NBIT64(n) ((uint64_t)1 << (n))
 #define S_NBITMASK(n) ((n) >= 32 ? 0xffffffff : S_NBIT(n) - 1)
-#define S_NBITMASK64(n) ((n) >= 64 ? 0xffffffffffffffff : S_NBIT64(n) - 1)
+#define S_NBITMASK64(n) ((n) >= 64 ? 0xffffffffffffffffLL : S_NBIT64(n) - 1)
 #if S_BPWORD >= 8
 #define S_NBITMASK32(n) ((uint32_t)S_NBITMASK(n))
 #else
@@ -180,10 +180,10 @@ extern "C" {
 			(((a) >> 40) & 0xff00) |		\
 			(((a) >> 24) & 0xff0000) |		\
 			(((a) >>  8) & 0xff000000) |		\
-			(((a) <<  8) & 0xff00000000) |		\
-			(((a) << 24) & 0xff0000000000) |	\
-			(((a) << 40) & 0xff000000000000) |	\
-			(((a) << 56) & 0xff00000000000000)	)
+			(((a) <<  8) & 0xff00000000LL) |	\
+			(((a) << 24) & 0xff0000000000LL) |	\
+			(((a) << 40) & 0xff000000000000LL) |	\
+			(((a) << 56) & 0xff00000000000000LL)	)
 #endif
 #define RETURN_IF(a, v) if (a) return (v); else {}
 #define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
