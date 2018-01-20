@@ -71,13 +71,13 @@ Generic advantages
       * %S printf extension (only for unit testing)
   * Compatibility with old C++ compilers:
     * It may work in C++98 mode only if following language extensions are available:
-    * Anonymous variadic macros
-    * Long long integer constant support (LL)
+      * Anonymous variadic macros
+      * Long long integer constant support (LL)
 
 Generic disadvantages/limitations
 ===
 
-* Double pointer usage: because of using just one allocation, wrte operations require to address a double pointer, so in the case of reallocation the source pointer could be changed.
+* Double pointer usage: because of using just one allocation, write operations require to address a double pointer, so in the case of reallocation the source pointer could be changed.
 
 * Concurrent read-only operations are safe, but concurrent read/write must be protected by the user (e.g. using mutexes or spinlocks). That can be seen as a disadvantage or as a "feature" (it is faster).
 
