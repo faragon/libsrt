@@ -172,9 +172,18 @@ extern "C" {
 #endif
 #if defined(__GNUC__) && __GNUC__ >= 4 && __GNUC_MINOR__ >= 3
 #define S_BSWAP32(a) __builtin_bswap32(a) /* Added in GCC 4.3 */
+#define S_BSWAP64(a) __builtin_bswap64(a) /* Added in GCC 4.3 */
 #else
 #define S_BSWAP32(a) ((a) << 24 | (a) >> 24 | ((a) & 0xff00) << 8 |	\
 		      ((a) & 0xff0000) >> 8)
+#define S_BSWAP64(a) (	(((a) >> 56) & 0xff) |			\
+			(((a) >> 40) & 0xff00) |		\
+			(((a) >> 24) & 0xff0000) |		\
+			(((a) >>  8) & 0xff000000) |		\
+			(((a) <<  8) & 0xff00000000) |		\
+			(((a) << 24) & 0xff0000000000) |	\
+			(((a) << 40) & 0xff000000000000) |	\
+			(((a) << 56) & 0xff00000000000000)	)
 #endif
 #define RETURN_IF(a, v) if (a) return (v); else {}
 #define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
@@ -236,6 +245,11 @@ typedef unsigned char sbool_t;
 union s_u32 {
 	uint32_t a32;
 	unsigned char b[4];
+};
+
+union s_u64 {
+	uint64_t a64;
+	unsigned char b[8];
 };
 
 /* Integer compare functions */
@@ -395,26 +409,53 @@ S_INLINE void s_free(void *ptr)
 	#define S_IS_LITTLE_ENDIAN 0
 #endif
 
+#if !S_IS_LITTLE_ENDIAN
+	#if (defined(__BYTE_ORDER__) &&				\
+		__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) ||	\
+	    defined(__BIG_ENDIAN__) && __BIG_ENDIAN__ ||	\
+	    defined(_BIG_ENDIAN) && _BIG_ENDIAN ||		\
+	    defined(__powerpc) || defined(__powerpc__) ||	\
+	    defined(__powerpc64__) || defined(__POWERPC__) ||	\
+	    defined(__PPC__) || defined(__PPC64__) ||		\
+	    defined(__370__) || defined(__s390__) ||		\
+	    defined(__s390x__) || defined (__zarch__) ||	\
+	    defined(__SYSC_ZARCH__) ||				\
+	    defined(__hppa__) || defined(__HPPA__) ||		\
+	    defined(__hppa) || defined(__m68k__) ||		\
+	    defined(__sparc__) || defined(__sparc) ||		\
+	    defined(__mips__) || defined(__mips) ||		\
+	    defined(__sh__)
+		#define S_IS_BIG_ENDIAN 1
+	#endif
+#endif
+
+#ifndef S_IS_BIG_ENDIAN
+	#define S_IS_BIG_ENDIAN 0
+#endif
+
+#define S_IS_UNKNOWN_ENDIAN !(S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
+
 /*
- * NTOH: "network (big endian) to host"
- * LTOH: "little endian to host"
+ * Byte access accelerators (used for CRC32)
  */
 #if S_IS_LITTLE_ENDIAN
-	#define S_NTOH_U32(a) S_BSWAP32((uint32_t)(a))
 	#define S_LTOH_U32(a) (a)
 	#define S_U32_BYTE0(a) ((a) & 0xff)
 	#define S_U32_BYTE1(a) (((a) >> 8) & 0xff)
 	#define S_U32_BYTE2(a) (((a) >> 16) & 0xff)
 	#define S_U32_BYTE3(a) (((a) >> 24) & 0xff)
-#else
-	#define S_NTOH_U32(a) (a)
+#elif S_IS_BIG_ENDIAN
 	#define S_LTOH_U32(a) S_BSWAP32((uint32_t)(a))
 	#define S_U32_BYTE0(a) (((a) >> 24) & 0xff)
 	#define S_U32_BYTE1(a) (((a) >> 16) & 0xff)
 	#define S_U32_BYTE2(a) (((a) >> 8) & 0xff)
 	#define S_U32_BYTE3(a) ((a) & 0xff)
+#else
+	/* For unnown endianess: no S_U32_BYTEx nor S_LTOH_U32
+	 * will be available, so the CRC computation would default
+	 * to the one byte at once implementation.
+	 */
 #endif
-#define S_HTON_U32(a) S_NTOH_U32(a)
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 
@@ -536,31 +577,6 @@ S_INLINE void s_st_le_u64(void *a, uint64_t v)
 	p[5] = (uint8_t)(v >> 40);
 	p[6] = (uint8_t)(v >> 48);
 	p[7] = (uint8_t)(v >> 56);
-#endif
-}
-
-S_INLINE uint32_t s_ld_be_u32(const void *a)
-{
-#if S_IS_LITTLE_ENDIAN
-	const uint8_t *p = (const uint8_t *)a;
-	return (uint32_t)(p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3]);
-#else
-	uint32_t r;
-	memcpy(&r, a, sizeof(r));
-	return r;
-#endif
-}
-
-S_INLINE void s_st_be_u32(void *a, uint32_t v)
-{
-#if S_IS_LITTLE_ENDIAN
-	uint8_t *p = (uint8_t *)a;
-	p[0] = (uint8_t)(v >> 24);
-	p[1] = (uint8_t)(v >> 16);
-	p[2] = (uint8_t)(v >> 8);
-	p[3] = (uint8_t)v;
-#else
-	memcpy(a, &v, sizeof(v));
 #endif
 }
 

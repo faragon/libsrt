@@ -59,8 +59,9 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 	i = 0;
 	p = (const uint8_t *)buf;
 	crc = ~crc;
-#if S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 || \
-    S_CRC32_SLC == 16
+#if (S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 ||	  \
+    S_CRC32_SLC == 16) && defined(S_U32_BYTE0) && defined(S_U32_BYTE1) && \
+    defined(S_U32_BYTE2) && defined(S_U32_BYTE3) && defined(S_LTOH_U32)
 	bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
 	for (; i < bsX; i += S_CRC32_SLC) {
 		uint32_t a = S_LD_U32(p + i) ^ S_LTOH_U32(crc)

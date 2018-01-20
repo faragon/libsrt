@@ -60,7 +60,7 @@ Generic advantages
 * Compatibility
   * C99 (and later) compatible (requiring alloca() function)
   * C++11 (and later) compatible (requiring alloca() function)
-  * CPU-aware: little and big endian CPU support (middle/mixed/PDP endian is not supported), aligned memory accesses
+  * Endian-safe: the library works with any CPU endianess (tested with little and big endian, but it should work with other modes, e.g. with PDP endianess -not tested-)
   * POSIX builds (Linux, BSD's) require GNU Make (e.g. on FreeBSD use 'gmake' instead of 'make')
 
 Generic disadvantages/limitations
@@ -115,6 +115,10 @@ String-specific advantages (ss\_t)
   * "Wide char" and "C style" strings R/W interoperability support.
   * I/O helpers: buffer read, reserve space for async write
   * Aliasing suport, e.g. ss\_cat(&a, a) is valid
+* Misc string/buffer operations:
+  * Real-time O(n) data compression (stateless, unlimited buffer size, and hash table resource usage proportional to the input size, i.e. efficient also for small inputs)
+  * State of the art encodings: base64, hexadecimal, etc. (at GB/s speeds)
+  * State of the art CRC32 and Adler32 hashes on strings (at >2 GB/s speeds)
 * Focus on reducing verbosity:
   * ss\_cat(&t, s1, ..., sN);
   * ss\_cat(&t, s1, s2, ss\_printf(&s3, "%i", cnt), ..., sN);

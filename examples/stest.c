@@ -3835,22 +3835,34 @@ static int test_sms()
 static int test_endianess()
 {
 	int res = 0;
-	union s_u32 a;
-	unsigned ua;
-#if S_IS_LITTLE_ENDIAN
-	unsigned ub = 0x03020100;
-#else
-	unsigned ub = 0x00010203;
-#endif
-	a.b[0] = 0;
-	a.b[1] = 1;
-	a.b[2] = 2;
-	a.b[3] = 3;
-	ua = a.a32;
-	if (ua != ub)
-		res |= 1;
-	if (S_HTON_U32(ub) != 0x00010203)
-		res |= 2;
+	union s_u32 be, le;
+	union s_u64 b, l;
+	uint32_t n = 0x00010203;
+	uint64_t n2 = 0x0001020304050607;
+	le.b[0] = be.b[3] = n & 0xff;
+	le.b[1] = be.b[2] = (n >> 8) & 0xff;
+	le.b[2] = be.b[1] = (n >> 16) & 0xff;
+	le.b[3] = be.b[0] = (n >> 24) & 0xff;
+	if (S_LD_LE_U32(le.b) != n)
+		res |= 0x01;
+	if (S_LD_LE_U32(le.b) != n)
+		res |= 0x02;
+	if (S_BSWAP32(S_LD_LE_U32(be.b)) != n)
+		res |= 0x04;
+	l.b[0] = b.b[7] = n2 & 0xff;
+	l.b[1] = b.b[6] = (n2 >> 8) & 0xff;
+	l.b[2] = b.b[5] = (n2 >> 16) & 0xff;
+	l.b[3] = b.b[4] = (n2 >> 24) & 0xff;
+	l.b[4] = b.b[3] = (n2 >> 32) & 0xff;
+	l.b[5] = b.b[2] = (n2 >> 40) & 0xff;
+	l.b[6] = b.b[1] = (n2 >> 48) & 0xff;
+	l.b[7] = b.b[0] = (n2 >> 56) & 0xff;
+	if (S_LD_LE_U64(l.b) != n2)
+		res |= 0x10;
+	if (S_LD_LE_U64(l.b) != n2)
+		res |= 0x20;
+	if (S_BSWAP64(S_LD_LE_U64(b.b)) != n2)
+		res |= 0x40;
 	return res;
 }
 
