@@ -840,13 +840,13 @@ S_INLINE char *ss_get_buffer(ss_t *s)
 	 * Constness breaking will be addressed once the ss_to_c gets fixed.
 	 */
 	return ss_is_ref(s) ? (char *)((struct SStringRef *)s)->cstr :
-		sdx_get_buffer((sd_t *)s);
+			      sdx_get_buffer((sd_t *)s);
 }
 
 S_INLINE const char *ss_get_buffer_r(const ss_t *s)
 {
 	return ss_is_ref(s) ? ((const struct SStringRef *)s)->cstr :
-		sdx_get_buffer_r((const sd_t *)s);
+			      sdx_get_buffer_r((const sd_t *)s);
 }
 
 /*

@@ -44,8 +44,8 @@ enum eSMS_Type
 	SMS_S	= SM0_S
 };
 
-typedef sm_t sms_t;	/* "Hidden" structure (accessors are provided) */
-			/* (set is implemented over key-only map)      */
+typedef sm_t sms_t;	/* Opaque structure (accessors are provided) */
+			/* (set is implemented over key-only map)    */
 
 typedef sbool_t (*sms_it_i32_t)(int32_t k, void *context);
 typedef sbool_t (*sms_it_u32_t)(uint32_t k, void *context);

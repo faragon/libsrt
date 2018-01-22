@@ -103,8 +103,8 @@ struct SMapSI { struct SMapS x; int64_t v; };
 struct SMapSS { struct SMapS x; union SMStr v; };
 struct SMapSP { struct SMapS x; const void *v; };
 
-typedef st_t sm_t;	/* "Hidden" structure (accessors are provided) */
-			/* (map is implemented as a tree)	       */
+typedef st_t sm_t;	/* Opaque structure (accessors are provided) */
+			/* (map is implemented as a tree)	     */
 
 typedef sbool_t (*sm_it_ii32_t)(int32_t k, int32_t v, void *context);
 typedef sbool_t (*sm_it_uu32_t)(uint32_t k, uint32_t v, void *context);

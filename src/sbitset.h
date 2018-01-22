@@ -35,8 +35,8 @@ extern "C" {
  * Structures
  */
 
-typedef sv_t sb_t;	/* "Hidden" structure (accessors are provided) */
-			/* (bitset is implemented using a vector)  */
+typedef sv_t sb_t;	/* Opaque structure (accessors are provided) */
+			/* (bitset is implemented using a vector)    */
 
 /*
  * Allocation

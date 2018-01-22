@@ -48,7 +48,7 @@ struct SVector
 	} vx;
 };
 
-typedef struct SVector sv_t; /* "Hidden" structure (accessors are provided) */
+typedef struct SVector sv_t; /* Opaque structure (accessors are provided) */
 
 #define EMPTY_SV { EMPTY_SData(sizeof(sv_t)), NULL }
 
