@@ -113,9 +113,9 @@ void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size,
 size_t sd_grow(sd_t **d, const size_t extra_size, const size_t extra_tail_bytes)
 {
 	size_t size, new_size;
-	ASSERT_RETURN_IF(!d, 0);
+	RETURN_IF(!d, 0);
 	size = sd_size(*d);
-	ASSERT_RETURN_IF(s_size_t_overflow(size, extra_size), 0);
+	RETURN_IF(s_size_t_overflow(size, extra_size), 0);
 	new_size = sd_reserve(d, size + extra_size, extra_tail_bytes);
 	return new_size >= (size + extra_size) ? (new_size - size) : 0;
 }
