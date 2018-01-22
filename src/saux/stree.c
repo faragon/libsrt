@@ -151,8 +151,9 @@ S_INLINE void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
 	set_lr(xpn, d, y);
 }
 
-S_INLINE stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-			const enum STNDir xd, stndx_t *y_out)
+S_INLINE stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x,
+			const enum STNDir d, const enum STNDir xd,
+			stndx_t *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
