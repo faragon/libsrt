@@ -713,34 +713,37 @@ size_t s_pk_u64_size(const uint8_t *buf);
  * Helper functions intended to be inlined
  */
 
+S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
+{
+	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
+}
+
 S_INLINE void s_move_elems(void *t, const size_t t_off, const void *s,
-			   const size_t s_off, const size_t n,
+			   const size_t s_off, const size_t n0,
 			   const size_t e_size)
 {
-        memmove((char *)t + t_off * e_size,
+	/* BEHAVIOR: on size_t overflow, cut the copy */
+	const size_t n = s_size_t_overflow(s_off, n0) ? S_NPOS - s_off : n0;
+	memmove((char *)t + t_off * e_size,
 		(const char *)s + s_off * e_size,
 		n * e_size);
 }
 
 S_INLINE void s_copy_elems(void *t, const size_t t_off, const void *s,
-			   const size_t s_off, const size_t n,
+			   const size_t s_off, const size_t n0,
 			   const size_t e_size)
 {
-	if (t && s && n)
-	        memcpy((char *)t + t_off * e_size,
-		       (const char *)s + s_off * e_size,
-		       n * e_size);
+	/* BEHAVIOR: on size_t overflow, cut the copy */
+	const size_t n = s_size_t_overflow(s_off, n0) ? S_NPOS - s_off : n0;
+	memcpy((char *)t + t_off * e_size,
+	       (const char *)s + s_off * e_size,
+	       n * e_size);
 }
 
 S_INLINE size_t s_load_size_t(const void *aligned_base_address,
 			      const size_t offset)
 {
 	return S_LD_SZT(((const char *)aligned_base_address) + offset);
-}
-
-S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
-{
-	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }
 
 S_INLINE size_t s_size_t_pct(const size_t q, const size_t pct)

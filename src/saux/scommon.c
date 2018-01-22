@@ -176,7 +176,8 @@ void s_memset64(void *o, const void *s, size_t n8)
 	size_t k = 0, n = n8 * 8;
 	uint64_t *o64;
 	uint64_t data = S_LD_U64(s);
-#if defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 8
+#if (defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 8) &&	\
+    (S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
 	size_t ua_head = (intptr_t)o & 7;
 	if (ua_head && n8) {
 		S_ST_U64(o, data);
@@ -205,7 +206,8 @@ void s_memset32(void *o, const void *s, size_t n4)
 	size_t k = 0, n = n4 * 4;
 	uint32_t *o32;
 	uint32_t data = S_LD_U32(s);
-#if defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 4
+#if (defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 4) &&	\
+    (S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
 	size_t ua_head = (intptr_t)o & 3;
 	if (ua_head && n4) {
 		S_ST_U32(o, data);
