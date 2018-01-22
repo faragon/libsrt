@@ -56,9 +56,8 @@ struct NodeContext
  * Internal functions
  */
 
-static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
+S_INLINE void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 {
-	S_ASSERT(n);
 	if (n) {
 		if (d == ST_Left)
 			n->x.l = v;
@@ -67,13 +66,13 @@ static void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 	}
 }
 
-static stndx_t get_lr(const stn_t *n, const enum STNDir d)
+S_INLINE stndx_t get_lr(const stn_t *n, const enum STNDir d)
 {
 	return d == ST_Left ? n->x.l : n->r;
 }
 
-static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
-			    enum STNDir *d)
+S_INLINE stn_t *locate_parent(st_t *t, const struct NodeContext *son,
+			      enum STNDir *d)
 {
 	stn_t *cn;
 	if (t->root == son->x)
@@ -87,7 +86,7 @@ static stn_t *locate_parent(st_t *t, const struct NodeContext *son,
 	return cn;
 }
 
-static void update_node_data(const st_t *t, stn_t *tgt, const stn_t *src)
+S_INLINE void update_node_data(const st_t *t, stn_t *tgt, const stn_t *src)
 {
 	const size_t node_header_size = sizeof(stn_t);
 	const size_t copy_size = t->d.elem_size - node_header_size;
@@ -96,32 +95,32 @@ static void update_node_data(const st_t *t, stn_t *tgt, const stn_t *src)
 	memcpy(tgtp, srcp, copy_size);
 }
 
-static void copy_node(const st_t *t, stn_t *tgt, const stn_t *src)
+S_INLINE void copy_node(const st_t *t, stn_t *tgt, const stn_t *src)
 {
 	memcpy(tgt, src, t->d.elem_size);
 }
 
-static void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
+S_INLINE void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
 {
 	update_node_data(t, tgt, src);
 	tgt->x.l = tgt->r = ST_NIL;
 	tgt->x.is_red = ir;
 }
 
-static sbool_t is_red(const st_t *t, stndx_t node_id)
+S_INLINE sbool_t is_red(const st_t *t, stndx_t node_id)
 {
 	RETURN_IF(node_id == ST_NIL, S_FALSE);
 	return get_node_r(t, node_id)->x.is_red;
 }
 
-static void set_red(st_t *t, const stndx_t node_id, const sbool_t red)
+S_INLINE void set_red(st_t *t, const stndx_t node_id, const sbool_t red)
 {
 	if (node_id != ST_NIL)
 		get_node(t, node_id)->x.is_red = red;
 }
 
 /* counter-direction */
-static enum STNDir cd(const enum STNDir d)
+S_INLINE enum STNDir cd(const enum STNDir d)
 {
 	return d == ST_Left ? ST_Right : ST_Left;
 }
@@ -138,30 +137,30 @@ static enum STNDir cd(const enum STNDir d)
 	set_red(t, x, S_TRUE);		\
 	set_red(t, y, S_FALSE);
 
-static stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		     const enum STNDir xd)
+S_INLINE stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+		       const enum STNDir xd)
 {
 	F_rotate1X;
 	return y;
 }
 
-static void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		    const enum STNDir xd, stn_t *xpn)
+S_INLINE void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+		      const enum STNDir xd, stn_t *xpn)
 {
 	F_rotate1X;
 	set_lr(xpn, d, y);
 }
 
-static stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		      const enum STNDir xd, stndx_t *y_out)
+S_INLINE stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+			const enum STNDir xd, stndx_t *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
 	return yn;
 }
 
-static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		     const enum STNDir xd)
+S_INLINE stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
+		       const enum STNDir xd)
 {
 	const stndx_t child = get_lr(xn, xd);
 	stn_t *child_node = get_node(t, child);
@@ -173,7 +172,7 @@ static stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
  * If current node is the tree root node, change the root index so it targets
  * the new node.
  */
-static void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
+S_INLINE void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
 {
 	if (pivot == t->root) {
 		t->root = new_pivot;
@@ -182,15 +181,15 @@ static void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
 }
 
 /*
- * Observation: *recursive* function. Be careful when using it in
- * runtime code if you're in a context with small stack size.
+ * Observation: *recursive* function. This is intended for debug-only
+ * purposes (for tree validation tests).
  * Returns: 0: error, > 0: tree height from a given node
  */
 static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
 {
 	size_t l, r;
 	const stn_t *n;
-	ASSERT_RETURN_IF(!t, 0);
+	RETURN_IF(!t, 0);
 	RETURN_IF(ndx == ST_NIL, 1);
 	n = get_node_r(t, ndx);
 	if (is_red(t, ndx) && (is_red(t, n->x.l) || is_red(t, n->r))) {
@@ -276,10 +275,12 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	enum STNDir xld;
 	stndx_t pd, v;
 	int64_t cmp;
-	ASSERT_RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
+	/* BEHAVIOR: valid tree, with space for one extra element */
+	RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
 	t = *tt;
 	ts = st_size(t);
-	ASSERT_RETURN_IF(ts >= ST_NIL, S_FALSE);
+	/* BEHAVIOR: tree reaching capability limit */
+	RETURN_IF(ts >= ST_NIL, S_FALSE);
 	/*
 	 * Trivial case: insert node into empty tree
 	 */
@@ -317,7 +318,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	 */
 	for (;;) {
 		cp = (c + 3) % CW_SIZE;
-		/* Leave found? update tree, copy data, update size */
+		/* Leaf found? update tree, copy data, update size */
 		if (w[c].x == ST_NIL) {
 			/* New node: */
 			w[c].x = (stndx_t)ts;
@@ -395,7 +396,8 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	enum STNDir xd, xd0, d2;
 	stndx_t s, sz;
 	stn_t *yn, *sn, *cpp_d2n;
-	ASSERT_RETURN_IF(!t || !n, S_FALSE);
+	/* BEHAVIOR: valid request */
+	RETURN_IF(!t || !n, S_FALSE);
 	/* Check empty tree: */
 	ts0 = st_size(t);
 	RETURN_IF(ts0 == 0 || ts0 >= ST_NIL, S_FALSE);
@@ -403,7 +405,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	/*
 	 * Prepare a 4-level node tracking window (in this case a 3-level
 	 * would be enough, using 4 in order to avoid the division by 3,
-	 * which is more expensive than by 4 in many CPUs).
+	 * which is more expensive than by 4 in most CPUs).
 	 */
 	auxn.r = t->root;
 	/* c: current node (cn) */
@@ -597,7 +599,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
 	int f_pre, f_ino, f_post;
 	const stn_t *cn_aux;
-	ASSERT_RETURN_IF(!t, -1);
+	RETURN_IF(!t, -1);
 	ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
 	rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
@@ -609,7 +611,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	 */
 	p = (struct STreeScan *)s_alloca(sizeof(struct STreeScan) *
 					       (rbt_max_depth + 3));
-	ASSERT_RETURN_IF(!p, -1);
+	RETURN_IF(!p, -1);
 	if (f)
 		f(&tp);
 	p[0].p = ST_NIL;
@@ -724,7 +726,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 	stndx_t n;
 	const stn_t *node;
 	sv_t *tmp;
-	ASSERT_RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
+	RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
 	ts = st_size(t);
 	RETURN_IF(!ts, 0);	/* empty */
 	curr = sv_alloc_t(SV_U32, ts / 2);
@@ -762,8 +764,8 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 
 sbool_t st_assert(const st_t *t)
 {
-	ASSERT_RETURN_IF(!t, S_FALSE);
-	ASSERT_RETURN_IF(t->d.size == 1 && is_red(t, t->root), S_FALSE);
+	RETURN_IF(!t, S_FALSE);
+	RETURN_IF(t->d.size == 1 && is_red(t, t->root), S_FALSE);
 	RETURN_IF(t->d.size == 1, S_TRUE);
 	return st_assert_aux(t, t->root) ? S_TRUE : S_FALSE;
 }
