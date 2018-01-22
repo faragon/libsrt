@@ -75,7 +75,7 @@ size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
 	 * On encoding errors, increase the error count, and return 1 as size
 	 */
 	if (enc_errors)
-		(*enc_errors)++;
+		*enc_errors = s_size_t_add(*enc_errors, 1, S_NPOS);
 	return 1;
 }
 
