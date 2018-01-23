@@ -60,19 +60,22 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 	p = (const uint8_t *)buf;
 	crc = ~crc;
 #if (S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 ||	  \
-    S_CRC32_SLC == 16) && defined(S_U32_BYTE0) && defined(S_U32_BYTE1) && \
-    defined(S_U32_BYTE2) && defined(S_U32_BYTE3) && defined(S_LTOH_U32)
+    S_CRC32_SLC == 16)
+	#define S_U32_BYTE0(a) ((a) & 0xff)
+	#define S_U32_BYTE1(a) (((a) >> 8) & 0xff)
+	#define S_U32_BYTE2(a) (((a) >> 16) & 0xff)
+	#define S_U32_BYTE3(a) (((a) >> 24) & 0xff)
 	bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
 	for (; i < bsX; i += S_CRC32_SLC) {
-		uint32_t a = S_LD_U32(p + i) ^ S_LTOH_U32(crc)
+		uint32_t a = S_LD_LE_U32(p + i) ^ crc
 	#if S_CRC32_SLC >= 8
-		       , b = S_LD_U32(p + i + 4)
+		       , b = S_LD_LE_U32(p + i + 4)
 	#endif
 	#if S_CRC32_SLC >= 12
-		       , c = S_LD_U32(p + i + 8)
+		       , c = S_LD_LE_U32(p + i + 8)
 	#endif
 	#if S_CRC32_SLC == 16
-		       , d = S_LD_U32(p + i + 12)
+		       , d = S_LD_LE_U32(p + i + 12)
 	#endif
 			;
 	#if S_CRC32_SLC == 4

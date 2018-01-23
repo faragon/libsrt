@@ -435,27 +435,7 @@ S_INLINE void s_free(void *ptr)
 
 #define S_IS_UNKNOWN_ENDIAN !(S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
 
-/*
- * Byte access accelerators (used for CRC32)
- */
-#if S_IS_LITTLE_ENDIAN
-	#define S_LTOH_U32(a) (a)
-	#define S_U32_BYTE0(a) ((a) & 0xff)
-	#define S_U32_BYTE1(a) (((a) >> 8) & 0xff)
-	#define S_U32_BYTE2(a) (((a) >> 16) & 0xff)
-	#define S_U32_BYTE3(a) (((a) >> 24) & 0xff)
-#elif S_IS_BIG_ENDIAN
-	#define S_LTOH_U32(a) S_BSWAP32((uint32_t)(a))
-	#define S_U32_BYTE0(a) (((a) >> 24) & 0xff)
-	#define S_U32_BYTE1(a) (((a) >> 16) & 0xff)
-	#define S_U32_BYTE2(a) (((a) >> 8) & 0xff)
-	#define S_U32_BYTE3(a) ((a) & 0xff)
-#else
-	/* For unnown endianess: no S_U32_BYTEx nor S_LTOH_U32
-	 * will be available, so the CRC computation would default
-	 * to the one byte at once implementation.
-	 */
-#endif
+
 #define S_LD_X(a, T) *(T *)(a)
 #define S_ST_X(a, T, v) S_LD_X(a, T) = v
 
