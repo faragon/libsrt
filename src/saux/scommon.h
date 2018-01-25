@@ -393,6 +393,11 @@ S_INLINE void s_free(void *ptr)
 	#undef S_UNALIGNED_MEMORY_ACCESS
 #endif
 
+/*
+ * Little-endian detection is used for optimizing the data compression
+ * routines and other internal code involving little-endian data
+ * serialization.
+ */
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || \
     defined(__i386__) || defined(__x86_64__) || defined(__ARMEL__) ||	    \
     defined(__i960__) || defined(__TIC80__) || 				    \
@@ -409,69 +414,51 @@ S_INLINE void s_free(void *ptr)
 	#define S_IS_LITTLE_ENDIAN 0
 #endif
 
-#if !S_IS_LITTLE_ENDIAN
-	#if (defined(__BYTE_ORDER__) &&				\
-		__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__) ||	\
-	    defined(__BIG_ENDIAN__) && __BIG_ENDIAN__ ||	\
-	    defined(_BIG_ENDIAN) && _BIG_ENDIAN ||		\
-	    defined(__powerpc) || defined(__powerpc__) ||	\
-	    defined(__powerpc64__) || defined(__POWERPC__) ||	\
-	    defined(__PPC__) || defined(__PPC64__) ||		\
-	    defined(__370__) || defined(__s390__) ||		\
-	    defined(__s390x__) || defined (__zarch__) ||	\
-	    defined(__SYSC_ZARCH__) ||				\
-	    defined(__hppa__) || defined(__HPPA__) ||		\
-	    defined(__hppa) || defined(__m68k__) ||		\
-	    defined(__sparc__) || defined(__sparc) ||		\
-	    defined(__mips__) || defined(__mips) ||		\
-	    defined(__sh__)
-		#define S_IS_BIG_ENDIAN 1
-	#endif
+#ifdef S_UNALIGNED_MEMORY_ACCESS
+#define RS_LD_X(a, T) return *(const T *)(a)
+#define RS_ST_X(a, T, v) *(T *)(a) = v
+#else
+#define RS_LD_X(a, T)			\
+	T r;				\
+	memcpy(&r, a, sizeof(r));	\
+	return r
+#define RS_ST_X(a, T, v)		\
+	memcpy(a, &v, sizeof(T))
 #endif
-
-#ifndef S_IS_BIG_ENDIAN
-	#define S_IS_BIG_ENDIAN 0
-#endif
-
-#define S_IS_UNKNOWN_ENDIAN !(S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
-
-
-#define S_LD_X(a, T) *(T *)(a)
-#define S_ST_X(a, T, v) S_LD_X(a, T) = v
 
 S_INLINE uint16_t s_ld_u16(const void *a)
 {
-	return S_LD_X(a, const uint16_t);
+	RS_LD_X(a, uint16_t);
 }
 
 S_INLINE uint32_t s_ld_u32(const void *a)
 {
-	return S_LD_X(a, const uint32_t);
+	RS_LD_X(a, uint32_t);
 }
 
 S_INLINE uint64_t s_ld_u64(const void *a)
 {
-	return S_LD_X(a, const uint64_t);
+	RS_LD_X(a, uint64_t);
 }
 
 S_INLINE size_t s_ld_szt(const void *a)
 {
-	return S_LD_X(a, const size_t);
+	RS_LD_X(a, size_t);
 }
 
 S_INLINE void s_st_u32(void *a, uint32_t v)
 {
-	S_ST_X(a, uint32_t, v);
+	RS_ST_X(a, uint32_t, v);
 }
 
 S_INLINE void s_st_u64(void *a, uint64_t v)
 {
-	S_ST_X(a, uint64_t, v);
+	RS_ST_X(a, uint64_t, v);
 }
 
 S_INLINE void s_st_szt(void *a, size_t v)
 {
-	S_ST_X(a, size_t, v);
+	RS_ST_X(a, size_t, v);
 }
 
 S_INLINE uint64_t *s_mar_u64(void *a)
@@ -567,59 +554,13 @@ S_INLINE void s_st_le_u64(void *a, uint64_t v)
 #define S_LD_LE_U64(a) s_ld_le_u64(a)
 #define S_ST_LE_U64(a, v) s_st_le_u64(a, v)
 
-#ifdef S_UNALIGNED_MEMORY_ACCESS
-	#define S_LD_U16(a) s_ld_u16((const void *)(a))
-	#define S_LD_U32(a) s_ld_u32((const void *)(a))
-	#define S_LD_U64(a) s_ld_u64((const void *)(a))
-	#define S_LD_SZT(a) s_ld_szt((const void *)(a))
-	#define S_ST_U32(a, v) s_st_u32((void *)(a), v)
-	#define S_ST_U64(a, v) s_st_u64((void *)(a), v)
-	#define S_ST_SZT(a, v) s_st_szt((void *)(a), v)
-	#if S_IS_LITTLE_ENDIAN
-		#define S_UNALIGNED_LE
-	#else
-		#define S_UNALIGNED_BE
-	#endif
-#else /* Aligned access supported only for 32 and >= 64 bit CPUs */
-	#if S_IS_LITTLE_ENDIAN
-		#define S_LD_U16(a)					\
-			((uint16_t)*(unsigned char *)(a) |		\
-			 (uint16_t)*((unsigned char *)(a) + 1) << 8)
-		#define S_LD_U32(a)					\
-			((uint32_t)*(unsigned char *)(a) |		\
-			 (uint32_t)*((unsigned char *)(a) + 1) << 8 |	\
-			 (uint32_t)*((unsigned char *)(a) + 2) << 16 |	\
-			 (uint32_t)*((unsigned char *)(a) + 3) << 24)
-		#define S_LD_U64(a)					\
-			((uint64_t)S_LD_U32(a) |			\
-			 (uint64_t)(S_LD_U32((unsigned char *)(a) +	\
-						4)) << 32)
-		#define S_ALIGNED_LE
-	#else
-		#define S_LD_U16(a)					\
-			((uint16_t)*((unsigned char *)(a) + 1) |	\
-			 (uint16_t)*(unsigned char *)(a))
-		#define S_LD_U32(a)					\
-			((uint32_t)*(unsigned char *)(a) << 24 |	\
-			 (uint32_t)*((unsigned char *)(a) + 1) << 16 |	\
-			 (uint32_t)*((unsigned char *)(a) + 2) << 8 |	\
-			 (uint32_t)*((unsigned char *)(a) + 3))
-		#define S_LD_U64(a)				\
-			(((uint64_t)S_LD_U32(a)) << 32 |	\
-			 S_LD_U32((unsigned char *)(a) + 4))
-		#define S_ALIGNED_BE
-	#endif
-	S_INLINE size_t S_LD_SZT(const void *a)
-	{
-		size_t tmp;
-		memcpy(&tmp, a, sizeof(tmp));
-		return tmp;
-	}
-	#define S_UAST_X(a, T, v) { T w = (T)v; memcpy((a), &w, sizeof(w)); }
-	#define S_ST_U32(a, v) S_UAST_X(a, uint32_t, v)
-	#define S_ST_U64(a, v) S_UAST_X(a, uint64_t, v)
-	#define S_ST_SZT(a, v) S_UAST_X(a, size_t, v)
-#endif
+#define S_LD_U16(a) s_ld_u16((const void *)(a))
+#define S_LD_U32(a) s_ld_u32((const void *)(a))
+#define S_LD_U64(a) s_ld_u64((const void *)(a))
+#define S_LD_SZT(a) s_ld_szt((const void *)(a))
+#define S_ST_U32(a, v) s_st_u32((void *)(a), v)
+#define S_ST_U64(a, v) s_st_u64((void *)(a), v)
+#define S_ST_SZT(a, v) s_st_szt((void *)(a), v)
 
 /*
  * Packed 64-bit integer: load/store a variable-size 64 bit integer
@@ -629,33 +570,6 @@ S_INLINE void s_st_le_u64(void *a, uint64_t v)
 void s_st_pk_u64(uint8_t **buf, const uint64_t v);
 uint64_t s_ld_pk_u64(const uint8_t **buf, const size_t bs);
 size_t s_pk_u64_size(const uint8_t *buf);
-
-#if defined(MSVC) && defined(_M_X86)
-	#include <emmintrin.h>
-	#define S_PREFETCH_R(address) 					\
-		if (address)						\
-			_mm_prefetch((char *)(address), _MM_HINT_T0)
-	#define S_PREFETCH_W(address) S_PREFETCH_R(address)
-#endif
-
-#if (defined(_M_X86) || defined(__x86_64__) || defined(__ARM_PCS_VFP) || \
-     defined(__PPC__) || defined(__sparc__)) && !defined(__SOFTFP__)
-	#define S_HW_FPU
-#endif
-
-#if defined(__GNUC__)
-	#define S_PREFETCH_GNU(address, rw)		\
-		if (address)				\
-			__builtin_prefetch(address, rw)
-	#define S_PREFETCH_R(address) S_PREFETCH_GNU(address, 0)
-	#define S_PREFETCH_W(address) S_PREFETCH_GNU(address, 1)
-#endif
-#ifndef S_PREFETCH_R
-	#define S_PREFETCH_R(address)
-#endif
-#ifndef S_PREFETCH_W
-	#define S_PREFETCH_W(address)
-#endif
 
 /*
  * Debug and alloc counter (used by the test)
@@ -764,34 +678,6 @@ void s_memset64(void *o, const void *s, size_t n);
 void s_memset32(void *o, const void *s, size_t n);
 void s_memset24(void *o, const void *s, size_t n);
 void s_memset16(void *o, const void *s, size_t n);
-
-
-S_INLINE void s_memcpy2(void *o, const void *i)
-{
-#ifdef S_UNALIGNED_MEMORY_ACCESS
-	S_ST_X(o, unsigned short, S_LD_X(i, const unsigned short));
-#else
-	((char *)o)[0] = ((const char *)i)[0];
-	((char *)o)[1] = ((const char *)i)[1];
-#endif
-}
-
-S_INLINE void s_memcpy4(void *o, const void *i)
-{
-	S_ST_U32(o, S_LD_U32(i));
-}
-
-S_INLINE void s_memcpy5(void *o, const void *i)
-{
-	s_memcpy4(o, i);
-	((char *)o)[4] = ((const char *)i)[4];
-}
-
-S_INLINE void s_memcpy6(void *o, const void *i)
-{
-	s_memcpy4(o, i);
-	s_memcpy2((char *)o + 4, (const char *)i + 4);
-}
 
 /*
  * Least/most significant bit

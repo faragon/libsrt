@@ -247,11 +247,11 @@ size_t senc_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o,
 	j = sso;
 	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
-		case '"': j -= 6; s_memcpy6(o + j, "&quot;"); continue;
-		case '&': j -= 5; s_memcpy5(o + j, "&amp;"); continue;
-		case '\'': j -= 6; s_memcpy6(o + j, "&apos;"); continue;
-		case '<': j -= 4; s_memcpy4(o + j, "&lt;"); continue;
-		case '>': j -= 4; s_memcpy4(o + j, "&gt;"); continue;
+		case '"': j -= 6; memcpy(o + j, "&quot;", 6); continue;
+		case '&': j -= 5; memcpy(o + j, "&amp;", 5); continue;
+		case '\'': j -= 6; memcpy(o + j, "&apos;", 6); continue;
+		case '<': j -= 4; memcpy(o + j, "&lt;", 4); continue;
+		case '>': j -= 4; memcpy(o + j, "&gt;", 4); continue;
 		default: o[--j] = s[i]; continue;
 		}
 	}
@@ -345,13 +345,13 @@ size_t senc_esc_json(const uint8_t *s, const size_t ss, uint8_t *o,
 	j = sso;
 	for (; i != (size_t)-1; i--) {
 		switch (s[i]) {
-		case '\b': j -= 2; s_memcpy2(o + j, "\\b"); continue;
-		case '\t': j -= 2; s_memcpy2(o + j, "\\t"); continue;
-		case '\n': j -= 2; s_memcpy2(o + j, "\\n"); continue;
-		case '\f': j -= 2; s_memcpy2(o + j, "\\f"); continue;
-		case '\r': j -= 2; s_memcpy2(o + j, "\\r"); continue;
-		case '"': j -= 2; s_memcpy2(o + j, "\\\""); continue;
-		case '\\': j -= 2; s_memcpy2(o + j, "\\\\"); continue;
+		case '\b': j -= 2; memcpy(o + j, "\\b", 2); continue;
+		case '\t': j -= 2; memcpy(o + j, "\\t", 2); continue;
+		case '\n': j -= 2; memcpy(o + j, "\\n", 2); continue;
+		case '\f': j -= 2; memcpy(o + j, "\\f", 2); continue;
+		case '\r': j -= 2; memcpy(o + j, "\\r", 2); continue;
+		case '"': j -= 2; memcpy(o + j, "\\\"", 2); continue;
+		case '\\': j -= 2; memcpy(o + j, "\\\\", 2); continue;
 		default: o[--j] = s[i]; continue;
 		}
 	}
@@ -1001,7 +1001,7 @@ S_INLINE void s_reccpy1(uint8_t *o, const size_t dist, size_t n)
 
 S_INLINE void s_reccpy(uint8_t *o, const size_t dist, size_t n)
 {
-	size_t i, chunk;
+	size_t i, n2, chunk;
 	const uint8_t *s = o - dist;
 	if (dist > n) {
 		/* non-overlapped */
@@ -1039,8 +1039,14 @@ S_INLINE void s_reccpy(uint8_t *o, const size_t dist, size_t n)
 	/* overlapped copy: generic */
 	memcpy(o, s, dist);
 	chunk = dist * 2;
-	for (i = dist; i < n; i += chunk)
-		memcpy(o + i, s, chunk);
+	i = dist;
+	if (i + chunk < n) {
+		n2 = n - dist;
+		for (; i < n2; i += chunk)
+			memcpy(o + i, s, chunk);
+	}
+	if (i < n)
+		memcpy(o + i, s, n - i);
 }
 
 S_INLINE void sdec_lz_load_ref(uint8_t **o, size_t dist, size_t len)

@@ -171,64 +171,46 @@ unsigned slog2_64(uint64_t i)
  * Custom "memset" functions
  */
 
-void s_memset64(void *o, const void *s, size_t n8)
+void s_memset64(void *o0, const void *s0, size_t n8)
 {
-	size_t k = 0, n = n8 * 8;
-	uint64_t *o64;
-	uint64_t data = S_LD_U64(s);
-#if (defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 8) &&	\
-    (S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
-	size_t ua_head = (intptr_t)o & 7;
-	if (ua_head && n8) {
-		S_ST_U64(o, data);
-		S_ST_U64((uint8_t *)o + n - 8, data);
-		o64 = s_mar_u64((uint8_t *)o + 8 - ua_head);
-	#if S_IS_LITTLE_ENDIAN
-		data = S_ROL64(data, ua_head * 8);
-	#else
-		data = S_ROR64(data, ua_head * 8);
-	#endif
-		k = 0;
+	uint8_t *o;
+	const uint8_t *s;
+	uint64_t data, *o64;
+	size_t i, head, tail;
+	if (!o0 || !s0 || !n8)
+		return;
+	head = (intptr_t)o0 & 7;
+	tail = 8 - head;
+	o = (uint8_t *)o0;
+	s = (const uint8_t *)s0;
+	if (head) {
 		n8--;
-		for (; k < n8; k++)
-			o64[k] = data;
-	} else
-#endif
-	{
-		o64 = (uint64_t *)o;
-		for (; k < n8; k++)
-			S_ST_U64(o64 + k, data);
+		memcpy(o, s, tail);
+		o += tail;
+		memcpy(&data, s + tail, head);
+		memcpy((uint8_t *)&data + head, s, tail);
+	} else {
+		memcpy(&data, s, 8);
 	}
+	o64 = (uint64_t *)o;
+	for (i = 0; i < n8; i++)
+		*o64++ = data;
+	if (head)
+		memcpy(o64, s + tail, head);
 }
 
 void s_memset32(void *o, const void *s, size_t n4)
 {
-	size_t k = 0, n = n4 * 4;
-	uint32_t *o32;
-	uint32_t data = S_LD_U32(s);
-#if (defined(S_UNALIGNED_MEMORY_ACCESS) || S_BPWORD == 4) &&	\
-    (S_IS_LITTLE_ENDIAN || S_IS_BIG_ENDIAN)
-	size_t ua_head = (intptr_t)o & 3;
-	if (ua_head && n4) {
-		S_ST_U32(o, data);
-		S_ST_U32((char *)o + n - 4, data);
-		o32 = s_mar_u32((char *)o + 4 - ua_head);
-	#if S_IS_LITTLE_ENDIAN
-		data = S_ROL32(data, ua_head * 8);
-	#else
-		data = S_ROR32(data, ua_head * 8);
-	#endif
-		k = 0;
-		n4--;
-		for (; k < n4; k++)
-			o32[k] = data;
-	} else
-#endif
-	{
-		o32 = (uint32_t *)o;
-		for (; k < n4; k++)
-			S_ST_U32(o32 + k, data);
-	}
+	size_t n8;
+	uint64_t s64;
+	if (!o || !s || !n4)
+		return;
+	n8 = n4 / 2;
+	memcpy(&s64, s, 4);
+	memcpy((uint8_t *)&s64 + 4, s, 4);
+	s_memset64(o, &s64, n8);
+	if (n4 % 2)
+		memcpy((uint8_t *)o + n8 * 8, s, 4);
 }
 
 void s_memset24(void *o0, const void *s0, size_t n3)
@@ -262,13 +244,17 @@ void s_memset24(void *o0, const void *s0, size_t n3)
 		memcpy(o + k, s, 3);
 }
 
-void s_memset16(void *o0, const void *s0, size_t n2)
+void s_memset16(void *o, const void *s, size_t n2)
 {
-	union s_u32 d;
-	memcpy(d.b, s0, 2);
-	memcpy(d.b + 2, s0, 2);
-	s_memset32(o0, s0, n2 / 2);
+	size_t n4;
+	uint32_t s32;
+	if (!o || !s || !n2)
+		return;
+	memcpy(&s32, s, 2);
+	memcpy((uint8_t *)&s32 + 2, s, 2);
+	n4 = n2 / 2;
+	s_memset32(o, &s32, n4);
 	if (n2 % 2)
-		memcpy((uint8_t *)o0 + (n2 - 1) * 2, s0, 2);
+		memcpy((uint8_t *)o + n4 * 4, s, 2);
 }
 
