@@ -97,22 +97,14 @@ extern "C" {
 #define S_ENABLE_FIND_CSUM_FIRST_CHAR_LOCATION_OPTIMIZATION
 #define S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
 #define S_ENABLE_FIND_CSUM_FAST_TO_SLOW_ALGORITHM_SWITCH
-#define S_ENABLE_OTHER_EXAMPLES
 
 #ifdef S_MINIMAL
 #undef S_ENABLE_FIND_CSUM_FIRST_CHAR_LOCATION_OPTIMIZATION
 #undef S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
-#undef S_ENABLE_OTHER_EXAMPLES
 #endif
 
 size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
 size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
-
-#ifdef S_ENABLE_OTHER_EXAMPLES
-size_t ss_find_bf(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
-size_t ss_find_bmh(const char *s0, const size_t off, const size_t ss0, const char *t0, const size_t ts);
-size_t ss_find_libc(const char *s, const size_t off, const size_t ss, const char *t, const size_t ts);
-#endif
 
 #ifdef __cplusplus
 }	/* extern "C" { */
