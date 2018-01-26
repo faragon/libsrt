@@ -145,6 +145,7 @@ static int aux_uu32_sort(struct STraverseParams *tp)
 	}
 	return 0;
 }
+
 static int aux_ii_sort(struct STraverseParams *tp)
 {
 	const struct SMapII *cn =

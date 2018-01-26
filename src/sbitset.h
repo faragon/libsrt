@@ -107,7 +107,6 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 S_INLINE void sb_set(sb_t **b, const size_t nth)
 {
 	size_t ss;
-	S_ASSERT(b);
 	if (b) {
 		unsigned char *buf;
 		const size_t pos = nth / 8, mask = (size_t)1 << (nth % 8),
@@ -142,7 +141,6 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 
 S_INLINE void sb_reset(sb_t **b, const size_t nth)
 {
-	S_ASSERT(!b);
 	if (b && *b) {
 		const size_t pos = nth / 8;
 		if (pos < sv_size(*b)) {
