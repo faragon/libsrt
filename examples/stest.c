@@ -44,6 +44,19 @@
 #define S_MAX_I64	9223372036854775807LL
 #define S_MIN_I64	(0 - S_MAX_I64 - 1)
 
+/* Integer compare functions */
+
+#define BUILD_SINT_CMPF(fn, T)				\
+        S_INLINE int fn(T a, T b) {              	\
+                return a > b ? 1 : a < b ? -1 : 0;	\
+        }
+
+BUILD_SINT_CMPF(scmp_int32, int32_t)
+BUILD_SINT_CMPF(scmp_uint32, uint32_t)
+BUILD_SINT_CMPF(scmp_int64, int64_t)
+BUILD_SINT_CMPF(scmp_uint64, uint64_t)
+BUILD_SINT_CMPF(scmp_ptr, const void *)
+
 /*
  * Test common data structures
  */
@@ -3847,8 +3860,6 @@ static int test_endianess()
 		res |= 0x01;
 	if (S_LD_LE_U32(le.b) != n)
 		res |= 0x02;
-	if (S_BSWAP32(S_LD_LE_U32(be.b)) != n)
-		res |= 0x04;
 	l.b[0] = b.b[7] = n2 & 0xff;
 	l.b[1] = b.b[6] = (n2 >> 8) & 0xff;
 	l.b[2] = b.b[5] = (n2 >> 16) & 0xff;
@@ -3861,8 +3872,6 @@ static int test_endianess()
 		res |= 0x10;
 	if (S_LD_LE_U64(l.b) != n2)
 		res |= 0x20;
-	if (S_BSWAP64(S_LD_LE_U64(b.b)) != n2)
-		res |= 0x40;
 	return res;
 }
 

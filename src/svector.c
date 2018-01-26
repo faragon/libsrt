@@ -306,6 +306,8 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 	return *v;
 }
 
+/* WARNING: this is intentionally unprotected.
+ */
 static char *ptr_to_elem(sv_t *v, const size_t i)
 {
 	return (char *)sv_get_buffer(v) + i * v->d.elem_size;

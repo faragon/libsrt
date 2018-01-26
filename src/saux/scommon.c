@@ -9,29 +9,6 @@
 
 #include "scommon.h"
 
-#define D8_LE_ID		0x01
-#define D16_LE_ID		0x02
-#define D24_LE_ID		0x04
-#define D32_LE_ID		0x08
-#define D40_LE_ID		0x10
-#define D48_LE_ID		0x20
-#define D56_LE_ID		0x40
-#define D72_LE_ID		0x80
-#define D8_LE_SZ		1
-#define D16_LE_SZ		2
-#define D24_LE_SZ		3
-#define D32_LE_SZ		4
-#define D40_LE_SZ		5
-#define D48_LE_SZ		6
-#define D56_LE_SZ		7
-#define D72_LE_SZ		9
-#define D8_LE_SHIFT		1
-#define D16_LE_SHIFT	2
-#define D24_LE_SHIFT	3
-#define D32_LE_SHIFT	4
-#define D40_LE_SHIFT	5
-#define D48_LE_SHIFT	6
-#define D56_LE_SHIFT	7
 #define D8_LE_MASK	S_NBITMASK(8 - D8_LE_SHIFT)
 #define D16_LE_MASK	S_NBITMASK(16 - D16_LE_SHIFT)
 #define D24_LE_MASK	S_NBITMASK(24 - D24_LE_SHIFT)
@@ -39,6 +16,16 @@
 #define D40_LE_MASK	S_NBITMASK64(40 - D40_LE_SHIFT)
 #define D48_LE_MASK	S_NBITMASK64(48 - D48_LE_SHIFT)
 #define D56_LE_MASK	S_NBITMASK64(56 - D56_LE_SHIFT)
+
+enum SPK64IDMASK {
+	D8_LE_ID = 1, D16_LE_ID = 2, D24_LE_ID = 4, D32_LE_ID = 8,
+	D40_LE_ID = 16, D48_LE_ID = 32, D56_LE_ID = 64, D72_LE_ID = 128 };
+enum SPK64SIZE {
+	D8_LE_SZ = 1, D16_LE_SZ = 2, D24_LE_SZ = 3, D32_LE_SZ = 4,
+	D40_LE_SZ = 5, D48_LE_SZ = 6, D56_LE_SZ = 7, D72_LE_SZ = 9 };
+enum SPK64SHIFT {
+	D8_LE_SHIFT = 1, D16_LE_SHIFT, D24_LE_SHIFT,
+	D32_LE_SHIFT, D40_LE_SHIFT, D48_LE_SHIFT, D56_LE_SHIFT };
 
 void s_st_pk_u64(uint8_t **buf0, const uint64_t v)
 {
@@ -227,7 +214,7 @@ void s_memset24(void *o0, const void *s0, size_t n3)
 			memcpy(o + k, s, 3);
 			k = 4 - ua_head;
 		}
-		o32 = s_mar_u32(o + k);
+		o32 = (uint32_t *)(o + k);
 		copy_size = n - k;
 		c12 = (copy_size / 12);
 		for (i = 0; i < 3; i ++)
