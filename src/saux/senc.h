@@ -40,7 +40,7 @@ extern "C" {
 
 #include "scommon.h"
 
-#define SDEBUG_LZ_STATS 1
+#define SDEBUG_LZ_STATS 0
 
 typedef size_t (*senc_f_t)(const uint8_t *s, const size_t ss, uint8_t *o);
 typedef size_t (*senc_f2_t)(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);

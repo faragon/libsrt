@@ -12,6 +12,10 @@
 #include <stdlib.h>
 
 #define SDEBUG_LZ	0
+#if !defined(SDEBUG_LZ_STATS) && SDEBUG_LZ
+	#undef SDEBUG_LZ
+	#define SDEBUG_LZ 0
+#endif
 
 #ifdef S_MINIMAL
 	/* For minimal configuration, using stack-only hash table of 2^10

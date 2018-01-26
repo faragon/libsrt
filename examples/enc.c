@@ -15,8 +15,8 @@
 #define ESC_MAX_SIZE	16 /* maximum size for an escape sequence: 16 bytes */
 
 #if SZ_DEBUG_STATS
-	extern size_t lz_st_lit[8], lz_st_lit_bytes;
-	extern size_t lz_st_ref[8], lz_st_ref_bytes;
+	extern size_t lz_st_lit[9], lz_st_lit_bytes;
+	extern size_t lz_st_ref[9], lz_st_ref_bytes;
 #endif
 
 static int syntax_error(const char **argv, const int exit_code)
