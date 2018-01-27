@@ -445,7 +445,7 @@ S_INLINE uint16_t S_LD_LE_U16(const void *a)
 S_INLINE void S_ST_LE_U16(void *a, uint16_t v)
 {
 #ifdef S_IS_LITTLE_ENDIAN
-	return S_ST_U16(a, v);
+	S_ST_U16(a, v);
 #else
 	uint8_t *p = (uint8_t *)a;
 	p[0] = (uint8_t)v;
