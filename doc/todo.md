@@ -1,8 +1,6 @@
 "to do" list
 ===
 
-* Security
-  * check size\_t overflow on every function (e.g. off + size -> overflow)
 * Debug
   * Add sm\_t, sms\_t, etc. prettyprinting
 * Tests

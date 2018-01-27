@@ -185,7 +185,7 @@ S_INLINE size_t get_str_off(const ss_t *s)
 
 S_INLINE void inc_size(ss_t *s, const size_t inc_size)
 {
-	ss_set_size(s, ss_size(s) + inc_size);
+	ss_set_size(s, s_size_t_add(ss_size(s), inc_size, S_NPOS));
 }
 
 static void set_unicode_size(ss_t *s, const size_t unicode_size)
@@ -203,8 +203,7 @@ static void set_unicode_size(ss_t *s, const size_t unicode_size)
 
 static void inc_unicode_size(ss_t *s, const size_t incr_size)
 {
-	/* BEHAVIOR: overflow must be controlled outside */
-	set_unicode_size(s, get_unicode_size(s) + incr_size);
+	set_unicode_size(s, s_size_t_add(get_unicode_size(s), incr_size, S_NPOS));
 }
 
 static void dec_unicode_size(ss_t *s, const size_t dec_size)
@@ -351,7 +350,7 @@ static ss_t *aux_toint(ss_t **s, const sbool_t cat, const int64_t num)
 	digits = sizeof(btmp) - off;
 	at = (cat && *s) ? ss_size(*s) : 0;
 	SS_OVERFLOW_CHECK(s, at, digits);
-	out_size = at + digits;
+	out_size = s_size_t_add(at, digits, S_NPOS);
         if (ss_reserve(s, out_size) >= out_size && *s) {
 		memcpy(ss_get_buffer(*s) + at, btmp + off, digits);
 		ss_set_size(*s, out_size);
@@ -364,7 +363,8 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 			 int32_t (*towX)(int32_t))
 {
 	int c, c2;
-	size_t ss, sso_max, cached_usize, at, sso_req, i, i2, csize, csize2;
+	size_t ss, sso_max, cached_usize, at, at_ss, sso_req, i, i2, csize,
+	       csize2;
 	const char *ps;
 	char *po0, *po, *pout, u8[SSU8_MAX_SIZE];
 	ss_t *out;
@@ -398,13 +398,13 @@ static ss_t *aux_toXcase(ss_t **s, const sbool_t cat, const ss_t *src,
 		at = 0;
 	}
 	/* Check if it is necessary to allocate more memory: */
-	sso_req = extra < 0 ? (at + ss - (size_t)(-extra)) :
-			     (at + ss + (size_t)extra);
+	at_ss = s_size_t_add(at, ss, S_NPOS);
+	sso_req = extra < 0 ? s_size_t_sub(at_ss, (size_t)(-extra)) :
+			      s_size_t_add(at_ss, (size_t)extra, S_NPOS);
 	if (!*s || sso_req > sso_max || (aliasing && extra > 0)) {
 		if (*s && (*s)->d.f.ext_buffer) { /* BEHAVIOR */
-			S_ERROR("not enough memory: strings stored in the "
-				"stored in fixed-length buffer can not be "
-				"resized.");
+			S_ERROR("not enough memory: strings stored into a "
+				"fixed-length buffer can not be resized.");
 			ss_set_alloc_errors(*s);
 			return ss_check(s);
 		}
@@ -491,7 +491,7 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 	at = (cat && *s) ? ss_size(*s) : 0;
 	enc_size = f ? f(src_buf, in_size, NULL) :
 		   f2 ? f2(src_buf, in_size, NULL, 0) : 0;
-	out_size = at + enc_size;
+	out_size = s_size_t_add(at, enc_size, S_NPOS);
 	if (enc_size > 0 && ss_reserve(s, out_size) >= out_size) {
 		src_aux = NULL;
 		if (aliasing) {
