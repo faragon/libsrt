@@ -222,7 +222,7 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 			else
 				if (at > 0)
 					sv_move_elems(*v, at, *v, 0, ss);
-			sv_set_size(*v, at + ss);
+			sv_set_size(*v, out_size);
 		}
 	} else {
 		RETURN_IF(cat, sv_check(v)); /* BEHAVIOR: cat wrong type */
@@ -246,28 +246,31 @@ static sv_t *aux_cat(sv_t **v, const sbool_t cat, const sv_t *src,
 static sv_t *aux_erase(sv_t **v, const sbool_t cat, const sv_t *src,
                        const size_t off, const size_t n)
 {
-	size_t ss0, at, src_size, erase_size, out_size;
+	size_t ss0, at, at_off, off_n, src_size, erase_size, out_size;
 	sbool_t overflow;
 	ASSERT_RETURN_IF(!v, sv_void);
 	if (!src)
 		src = sv_void;
 	ss0 = sv_size(src);
 	at = (cat && *v) ? sv_size(*v) : 0;
+	/* BEHAVIOR: overflow handling */
 	overflow = off + n > ss0;
-	src_size = overflow ? ss0 - off : n,
-	erase_size = ss0 - off - src_size;
+	src_size = overflow ? ss0 - off : n;
+	erase_size = s_size_t_sub(s_size_t_sub(ss0, off), src_size);
+	off_n = s_size_t_add(off, n, S_NPOS);
 	if (*v == src) { /* BEHAVIOR: aliasing: copy-only */
-		if (off + n >= ss0) { /* tail clean cut */
+		if (off_n >= ss0) { /* tail clean cut */
 			sv_set_size(*v, off);
 		} else {
-			sv_move_elems(*v, off, *v, off + n, erase_size);
+			sv_move_elems(*v, off, *v, off_n, erase_size);
 			sv_set_size(*v, ss0 - n);
 		}
 	} else { /* copy or cat */
-		out_size = at + off + erase_size;
+		at_off = s_size_t_add(at, off, S_NPOS);
+		out_size = s_size_t_add(at_off, erase_size, S_NPOS);
 		if (aux_reserve(v, src, out_size) >= out_size) {
 			sv_copy_elems(*v, at, src, 0, off);
-			sv_copy_elems(*v, at + off, src, off + n, erase_size);
+			sv_copy_elems(*v, at_off, src, off_n, erase_size);
 			sv_set_size(*v, out_size);
 		}
 	}
@@ -290,7 +293,7 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 	src_size = sv_size(src);
 	at = (cat && *v) ? sv_size(*v) : 0;
 	n = n0 < src_size ? n0 : src_size;
-	if (!s_size_t_overflow(at, n)) { /* overflow check */
+	if (!s_size_t_overflow(at, n)) { /* BEHAVIOR don't resize if overflow */
 		out_size = at + n;
 		aliasing = *v == src;
 		if (aux_reserve(v, src, out_size) >= out_size) {
@@ -306,8 +309,6 @@ static sv_t *aux_resize(sv_t **v, const sbool_t cat, const sv_t *src,
 	return *v;
 }
 
-/* WARNING: this is intentionally unprotected.
- */
 static char *ptr_to_elem(sv_t *v, const size_t i)
 {
 	return (char *)sv_get_buffer(v) + i * v->d.elem_size;
@@ -453,9 +454,6 @@ sv_t *sv_sort(sv_t *v)
 	buf = (void *)sv_get_buffer(v);
 	buf_size = sv_size(v);
 	elem_size = v->d.elem_size;
-	/*
-	 * TODO/FIXME: integer sort optimizations disabled, until validated
-	 */
 #ifndef S_MINIMAL
 	switch (v->d.sub_type) {
 	case SV_I8:  ssort_i8((int8_t *)buf, buf_size); break;

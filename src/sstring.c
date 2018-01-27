@@ -490,9 +490,9 @@ static ss_t *aux_toenc(ss_t **s, const sbool_t cat, const ss_t *src,
 	in_size = ss_size(src);
 	at = (cat && *s) ? ss_size(*s) : 0;
 	enc_size = f ? f(src_buf, in_size, NULL) :
-			       f2(src_buf, in_size, NULL, 0);
+		   f2 ? f2(src_buf, in_size, NULL, 0) : 0;
 	out_size = at + enc_size;
-	if (ss_reserve(s, out_size) >= out_size) {
+	if (enc_size > 0 && ss_reserve(s, out_size) >= out_size) {
 		src_aux = NULL;
 		if (aliasing) {
 			/*
@@ -730,7 +730,7 @@ static ss_t *aux_resize(ss_t **s, const sbool_t cat, const ss_t *src,
 		src = ss_void;
 	src_size = ss_size(src);
 	at = (cat && *s) ? ss_size(*s) : 0;
-	out_size = at + n;  /* BEHAVIOR: n overflow TODO */
+	out_size = s_size_t_add(at, n, S_NPOS); /* BEHAVIOR: on overflow */
 	aliasing = *s == src;
 	if (src_size < n) { /* fill */
 		if (ss_reserve(s, out_size) >= out_size && *s) {
