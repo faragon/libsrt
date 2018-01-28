@@ -131,16 +131,6 @@ extern "C" {
 	#define UINTPTR_MAX 0xffffffff
 #endif
 
-#if UINTPTR_MAX == 0xffff
-	#define S_BPWORD 2 /* 16-bit CPU */
-#elif UINTPTR_MAX == 0xffffffff
-	#define S_BPWORD 4 /* 32 */
-#elif UINTPTR_MAX == 0xffffffffffffffff
-	#define S_BPWORD 8 /* 64 */
-#else /* assume 128-bit CPU */
-	#define S_BPWORD 16
-#endif
-
 /*
  * Macros
  */
@@ -158,10 +148,10 @@ extern "C" {
 #define S_NBIT64(n) ((uint64_t)1 << (n))
 #define S_NBITMASK(n) ((n) >= 32 ? 0xffffffff : S_NBIT(n) - 1)
 #define S_NBITMASK64(n) ((n) >= 64 ? 0xffffffffffffffffLL : S_NBIT64(n) - 1)
-#if S_BPWORD >= 8
-#define S_NBITMASK32(n) ((uint32_t)S_NBITMASK(n))
-#else
+#if UINTPTR_MAX <= 0xffffffff
 #define S_NBITMASK32(n) (((S_NBIT(n - 1) - 1) << 1) | 1)
+#else
+#define S_NBITMASK32(n) ((uint32_t)S_NBITMASK(n))
 #endif
 #define RETURN_IF(a, v) if (a) return (v); else {}
 #define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
@@ -171,18 +161,18 @@ extern "C" {
  */
 
 #ifdef _MSC_VER
-	#if S_BPWORD == 8
-		#define FMT_ZI "%I64i"
-		#define FMT_ZU "%I64u"
-		#define FMT_I FMT_ZI
-		#define FMTSSZ_T __int64
-		#define FMTSZ_T unsigned __int64
-	#else
+	#if UINTPTR_MAX <= 0xffffffff
 		#define FMT_ZI "%i"
 		#define FMT_ZU "%u"
 		#define FMT_I "%I64i"
 		#define FMTSSZ_T int
 		#define FMTSZ_T unsigned int
+	#else
+		#define FMT_ZI "%I64i"
+		#define FMT_ZU "%I64u"
+		#define FMT_I FMT_ZI
+		#define FMTSSZ_T __int64
+		#define FMTSZ_T unsigned __int64
 	#endif
 #else
 	#ifdef S_C99_SUPPORT

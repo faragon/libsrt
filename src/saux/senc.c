@@ -878,16 +878,16 @@ S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
 {
 	size_t off = 0;
 #ifdef S_UNALIGNED_MEMORY_ACCESS
-	#if S_BPWORD >= 8
-		size_t ms8 = max_size / 8;
-		uint64_t *a64 = (uint64_t *)a, *b64 = (uint64_t *)b;
-		for (; off < ms8 && a64[off] == b64[off]; off++);
-		off *= 8;
-	#elif S_BPWORD >= 4
+	#if UINTPTR_MAX <= 0xffffffff
 		size_t ms4 = max_size / 4;
 		uint32_t *a32 = (uint32_t *)a, *b32 = (uint32_t *)b;
 		for (; off < ms4 && a32[off] == b32[off]; off++);
 		off *= 4;
+	#else
+		size_t ms8 = max_size / 8;
+		uint64_t *a64 = (uint64_t *)a, *b64 = (uint64_t *)b;
+		for (; off < ms8 && a64[off] == b64[off]; off++);
+		off *= 8;
 	#endif
 #endif
 	for (; off < max_size && a[off] == b[off]; off++);
