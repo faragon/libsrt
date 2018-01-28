@@ -2,8 +2,6 @@ Benchmarks overview
 ===
 
 * 'bench' executable is built using 'make'
-* Memory usage retrieved manually with htop (that's the reason for using MiB instead of MB as unit)
-* Memory usage does not reflect real per-element allocation, because of resizing heuristics, both for libsrt (C/C++) and STL (C++). E.g. a 10^6 byte vector shows using 3.5 MiB (~3.6 bytes per element) while a 10^8 would take 100 MiB (closer to the expected 1 byte per element).
 * Benchmark time precision limited to clock\_gettime() resolution on Linux
 * Some functions are not yet optimized (e.g. vector)
 
