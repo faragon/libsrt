@@ -1069,11 +1069,18 @@ S_INLINE void sdec_lz_load_lit(const uint8_t **s, uint8_t **o, size_t cnt)
 	(*o) += cnt;
 }
 
+/* BEHAVIOR: safety for avoiding decompression buffer overflow */
+#define SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, sz)	\
+	if (S_UNLIKELY(o + sz > o_top)) { 			\
+		s = s_top;					\
+		continue;					\
+	}
+
 size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 {
 	uint8_t *o;
 	uint64_t mix64;
-	const uint8_t *s, *s_top;
+	const uint8_t *s, *s_top, *o_top;
 	size_t cnt, dist, len, mix, op, expected_ss;
 	RETURN_IF(!s0 || ss < 4, 0); /* too small input (min hdr + opcode) */
 	s = s0;
@@ -1082,6 +1089,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 	RETURN_IF(!o0, expected_ss + 16); /* max out size */
 	s_top = s0 + ss;
 	o = o0;
+	o_top = o + expected_ss;
 	while (s < s_top) {
 		if ((*s & LZOP_MASK2) == LZOPR_16_ID) {
 			mix = S_LD_LE_U16(s) >> LZOPR_HDR_16_BITS;
@@ -1092,6 +1100,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R2:%06i.%08i\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		}
@@ -1106,6 +1115,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R2:%06i.%08i [S2]\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_16S_ID:
@@ -1117,6 +1127,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R2:%06i.%08i [S1]\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S3_ID:
@@ -1129,6 +1140,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R3:%06i.%08i [S2]\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S2_ID:
@@ -1141,6 +1153,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R3:%06i.%08i [S3]\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S_ID:
@@ -1153,6 +1166,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R3:%06i.%08i [S1]\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24_ID:
@@ -1165,6 +1179,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R3:%06i.%08i\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_32_ID:
@@ -1176,6 +1191,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R4:%06i.%08i\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPL_8_ID:
@@ -1184,6 +1200,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 #if SDEBUG_LZ
 			fprintf(stderr, "L8:%06i\n", 1 + (int)cnt);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
 			sdec_lz_load_lit(&s, &o, cnt);
 			continue;
 		}
@@ -1198,6 +1215,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R5:%06i.%08i\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_64_ID:
@@ -1209,6 +1227,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 			fprintf(stderr, "R8:%06i.%08i\n",
 				4 + (int)len, 1 + (int)dist);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPL_16_ID:
@@ -1217,6 +1236,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 #if SDEBUG_LZ
 			fprintf(stderr, "L16:%06i\n", 1 + (int)cnt);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
 			sdec_lz_load_lit(&s, &o, cnt);
 			continue;
 		case LZOPL_32_ID:
@@ -1225,6 +1245,7 @@ size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
 #if SDEBUG_LZ
 			fprintf(stderr, "L32:%06i\n", 1 + (int)cnt);
 #endif
+			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
 			sdec_lz_load_lit(&s, &o, cnt);
 			continue;
 		default:
