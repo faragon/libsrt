@@ -42,6 +42,8 @@ enum STNDir
 	ST_Right = 1
 };
 
+#define st_void (st_t *)sd_void
+
 /*
  * Internal data structures
  */
@@ -228,7 +230,7 @@ st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
 		   const size_t elem_size, const size_t max_size)
 {
 	st_t *t;
-	RETURN_IF(!cmp_f || !elem_size || !buffer, (st_t *)sd_void);
+	RETURN_IF(!cmp_f || !elem_size || !buffer, st_void);
 	t = (st_t *)buffer;
 	sd_reset((sd_t *)t, sizeof(st_t), elem_size, max_size, ext_buf,
 		 S_FALSE);
@@ -241,8 +243,11 @@ st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
 {
 	size_t alloc_size = sd_alloc_size_raw(sizeof(st_t), elem_size,
 					      init_size, S_FALSE);
-	return st_alloc_raw(cmp_f, S_FALSE, s_malloc(alloc_size), elem_size,
-			    init_size);
+	void *buf = s_malloc(alloc_size);
+	st_t *t = st_alloc_raw(cmp_f, S_FALSE, buf, elem_size, init_size);
+	if (!t || t == st_void)
+		s_free(buf);
+	return t;
 }
 
 /*

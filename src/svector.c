@@ -130,8 +130,11 @@ static sv_t *sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
 {
 	const size_t alloc_size = sd_alloc_size_raw(sizeof(sv_t), elem_size,
 						    init_size, S_FALSE);
-	return sv_alloc_raw(t, S_FALSE, s_malloc(alloc_size),
-			    elem_size, init_size, f);
+	void *buf = s_malloc(alloc_size);
+	sv_t *v = sv_alloc_raw(t, S_FALSE, buf, elem_size, init_size, f);
+	if (!v || v == sv_void)
+		s_free(buf);
+	return v;
 }
 
 static void sv_copy_elems(sv_t *v, const size_t v_off, const sv_t *src,
