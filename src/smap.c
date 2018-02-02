@@ -234,7 +234,7 @@ S_INLINE sbool_t sm_chk_t(const sm_t *m, int t)
 
 S_INLINE sbool_t sm_i32_range(const int64_t k)
 {
-	return k >= SINT32_MIN && k <= SINT32_MAX ? S_TRUE : S_FALSE;
+	return k >= INT32_MIN && k <= INT32_MAX ? S_TRUE : S_FALSE;
 }
 
 SM_ENUM_INORDER_XX(sm_itr_ii32, sm_it_ii32_t, SM_II32, int32_t,
@@ -705,14 +705,13 @@ sbool_t sm_delete_i(sm_t *m, const int64_t k)
 		n = (const stn_t *)&n_i32;
 		break;
 	case SM0_U32: case SM0_UU32:
-		RETURN_IF(k > SUINT32_MAX, S_FALSE);
+		RETURN_IF(k > UINT32_MAX, S_FALSE);
 		n_u32.k = (uint32_t)k;
 		n = (const stn_t *)&n_u32;
 		break;
-	case SM0_IS:
-		callback = aux_is_delete;
-		/* don't break */
-	case SM0_I: case SM0_II: case SM0_IP:
+	case SM0_IS: case SM0_I: case SM0_II: case SM0_IP:
+		if (m->d.sub_type == SM0_IS)
+			callback = aux_is_delete;
 		n_i64.k = k;
 		n = (const stn_t *)&n_i64;
 		break;

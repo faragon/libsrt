@@ -59,6 +59,18 @@ extern "C" {
 #ifndef WCHAR_MAX
 #define WCHAR_MAX	((wchar_t)-1)
 #endif
+#if defined(__CYGWIN__) && !defined(UINTPTR_MAX)
+	#define UINTPTR_MAX 0xffffffff
+#endif
+#ifndef UINT32_MAX
+	#define UINT32_MAX ((uint32_t)-1)
+#endif
+#ifndef INT32_MAX
+	#define INT32_MAX ((int32_t)0x7fffffff)
+#endif
+#ifndef INT32_MIN
+	#define INT32_MIN ((int32_t)0x80000000)
+#endif
 
 /*
  * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
@@ -113,22 +125,12 @@ extern "C" {
 #else
 	#define S_INLINE static
 #endif
-
 #if !defined(S_C99_SUPPORT) && !defined(_MSC_VER) && !defined(__cplusplus)
 	int snprintf(char *str, size_t size, const char *format, ...);
 	int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
-
 #if defined(S_MODERN_COMPILER) && !defined(_MSC_VER)
 	#define S_POSIX_LOCALE_SUPPORT
-#endif
-
-#ifndef offsetof
-	#define offsetof(s, m) ((size_t)(&((s *)0)->m))
-#endif
-
-#if defined(__CYGWIN__) && !defined(UINTPTR_MAX)
-	#define UINTPTR_MAX 0xffffffff
 #endif
 
 /*
@@ -146,8 +148,8 @@ extern "C" {
  */
 #define S_NBIT(n) (1 << (n))
 #define S_NBIT64(n) ((uint64_t)1 << (n))
-#define S_NBITMASK(n) ((n) >= 32 ? 0xffffffff : S_NBIT(n) - 1)
-#define S_NBITMASK64(n) ((n) >= 64 ? 0xffffffffffffffffLL : S_NBIT64(n) - 1)
+#define S_NBITMASK(n) (S_NBIT(n) - 1)
+#define S_NBITMASK64(n) (S_NBIT64(n) - 1)
 #if UINTPTR_MAX <= 0xffffffff
 #define S_NBITMASK32(n) (((S_NBIT(n - 1) - 1) << 1) | 1)
 #else
@@ -232,14 +234,6 @@ union s_u64 {
 #define S_FALSE		0
 #define S_CRC32_INIT	0
 #define S_ADLER32_INIT	1
-#define SINT32_MAX	((int32_t)0x7fffffff)
-#define SINT32_MIN	((int32_t)0x80000000)
-#define SUINT32_MAX	((uint32_t)-1)
-#define SUINT32_MIN	0
-#define SINT64_MAX	((int64_t)0x7fffffffffffffff)
-#define SINT64_MIN	((int64_t)0x8000000000000000)
-#define SUINT64_MAX	((uint64_t)-1)
-#define SUINT64_MIN	0
 
 /*
  * Variable argument helpers
@@ -342,7 +336,9 @@ S_INLINE void s_free(void *ptr)
     defined(__ppc__) || defined(__POWERPC__) || defined(__powerpc__) ||	\
     defined(_M_AMD64) || defined(_M_IX86)) &&				\
     (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_7M__))
-	#define S_UNALIGNED_MEMORY_ACCESS
+	#ifndef S_DISABLE_UNALIGNED_OPTIMIZATIONS
+		#define S_UNALIGNED_MEMORY_ACCESS
+	#endif
 #endif
 
 #if defined(S_FORCE_DISABLE_UNALIGNED) && defined(S_UNALIGNED_MEMORY_ACCESS)
@@ -363,11 +359,15 @@ S_INLINE void s_free(void *ptr)
     defined(__sparc__) && defined(__LITTLE_ENDIAN_DATA__) ||		    \
     defined(__PPC__) && (defined(_LITTLE_ENDIAN) && _LITTLE_ENDIAN) ||	    \
     defined(__IEEE_LITTLE_ENDIAN) || defined(_M_AMD64) || defined(_M_IX86)
-	#define S_IS_LITTLE_ENDIAN 1
+	#ifdef S_DISABLE_LE_OPTIMIZATIONS
+		#define S_ALLOW_LE_OPTIMIZATIONS 0
+	#else
+		#define S_ALLOW_LE_OPTIMIZATIONS 1
+	#endif
 #endif
 
-#ifndef S_IS_LITTLE_ENDIAN
-	#define S_IS_LITTLE_ENDIAN 0
+#ifndef S_ALLOW_LE_OPTIMIZATIONS
+	#define S_ALLOW_LE_OPTIMIZATIONS 0
 #endif
 
 #ifdef S_UNALIGNED_MEMORY_ACCESS
@@ -424,7 +424,7 @@ S_INLINE void S_ST_SZT(void *a, size_t v)
 
 S_INLINE uint16_t S_LD_LE_U16(const void *a)
 {
-#if S_IS_LITTLE_ENDIAN
+#if S_ALLOW_LE_OPTIMIZATIONS
 	return S_LD_U16(a);
 #else
 	const uint8_t *p = (const uint8_t *)a;
@@ -434,7 +434,7 @@ S_INLINE uint16_t S_LD_LE_U16(const void *a)
 
 S_INLINE void S_ST_LE_U16(void *a, uint16_t v)
 {
-#ifdef S_IS_LITTLE_ENDIAN
+#ifdef S_ALLOW_LE_OPTIMIZATIONS
 	S_ST_U16(a, v);
 #else
 	uint8_t *p = (uint8_t *)a;
@@ -445,7 +445,7 @@ S_INLINE void S_ST_LE_U16(void *a, uint16_t v)
 
 S_INLINE uint32_t S_LD_LE_U32(const void *a)
 {
-#if S_IS_LITTLE_ENDIAN
+#if S_ALLOW_LE_OPTIMIZATIONS
 	return S_LD_U32(a);
 #else
 	const uint8_t *p = (const uint8_t *)a;
@@ -455,7 +455,7 @@ S_INLINE uint32_t S_LD_LE_U32(const void *a)
 
 S_INLINE void S_ST_LE_U32(void *a, uint32_t v)
 {
-#if S_IS_LITTLE_ENDIAN
+#if S_ALLOW_LE_OPTIMIZATIONS
 	S_ST_U32(a, v);
 #else
 	uint8_t *p = (uint8_t *)a;
@@ -468,18 +468,18 @@ S_INLINE void S_ST_LE_U32(void *a, uint32_t v)
 
 S_INLINE uint64_t S_LD_LE_U64(const void *a)
 {
-#if S_IS_LITTLE_ENDIAN
+#if S_ALLOW_LE_OPTIMIZATIONS
 	return S_LD_U64(a);
 #else
 	const uint8_t *p = (const uint8_t *)a;
-	return s_ld_le_u32(p) |
-	       ((uint64_t)s_ld_le_u32(p + 4) << 32);
+	return S_LD_LE_U32(p) |
+	       ((uint64_t)S_LD_LE_U32(p + 4) << 32);
 #endif
 }
 
 S_INLINE void S_ST_LE_U64(void *a, uint64_t v)
 {
-#if S_IS_LITTLE_ENDIAN
+#if S_ALLOW_LE_OPTIMIZATIONS
 	S_ST_U64(a, v);
 #else
 	uint8_t *p = (uint8_t *)a;
@@ -613,7 +613,7 @@ void s_memset16(void *o, const void *s, size_t n);
 #define BUILD_S_MSB(FN, T)					\
 	S_INLINE T FN(T v)					\
 	{							\
-		int i;						\
+		size_t i;					\
 		for (i = 1; i < sizeof(T) * 8 / 2; i <<= 1)	\
 			v |= (v >> i);				\
 		return v & ~(v >> 1);				\
