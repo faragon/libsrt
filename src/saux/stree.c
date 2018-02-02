@@ -626,7 +626,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		 * would mean that there is some bug in the insert/delete
 		 * rebalanzing code.
 		 */
-		S_ASSERT(tp.max_level < (2 * (slog2(ts) + 1)));
+		S_ASSERT(tp.max_level < (ssize_t)(2 * (slog2(ts) + 1)));
 		switch (p[tp.level].s) {
 		case STS_ScanStart:
 			if (f_pre) {
