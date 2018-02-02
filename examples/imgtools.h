@@ -14,7 +14,6 @@
 #define IMGTOOLS_H
 
 #include "../src/libsrt.h"
-#include "ifilters.h"
 #include "rgbi.h"
 
 #define DEBUG_IMGC

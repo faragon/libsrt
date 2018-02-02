@@ -17,14 +17,14 @@ struct RGB_Info
 	size_t width, height, bpp, Bpp, chn, bpc, Bpc, row_size, bmp_size;
 };
 
-static sbool_t rgbi_valid(const struct RGB_Info *ri)
+S_INLINE sbool_t rgbi_valid(const struct RGB_Info *ri)
 {
 	return ri && ri->chn > 0 && ri->bpp >= 8 && ri->Bpp > 0 &&
 	       ri->width > 0 && ri->height > 0 && ri->row_size > 0 ? S_TRUE :
 								     S_FALSE;
 }
 
-static void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
+S_INLINE void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
 		     size_t c)
 {
 	if (i) {
@@ -40,7 +40,7 @@ static void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
 	}
 }
 
-static sbool_t rgbi_cmp(const struct RGB_Info *a, const struct RGB_Info *b)
+S_INLINE sbool_t rgbi_cmp(const struct RGB_Info *a, const struct RGB_Info *b)
 {
 	return a && b && a->width == b->width &&
 	       a->height == b->height && a->bpp == b->bpp &&

@@ -11,6 +11,7 @@
  */
 
 #include "imgtools.h"
+#include "ifilters.h"
 
 enum ImgTypes file_type(const char *file_name)
 {
