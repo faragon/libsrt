@@ -69,11 +69,10 @@ int main(int argc, const char **argv)
 		f32 = ss_adler32r;
 	}
 	if (f32) {
-		uint32_t buf_size = 8192;
+		in = ss_alloca(IBUF_SIZE);
 		while (ss_read(&in, stdin, IBUF_SIZE))
 			acc = f32(in, acc, 0, S_NPOS);
 		printf("%08x\n", acc);
-		ss_free(&in);
 		return 0;
 	}
 	if (!strncmp(argv[1], "-eb", 3))
