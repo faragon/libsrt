@@ -56,6 +56,15 @@ extern "C" {
 #include <wctype.h>
 #include <wchar.h>
 
+/*
+ * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
+ * (WG14/N1256 Committee Draft 20070907 ISO/IEC 9899:TC3, 7.18.2, page 257)
+ */
+#ifdef __cplusplus
+#define __STDC_LIMIT_MACROS
+#endif
+#include <stdint.h>
+
 #ifndef WCHAR_MAX
 #define WCHAR_MAX	((wchar_t)-1)
 #endif
@@ -71,15 +80,6 @@ extern "C" {
 #ifndef INT32_MIN
 	#define INT32_MIN ((int32_t)0x80000000)
 #endif
-
-/*
- * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
- * (WG14/N1256 Committee Draft 20070907 ISO/IEC 9899:TC3, 7.18.2, page 257)
- */
-#ifdef __cplusplus
-#define __STDC_LIMIT_MACROS
-#endif
-#include <stdint.h>
 
 /*
  * Context
