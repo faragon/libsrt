@@ -111,6 +111,23 @@ size_t sc_wc_to_utf8_size(const int32_t c)
 		c <= 0x1fffff? 4 : c <= 0x3ffffff? 5 : 6;
 }
 
+#define SC_WC2UTF8_x(s, off, len, c, n)	\
+	s[off + n - 1] = (char)(SSU8_SX | ((c >> (6 * (len - n))) & SSUB_MX));
+#define SC_WC2UTF8_2(s, off, len, c)	\
+	SC_WC2UTF8_x(s, off, len, c, 2)
+#define SC_WC2UTF8_3(s, off, len, c)	\
+	SC_WC2UTF8_2(s, off, len, c)	\
+	SC_WC2UTF8_x(s, off, len, c, 3)
+#define SC_WC2UTF8_4(s, off, len, c)	\
+	SC_WC2UTF8_3(s, off, len, c)	\
+	SC_WC2UTF8_x(s, off, len, c, 4)
+#define SC_WC2UTF8_5(s, off, len, c)	\
+	SC_WC2UTF8_3(s, off, len, c)	\
+	SC_WC2UTF8_x(s, off, len, c, 5)
+#define SC_WC2UTF8_6(s, off, len, c)	\
+	SC_WC2UTF8_3(s, off, len, c)	\
+	SC_WC2UTF8_x(s, off, len, c, 6)
+
 size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
 		     const size_t max_off)
 {
@@ -118,74 +135,87 @@ size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
 	if (s && off < max_off) {
 		switch (len) {
 		case 1:	s[off] = (char)(SSU8_S1 | (c & 0x7f)); break;
-		case 2:	s[off] = (char)(SSU8_S2 | (c >> 6));  break;
-		case 3:	s[off] = (char)(SSU8_S3 | (c >> 12)); break;
-		case 4:	s[off] = (char)(SSU8_S4 | (c >> 18)); break;
-		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24)); break;
-		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30)); break;
-		}
-		switch (len) {
-		case 6: s[off+5] = (char)(SSU8_SX |
-					  ((c >> (6 * (len-6))) & SSUB_MX));
-		case 5: s[off+4] = (char)(SSU8_SX |
-					  ((c >> (6 * (len-5))) & SSUB_MX));
-		case 4: s[off+3] = (char)(SSU8_SX |
-					  ((c >> (6 * (len-4))) & SSUB_MX));
-		case 3: s[off+2] = (char)(SSU8_SX |
-					  ((c >> (6 * (len-3))) & SSUB_MX));
-		case 2: s[off+1] = (char)(SSU8_SX |
-					  ((c >> (6 * (len-2))) & SSUB_MX));
+		case 2:	s[off] = (char)(SSU8_S2 | (c >> 6)); SC_WC2UTF8_2(s, off, len, c); break;
+		case 3:	s[off] = (char)(SSU8_S3 | (c >> 12)); SC_WC2UTF8_3(s, off, len, c); break;
+		case 4:	s[off] = (char)(SSU8_S4 | (c >> 18)); SC_WC2UTF8_4(s, off, len, c); break;
+		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24)); SC_WC2UTF8_5(s, off, len, c); break;
+		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30)); SC_WC2UTF8_6(s, off, len, c); break;
 		}
 	}
 	return len;
 }
+
+#define SC_U82WC_x(o, s, off, size, n)				\
+	o |= (s[off + n - 1] & SSUB_MX) << (6 * (size - n))
+#define SC_U82WC_2(o, s, off, size)	\
+	SC_U82WC_x(o, s, off, size, 2)
+#define SC_U82WC_3(o, s, off, size)	\
+	SC_U82WC_2(o, s, off, size);	\
+	SC_U82WC_x(o, s, off, size, 3)
+#define SC_U82WC_4(o, s, off, size)	\
+	SC_U82WC_3(o, s, off, size);	\
+	SC_U82WC_x(o, s, off, size, 4)
+#define SC_U82WC_5(o, s, off, size)	\
+	SC_U82WC_4(o, s, off, size);	\
+	SC_U82WC_x(o, s, off, size, 5)
+#define SC_U82WC_6(o, s, off, size)	\
+	SC_U82WC_5(o, s, off, size);	\
+	SC_U82WC_x(o, s, off, size, 6)
+#define SC_U82WC_RETURN(out, outp, size)	\
+	if (outp)				\
+		*(outp) = out;			\
+	return size
 
 /* BEHAVIOR: always return a character. For broken UTF-8, return the first
    byte as character. */
 size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
 		     int32_t *unicode_out, int *encoding_errors)
 {
-	size_t c_sz = 1;
-	int32_t out = 0;
+	int32_t c;
 	if (s && off < max_off && unicode_out) {
-		const int c = s[off];
+		c = s[off];
 		if (SSU8_SZ1(c)) {
-			out = c;
+			SC_U82WC_RETURN(c, unicode_out, 1);
 		} else if (SSU8_SZ2(c)) {
-			c_sz = 2;
-			out = c & 0x1f;
-		} else if (SSU8_SZ3(c)) {
-			c_sz = 3;
-			out = c & 0x0f;
-		} else  if (SSU8_SZ4(c)) {
-			c_sz = 4;
-			out = c & 0x07;
-		} else if (SSU8_SZ5(c)) {
-			c_sz = 5;
-			out = c & 0x03;
-		} else if (SSU8_SZ6(c)) {
-			c_sz = 6;
-			out = c & 0x01;
-		}
-		if ((off + c_sz) <= max_off) {
-			out <<= (6 * (c_sz - 1));
-			switch (c_sz) {
-			case 6: out|= (s[off+5] & SSUB_MX);
-			case 5: out|= (s[off+4] & SSUB_MX) << (6 * (c_sz - 5));
-			case 4: out|= (s[off+3] & SSUB_MX) << (6 * (c_sz - 4));
-			case 3: out|= (s[off+2] & SSUB_MX) << (6 * (c_sz - 3));
-			case 2: out|= (s[off+1] & SSUB_MX) << (6 * (c_sz - 2));
+			if ((off + 2) <= max_off) {
+				c &= 0x1f;
+				c <<= (6 * (2 - 1));
+				SC_U82WC_2(c, s, off, 2);
+				SC_U82WC_RETURN(c, unicode_out, 2);
 			}
-		} else {	/* Broken UTF8: return raw character */
-			if (encoding_errors)
-				*encoding_errors = 1;
-			c_sz = 1;
-			out = c;
+		} else if (SSU8_SZ3(c)) {
+			if ((off + 3) <= max_off) {
+				c &= 0x0f;
+				c <<= (6 * (3 - 1));
+				SC_U82WC_3(c, s, off, 3);
+				SC_U82WC_RETURN(c, unicode_out, 3);
+			}
+		} else  if (SSU8_SZ4(c)) {
+			if ((off + 4) <= max_off) {
+				c &= 0x07;
+				c <<= (6 * (4 - 1));
+				SC_U82WC_4(c, s, off, 4);
+				SC_U82WC_RETURN(c, unicode_out, 4);
+			}
+		} else if (SSU8_SZ5(c)) {
+			if ((off + 5) <= max_off) {
+				c &= 0x03;
+				c <<= (6 * (5 - 1));
+				SC_U82WC_5(c, s, off, 5);
+				SC_U82WC_RETURN(c, unicode_out, 5);
+			}
+		} else if (SSU8_SZ6(c)) {
+			if ((off + 6) <= max_off) {
+				c &= 0x01;
+				c <<= (6 * (6 - 1));
+				SC_U82WC_6(c, s, off, 6);
+				SC_U82WC_RETURN(c, unicode_out, 6);
+			}
 		}
 	}
-	if (unicode_out)
-		*unicode_out = out;
-	return c_sz;
+	if (encoding_errors)
+		*encoding_errors = 1;
+	SC_U82WC_RETURN(0, unicode_out, 1);
 }
 
 size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,

@@ -139,7 +139,8 @@ size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o)
 	j = ssod4 + (tail ? 4 : 0);
 	out_size = j;
 	switch (tail) {
-	case 2: si0 = s[ssd3], si1 = s[ssd3 + 1];
+	case 2: si0 = s[ssd3];
+		si1 = s[ssd3 + 1];
 		o[j - 4] = b64e[EB64C1(si0)];
 		o[j - 3] = b64e[EB64C2(si0, si1)];
 		o[j - 2] = b64e[EB64C3(si1, 0)];
@@ -154,7 +155,9 @@ size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o)
 		j -= 4;
 	}
 	for (; i > 0; i -= 3, j -= 4) {
-		si0 = s[i - 3], si1 = s[i - 2], si2 = s[i - 1];
+		si0 = s[i - 3];
+		si1 = s[i - 2];
+		si2 = s[i - 1];
 		o[j - 4] = b64e[EB64C1(si0)];
 		o[j - 3] = b64e[EB64C2(si0, si1)];
 		o[j - 2] = b64e[EB64C3(si1, si2)];
@@ -923,7 +926,7 @@ static size_t senc_lz_aux(const uint8_t *s, const size_t ss, uint8_t *o0,
 	 */
 	if (ss < 8) {
 		senc_lz_store_lit(&o, s, ss);
-		return o - o0;
+		return (size_t)(o - o0);
 	}
 	/*
 	 * Hash size is kept proportional to the input buffer size, in order to
@@ -983,7 +986,7 @@ static size_t senc_lz_aux(const uint8_t *s, const size_t ss, uint8_t *o0,
 		senc_lz_store_lit(&o, s + plit, ss - plit);
 	if (refsx)
 		s_free(refsx);
-	return o - o0;
+	return (size_t)(o - o0);
 }
 
 size_t senc_lz(const uint8_t *s, const size_t ss, uint8_t *o0)
@@ -1026,9 +1029,11 @@ S_INLINE void s_reccpy(uint8_t *o, const size_t dist, size_t n)
 	case 2: s_reccpy1(o, dist, 4);
 		s_memset32(o + 4, s, (n / 4));
 		return;
-	case 6: if (memcmp(s, s + 3, 3))
+	case 3:
+	case 6:
+		if (dist == 6 && memcmp(s, s + 3, 3))
 			break;
-	case 3:	s_memset24(o, s, (n / 3) + 1);
+		s_memset24(o, s, (n / 3) + 1);
 		return;
 	case 4:	s_memset32(o, s, (n / 4) + 1);
 		return;

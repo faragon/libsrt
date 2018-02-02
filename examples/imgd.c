@@ -24,7 +24,6 @@ int main(int argc, const char **argv)
 	int exit_code = 2;
 	FILE *fin = NULL, *fout = NULL;
 	const char *exit_msg = "not enough parameters";
-	int filter = F_None;
 	sbool_t ro;
 	enum ImgTypes t_in1, t_in2, t_out;
 	#define IMGC_XTEST(test, m, c)	\

@@ -597,27 +597,19 @@ enum eTMode
  * Aux space: using the stack -i.e. "free"-, O(2 * log(n))
  */
 
+#define RBT_MAX_DEPTH_LOG2 65
+
 static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			 const enum eTMode m)
 {
-	size_t ts, rbt_max_depth;
-	struct STreeScan *p;
+	size_t ts;
+	struct STreeScan p[2 * RBT_MAX_DEPTH_LOG2]; /* 2 * (log2(ts_max) + 1) */
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
 	int f_pre, f_ino, f_post;
 	const stn_t *cn_aux;
 	RETURN_IF(!t, -1);
 	ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
-	rbt_max_depth = 2 * (slog2(ts) + 1); /* +1: round error */
-	/*
-	 * DF path length takes twice the logarithm of the number of nodes,
-	 * so it will fit always in the stack (e.g. (2^32)-1 [(2^64)-1] nodes
-	 * would require allocating less than 1KB [2KB] of stack space for the
-	 * path)
-	 */
-	p = (struct STreeScan *)s_alloca(sizeof(struct STreeScan) *
-					       (rbt_max_depth + 3));
-	RETURN_IF(!p, -1);
 	if (f)
 		f(&tp);
 	p[0].p = ST_NIL;
@@ -634,7 +626,7 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 		 * would mean that there is some bug in the insert/delete
 		 * rebalanzing code.
 		 */
-		S_ASSERT(tp.max_level < (ssize_t)rbt_max_depth);
+		S_ASSERT(tp.max_level < (2 * (slog2(ts) + 1)));
 		switch (p[tp.level].s) {
 		case STS_ScanStart:
 			if (f_pre) {
@@ -695,12 +687,11 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 			}
 			continue;
 		case STS_ScanRight:
-			if (f_post) {
+		case STS_ScanDone:
+			if (p[tp.level].s == STS_ScanRight && f_post) {
 				tp.c = p[tp.level].c;
 				f(&tp);
 			}
-			/* don't break */
-		case STS_ScanDone:
 			p[tp.level].s = STS_ScanDone;
 			tp.level--;
 			continue;

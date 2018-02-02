@@ -54,6 +54,12 @@ struct SStringRef
 	const char *cstr;
 };
 
+struct SStringRefRW
+{
+	struct SString s;
+	char *str;
+};
+
 #define SS_RANGE	(sizeof(size_t) - sizeof(ss_t))
 #define EMPTY_SS	{ EMPTY_SDataFull, 0 }
 
@@ -839,7 +845,7 @@ S_INLINE char *ss_get_buffer(ss_t *s)
 	/*
 	 * Constness breaking will be addressed once the ss_to_c gets fixed.
 	 */
-	return ss_is_ref(s) ? (char *)((struct SStringRef *)s)->cstr :
+	return ss_is_ref(s) ? ((struct SStringRefRW *)s)->str :
 			      sdx_get_buffer((sd_t *)s);
 }
 
