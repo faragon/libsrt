@@ -93,7 +93,6 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 {
 	size_t pos, mask;
 	const unsigned char *buf;
-	S_ASSERT(b);
 	RETURN_IF(!b, 0);
 	pos = nth / 8;
 	mask = (size_t)1 << (nth % 8);
@@ -184,7 +183,7 @@ S_INLINE size_t sb_reserve(sb_t **b, const size_t max_elems)
 /* #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|1;2| */
 S_INLINE sb_t *sb_shrink(sb_t **b)
 {
-	RETURN_IF(!b || !*b, NULL); /* BEHAVIOR */ /* TODO: null bitset */
+	RETURN_IF(!b || !*b, NULL); /* BEHAVIOR */
 	if (!sb_popcount(*b))
 		sv_set_size(*b, 0);
 	return sv_shrink(b);
