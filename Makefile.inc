@@ -53,9 +53,6 @@ endif
 ifdef HAS_JPEG
 	HAS_JPG = $(HAS_JPEG)
 endif
-ifndef HAS_LL1
-	HAS_LL1 = 0
-endif
 
 # Configure compiler context
 
@@ -239,10 +236,6 @@ endif
 ifeq ($(HAS_JPG), 1)
 	COMMON_FLAGS += -DHAS_JPG
 	LDLIBS += -ljpeg
-endif
-
-ifeq ($(HAS_LL1), 1)
-	COMMON_FLAGS += -DHAS_LL1
 endif
 
 ifeq ($(GNUC), 1)
