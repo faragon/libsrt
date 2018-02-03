@@ -134,12 +134,23 @@ size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
 	const size_t len = sc_wc_to_utf8_size(c);
 	if (s && off < max_off) {
 		switch (len) {
-		case 1:	s[off] = (char)(SSU8_S1 | (c & 0x7f)); break;
-		case 2:	s[off] = (char)(SSU8_S2 | (c >> 6)); SC_WC2UTF8_2(s, off, len, c); break;
-		case 3:	s[off] = (char)(SSU8_S3 | (c >> 12)); SC_WC2UTF8_3(s, off, len, c); break;
-		case 4:	s[off] = (char)(SSU8_S4 | (c >> 18)); SC_WC2UTF8_4(s, off, len, c); break;
-		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24)); SC_WC2UTF8_5(s, off, len, c); break;
-		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30)); SC_WC2UTF8_6(s, off, len, c); break;
+		case 1:	s[off] = (char)(SSU8_S1 | (c & 0x7f));
+			break;
+		case 2:	s[off] = (char)(SSU8_S2 | (c >> 6));
+			SC_WC2UTF8_2(s, off, len, c);
+			break;
+		case 3:	s[off] = (char)(SSU8_S3 | (c >> 12));
+			SC_WC2UTF8_3(s, off, len, c);
+			break;
+		case 4:	s[off] = (char)(SSU8_S4 | (c >> 18));
+			SC_WC2UTF8_4(s, off, len, c);
+			break;
+		case 5:	s[off] = (char)(SSU8_S5 | (c >> 24));
+			SC_WC2UTF8_5(s, off, len, c);
+			break;
+		case 6:	s[off] = (char)(SSU8_S6 | (c >> 30));
+			SC_WC2UTF8_6(s, off, len, c);
+			break;
 		}
 	}
 	return len;
