@@ -16,21 +16,41 @@ extern "C" {
  * #DOC Supported key/value modes (enum eSM_Type):
  * #DOC
  * #DOC
- * #DOC 	SM_II32: 32-bit integer key, 32-bit integer value
+ * #DOC	SM_II32: 32-bit integer key, 32-bit integer value
  * #DOC
- * #DOC 	SM_UU32: 32-bit unsigned int key, 32-bit unsigned int value
+ * #DOC	SM_UU32: 32-bit unsigned int key, 32-bit unsigned int value
  * #DOC
- * #DOC 	SM_II: 64-bit int key, 64-bit int value
+ * #DOC	SM_II: 64-bit int key, 64-bit int value
  * #DOC
- * #DOC 	SM_IS: 64-bit int key, string value
+ * #DOC	SM_IS: 64-bit int key, string value
  * #DOC
- * #DOC 	SM_IP: 64-bit int key, pointer value
+ * #DOC	SM_IP: 64-bit int key, pointer value
  * #DOC
- * #DOC 	SM_SI: 64-bit string key, 64-bit int value
+ * #DOC	SM_SI: 64-bit string key, 64-bit int value
  * #DOC
- * #DOC 	SM_SS: string key, string value
+ * #DOC	SM_SS: string key, string value
  * #DOC
- * #DOC 	SM_SP: string key, pointer value
+ * #DOC	SM_SP: string key, pointer value
+ * #DOC
+ * #DOC
+ * #DOC Callback types for the sm_itr_*() functions:
+ * #DOC
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_ii32_t)(int32_t k, int32_t v, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_uu32_t)(uint32_t k, uint32_t v, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_ii_t)(int64_t k, int64_t v, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_is_t)(int64_t k, const ss_t *, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_ip_t)(int64_t k, const void *, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_si_t)(const ss_t *, int64_t v, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_ss_t)(const ss_t *, const ss_t *, void *context);
+ * #DOC
+ * #DOC	typedef sbool_t (*sm_it_sp_t)(const ss_t *, const void *, void *context);
  *
  * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
