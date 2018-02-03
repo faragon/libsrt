@@ -80,6 +80,12 @@ extern "C" {
 #ifndef INT32_MIN
 	#define INT32_MIN ((int32_t)0x80000000)
 #endif
+#ifndef INT64_MAX
+	#define INT64_MAX ((int64_t)0x7fffffffffffffffLL)
+#endif
+#ifndef INT64_MIN
+	#define INT64_MIN ((int64_t)0x8000000000000000LL)
+#endif
 
 /*
  * Context
@@ -181,10 +187,12 @@ extern "C" {
 		#define FMT_ZI "%zi"
 		#define FMT_ZU "%zu"
 		#define FMT_I "%" PRId64
+		#define FMT_U "%" PRIu64
 	#else
 		#define FMT_ZI "%li"
 		#define FMT_ZU "%lu"
 		#define FMT_I "%li"
+		#define FMT_U "%lu"
 	#endif
 	#define FMTSZ_T ssize_t
 	#define FMTSSZ_T size_t
