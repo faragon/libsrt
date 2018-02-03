@@ -45,7 +45,7 @@ EOBJECTS= $(ESOURCES:.c=.o)
 LIBSRT	= libsrt.a
 ELIBSRT = elibsrt.a
 TEST	= stest
-EXAMPLES = counter enc table imgc imgd
+EXAMPLES = counter enc histogram imgc imgd table
 ifeq (,$(findstring tcc,$(CC)))
 	# Add CPP targets only if not using TCC
 	EN_BENCH = 1
