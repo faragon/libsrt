@@ -163,6 +163,7 @@ extern "C" {
 #endif
 #define RETURN_IF(a, v) if (a) return (v); else {}
 #define ASSERT_RETURN_IF(a, v) { S_ASSERT(!(a)); RETURN_IF(a, v); }
+#define S_UNUSED(v) (void)(v)
 
 /*
  * Types
