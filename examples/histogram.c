@@ -68,18 +68,18 @@ int main(int argc, const char **argv)
 		case 3:	CNTLOOP(3, S_LD_LE_U32(buf + i) & 0xffffff,
 				sm_inc_uu32);
 			break;
-		case 4:	CNTLOOP(4, S_LD_U32(buf + i), sm_inc_uu32);
+		case 4:	CNTLOOP(4, S_LD_LE_U32(buf + i), sm_inc_uu32);
 			break;
-		case 5:	CNTLOOP(5, S_LD_U64(buf + i) & 0xffffffffffLL,
+		case 5:	CNTLOOP(5, S_LD_LE_U64(buf + i) & 0xffffffffffLL,
 				sm_inc_ii);
 			break;
-		case 6:	CNTLOOP(6, S_LD_U64(buf + i) & 0xffffffffffffLL,
+		case 6:	CNTLOOP(6, S_LD_LE_U64(buf + i) & 0xffffffffffffLL,
 				sm_inc_ii);
 			break;
-		case 7:	CNTLOOP(7, S_LD_U64(buf + i) & 0xffffffffffffffLL,
+		case 7:	CNTLOOP(7, S_LD_LE_U64(buf + i) & 0xffffffffffffffLL,
 				sm_inc_ii);
 			break;
-		case 8:	CNTLOOP(8, S_LD_U64(buf + i), sm_inc_ii);
+		case 8:	CNTLOOP(8, S_LD_LE_U64(buf + i), sm_inc_ii);
 			break;
 		default:
 			goto done;
