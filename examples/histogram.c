@@ -13,9 +13,8 @@ static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr, "Histogram (libsrt example). Returns: list of elements "
-		"and its count\nError [%i] Syntax: %s unit_size "
-		"diff_max_stop\n(1 <= unit_size <= 4; diff_max_stop = 0: no "
-		"max, != 0: max)\n"
+		"and its count\nError [%i] Syntax: %s element_size\n"
+		"(1 <= element_size <= 8)\n"
 		"Examples (e.g. color histogram):\n"
 		"%s 1 <in (1-byte element histogram, e.g. 8bpp bitmap)\n"
 		"%s 2 <in (2-byte element histogram, e.g. 16bpp bitmap)\n"
