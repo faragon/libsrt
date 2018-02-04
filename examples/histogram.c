@@ -13,30 +13,34 @@ static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr, "Histogram (libsrt example). Returns: list of elements "
-		"and its count\nError [%i] Syntax: %s element_size\n"
-		"(1 <= element_size <= 8)\n"
-		"Examples (e.g. color histogram):\n"
-		"%s 1 <in (1-byte element histogram, e.g. 8bpp bitmap)\n"
-		"%s 2 <in (2-byte element histogram, e.g. 16bpp bitmap)\n"
-		"%s 3 <in (3-byte element histogram, e.g. 24bpp bitmap)\n"
-		"%s 4 <in (4-byte element histogram, e.g. 32bpp bitmap)\n"
-		"%s 5 <in (5-byte element histogram)\n"
-		"%s 6 <in (6-byte element histogram)\n"
-		"%s 7 <in (7-byte element histogram)\n"
-		"%s 8 <in (8-byte element histogram)\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0);
+		"and its count\nError [%i] Syntax: %s element_size  "
+		"# (1 <= element_size <= 8)\n\nExamples:\n"
+		"%s 1 <in >h.txt  # (1-byte element histogram, e.g. 8bpp bitmap)\n"
+		"%s 2 <in >h.txt  # (2-byte element histogram, e.g. 16bpp bitmap)\n"
+		"%s 3 <in >h.txt  # (3-byte element histogram, e.g. 24bpp bitmap)\n"
+		"%s 4 <in >h.txt  # (4-byte element histogram, e.g. 32bpp bitmap)\n"
+		"%s 5 <in >h.txt  # (5-byte element histogram)\n"
+		"%s 6 <in >h.txt  # (6-byte element histogram)\n"
+		"%s 7 <in >h.txt  # (7-byte element histogram)\n"
+		"%s 8 <in >h.txt  # (8-byte element histogram)\n"
+		"head -c 256MB </dev/urandom | %s 1 >h.txt  # Check random gen. quality\n",
+		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
 static sbool_t cb32(uint32_t k, uint32_t v, void *context)
 {
-	printf("%u %u\n", (unsigned)k, (unsigned)v);
+	S_UNUSED(context);
+	printf("%08x %u\n", (unsigned)k, (unsigned)v);
+	return S_TRUE;
 }
 
 static sbool_t cb64(int64_t k, int64_t v, void *context)
 {
-	printf(FMT_U " " FMT_U "\n",
-	       (uint64_t)(k + 0x8000000000000000LL), (uint64_t)v);
+	S_UNUSED(context);
+	printf("%08x%08x " FMT_U "\n",
+	       (unsigned)(k >> 32), (unsigned)k, (uint64_t)v);
+	return S_TRUE;
 }
 
 int main(int argc, const char **argv)
@@ -44,7 +48,7 @@ int main(int argc, const char **argv)
 	sm_t *m;
 	size_t i, l;
 	int csize, exit_code;
-	uint8_t buf[2 * 3 * 4 * 5 * 7];
+	uint8_t buf[2 * 3 * 4 * 5 * 7]; /* buffer size: LCM(1..8) */
 	if (argc != 2)
 		return syntax_error(argv, 5);
 	csize = atoi(argv[1]);
