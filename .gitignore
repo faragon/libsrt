@@ -17,8 +17,14 @@
 *.lib
 # Executables
 *.exe
+bench
+counter
+enc
+histogram
+imgc
+imgd
 stest
-sbench
+table
 # Profiling
 *.gcda
 *.gcno
