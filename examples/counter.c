@@ -24,9 +24,9 @@ static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr, "Code counter (libsrt example). Returns: elements "
-		"processed, unique elements\nError [%i] Syntax: %s unit_size "
+		"processed, unique elements\n\nSyntax: %s unit_size "
 		"diff_max_stop\n(1 <= unit_size <= 4; diff_max_stop = 0: no "
-		"max, != 0: max)\n"
+		"max, != 0: max)\n\n"
 		"Examples (count colors, fast randomness test, etc.):\n"
 		"%s 1 0 <in  (count unique bytes)\n"
 		"%s 1 128 <in (count unique bytes, stop after 128)\n"
@@ -36,7 +36,7 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s 3 256  <in (count 3-byte unique elem., stop after 256)\n"
 		"%s 4 0 <in (count 4-byte unique elements, e.g. RGBA888)\n"
 		"%s 4 1000 <in (count 4-byte unique elem., stop after 1000)\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0);
+		v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 

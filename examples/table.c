@@ -67,8 +67,8 @@ static int exit_msg(const char **argv, const char *msg, const int code)
 {
 	const char *v0 = argv[0];
         fprintf(stderr, "Table import/export (libsrt example). Returns: 0: OK,"
-		" 1 syntax error, 2: input error\nError [%i]: %s\nSyntax: %s "
-		"-{c|h|j}{c|h|j}\n(where: c = csv, h = html, j = json)\n"
+		" 1 syntax error, 2: input error\n\nError [%i]: %s\nSyntax: %s "
+		"-{c|h|j}{c|h|j}\n(where: c = csv, h = html, j = json)\n\n"
 		"Examples:\n"
 		"%s -cc <in.csv >out.csv\n%s -ch <in.csv >out.html\n%s -cj "
 		"<in.csv >out.json\n"

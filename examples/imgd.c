@@ -89,12 +89,14 @@ static int exit_with_error(const char **argv, const char *msg,
 			   const int exit_code)
 {
 	const char *v0 = argv[0];
-	fprintf(stderr, "Error [%i]: %s\nSyntax: %s in1." FMT_IMGS_IN " in2."
+	fprintf(stderr,
+		"Image diff (libsrt example)\n\n"
+		"Error [%i]: %s\nSyntax: %s in1." FMT_IMGS_IN " in2."
 		FMT_IMGS_IN " [out." FMT_IMGS_OUT "]\nExit code 0: matching "
-		"images, 1: not matching.\nExamples:\n"
-		IF_PNG("\tDiff: %s input1.png input2.png output.ppm\n")
-		IF_JPG("\tDiff: %s input1.jpg input2.jpg output.tga\n")
-		"\tDiff: %s input1.ppm input2.tga output.tga\n",
+		"images, not 0: not matching or syntax error\n\nExamples:\n"
+		IF_PNG("%s i1.png i2.png o.ppm  # i1.png vs i2.png to o.ppm\n")
+		IF_JPG("%s i1.jpg i2.jpg o.tga  # i1.jpg vs i2.jpg to o.tga\n")
+		"%s i1.ppm i2.tga o.tga  # i1.ppm vs i2.tga to o.tga\n",
 		exit_code, msg, v0, IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA) v0);
 	return exit_code;
 }

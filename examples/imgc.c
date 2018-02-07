@@ -86,20 +86,23 @@ static int exit_with_error(const char **argv, const char *msg,
 			   const int exit_code)
 {
 	const char *v0 = argv[0];
-	fprintf(stderr, "Error [%i]: %s\nSyntax: %s in." FMT_IMGS_IN " [out."
-		FMT_IMGS_OUT " [filter]]\nExamples:\n"
-		"\tStats: %s input.pgm\n"
-		IF_PNG("\tConvert: %s input.png output.ppm\n")
-		IF_JPG("\tConvert: %s input.jpg output.tga\n")
-		"\tConvert: %s input.ppm output.tga\n"
-		"\tConvert + filter: %s input.ppm output.tga 5\n"
+	fprintf(stderr,
+		"Image conversion (libsrt example)\n\n"
+		"Error [%i]: %s\nSyntax: %s in." FMT_IMGS_IN " [out."
+		FMT_IMGS_OUT " [filter]]\n"
 		"Filters: 0 none, 1 left->right DPCM, 2 reverse of (1), "
 		"3 left->right xor DPCM,\n\t 4 reverse of (3), 5 up->down DPCM"
 		", 6 reverse of (5),\n\t 7 up->down xor DPCM, 8 reverse of (7)"
 		", 9 left/up/up-left average DPCM,\n\t 10 reverse of (9), "
 		"11 Paeth DPCM, 12 reverse of (11),\n\t 13 red substract, 14 "
 		"reverse of (13), 15 green substract, 16 reverse\n\t of (15), "
-		"17 blue substract, 18 reverse of (17)\n",
+		"17 blue substract, 18 reverse of (17)\n\n"
+		"Examples:\n"
+		"%s input.pgm  # Show image statistics\n"
+		IF_PNG("%s input.png output.ppm  # Convert png to ppm\n")
+		IF_JPG("%s input.jpg output.tga  # Convert jpg to tga\n")
+		"%s input.ppm output.tga  # Convert ppm to tga\n"
+		"%s input.ppm output.tga 5  # Convert ppm to tga + filter\n",
 		exit_code, msg, v0, v0, IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA)
 		v0, v0);
 	return exit_code;

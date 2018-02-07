@@ -23,8 +23,9 @@ static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
-		"Error [%i] Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
-		"-eu|-du|-ez|-dz|-crc32|-adler32]\nExamples:\n"
+		"Buffer encoding/decoding (libsrt example)\n\n"
+		"Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
+		"-eu|-du|-ez|-dz|-crc32|-adler32]\n\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
@@ -35,7 +36,7 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s -ezh <in >in.lz\n%s -dz <in.lz >out\n"
 		"%s -crc32 <in\n%s -crc32 <in >out\n"
 		"%s -adler32 <in\n%s -adler32 <in >out\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
+		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
 		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
