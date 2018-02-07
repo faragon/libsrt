@@ -13,7 +13,7 @@ static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr, "Histogram (libsrt example). Returns: list of elements "
-		"and its count\nError [%i] Syntax: %s element_size  "
+		"and its count\n\nSyntax: %s element_size  "
 		"# (1 <= element_size <= 8)\n\nExamples:\n"
 		"%s 1 <in >h.txt  # (1-byte element histogram, e.g. 8bpp bitmap)\n"
 		"%s 2 <in >h.txt  # (2-byte element histogram, e.g. 16bpp bitmap)\n"
@@ -24,7 +24,7 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s 7 <in >h.txt  # (7-byte element histogram)\n"
 		"%s 8 <in >h.txt  # (8-byte element histogram)\n"
 		"head -c 256MB </dev/urandom | %s 1 >h.txt  # Check random gen. quality\n",
-		exit_code, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
+		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
@@ -47,8 +47,11 @@ int main(int argc, const char **argv)
 {
 	sm_t *m;
 	size_t i, l;
+	uint32_t k32 = 0, kp32 = 0;
+	uint64_t k64 = 0, kp64 = 0;
+	size_t rep_cnt = 0;
 	int csize, exit_code;
-	uint8_t buf[2 * 3 * 4 * 5 * 7]; /* buffer size: LCM(1..8) */
+	uint8_t buf[2 * 3 * 4 * 5 * 7 * 16]; /* buffer size: LCM(1..8) */
 	if (argc != 2)
 		return syntax_error(argv, 5);
 	csize = atoi(argv[1]);
@@ -61,29 +64,51 @@ int main(int argc, const char **argv)
 		l = (l / (size_t)csize) * (size_t)csize;
 		if (!l)
 			break;
-		#define CNTLOOP(inc, k, f)		\
-			for (i = 0; i < l; i += inc)	\
-				f(&m, k, 1);
+		/*
+		 * Local optimization: instead of calling N times to the
+		 * map for the case of repeated elements, we keep the
+		 * count and set the counter for all the repeated
+		 * elements at once (3x speed-up for non random data).
+		 */
+		#define CNTLOOP(inc, k, ki, kip, f)		\
+			rep_cnt = 0;				\
+			for (i = 0; i < l; i += inc) {		\
+				ki = k;				\
+				if (ki == kip) {		\
+					rep_cnt++;		\
+					continue;		\
+				}				\
+				if (rep_cnt) {			\
+					f(&m, kip, rep_cnt);	\
+					rep_cnt = 0;		\
+				}				\
+				kip = ki;			\
+				f(&m, ki, 1);			\
+			}					\
+			if (rep_cnt)				\
+				f(&m, kip, rep_cnt)
 		switch (csize) {
-		case 1:	CNTLOOP(1, buf[i], sm_inc_uu32);
+		case 1:	CNTLOOP(1, buf[i], k32, kp32, sm_inc_uu32);
 			break;
-		case 2:	CNTLOOP(2, S_LD_LE_U16(buf + i), sm_inc_uu32);
+		case 2:	CNTLOOP(2, S_LD_LE_U16(buf + i),
+				k32, kp32, sm_inc_uu32);
 			break;
 		case 3:	CNTLOOP(3, S_LD_LE_U32(buf + i) & 0xffffff,
-				sm_inc_uu32);
+				k32, kp32, sm_inc_uu32);
 			break;
-		case 4:	CNTLOOP(4, S_LD_LE_U32(buf + i), sm_inc_uu32);
+		case 4:	CNTLOOP(4, S_LD_LE_U32(buf + i),
+				k32, kp32, sm_inc_uu32);
 			break;
 		case 5:	CNTLOOP(5, S_LD_LE_U64(buf + i) & 0xffffffffffLL,
-				sm_inc_ii);
+				k64, kp64, sm_inc_ii);
 			break;
 		case 6:	CNTLOOP(6, S_LD_LE_U64(buf + i) & 0xffffffffffffLL,
-				sm_inc_ii);
+				k64, kp64, sm_inc_ii);
 			break;
 		case 7:	CNTLOOP(7, S_LD_LE_U64(buf + i) & 0xffffffffffffffLL,
-				sm_inc_ii);
+				k64, kp64, sm_inc_ii);
 			break;
-		case 8:	CNTLOOP(8, S_LD_LE_U64(buf + i), sm_inc_ii);
+		case 8:	CNTLOOP(8, S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii);
 			break;
 		default:
 			goto done;
