@@ -562,9 +562,9 @@ size_t sdec_esc_squote(const uint8_t *s, const size_t ss,
  * x.1001 R16S  4
  * x.1101 R16S2 4
  * x.0010 R32   4
- * 0x0110 R24S  4
- * 0x1010 R24S2 4
- * 0x1110 L16   4
+ * x.0110 R24S  4
+ * x.1010 R24S2 4
+ * x.1110 L16   4
  * x.0011 R40   4
  * x.0111 R64   4
  * x.1011 L8    4
