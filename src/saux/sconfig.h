@@ -49,6 +49,7 @@ inline static void *_s_realloc(void *ptr, size_t size)
 	if (!ptr_next)
 		return NULL;
 	memcpy(ptr_next, ptr, size_prev);
+	memset(ptr, 0xfa, size_prev);
 	free(ptr);
 	return ptr_next;
 }
