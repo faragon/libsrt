@@ -74,7 +74,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 			sizes = pheap;					\
 		}							\
 		sizes[0] = STRLEN(s1);					\
-		extra_size = sizes[0];				\
+		extra_size = sizes[0];					\
 		va_start(ap, s1);					\
 		for (i = 1; i < nargs; i++) {				\
 			next = va_arg(ap, TYPE *);			\
@@ -85,7 +85,7 @@ size_t dbg_cnt_alloc_calls = 0;      /* debug alloc/realloc calls */
 		}							\
 		va_end(ap);						\
 		if ((cat && ss_grow(s, extra_size)) ||			\
-		    ss_reserve(s, extra_size) >= extra_size) {		\
+		    (!cat && ss_reserve(s, extra_size) >= extra_size)) {\
 			if (!cat)					\
 				ss_clear(*s);				\
 			SS_CAT_XN(s, s1, sizes[0]);			\
