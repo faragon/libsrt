@@ -979,8 +979,9 @@ static int test_ss_cat(const char *a, const char *b)
 	res |= res ? 0 : (ss_cat(&sa, sb, sb) ? 0 : 2) |
 			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Aliasing test: */
-	res |= res ? 0 : (sprintf(btmp, "%s%s", ss_to_c(sa), ss_to_c(sa)) &&
-			  ss_cat(&sa, sa) ? 0 : 8); 
+	res |= res ? 0 : (sprintf(btmp, "%s%s%s%s", ss_to_c(sa), ss_to_c(sa),
+				  ss_to_c(sa), ss_to_c(sa)) &&
+			  ss_cat(&sa, sa, sa, sa) ? 0 : 8);
 	res |= res ? 0 : (!strcmp(ss_to_c(sa), btmp) ? 0 : 16);
 #ifdef S_DEBUG
 	alloc_calls_before = dbg_cnt_alloc_calls;
