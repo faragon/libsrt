@@ -10,7 +10,7 @@
 #include "../src/libsrt.h"
 
 #define LZHBUF_SIZE	S_NPOS /* -ezh high compression: infinite buffer size */
-#define LZBUF_SIZE	1000000 /* -ezh fast compression: 1 MB buffer size */
+#define LZBUF_SIZE	1000000 /* -ez fast compression: 1 MB buffer size */
 #define IBUF_SIZE	(3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
 #define ESC_MAX_SIZE	16 /* maximum size for an escape sequence: 16 bytes */
 
