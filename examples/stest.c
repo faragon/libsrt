@@ -729,7 +729,7 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 static int test_ss_cpy_wn()
 {
 	int res = 0;
-#if WCHAR_MAX <= 0xffff
+#if WCHAR_MAX > 0 && WCHAR_MAX <= 0xffff
 	const uint16_t t16[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e,
 				 0x15f, 0xa2, 0x20ac,
 				 0xd800 | (uint16_t)(0x24b62 >> 10),

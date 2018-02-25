@@ -237,6 +237,7 @@ Test-covered platforms
 | x86, x86-64 (Core i5) | 32, 64 | little | yes | FreeBSD 10.2 | gcc, g++, clang, clang++ | Valgrind clang | manual |
 | x86, x86-64 (Core2Duo) | 32, 64 | little | yes | Darwin 11.4.2 | gcc, g++, clang, clang++ | none | manual |
 | ARMv5 (ARM926EJ-S) | 32 | little | no | Arch Linux | gcc, g++, clang, clang++ | none | manual |
+| ARMv5 (ARM926EJ-S) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++, clang, clang++ | none | manual |
 | ARMv5 (Feroceon) | 32 | little | no | Linux Debian 7.0 "Wheezy" | gcc, g++ | none | manual |
 | ARMv6 (ARM1176JZF-S) | 32 | little | yes | Linux Raspbian | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | ARMv7-A (Krait 400) | 32 | little | yes | Linux Android 5.1.1 + BusyBox | gcc, g++ | none | manual |
