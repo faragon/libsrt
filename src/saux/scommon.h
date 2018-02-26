@@ -100,7 +100,8 @@ extern "C" {
 	#endif
 #endif
 
-#if defined(__GNUC__) || defined(__clang__) || defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && __GNUC__ >= 4 || defined(__clang__) ||	\
+    defined(__INTEL_COMPILER)
 #define S_EXPECT(expr, val) __builtin_expect(expr, val)
 #else
 #define S_EXPECT(expr, val) (expr)
