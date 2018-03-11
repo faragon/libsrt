@@ -500,7 +500,7 @@ static int test_ss_dup_tolower(const srt_string *a, const srt_string *b)
 	srt_string *sa = ss_dup(a), *sb = ss_dup_tolower(sa),
 		   *sc = ss_dup_tolower(a);
 	int res = (!sa || !sb || !sc) ? 1 :
-		  (srt_stringolower(&sa) ? 0 : 2) |
+		  (ss_tolower(&sa) ? 0 : 2) |
 		  (!ss_cmp(sa, b) ? 0 : 4) |
 		  (!ss_cmp(sb, b) ? 0 : 8) |
 		  (!ss_cmp(sc, b) ? 0 : 16) |
@@ -513,7 +513,7 @@ static int test_ss_dup_tolower(const srt_string *a, const srt_string *b)
 static int test_ss_dup_toupper(const srt_string *a, const srt_string *b)
 {
 	srt_string *sa = ss_dup(a), *sb = ss_dup_toupper(sa);
-	int res = (!sa ||!sb) ? 1 : (srt_stringoupper(&sa) ? 0 : 2) |
+	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
 			   (!ss_cmp(sa, b) ? 0 : 4) |
 			   (!ss_cmp(sb, b) ? 0 : 8) |
 			   (!ss_cmp(sb, b) ? 0 : 16);
@@ -792,7 +792,7 @@ static int test_ss_cpy_tolower(const srt_string *a, const srt_string *b)
 	int res;
 	srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_tolower(&sb, sa);
-	res = (!sa ||!sb) ? 1 : (srt_stringolower(&sa) ? 0 : 2) |
+	res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
 			   (!ss_cmp(sa, b) ? 0 : 4) |
 			   (!ss_cmp(sb, b) ? 0 : 8);
 	ss_free(&sa, &sb);
@@ -804,7 +804,7 @@ static int test_ss_cpy_toupper(const srt_string *a, const srt_string *b)
 	int res;
 	srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_toupper(&sb, sa);
-	res = (!sa ||!sb) ? 1 : (srt_stringoupper(&sa) ? 0 : 2) |
+	res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
 			   (!ss_cmp(sa, b) ? 0 : 4) |
 			   (!ss_cmp(sb, b) ? 0 : 8);
 	ss_free(&sa, &sb);
@@ -1277,7 +1277,7 @@ static int test_ss_cat_read()
 static int test_ss_tolower(const char *a, const char *b)
 {
 	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (srt_stringolower(&sa) ? 0 : 2) |
+	int res = !sa ? 1 : (ss_tolower(&sa) ? 0 : 2) |
 			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
@@ -1286,7 +1286,7 @@ static int test_ss_tolower(const char *a, const char *b)
 static int test_ss_toupper(const char *a, const char *b)
 {
 	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (srt_stringoupper(&sa) ? 0 : 2) |
+	int res = !sa ? 1 : (ss_toupper(&sa) ? 0 : 2) |
 			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
@@ -1341,7 +1341,7 @@ static int test_ss_to_w(const char *in)
 	wchar_t *out = a ? (wchar_t *)s_malloc(sizeof(wchar_t) * (ssa + 1)) :
 			  NULL;
 	size_t out_size = 0;
-	int res = !a ? 1 : (srt_stringo_w(a, out, ssa + 1, &out_size) ? 0 : 2);
+	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);
 	res |= (((ssa > 0 && out_size > 0) || ssa == out_size) ? 0 : 4);
 	if (!res) {
 		char b1[4096], b2[4096];

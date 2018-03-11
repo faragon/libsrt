@@ -951,8 +951,8 @@ bool libsrt_string_loweruppercase(const char *in, size_t count, int tid)
 	srt_string *s = ss_alloca(95);
 	ss_cpy(&s, ss_crefa(in));
 	for (size_t i = 0; i < count; i++) {
-		srt_stringolower(&s);
-		srt_stringoupper(&s);
+		ss_tolower(&s);
+		ss_toupper(&s);
 	}
 	return true;
 }

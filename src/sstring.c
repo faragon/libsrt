@@ -1779,12 +1779,12 @@ srt_string *ss_cat_read(srt_string **s, FILE *handle, const size_t max_bytes)
  * Transformation
  */
 
-srt_string *srt_stringolower(srt_string **s)
+srt_string *ss_tolower(srt_string **s)
 {
         return aux_toXcase(s, S_FALSE, *s, fsc_tolower);
 }
 
-srt_string *srt_stringoupper(srt_string **s)
+srt_string *ss_toupper(srt_string **s)
 {
         return aux_toXcase(s, S_FALSE, *s, fsc_toupper);
 }
@@ -1902,7 +1902,7 @@ const char *ss_to_c(const srt_string *s)
 }
 
 const wchar_t *
-srt_stringo_w(const srt_string *s, wchar_t *o, const size_t nmax, size_t *n)
+ss_to_w(const srt_string *s, wchar_t *o, const size_t nmax, size_t *n)
 {
 	wchar_t *o_aux = NULL;
 	size_t o_s, i, ss, l;

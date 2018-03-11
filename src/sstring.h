@@ -612,10 +612,10 @@ srt_string *ss_cat_read(srt_string **s, FILE *handle, const size_t max_bytes);
  */
 
 /* #API: |Convert string to lowercase|output string|output string reference (optional usage)|O(n)|1;2| */
-srt_string *srt_stringolower(srt_string **s);
+srt_string *ss_tolower(srt_string **s);
 
 /* #API: |Convert string to uppercase|output string|output string reference (optional usage)|O(n)|1;2| */
-srt_string *srt_stringoupper(srt_string **s);
+srt_string *ss_toupper(srt_string **s);
 
 /* #API: |Convert to base64|output string; input string|output string reference (optional usage)|O(n)|1;2| */
 srt_string *ss_enc_b64(srt_string **s, const srt_string *src);
@@ -712,7 +712,7 @@ srt_string *ss_rtrim(srt_string **s);
 const char *ss_to_c(const srt_string *s);
 
 /* #API: |Give a C-compatible zero-ended string reference ("wide char" Unicode mode) (UTF-16 for 16-bit wchar_t, and UTF-32 for 32-bit wchar_t)|input string; output string buffer; output string max characters; output string size|Zero'ended C compatible string reference ("wide char" Unicode mode)|O(n)|1;2| */
-const wchar_t *srt_stringo_w(const srt_string *s, wchar_t *o, const size_t nmax, size_t *n);
+const wchar_t *ss_to_w(const srt_string *s, wchar_t *o, const size_t nmax, size_t *n);
 
 /*
  * Search
