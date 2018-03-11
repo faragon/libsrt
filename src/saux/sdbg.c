@@ -21,19 +21,19 @@ const char *sv_type_to_label(const enum eSV_Type t)
 	return "?";
 }
 
-void sv_log_obj(ss_t **log, const sv_t *v)
+void sv_log_obj(srt_string **log, const srt_vector *v)
 {
 	size_t elems;
 	enum eSV_Type t;
 	size_t elem_size, i;
-	ss_t *aux;
+	srt_string *aux;
 	const char *buf;
 	if (!log)
 		return;
-	elems = sd_size((const sd_t *)v);
+	elems = sd_size((const srt_data *)v);
 	t = v ? (enum eSV_Type)v->d.sub_type : SV_GEN;
 	elem_size = v ? v->d.elem_size : 0;
-	ss_cat_printf(log, 512, "sv_t: t: %s, elem size: " FMT_ZU ", sz: "
+	ss_cat_printf(log, 512, "srt_vector: t: %s, elem size: " FMT_ZU ", sz: "
 		      FMT_ZU ", { ", sv_type_to_label(t), elem_size, elems);
 	i = 0;
 	aux = ss_alloca(elem_size * 2);
@@ -49,7 +49,7 @@ void sv_log_obj(ss_t **log, const sv_t *v)
 
 struct st_log_context_data
 {
-	ss_t **log;
+	srt_string **log;
 	ss_cat_stn tf;
 };
 
@@ -62,14 +62,14 @@ static int aux_st_log_traverse(struct STraverseParams *tp)
 			      (unsigned)tp->level);
 	}
 	else {
-		const stn_t *cn = get_node_r(tp->t, tp->c);
+		const srt_tnode *cn = get_node_r(tp->t, tp->c);
 		d->tf(d->log, cn, tp->c);
 		ss_cat_c(d->log, " ");
 	}
 	return 0;
 }
 
-void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f)
+void st_log_obj(srt_string **log, const srt_tree *t, ss_cat_stn f)
 {
 	ssize_t levels;
 	struct st_log_context_data context = { log, f };
@@ -86,7 +86,7 @@ void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f)
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
-static void ndx2s(char *out, const size_t out_max, const stndx_t id)
+static void ndx2s(char *out, const size_t out_max, const srt_tndx id)
 {
 	if (id == ST_NIL)
 		strcpy(out, "nil");
@@ -98,8 +98,8 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 {
 	char id[128], l[128], r[128];
 	char k[4096] = "", v[4096] = "";
-	ss_t **log = (ss_t **)tp->context;
-	const stn_t *cn;
+	srt_string **log = (srt_string **)tp->context;
+	const srt_tnode *cn;
 	if (tp->c == ST_NIL) {
 		ss_cat_printf(log, 128, "\nLevel: %u\n", (unsigned)tp->level);
 		return 0;
@@ -161,14 +161,14 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 	return 0;
 }
 
-void sm_log_obj(ss_t **log, const sm_t *m)
+void sm_log_obj(srt_string **log, const srt_map *m)
 {
 	ssize_t levels;
 	if (!log)
 		return;
 	ss_cpy_c(log, "");
 	levels = st_traverse_levelorder(
-				(const st_t *)m,
+				(const srt_tree *)m,
 				(st_traverse)aux_sm_log_traverse, log);
 	if (levels == 0)
 		ss_cat_c(log, "empty map");
@@ -178,10 +178,10 @@ void sm_log_obj(ss_t **log, const sm_t *m)
 	fprintf(stdout, "%s", ss_to_c(*log));
 }
 
-void s_hex_dump(ss_t **log, const char *label, const char *buf,
+void s_hex_dump(srt_string **log, const char *label, const char *buf,
 		const size_t buf_size)
 {
-	ss_t *aux;
+	srt_string *aux;
 	if (!log)
 		return;
 	aux = ss_dup_cn(buf, buf_size);

@@ -220,7 +220,7 @@ extern "C" {
 	#endif
 #endif
 
-typedef unsigned char sbool_t;
+typedef unsigned char srt_bool;
 
 union s_u32 {
 	uint32_t a32;
@@ -251,7 +251,7 @@ union s_u64 {
 
 #define S_INVALID_PTR_VARG_TAIL	((const void *)-1)
 
-S_INLINE sbool_t s_varg_tail_ptr_tag(const void *p)
+S_INLINE srt_bool s_varg_tail_ptr_tag(const void *p)
 {
 	return p == S_INVALID_PTR_VARG_TAIL ? S_TRUE : S_FALSE;
 }
@@ -549,7 +549,7 @@ size_t s_pk_u64_size(const uint8_t *buf);
  * Helper functions intended to be inlined
  */
 
-S_INLINE sbool_t s_size_t_overflow(const size_t off, const size_t inc)
+S_INLINE srt_bool s_size_t_overflow(const size_t off, const size_t inc)
 {
 	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }

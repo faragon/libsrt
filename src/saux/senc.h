@@ -42,8 +42,8 @@ extern "C" {
 
 #define SDEBUG_LZ_STATS 0
 
-typedef size_t (*senc_f_t)(const uint8_t *s, const size_t ss, uint8_t *o);
-typedef size_t (*senc_f2_t)(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
+typedef size_t (*srt_enc_f)(const uint8_t *s, const size_t ss, uint8_t *o);
+typedef size_t (*srt_enc_f2)(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
 
 size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o);
 size_t sdec_b64(const uint8_t *s, const size_t ss, uint8_t *o);

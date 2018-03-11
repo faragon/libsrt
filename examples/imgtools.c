@@ -33,13 +33,13 @@ enum TGA_DCRGB_Offs { TGA_ID = 0, TGA_CMAP = 1, TGA_TYPE = 2, TGA_W = 12,
 enum TGA_MISC { TGA_LOWER_LEFT = 0, TGA_TOP_LEFT = 0x20, TGA_NO_X_INFO = 0,
 		TGA_NO_CMAP = 0, TGA_RAW_RGB = 2,  TGA_RAW_GRAY = 3 };
 
-static sbool_t valid_tga(const char *h)
+static srt_bool valid_tga(const char *h)
 {
 	return h[TGA_ID] == TGA_NO_X_INFO && h[TGA_CMAP] == TGA_NO_CMAP &&
 		   (h[TGA_TYPE] == TGA_RAW_RGB || h[TGA_TYPE] == TGA_RAW_GRAY);
 }
 
-static sbool_t tga_rgb_swap(const size_t bpp, const size_t buf_size,
+static srt_bool tga_rgb_swap(const size_t bpp, const size_t buf_size,
 			    const char *s, char *t)
 {
 	size_t i;
@@ -56,7 +56,8 @@ static sbool_t tga_rgb_swap(const size_t bpp, const size_t buf_size,
 	}
 }
 
-static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
+static size_t
+tga2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *tga)
 {
 	const char *t = ss_get_buffer_r(tga);
 	const size_t ts = ss_size(tga);
@@ -93,7 +94,8 @@ static size_t tga2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *tga)
 	return rgb_bytes;
 }
 
-static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
+static size_t
+rgb2tga(srt_string **tga, const srt_string *rgb, const struct RGB_Info *ri)
 {
 	size_t buf_size;
 	char *h;
@@ -126,7 +128,7 @@ static size_t rgb2tga(ss_t **tga, const ss_t *rgb, const struct RGB_Info *ri)
 
 #define PPM_NFIELDS 3
 
-static sbool_t rgbi_valid_for_ppm(const struct RGB_Info *ri)
+static srt_bool rgbi_valid_for_ppm(const struct RGB_Info *ri)
 {
 	RETURN_IF(!rgbi_valid(ri), S_FALSE);
 	RETURN_IF(ri->chn == 3 && ri->bpp != 24 && ri->bpp != 48, S_FALSE);
@@ -134,7 +136,8 @@ static sbool_t rgbi_valid_for_ppm(const struct RGB_Info *ri)
 	return S_TRUE;
 }
 
-static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
+static size_t
+ppm2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *ppm)
 {
 	const char *p;
 	size_t f[PPM_NFIELDS];
@@ -171,7 +174,8 @@ static size_t ppm2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *ppm)
 	return ss_size(*rgb);
 }
 
-static size_t rgb2ppm(ss_t **ppm, const ss_t *rgb, const struct RGB_Info *ri)
+static size_t
+rgb2ppm(srt_string **ppm, const srt_string *rgb, const struct RGB_Info *ri)
 {
 	int colors_per_channel;
 	RETURN_IF(!ppm || !rgb || !rgbi_valid_for_ppm(ri), 0);
@@ -186,7 +190,7 @@ static size_t rgb2ppm(ss_t **ppm, const ss_t *rgb, const struct RGB_Info *ri)
 
 #ifdef HAS_PNG	/* PNG codec start */
 
-struct aux_png_rio { size_t off; const ss_t *buf; };
+struct aux_png_rio { size_t off; const srt_string *buf; };
 
 static void aux_png_read(png_structp s, png_bytep d, png_size_t ds)
 {
@@ -199,15 +203,15 @@ static void aux_png_read(png_structp s, png_bytep d, png_size_t ds)
 
 static void aux_png_write(png_structp s, png_bytep d, png_size_t ds)
 {
-	ss_cat_cn((ss_t **)png_get_io_ptr(s), (char *)d, ds);
+	ss_cat_cn((srt_string **)png_get_io_ptr(s), (char *)d, ds);
 }
 
 static size_t aux_png_get_chn(const png_structp s, const png_infop pi)
 {
 	RETURN_IF(!s, S_FALSE);
 	int ct = png_get_color_type(s, pi);
-	sbool_t alpha = (ct & PNG_COLOR_MASK_ALPHA) != 0 ? S_TRUE : S_FALSE;
-	sbool_t gray = (ct & PNG_COLOR_MASK_COLOR) == 0 ? S_TRUE : S_FALSE;
+	srt_bool alpha = (ct & PNG_COLOR_MASK_ALPHA) != 0 ? S_TRUE : S_FALSE;
+	srt_bool gray = (ct & PNG_COLOR_MASK_COLOR) == 0 ? S_TRUE : S_FALSE;
 	return (gray ? 1 : 3) + (alpha ? 1 : 0);
 }
 
@@ -218,7 +222,7 @@ static size_t aux_png_get_depth(const png_structp s, const png_infop pi)
 		8 : png_get_bit_depth(s, pi);
 }
 
-static sbool_t aux_png2rbi(const png_structp s, const png_infop pi,
+static srt_bool aux_png2rbi(const png_structp s, const png_infop pi,
 			   struct RGB_Info *ri)
 {
 	RETURN_IF(!s || !ri, S_FALSE);
@@ -234,7 +238,7 @@ static size_t aux_png_row_size(const png_structp s, const png_infop pi)
 	       aux_png_get_depth(s, pi)) / 8;
 }
 
-static sbool_t aux_png_set_rows(png_bytep *rows, const png_structp s,
+static srt_bool aux_png_set_rows(png_bytep *rows, const png_structp s,
 				const png_infop pi, const char *rgb)
 {
 	RETURN_IF(!rows || !pi || !rgb, S_FALSE);
@@ -244,8 +248,8 @@ static sbool_t aux_png_set_rows(png_bytep *rows, const png_structp s,
 	return S_TRUE;
 }
 
-static sbool_t aux_png_read_set_rows(png_bytep *rows, const png_structp s,
-				     const png_infop pi, ss_t **rgb)
+static srt_bool aux_png_read_set_rows(png_bytep *rows, const png_structp s,
+				     const png_infop pi, srt_string **rgb)
 {
 	RETURN_IF(!rows || !pi || !rgb, S_FALSE);
 	size_t rs = aux_png_row_size(s, pi),
@@ -255,7 +259,8 @@ static sbool_t aux_png_read_set_rows(png_bytep *rows, const png_structp s,
 	return aux_png_set_rows(rows, s, pi, ss_get_buffer(*rgb));
 }
 
-static size_t png2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *png)
+static size_t
+png2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *png)
 {
 	RETURN_IF(!png || !ss_size(png), 0);
 	size_t out_size = 0;
@@ -286,7 +291,8 @@ static size_t png2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *png)
 	return out_size;
 }
 
-static size_t rgb2png(ss_t **png, const ss_t *rgb, const struct RGB_Info *ri)
+static size_t
+rgb2png(srt_string **png, const srt_string *rgb, const struct RGB_Info *ri)
 {
 	RETURN_IF(!rgbi_valid(ri) ||!rgb, 0);
 	size_t out_size = 0;
@@ -298,8 +304,8 @@ static size_t rgb2png(ss_t **png, const ss_t *rgb, const struct RGB_Info *ri)
 	int ctype = (ri->chn > 1 ? PNG_COLOR_MASK_COLOR : 0) |
 		    (ri->chn == 2 || ri->chn == 4 ? PNG_COLOR_MASK_ALPHA : 0);
 	png_set_IHDR(s, pi, (png_uint_32)ri->width, (png_uint_32)ri->height,
-		     ri->bpc, ctype, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-		     PNG_FILTER_TYPE_BASE);
+		     ri->bpc, ctype, PNG_INTERLACE_NONE,
+		     PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 	png_set_filter(s, PNG_FILTER_TYPE_BASE, PNG_ALL_FILTERS);
 	png_set_compression_level(s, Z_BEST_COMPRESSION);
 	png_write_info(s, pi);
@@ -338,9 +344,9 @@ struct aux_jpeg
 	/* decode */
 	struct jpeg_source_mgr jsrc;
 	/* common */
-	const ss_t *in;
-	ss_t **out;
-	sbool_t errors;
+	const srt_string *in;
+	srt_string **out;
+	srt_bool errors;
 	size_t out_size, max_out_size;
 };
 
@@ -405,9 +411,9 @@ void aux_jpeg_common_init(struct aux_jpeg *ja)
 	ja->out_size = 0;
 }
 
-sbool_t aux_jpeg_dec_init(struct jpeg_decompress_struct *jd,
+srt_bool aux_jpeg_dec_init(struct jpeg_decompress_struct *jd,
 			  struct aux_jpeg *ja, struct RGB_Info *ri,
-			  const ss_t *jpg_in, ss_t **rgb_out)
+			  const srt_string *jpg_in, srt_string **rgb_out)
 {
 	RETURN_IF(!ja || !ri || !jpg_in || !rgb_out, S_FALSE);
 	jpeg_create_decompress(jd);
@@ -436,9 +442,9 @@ sbool_t aux_jpeg_dec_init(struct jpeg_decompress_struct *jd,
 	return S_FALSE;
 }
 
-sbool_t aux_jpeg_enc_init(struct jpeg_compress_struct *jc,
+srt_bool aux_jpeg_enc_init(struct jpeg_compress_struct *jc,
 			  struct aux_jpeg *ja, const struct RGB_Info *ri,
-			  const ss_t *rgb, ss_t **jpg_out)
+			  const srt_string *rgb, srt_string **jpg_out)
 {
 	RETURN_IF(!ja || !rgbi_valid(ri) || !rgb || !jpg_out, S_FALSE);
 	ss_set_size(*jpg_out, 0);
@@ -487,7 +493,7 @@ sbool_t aux_jpeg_enc_init(struct jpeg_compress_struct *jc,
 	return S_TRUE;
 }
 
-sbool_t rgbi_valid_for_jpg(const struct RGB_Info *ri)
+srt_bool rgbi_valid_for_jpg(const struct RGB_Info *ri)
 {
 	RETURN_IF(!rgbi_valid(ri), S_FALSE);
 	RETURN_IF(ri->chn == 2 || ri->chn > 3, S_FALSE);
@@ -496,7 +502,8 @@ sbool_t rgbi_valid_for_jpg(const struct RGB_Info *ri)
 	return S_TRUE;
 }
 
-static size_t jpg2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *jpg)
+static size_t
+jpg2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *jpg)
 {
 	RETURN_IF(!jpg || !ri, 0);
 	struct jpeg_error_mgr je;
@@ -521,7 +528,8 @@ static size_t jpg2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *jpg)
 	return i;
 }
 
-static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
+static size_t
+rgb2jpg(srt_string **jpg, const srt_string *rgb, const struct RGB_Info *ri)
 {
 	RETURN_IF(!rgbi_valid_for_jpg(ri) ||!rgb, 0);
 	struct jpeg_error_mgr je;
@@ -579,7 +587,7 @@ static size_t rgb2jpg(ss_t **jpg, const ss_t *rgb, const struct RGB_Info *ri)
 	}								\
 	out = sb_popcount(bs); }
 
-static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
+static size_t rgb_info(const srt_string *rgb, const struct RGB_Info *ri)
 {
 	size_t off2;
 	unsigned pixels, l, r, c;
@@ -591,7 +599,7 @@ static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 		size_t i, uqp = 0;
 		const char *p0 = ss_get_buffer_r(rgb);
 		const unsigned char *p = (const unsigned char *)p0;
-		sb_t *bs = sb_alloc(0);
+		srt_bitset *bs = sb_alloc(0);
 		sb_eval(&bs, cmax);
 		switch (ri->Bpp) {
 		case 4: RGB_COUNT_LOOP(i, p, ss, 4, bs, cmax, uqp); break;
@@ -633,7 +641,7 @@ static size_t rgb_info(const ss_t *rgb, const struct RGB_Info *ri)
 	return ss_size(rgb);
 }
 
-size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in,
+size_t any2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *in,
 	      enum ImgTypes it)
 {
 	return it == IMG_tga ? tga2rgb(rgb, ri, in) :
@@ -642,12 +650,12 @@ size_t any2rgb(ss_t **rgb, struct RGB_Info *ri, const ss_t *in,
 	       IF_JPG(it == IMG_jpg ? jpg2rgb(rgb, ri, in) :) 0;
 }
 
-size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
+size_t rgb2type(srt_string **out, enum ImgTypes ot, const srt_string *rgb0,
 	        const struct RGB_Info *ri, const int f)
 {
 	size_t r;
-	ss_t *rgb_aux = NULL;
-	const ss_t *rgb;
+	srt_string *rgb_aux = NULL;
+	const srt_string *rgb;
 	switch (f) {	/* Apply filter, if any */
 	case F_HDPCM: case F_HRDPCM: case F_HDXOR: case F_HRDXOR: case F_VDPCM:
 	case F_VRDPCM: case F_VDXOR: case F_VRDXOR: case F_AVG3: case F_RAVG3:
@@ -682,8 +690,9 @@ size_t rgb2type(ss_t **out, enum ImgTypes ot, const ss_t *rgb0,
 #define CFF2 (char)0xff
 #define CFF4 (short)0xffff
 
-int rgbdiff(ss_t **out, const ss_t *rgb0, const struct RGB_Info *ri0,
-	    const ss_t *rgb1, const struct RGB_Info *ri1)
+int rgbdiff(srt_string **out, const srt_string *rgb0,
+	    const struct RGB_Info *ri0, const srt_string *rgb1,
+	    const struct RGB_Info *ri1)
 {
 	int res;
 	const char *c0, *c1;

@@ -28,14 +28,14 @@ static int syntax_error(const char **argv, const int exit_code)
 	return exit_code;
 }
 
-static sbool_t cb32(uint32_t k, uint32_t v, void *context)
+static srt_bool cb32(uint32_t k, uint32_t v, void *context)
 {
 	S_UNUSED(context);
 	printf("%08x %u\n", (unsigned)k, (unsigned)v);
 	return S_TRUE;
 }
 
-static sbool_t cb64(int64_t k, int64_t v, void *context)
+static srt_bool cb64(int64_t k, int64_t v, void *context)
 {
 	S_UNUSED(context);
 	printf("%08x%08x " FMT_U "\n",
@@ -45,7 +45,7 @@ static sbool_t cb64(int64_t k, int64_t v, void *context)
 
 int main(int argc, const char **argv)
 {
-	sm_t *m;
+	srt_map *m;
 	size_t i, l;
 	uint32_t k32 = 0, kp32 = 0;
 	uint64_t k64 = 0, kp64 = 0;

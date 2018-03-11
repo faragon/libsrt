@@ -48,11 +48,11 @@ int main(int argc, const char **argv)
 #ifdef COUNTER_USE_BITSET
 	#define COUNTER_SET(val) sb_set(&bs, val)
 	#define COUNTER_POPCOUNT sb_popcount(bs)
-	sb_t *bs;
+	srt_bitset *bs;
 #else
 	#define COUNTER_SET(val) sm_insert_uu32(&m, val, 1)
 	#define COUNTER_POPCOUNT sm_size(m)
-	sm_t *m;
+	srt_map *m;
 #endif
 	if (argc < 3)
 		return syntax_error(argv, 5);

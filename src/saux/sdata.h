@@ -14,7 +14,7 @@ extern "C" {
  *
  * Observations:
  * - This is not intended for direct use, but as base for
- *   other types (ss_t, sv_t, st_t, sm_t, etc.)
+ *   other types (srt_string, srt_vector, srt_tree, srt_map, etc.)
  */
 
 #include "scommon.h"
@@ -33,98 +33,99 @@ extern "C" {
  * Macros
  */
 
-#define SD_BUILDFUNCS_COMMON(pfix, tail_bytes)				\
-	S_INLINE pfix##_t *pfix##_shrink(pfix##_t **c) {		\
-		return (pfix##_t *)sd_shrink((sd_t **)c, tail_bytes);	\
+#define SD_BUILDFUNCS_COMMON(pfix, t, tail_bytes)			\
+	S_INLINE t *pfix##_shrink(t **c) {				\
+		return (t *)sd_shrink((srt_data **)c, tail_bytes);	\
 	}								\
-	S_INLINE sbool_t pfix##_empty(const pfix##_t *c) {		\
+	S_INLINE srt_bool pfix##_empty(const t *c) {			\
 		return pfix##_size(c) == 0 ? S_TRUE : S_FALSE;		\
 	}								\
-	S_INLINE void pfix##_set_alloc_errors(pfix##_t *c) {		\
-		sd_set_alloc_errors((sd_t *)c);				\
+	S_INLINE void pfix##_set_alloc_errors(t *c) {			\
+		sd_set_alloc_errors((srt_data *)c);			\
 	}								\
-	S_INLINE void pfix##_reset_alloc_errors(pfix##_t *c) {		\
-		sd_reset_alloc_errors((sd_t *)c);			\
+	S_INLINE void pfix##_reset_alloc_errors(t *c) {			\
+		sd_reset_alloc_errors((srt_data *)c);			\
 	}								\
-	S_INLINE sbool_t pfix##_alloc_errors(pfix##_t *c) {		\
-		return sd_alloc_errors((sd_t *)c);			\
+	S_INLINE srt_bool pfix##_alloc_errors(t *c) {			\
+		return sd_alloc_errors((srt_data *)c);			\
 	}
 
-#define SD_BUILDFUNCS_ST(pfix, stpfix)					\
-	S_INLINE size_t pfix##_size(const pfix##_t *c) {		\
-		return stpfix##_size((const sd_t *)c);			\
+#define SD_BUILDFUNCS_ST(pfix, t, stpfix)				\
+	S_INLINE size_t pfix##_size(const t *c) {			\
+		return stpfix##_size((const srt_data *)c);		\
 	}								\
-	S_INLINE void pfix##_set_size(pfix##_t *c, const size_t s) {	\
-		stpfix##_set_size((sd_t *)c, s);			\
+	S_INLINE void pfix##_set_size(t *c, const size_t s) {		\
+		stpfix##_set_size((srt_data *)c, s);			\
 	}								\
-	S_INLINE size_t pfix##_max_size(const pfix##_t *c) {		\
-		return stpfix##_max_size((const sd_t *)c);		\
+	S_INLINE size_t pfix##_max_size(const t *c) {			\
+		return stpfix##_max_size((const srt_data *)c);		\
 	}								\
-	S_INLINE size_t pfix##_alloc_size(const pfix##_t *c) {		\
-		return stpfix##_alloc_size((const sd_t *)c);		\
+	S_INLINE size_t pfix##_alloc_size(const t *c) {			\
+		return stpfix##_alloc_size((const srt_data *)c);	\
 	}								\
-	S_INLINE size_t pfix##_get_buffer_size(const pfix##_t *c) {	\
-		return stpfix##_size((const sd_t *)c) *			\
-		       stpfix##_elem_size((const sd_t *)c);		\
+	S_INLINE size_t pfix##_get_buffer_size(const t *c) {		\
+		return stpfix##_size((const srt_data *)c) *		\
+		       stpfix##_elem_size((const srt_data *)c);		\
 	}								\
-	S_INLINE void *pfix##_elem_addr(pfix##_t *c, const size_t pos) {\
-		return stpfix##_elem_addr((sd_t *)c, pos);		\
+	S_INLINE void *pfix##_elem_addr(t *c, const size_t pos) {	\
+		return stpfix##_elem_addr((srt_data *)c, pos);		\
 	}								\
-	S_INLINE const void *pfix##_elem_addr_r(const pfix##_t *c,	\
+	S_INLINE const void *pfix##_elem_addr_r(const t *c,		\
 						const size_t pos) {	\
-		return stpfix##_elem_addr_r((const sd_t *)c, pos);	\
+		return stpfix##_elem_addr_r((const srt_data *)c, pos);	\
 	}								\
-	S_INLINE size_t pfix##_capacity(const pfix##_t *c) {		\
-		return stpfix##_max_size((const sd_t *)c);		\
+	S_INLINE size_t pfix##_capacity(const t *c) {			\
+		return stpfix##_max_size((const srt_data *)c);		\
 	}								\
-	S_INLINE size_t pfix##_capacity_left(const pfix##_t *c) {	\
-		return stpfix##_max_size((const sd_t *)c) -		\
-		       stpfix##_size((const sd_t *)c);			\
+	S_INLINE size_t pfix##_capacity_left(const t *c) {		\
+		return stpfix##_max_size((const srt_data *)c) -		\
+		       stpfix##_size((const srt_data *)c);		\
 	}								\
-	S_INLINE size_t pfix##_len(const pfix##_t *c) {			\
-		return stpfix##_size((const sd_t *)c);			\
+	S_INLINE size_t pfix##_len(const t *c) {			\
+		return stpfix##_size((const srt_data *)c);		\
 	}
 
-#define SD_BUILDFUNCS_ST2(pfix, stpfix)					\
-	S_INLINE char *pfix##_get_buffer(pfix##_t *c) {			\
-		return stpfix##_get_buffer((sd_t *)c);			\
+#define SD_BUILDFUNCS_ST2(pfix, t, stpfix)				\
+	S_INLINE char *pfix##_get_buffer(t *c) {			\
+		return stpfix##_get_buffer((srt_data *)c);		\
 	}								\
-	S_INLINE const char *pfix##_get_buffer_r(const pfix##_t *c) {	\
-		return stpfix##_get_buffer_r((const sd_t *)c);		\
+	S_INLINE const char *pfix##_get_buffer_r(const t *c) {		\
+		return stpfix##_get_buffer_r((const srt_data *)c);	\
 	}
 
-#define SD_BUILDFUNCS_DYN_ST(pfix, tail_bytes)				\
-	SD_BUILDFUNCS_ST(pfix, sdx)					\
-	SD_BUILDFUNCS_COMMON(pfix, tail_bytes)
+#define SD_BUILDFUNCS_DYN_ST(pfix, t, tail_bytes)			\
+	SD_BUILDFUNCS_ST(pfix, t, sdx)					\
+	SD_BUILDFUNCS_COMMON(pfix, t, tail_bytes)
 
-#define SD_BUILDFUNCS_FULL_ST(pfix, tail_bytes)				\
-	SD_BUILDFUNCS_ST(pfix, sd)					\
-	SD_BUILDFUNCS_ST2(pfix, sd)					\
-	SD_BUILDFUNCS_COMMON(pfix, tail_bytes)				\
-	S_INLINE size_t pfix##_grow(pfix##_t **c,			\
+#define SD_BUILDFUNCS_FULL_ST(pfix, t, tail_bytes)			\
+	SD_BUILDFUNCS_ST(pfix, t, sd)					\
+	SD_BUILDFUNCS_ST2(pfix, t, sd)					\
+	SD_BUILDFUNCS_COMMON(pfix, t, tail_bytes)			\
+	S_INLINE size_t pfix##_grow(t **c,				\
 				    const size_t extra_elems) {  	\
-		return sd_grow((sd_t **)c, extra_elems, tail_bytes);	\
+		return sd_grow((srt_data **)c, extra_elems, tail_bytes);\
 	}								\
-	S_INLINE size_t pfix##_reserve(pfix##_t **c,			\
+	S_INLINE size_t pfix##_reserve(t **c,				\
 				       const size_t max_elems) {	\
-		return sd_reserve((sd_t **)c, max_elems, tail_bytes);	\
+		return sd_reserve((srt_data **)c, max_elems,		\
+				  tail_bytes);				\
 	}
 
-#define SD_FREE_AUX(pfix)						\
-	S_INLINE void pfix##_free_aux(pfix##_t **c, ...) {		\
+#define SD_FREE_AUX(pfix, t)						\
+	S_INLINE void pfix##_free_aux(t **c, ...) {			\
 		va_list ap;						\
 		va_start(ap, c);					\
-		sd_free_va((sd_t **)c, ap);				\
+		sd_free_va((srt_data **)c, ap);				\
 		va_end(ap);						\
 	}
 
-#define SD_BUILDFUNCS_DYN(pfix, tail_bytes)				\
-	SD_BUILDFUNCS_DYN_ST(pfix, tail_bytes)				\
-	SD_FREE_AUX(pfix)
+#define SD_BUILDFUNCS_DYN(pfix, t, tail_bytes)				\
+	SD_BUILDFUNCS_DYN_ST(pfix, t, tail_bytes)			\
+	SD_FREE_AUX(pfix, t)
 
-#define SD_BUILDFUNCS_FULL(pfix, tail_bytes)				\
-	SD_BUILDFUNCS_FULL_ST(pfix, tail_bytes)				\
-	SD_FREE_AUX(pfix)
+#define SD_BUILDFUNCS_FULL(pfix, t, tail_bytes)				\
+	SD_BUILDFUNCS_FULL_ST(pfix, t, tail_bytes)			\
+	SD_FREE_AUX(pfix, t)
 
 /*
  * Data structures and types
@@ -239,88 +240,88 @@ struct SDataFull /* 16-byte structure (32-bit compiler), 32-byte (64-bit c.) */
 	size_t max_size;
 };
 
-typedef struct SDataFull sd_t; /* Opaque structure (accessors are provided) */
+typedef struct SDataFull srt_data; /* Opaque structure (accessors are provided) */
 
 #define EMPTY_SDataFlags	{ 1, 1, 3, 0, 0, 0, 0 }
 #define EMPTY_SDataSmall	{ EMPTY_SDataFlags, 0, 0, 0 }
 #define EMPTY_SDataFull		{ EMPTY_SDataFlags, 0, 0, 0, 0, 0 }
 
-extern sd_t *sd_void;
+extern srt_data *sd_void;
 
 /*
  * Functions
  */
 
-S_INLINE void sd_set_alloc_errors(sd_t *d)
+S_INLINE void sd_set_alloc_errors(srt_data *d)
 {
 	if (d)
 		d->f.alloc_errors = 1;
 }
 
-S_INLINE void sd_reset_alloc_errors(sd_t *d)
+S_INLINE void sd_reset_alloc_errors(srt_data *d)
 {
 	if (d)
 		d->f.alloc_errors = 0;
 }
 
-S_INLINE sbool_t sd_alloc_errors(const sd_t *d)
+S_INLINE srt_bool sd_alloc_errors(const srt_data *d)
 {
 	return (!d || d->f.alloc_errors) ? S_TRUE : S_FALSE;
 }
 
-S_INLINE size_t sd_size(const sd_t *d)
+S_INLINE size_t sd_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	return d->size;
 }
 
-S_INLINE void sd_set_size(sd_t *d, const size_t size)
+S_INLINE void sd_set_size(srt_data *d, const size_t size)
 {
 	if (d)
 		d->size = size;
 }
 
-S_INLINE void sd_set_max_size(sd_t *d, const size_t max_size)
+S_INLINE void sd_set_max_size(srt_data *d, const size_t max_size)
 {
 	if (d)
 		d->max_size = max_size;
 }
 
-S_INLINE size_t sd_max_size(const sd_t *d)
+S_INLINE size_t sd_max_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	return d->max_size;
 }
 
-S_INLINE char *sd_get_buffer(sd_t *d)
+S_INLINE char *sd_get_buffer(srt_data *d)
 {
 	return !d ? NULL : (char *)d + d->header_size;
 }
 
-S_INLINE const char *sd_get_buffer_r(const sd_t *d)
+S_INLINE const char *sd_get_buffer_r(const srt_data *d)
 {
 	return !d ? NULL : (const char *)d + d->header_size;
 }
 
-S_INLINE void *sd_elem_addr(sd_t *d, const size_t pos)
+S_INLINE void *sd_elem_addr(srt_data *d, const size_t pos)
 {
 	return !d ? NULL : ((char *)d + d->header_size +
 					d->elem_size * pos);
 }
 
-S_INLINE const void *sd_elem_addr_r(const sd_t *d, const size_t pos)
+S_INLINE const void *sd_elem_addr_r(const srt_data *d, const size_t pos)
 {
 	return !d ? NULL : ((const char *)d + d->header_size +
 					      d->elem_size * pos);
 }
 
-S_INLINE size_t sd_elem_size(const sd_t *d)
+S_INLINE size_t sd_elem_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	return d->elem_size;
 }
 
-S_INLINE size_t sd_alloc_size(const sd_t *d)
+S_INLINE size_t sd_alloc_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	return d->header_size + d->elem_size * d->max_size;
@@ -331,12 +332,12 @@ S_INLINE uint8_t sdx_szt_to_u8_sat(size_t v)
 	return v <= 255 ? (uint8_t)v : 255;
 }
 
-S_INLINE sbool_t sdx_full_st(const sd_t *d)
+S_INLINE srt_bool sdx_full_st(const srt_data *d)
 {
 	return d && d->f.st_mode <= SData_DynFull ? S_TRUE : S_FALSE;
 }
 
-S_INLINE sbool_t sdx_dyn_st(const sd_t *d)
+S_INLINE srt_bool sdx_dyn_st(const srt_data *d)
 {
 	RETURN_IF(!d, S_FALSE);
 	return d->f.st_mode == SData_DynFull ||
@@ -344,7 +345,7 @@ S_INLINE sbool_t sdx_dyn_st(const sd_t *d)
 	       S_TRUE : S_FALSE;
 }
 
-S_INLINE void sdx_set_max_size(sd_t *d, const size_t max_size)
+S_INLINE void sdx_set_max_size(srt_data *d, const size_t max_size)
 {
 	if (d) {
 		if (sdx_full_st(d))
@@ -355,7 +356,7 @@ S_INLINE void sdx_set_max_size(sd_t *d, const size_t max_size)
 	}
 }
 
-S_INLINE size_t sdx_size(const sd_t *d)
+S_INLINE size_t sdx_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	if (sdx_full_st(d))
@@ -363,7 +364,7 @@ S_INLINE size_t sdx_size(const sd_t *d)
 	return ((const struct SDataSmall *)d)->size;
 }
 
-S_INLINE void sdx_set_size(sd_t *d, const size_t size)
+S_INLINE void sdx_set_size(srt_data *d, const size_t size)
 {
 	if (d) {
 		if (sdx_full_st(d))
@@ -374,7 +375,7 @@ S_INLINE void sdx_set_size(sd_t *d, const size_t size)
 	}
 }
 
-S_INLINE size_t sdx_max_size(const sd_t *d)
+S_INLINE size_t sdx_max_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	if (sdx_full_st(d))
@@ -382,49 +383,49 @@ S_INLINE size_t sdx_max_size(const sd_t *d)
 	return ((const struct SDataSmall *)d)->max_size;
 }
 
-S_INLINE char *sdx_get_buffer(sd_t *d)
+S_INLINE char *sdx_get_buffer(srt_data *d)
 {
 	return	!d ? NULL :
 		(char *)d + (sdx_full_st(d) ? d->header_size :
 					     sizeof(struct SDataSmall));
 }
 
-S_INLINE const char *sdx_get_buffer_r(const sd_t *d)
+S_INLINE const char *sdx_get_buffer_r(const srt_data *d)
 {
 	return	!d ? NULL :
 		(const char *)d + (sdx_full_st(d) ? d->header_size :
 						   sizeof(struct SDataSmall));
 }
 
-S_INLINE void *sdx_elem_addr(sd_t *d, const size_t pos)
+S_INLINE void *sdx_elem_addr(srt_data *d, const size_t pos)
 {
 	return !d ? NULL : (char *)d +
 		(sdx_full_st(d) ? d->header_size + d->elem_size * pos :
 		sizeof(struct SDataSmall) + pos);	/* BEHAVIOR */
 }
 
-S_INLINE const void *sdx_elem_addr_r(const sd_t *d, const size_t pos)
+S_INLINE const void *sdx_elem_addr_r(const srt_data *d, const size_t pos)
 {
 	return !d ? NULL : (const char *)d +
 		(sdx_full_st(d) ? d->header_size + d->elem_size * pos :
 		sizeof(struct SDataSmall) + pos);	/* BEHAVIOR */
 }
 
-S_INLINE uint8_t sdx_header_size(const sd_t *d)
+S_INLINE uint8_t sdx_header_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	RETURN_IF(sdx_full_st(d), d->header_size);
 	return sizeof(struct SDataSmall); /* Implicit value */
 }
 
-S_INLINE size_t sdx_elem_size(const sd_t *d)
+S_INLINE size_t sdx_elem_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	RETURN_IF(sdx_full_st(d), d->elem_size);
 	return 1; /* Implicit value */
 }
 
-S_INLINE size_t sdx_alloc_size(const sd_t *d)
+S_INLINE size_t sdx_alloc_size(const srt_data *d)
 {
 	return sdx_header_size(d) + sdx_elem_size(d) * sdx_max_size(d);
 }
@@ -434,7 +435,7 @@ S_INLINE size_t sdx_alloc_size(const sd_t *d)
  * 0: no changes
  * 1: small to full
  */
-S_INLINE int sdx_chk_st_change(const sd_t *d, size_t new_max_size)
+S_INLINE int sdx_chk_st_change(const srt_data *d, size_t new_max_size)
 {
 	size_t curr_max_size;
 	RETURN_IF(!d || !sdx_dyn_st(d), 0);
@@ -445,7 +446,7 @@ S_INLINE int sdx_chk_st_change(const sd_t *d, size_t new_max_size)
 }
 
 S_INLINE size_t sd_alloc_size_raw(uint8_t header_size, size_t elem_size,
-				  size_t size, const sbool_t dyn_st)
+				  size_t size, const srt_bool dyn_st)
 {
 	if (dyn_st && size < 255) {
 		S_ASSERT(elem_size == 1);
@@ -461,16 +462,16 @@ S_INLINE size_t sd_compute_max_elems(size_t buffer_size, size_t header_size,
 		(buffer_size - header_size) / elem_size;
 }
 
-void sd_set_alloc_size(sd_t *d, const size_t alloc_size);
-sd_t *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const sbool_t dyn_st, const size_t extra_tail_bytes);
-sd_t *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const uint8_t header_size, const size_t elem_size, const sbool_t dyn_st);
-void sd_free(sd_t **d);
-void sd_free_va(sd_t **first, va_list ap);
-void sd_reset(sd_t *d, const uint8_t header_size, const size_t elem_size, const size_t max_size, const sbool_t ext_buf, const sbool_t dyn_st);
-size_t sd_grow(sd_t **d, const size_t extra_size, const size_t extra_tail_bytes);
-size_t sd_reserve(sd_t **d, size_t max_size, const size_t extra_tail_bytes);
-size_t sdx_reserve(sd_t **d, size_t max_size, uint8_t full_header_size, const size_t extra_tail_bytes);
-sd_t *sd_shrink(sd_t **d, const size_t extra_tail_bytes);
+void sd_set_alloc_size(srt_data *d, const size_t alloc_size);
+srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const srt_bool dyn_st, const size_t extra_tail_bytes);
+srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const uint8_t header_size, const size_t elem_size, const srt_bool dyn_st);
+void sd_free(srt_data **d);
+void sd_free_va(srt_data **first, va_list ap);
+void sd_reset(srt_data *d, const uint8_t header_size, const size_t elem_size, const size_t max_size, const srt_bool ext_buf, const srt_bool dyn_st);
+size_t sd_grow(srt_data **d, const size_t extra_size, const size_t extra_tail_bytes);
+size_t sd_reserve(srt_data **d, size_t max_size, const size_t extra_tail_bytes);
+size_t sdx_reserve(srt_data **d, size_t max_size, uint8_t full_header_size, const size_t extra_tail_bytes);
+srt_data *sd_shrink(srt_data **d, const size_t extra_tail_bytes);
 
 #ifdef __cplusplus
 }      /* extern "C" { */

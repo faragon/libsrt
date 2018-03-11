@@ -42,7 +42,7 @@ enum STNDir
 	ST_Right = 1
 };
 
-#define st_void (st_t *)sd_void
+#define st_void (srt_tree *)sd_void
 
 /*
  * Internal data structures
@@ -50,15 +50,15 @@ enum STNDir
 
 struct NodeContext
 {
-	stndx_t x;	/* Index to the memory slot */
-	stn_t *n;	/* Pointer to the node (base_ptr + x * sizeof(node)) */
+	srt_tndx x;	/* Index to the memory slot */
+	srt_tnode *n;	/* Pointer to the node (base_ptr + x * sizeof(node)) */
 };
 
 /*
  * Internal functions
  */
 
-S_INLINE void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
+S_INLINE void set_lr(srt_tnode *n, const enum STNDir d, const srt_tndx v)
 {
 	if (n) {
 		if (d == ST_Left)
@@ -68,15 +68,15 @@ S_INLINE void set_lr(stn_t *n, const enum STNDir d, const stndx_t v)
 	}
 }
 
-S_INLINE stndx_t get_lr(const stn_t *n, const enum STNDir d)
+S_INLINE srt_tndx get_lr(const srt_tnode *n, const enum STNDir d)
 {
 	return d == ST_Left ? n->x.l : n->r;
 }
 
-S_INLINE stn_t *locate_parent(st_t *t, const struct NodeContext *son,
-			      enum STNDir *d)
+S_INLINE srt_tnode *
+locate_parent(srt_tree *t, const struct NodeContext *son, enum STNDir *d)
 {
-	stn_t *cn;
+	srt_tnode *cn;
 	if (t->root == son->x)
 		return son->n;
 	cn = get_node(t, t->root);
@@ -88,34 +88,36 @@ S_INLINE stn_t *locate_parent(st_t *t, const struct NodeContext *son,
 	return cn;
 }
 
-S_INLINE void update_node_data(const st_t *t, stn_t *tgt, const stn_t *src)
+S_INLINE void
+update_node_data(const srt_tree *t, srt_tnode *tgt, const srt_tnode *src)
 {
-	const size_t node_header_size = sizeof(stn_t);
+	const size_t node_header_size = sizeof(srt_tnode);
 	const size_t copy_size = t->d.elem_size - node_header_size;
 	char *tgtp = (char *)tgt + node_header_size;
 	const char *srcp = (const char *)src + node_header_size;
 	memcpy(tgtp, srcp, copy_size);
 }
 
-S_INLINE void copy_node(const st_t *t, stn_t *tgt, const stn_t *src)
+S_INLINE void copy_node(const srt_tree *t, srt_tnode *tgt, const srt_tnode *src)
 {
 	memcpy(tgt, src, t->d.elem_size);
 }
 
-S_INLINE void new_node(const st_t *t, stn_t *tgt, const stn_t *src, sbool_t ir)
+S_INLINE void
+new_node(const srt_tree *t, srt_tnode *tgt, const srt_tnode *src, srt_bool ir)
 {
 	update_node_data(t, tgt, src);
 	tgt->x.l = tgt->r = ST_NIL;
 	tgt->x.is_red = ir;
 }
 
-S_INLINE sbool_t is_red(const st_t *t, stndx_t node_id)
+S_INLINE srt_bool is_red(const srt_tree *t, srt_tndx node_id)
 {
 	RETURN_IF(node_id == ST_NIL, S_FALSE);
 	return get_node_r(t, node_id)->x.is_red;
 }
 
-S_INLINE void set_red(st_t *t, const stndx_t node_id, const sbool_t red)
+S_INLINE void set_red(srt_tree *t, const srt_tndx node_id, const srt_bool red)
 {
 	if (node_id != ST_NIL)
 		get_node(t, node_id)->x.is_red = red;
@@ -132,41 +134,44 @@ S_INLINE enum STNDir cd(const enum STNDir d)
  */
 
 #define F_rotate1X			\
-	stndx_t y = get_lr(xn, xd);	\
-	stn_t *yn = get_node(t, y);	\
+	srt_tndx y = get_lr(xn, xd);	\
+	srt_tnode *yn = get_node(t, y);	\
 	set_lr(xn, xd, get_lr(yn, d));	\
 	set_lr(yn, d, x);		\
 	set_red(t, x, S_TRUE);		\
 	set_red(t, y, S_FALSE);
 
-S_INLINE stndx_t rot1x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		       const enum STNDir xd)
+S_INLINE srt_tndx
+rot1x(srt_tree *t, srt_tnode *xn, const srt_tndx x, const enum STNDir d,
+      const enum STNDir xd)
 {
 	F_rotate1X;
 	return y;
 }
 
-S_INLINE void rot1x_p(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		      const enum STNDir xd, stn_t *xpn)
+S_INLINE void
+rot1x_p(srt_tree *t, srt_tnode *xn, const srt_tndx x, const enum STNDir d,
+	const enum STNDir xd, srt_tnode *xpn)
 {
 	F_rotate1X;
 	set_lr(xpn, d, y);
 }
 
-S_INLINE stn_t *rot1x_y(st_t *t, stn_t *xn, const stndx_t x,
-			const enum STNDir d, const enum STNDir xd,
-			stndx_t *y_out)
+S_INLINE srt_tnode *
+rot1x_y(srt_tree *t, srt_tnode *xn, const srt_tndx x, const enum STNDir d,
+	const enum STNDir xd, srt_tndx *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
 	return yn;
 }
 
-S_INLINE stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
-		       const enum STNDir xd)
+S_INLINE srt_tndx
+rot2x(srt_tree *t, srt_tnode *xn, const srt_tndx x, const enum STNDir d,
+      const enum STNDir xd)
 {
-	const stndx_t child = get_lr(xn, xd);
-	stn_t *child_node = get_node(t, child);
+	const srt_tndx child = get_lr(xn, xd);
+	srt_tnode *child_node = get_node(t, child);
 	rot1x_p(t, child_node, child, xd, d, xn);
 	return rot1x(t, xn, x, d, xd);
 }
@@ -175,7 +180,7 @@ S_INLINE stndx_t rot2x(st_t *t, stn_t *xn, const stndx_t x, const enum STNDir d,
  * If current node is the tree root node, change the root index so it targets
  * the new node.
  */
-S_INLINE void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
+S_INLINE void st_checkfix_root(srt_tree *t, srt_tndx pivot, srt_tndx new_pivot)
 {
 	if (pivot == t->root) {
 		t->root = new_pivot;
@@ -188,10 +193,10 @@ S_INLINE void st_checkfix_root(st_t *t, stndx_t pivot, stndx_t new_pivot)
  * purposes (for tree validation tests).
  * Returns: 0: error, > 0: tree height from a given node
  */
-static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
+static size_t st_assert_aux(const srt_tree *t, const srt_tndx ndx)
 {
 	size_t l, r;
-	const stn_t *n;
+	const srt_tnode *n;
 	RETURN_IF(!t, 0);
 	RETURN_IF(ndx == ST_NIL, 1);
 	n = get_node_r(t, ndx);
@@ -226,25 +231,26 @@ static size_t st_assert_aux(const st_t *t, const stndx_t ndx)
  * Allocation
  */
 
-st_t *st_alloc_raw(st_cmp_t cmp_f, const sbool_t ext_buf, void *buffer,
+srt_tree *st_alloc_raw(srt_cmp cmp_f, const srt_bool ext_buf, void *buffer,
 		   const size_t elem_size, const size_t max_size)
 {
-	st_t *t;
+	srt_tree *t;
 	RETURN_IF(!cmp_f || !elem_size || !buffer, st_void);
-	t = (st_t *)buffer;
-	sd_reset((sd_t *)t, sizeof(st_t), elem_size, max_size, ext_buf,
+	t = (srt_tree *)buffer;
+	sd_reset((srt_data *)t, sizeof(srt_tree), elem_size, max_size, ext_buf,
 		 S_FALSE);
 	t->cmp_f = cmp_f;
 	t->root = 0;
 	return t;
 }
 
-st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
+srt_tree *
+st_alloc(srt_cmp cmp_f, const size_t elem_size, const size_t init_size)
 {
-	size_t alloc_size = sd_alloc_size_raw(sizeof(st_t), elem_size,
+	size_t alloc_size = sd_alloc_size_raw(sizeof(srt_tree), elem_size,
 					      init_size, S_FALSE);
 	void *buf = s_malloc(alloc_size);
-	st_t *t = st_alloc_raw(cmp_f, S_FALSE, buf, elem_size, init_size);
+	srt_tree *t = st_alloc_raw(cmp_f, S_FALSE, buf, elem_size, init_size);
 	if (!t || t == st_void)
 		s_free(buf);
 	return t;
@@ -254,9 +260,9 @@ st_t *st_alloc(st_cmp_t cmp_f, const size_t elem_size, const size_t init_size)
  * Operations
  */
 
-st_t *st_dup(const st_t *t)
+srt_tree *st_dup(const srt_tree *t)
 {
-	st_t *t2;
+	srt_tree *t2;
 	RETURN_IF(!t, NULL);
 	t2 = st_alloc(t->cmp_f, t->d.elem_size, t->d.size);
 	RETURN_IF(!t2, NULL);
@@ -264,22 +270,23 @@ st_t *st_dup(const st_t *t)
 	return t2;
 }
 
-sbool_t st_insert(st_t **tt, const stn_t *n)
+srt_bool st_insert(srt_tree **tt, const srt_tnode *n)
 {
 	return st_insert_rw(tt, n, NULL);
 }
 
-sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
+srt_bool
+st_insert_rw(srt_tree **tt, const srt_tnode *n, const srt_tree_rewrite rw_f)
 {
-	st_t *t;
-	stn_t auxn = EMPTY_STN;
+	srt_tree *t;
+	srt_tnode auxn = EMPTY_STN;
 	size_t ts, c, cp, cpp, cppp;
 	enum STNDir ld = ST_Left;	/* last walk direction */
 	enum STNDir d = ST_Left;	/* current walk direction */
 	struct NodeContext w[CW_SIZE];
-	sbool_t done = S_FALSE;
+	srt_bool done = S_FALSE;
 	enum STNDir xld;
-	stndx_t pd, v;
+	srt_tndx pd, v;
 	int64_t cmp;
 	/* BEHAVIOR: valid tree, with space for one extra element */
 	RETURN_IF(!tt || !*tt || !n || !st_grow(tt, 1), S_FALSE);
@@ -291,7 +298,7 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	 * Trivial case: insert node into empty tree
 	 */
 	if (!ts) {
-		stn_t *node = get_node(t, 0);
+		srt_tnode *node = get_node(t, 0);
 		new_node(t, node, n, S_FALSE);
 		if (rw_f)
 			rw_f(node, n, S_FALSE);
@@ -327,8 +334,8 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 		/* Leaf found? update tree, copy data, update size */
 		if (w[c].x == ST_NIL) {
 			/* New node: */
-			w[c].x = (stndx_t)ts;
-			w[c].n = get_node(t, (stndx_t)ts);
+			w[c].x = (srt_tndx)ts;
+			w[c].n = get_node(t, (srt_tndx)ts);
 			new_node(t, w[c].n, n, S_TRUE);
 			if (rw_f)
 				rw_f(w[c].n, n, S_FALSE);
@@ -385,29 +392,29 @@ sbool_t st_insert_rw(st_t **tt, const stn_t *n, const st_rewrite_t rw_f)
 	return S_TRUE;
 }
 
-sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
+srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 {
 	size_t ts0;
-	stndx_t ts;
-	stn_t auxn = EMPTY_STN;
-	stndx_t c, cp, cpp, cppp;
+	srt_tndx ts;
+	srt_tnode auxn = EMPTY_STN;
+	srt_tndx c, cp, cpp, cppp;
 	struct NodeContext found = { ST_NIL, NULL };
 	enum STNDir d0 = ST_Right;
 	struct NodeContext w[CW_SIZE];
 	int64_t cmp;
 	enum STNDir d;
-	stndx_t nd;
-	stn_t *ndn;
-	stndx_t y;
+	srt_tndx nd;
+	srt_tnode *ndn;
+	srt_tndx y;
 	enum STNDir xd, xd0, d2;
-	stndx_t s, sz;
-	stn_t *yn, *sn, *cpp_d2n;
+	srt_tndx s, sz;
+	srt_tnode *yn, *sn, *cpp_d2n;
 	/* BEHAVIOR: valid request */
 	RETURN_IF(!t || !n, S_FALSE);
 	/* Check empty tree: */
 	ts0 = st_size(t);
 	RETURN_IF(ts0 == 0 || ts0 >= ST_NIL, S_FALSE);
-	ts = (stndx_t)ts0;
+	ts = (srt_tndx)ts0;
 	/*
 	 * Prepare a 4-level node tracking window (in this case a 3-level
 	 * would be enough, using 4 in order to avoid the division by 3,
@@ -483,13 +490,13 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			d2 = w[cpp].n->r == w[cp].x ?
 						ST_Right : ST_Left;
 			if (is_red(t, get_lr(sn, d0))) {
-				const stndx_t y = rot2x(t, w[cp].n, w[cp].x,
+				const srt_tndx y = rot2x(t, w[cp].n, w[cp].x,
 							d0, xd0);
 				set_lr(w[cpp].n, d2, y);
 				st_checkfix_root(t, w[cp].x, y);
 			} else {
 				if (is_red(t, get_lr(sn, xd0))) {
-					stndx_t y = rot1x(t, w[cp].n, w[cp].x,
+					srt_tndx y = rot1x(t, w[cp].n, w[cp].x,
 							  d0, xd0);
 					set_lr(w[cpp].n, d2, y);
 					st_checkfix_root(t, w[cp].x, y);
@@ -549,7 +556,7 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 			enum STNDir d = ST_Left;
 			const struct NodeContext ct = { sz, get_node(t, sz) };
 			/* TODO: cache this (!) */
-			stn_t *fpn = locate_parent(t, &ct, &d);
+			srt_tnode *fpn = locate_parent(t, &ct, &d);
 			if (fpn) {
 				copy_node(t, w[c].n, ct.n);
 				set_lr(fpn, d, w[c].x);
@@ -567,9 +574,9 @@ sbool_t st_delete(st_t *t, const stn_t *n, stn_callback_t callback)
 	return found.n ? S_TRUE : S_FALSE;
 }
 
-const stn_t *st_locate(const st_t *t, const stn_t *n)
+const srt_tnode *st_locate(const srt_tree *t, const srt_tnode *n)
 {
-	const stn_t *cn = get_node_r(t, t->root);
+	const srt_tnode *cn = get_node_r(t, t->root);
 	int r;
 	for (;;)
 		if (!(r = t->cmp_f(cn, n)) ||
@@ -599,14 +606,14 @@ enum eTMode
 
 #define RBT_MAX_DEPTH_LOG2 65
 
-static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
-			 const enum eTMode m)
+static ssize_t srt_treer_aux(const srt_tree *t, st_traverse f, void *context,
+			     const enum eTMode m)
 {
 	size_t ts;
 	struct STreeScan p[2 * RBT_MAX_DEPTH_LOG2]; /* 2 * (log2(ts_max) + 1) */
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
 	int f_pre, f_ino, f_post;
-	const stn_t *cn_aux;
+	const srt_tnode *cn_aux;
 	RETURN_IF(!t, -1);
 	ts = st_size(t);
 	RETURN_IF(!ts, S_FALSE);
@@ -700,29 +707,29 @@ static ssize_t st_tr_aux(const st_t *t, st_traverse f, void *context,
 	return tp.max_level + 1;
 }
 
-ssize_t st_traverse_preorder(const st_t *t, st_traverse f, void *context)
+ssize_t st_traverse_preorder(const srt_tree *t, st_traverse f, void *context)
 {
-	return st_tr_aux(t, f, context, TR_Preorder);
+	return srt_treer_aux(t, f, context, TR_Preorder);
 }
 
-ssize_t st_traverse_inorder(const st_t *t, st_traverse f, void *context)
+ssize_t st_traverse_inorder(const srt_tree *t, st_traverse f, void *context)
 {
-	return st_tr_aux(t, f, context, TR_Inorder);
+	return srt_treer_aux(t, f, context, TR_Inorder);
 }
 
-ssize_t st_traverse_postorder(const st_t *t, st_traverse f, void *context)
+ssize_t st_traverse_postorder(const srt_tree *t, st_traverse f, void *context)
 {
-	return st_tr_aux(t, f, context, TR_Postorder);
+	return srt_treer_aux(t, f, context, TR_Postorder);
 }
 
-ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
+ssize_t st_traverse_levelorder(const srt_tree *t, st_traverse f, void *context)
 {
 	size_t ts, i, le, ne;
 	struct STraverseParams tp = { context, t, ST_NIL, 0, 0 };
-	sv_t *curr, *next;
-	stndx_t n;
-	const stn_t *node;
-	sv_t *tmp;
+	srt_vector *curr, *next;
+	srt_tndx n;
+	const srt_tnode *node;
+	srt_vector *tmp;
 	RETURN_IF(!t, -1); /* BEHAVIOR: invalid parameter */
 	ts = st_size(t);
 	RETURN_IF(!ts, 0);	/* empty */
@@ -736,7 +743,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 		}
 		le = sv_size(curr);
 		for (i = 0; i < le; i++) {
-			n = (stndx_t)sv_at_u(curr, i);
+			n = (srt_tndx)sv_at_u(curr, i);
 			node = get_node_r(t, n);
 			if (f) {
 				tp.c = n;
@@ -759,7 +766,7 @@ ssize_t st_traverse_levelorder(const st_t *t, st_traverse f, void *context)
 	return tp.max_level + 1;
 }
 
-sbool_t st_assert(const st_t *t)
+srt_bool st_assert(const srt_tree *t)
 {
 	RETURN_IF(!t, S_FALSE);
 	RETURN_IF(t->d.size == 1 && is_red(t, t->root), S_FALSE);

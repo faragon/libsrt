@@ -118,7 +118,7 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 		OP(t + i, s + i, p + i - ps);
 
 #define BUILD_HALG(FN, LOOP, OP, p)					\
-	static sbool_t FN(ss_t **dpcm, const ss_t *rgb,			\
+	static srt_bool FN(srt_string **dpcm, const srt_string *rgb,			\
 		       const struct RGB_Info *ri)			\
 	{								\
 		ALG_COMMON(p);						\
@@ -146,7 +146,7 @@ S_INLINE int paeth_predictor(int a, int b, int c)
 	}						\
 
 #define BUILD_VDALG(FN, LOOP, OP, p)					     \
-	static sbool_t FN(ss_t **dpcm, const ss_t *rgb, 		     \
+	static srt_bool FN(srt_string **dpcm, const srt_string *rgb, 		     \
 		       const struct RGB_Info *ri)			     \
 	{								     \
 		ALG_COMMON(p);						     \

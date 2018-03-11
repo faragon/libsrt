@@ -35,7 +35,7 @@ extern "C" {
  * Structures
  */
 
-typedef sv_t sb_t;	/* Opaque structure (accessors are provided) */
+typedef srt_vector srt_bitset;	/* Opaque structure (accessors are provided) */
 			/* (bitset is implemented using a vector)    */
 
 /*
@@ -50,16 +50,16 @@ typedef sv_t sb_t;	/* Opaque structure (accessors are provided) */
 
 /*
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|1;2|
-sb_t *sb_alloca(const size_t initial_num_elems_reserve)
+srt_bitset *sb_alloca(const size_t initial_num_elems_reserve)
 
 #API: |Allocate bitset (heap)|space preallocated to store n elements|bitset|O(1)|1;2|
-sb_t *sb_alloc(const size_t initial_num_elems_reserve)
+srt_bitset *sb_alloc(const size_t initial_num_elems_reserve)
 
 #API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;2|
-sb_t *sb_free(sb_t **b, ...)
+srt_bitset *sb_free(srt_bitset **b, ...)
 
 #API: |Duplicate bitset|bitset|output bitset|O(n)|1;2|
-sb_t *sb_dup(const sb_t *src)
+srt_bitset *sb_dup(const srt_bitset *src)
 
 */
 
@@ -68,7 +68,7 @@ sb_t *sb_dup(const sb_t *src)
  */
 
 /* #API: |Reset bitset|bitset|-|O(1)|1;2| */
-S_INLINE void sb_clear(sb_t *b)
+S_INLINE void sb_clear(srt_bitset *b)
 {
 	if (b) {
 		sv_set_size(b, 0);
@@ -78,7 +78,7 @@ S_INLINE void sb_clear(sb_t *b)
 
 /* #API: |Number of bits set to 1|bitset|Map number of elements|O(1)|1;2| */
 
-S_INLINE size_t sb_popcount(const sb_t *b)
+S_INLINE size_t sb_popcount(const srt_bitset *b)
 {
 	return b ? b->vx.cnt : 0;
 }
@@ -89,7 +89,7 @@ S_INLINE size_t sb_popcount(const sb_t *b)
 
 /* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)|1;2| */
 
-S_INLINE int sb_test(const sb_t *b, const size_t nth)
+S_INLINE int srt_bitsetest(const srt_bitset *b, const size_t nth)
 {
 	size_t pos, mask;
 	const unsigned char *buf;
@@ -103,7 +103,7 @@ S_INLINE int sb_test(const sb_t *b, const size_t nth)
 
 /* #API: |Set nth bit to 1|bitset; bit offset||O(n) -O(1) amortized-|1;2| */
 
-S_INLINE void sb_set(sb_t **b, const size_t nth)
+S_INLINE void sb_set(srt_bitset **b, const size_t nth)
 {
 	size_t ss;
 	if (b) {
@@ -138,7 +138,7 @@ S_INLINE void sb_set(sb_t **b, const size_t nth)
 
 /* #API: |Set nth bit to 0|bitset; bit offset||O(1)|1;2| */
 
-S_INLINE void sb_reset(sb_t **b, const size_t nth)
+S_INLINE void sb_reset(srt_bitset **b, const size_t nth)
 {
 	if (b && *b) {
 		const size_t pos = nth / 8;
@@ -158,10 +158,10 @@ S_INLINE void sb_reset(sb_t **b, const size_t nth)
 
 /* #API: |Force evaluation of first N bits -equivalent to set to 0 all not previously referenced bits-|bitset; bit offset|-|O(n)|1;2| */
 
-S_INLINE void sb_eval(sb_t **b, const size_t nth)
+S_INLINE void sb_eval(srt_bitset **b, const size_t nth)
 {
 	if (b) {
-		int prev = sb_test(*b, nth);
+		int prev = srt_bitsetest(*b, nth);
 		sb_set(b, nth);
 		if (!prev)
 			sb_reset(b, nth);
@@ -169,19 +169,19 @@ S_INLINE void sb_eval(sb_t **b, const size_t nth)
 }
 
 /* #API: |Preallocated space left (number of 1 bit elements)|bitset|allocated space left (unit: bits)|O(1)|1;2| */
-S_INLINE size_t sb_capacity(const sb_t *b)
+S_INLINE size_t sb_capacity(const srt_bitset *b)
 {
 	return 8 * sv_capacity(b);
 }
 
 /* #API: |Ensure space for N 1-bit elements|bitset;absolute element reserve (unit: bits)|reserved elements|O(1)|1;2| */
-S_INLINE size_t sb_reserve(sb_t **b, const size_t max_elems)
+S_INLINE size_t sb_reserve(srt_bitset **b, const size_t max_elems)
 {
 	return sv_reserve(b, 1 + max_elems / 8) * 8;
 }
 
 /* #API: |Free unused space|bitset|same bitset (optional usage)|O(1)|1;2| */
-S_INLINE sb_t *sb_shrink(sb_t **b)
+S_INLINE srt_bitset *sb_shrink(srt_bitset **b)
 {
 	RETURN_IF(!b || !*b, NULL); /* BEHAVIOR */
 	if (!sb_popcount(*b))

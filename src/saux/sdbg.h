@@ -21,13 +21,13 @@ extern "C" {
 #include "../smap.h"
 #include "stree.h"
 
-typedef ss_t *(*ss_cat_stn)(ss_t **s, const stn_t *n, const stndx_t id);
+typedef srt_string *(*ss_cat_stn)(srt_string **s, const srt_tnode *n, const srt_tndx id);
 
 const char *sv_type_to_label(const enum eSV_Type t);
-void sv_log_obj(ss_t **log, const sv_t *v);
-void st_log_obj(ss_t **log, const st_t *t, ss_cat_stn f);
-void sm_log_obj(ss_t **log, const sm_t *m);
-void s_hex_dump(ss_t **log, const char *label, const char *buf, const size_t buf_size);
+void sv_log_obj(srt_string **log, const srt_vector *v);
+void st_log_obj(srt_string **log, const srt_tree *t, ss_cat_stn f);
+void sm_log_obj(srt_string **log, const srt_map *m);
+void s_hex_dump(srt_string **log, const char *label, const char *buf, const size_t buf_size);
 
 #ifdef __cplusplus
 }      /* extern "C" { */

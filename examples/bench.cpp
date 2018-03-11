@@ -69,7 +69,7 @@ bool libsrt_map_ii32(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	sm_t *m = sm_alloc(SM_II32, 0);
+	srt_map *m = sm_alloc(SM_II32, 0);
 	for (size_t i = 0; i < count; i++)
 		sm_insert_ii32(&m, (int32_t)i, (int32_t)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -104,7 +104,7 @@ bool libsrt_map_ii64(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	sm_t *m = sm_alloc(SM_II, 0);
+	srt_map *m = sm_alloc(SM_II, 0);
 	for (size_t i = 0; i < count; i++)
 		sm_insert_ii(&m, (int64_t)i, (int64_t)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -139,8 +139,8 @@ bool libsrt_map_s16(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	ss_t *btmp = ss_alloca(512);
-	sm_t *m = sm_alloc(SM_SS, 0);
+	srt_string *btmp = ss_alloca(512);
+	srt_map *m = sm_alloc(SM_SS, 0);
 	for (size_t i = 0; i < count; i++) {
 		ss_printf(&btmp, 512, "%016i", (int)i);
 		sm_insert_ss(&m, btmp, btmp);
@@ -188,8 +188,8 @@ bool libsrt_map_s64(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	ss_t *btmp = ss_alloca(512);
-	sm_t *m = sm_alloc(SM_SS, 0);
+	srt_string *btmp = ss_alloca(512);
+	srt_map *m = sm_alloc(SM_SS, 0);
 	for (size_t i = 0; i < count; i++) {
 		ss_printf(&btmp, 512, "%064i", (int)i);
 		sm_insert_ss(&m, btmp, btmp);
@@ -323,7 +323,7 @@ bool libsrt_set_i32(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	sms_t *m = sms_alloc(SMS_I32, 0);
+	srt_set *m = sms_alloc(SMS_I32, 0);
 	for (size_t i = 0; i < count; i++)
 		sms_insert_i32(&m, (int32_t)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -358,7 +358,7 @@ bool libsrt_set_i64(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	sms_t *m = sms_alloc(SMS_I, 0);
+	srt_set *m = sms_alloc(SMS_I, 0);
 	for (size_t i = 0; i < count; i++)
 		sms_insert_i(&m, (int64_t)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -393,8 +393,8 @@ bool libsrt_set_s16(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	ss_t *btmp = ss_alloca(512);
-	sms_t *m = sms_alloc(SMS_S, 0);
+	srt_string *btmp = ss_alloca(512);
+	srt_set *m = sms_alloc(SMS_S, 0);
 	for (size_t i = 0; i < count; i++) {
 		ss_printf(&btmp, 512, "%016i", (int)i);
 		sms_insert_s(&m, btmp);
@@ -442,8 +442,8 @@ bool libsrt_set_s64(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	ss_t *btmp = ss_alloca(512);
-	sms_t *m = sms_alloc(SMS_S, 0);
+	srt_string *btmp = ss_alloca(512);
+	srt_set *m = sms_alloc(SMS_S, 0);
 	for (size_t i = 0; i < count; i++) {
 		ss_printf(&btmp, 512, "%064i", (int)i);
 		sms_insert_s(&m, btmp);
@@ -493,7 +493,7 @@ bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 		  !TIdTest(tid, TId_DeleteOneByOne) &&
 		  !TIdTest(tid, TId_Sort10Times) &&
 		  !TIdTest(tid, TId_Sort10000Times), false);
-	sv_t *v = sv_alloc_t(t, 0);
+	srt_vector *v = sv_alloc_t(t, 0);
 	if (TIdTest(tid, TId_ReverseSort))
 		for (size_t i = 0; i < count; i++)
 			sv_push_i(&v, (int32_t)count - 1 - (int32_t)i);
@@ -652,7 +652,7 @@ bool libsrt_vector_gen(size_t count, int tid)
 		  !TIdTest(tid, TId_Sort10000Times), false);
 	struct StrGenTest aux;
 	memset(&aux, 0, sizeof(aux));
-	sv_t *v = sv_alloc(sizeof(struct StrGenTest), 0, sv_cmp_StrGenTest);
+	srt_vector *v = sv_alloc(sizeof(struct StrGenTest), 0, sv_cmp_StrGenTest);
 	for (size_t i = 0; i < count; i++)
 		sv_push(&v, &aux);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -733,7 +733,7 @@ bool libsrt_string_search(const char *haystack, const char *needle,
 			  size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
-	const ss_t *h = ss_crefa(haystack), *n = ss_crefa(needle);
+	const srt_string *h = ss_crefa(haystack), *n = ss_crefa(needle);
 	for (size_t i = 0; i < count; i++)
 		ss_find(h, 0, n);
 	return true;
@@ -948,11 +948,11 @@ const char
 bool libsrt_string_loweruppercase(const char *in, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
-	ss_t *s = ss_alloca(95);
+	srt_string *s = ss_alloca(95);
 	ss_cpy(&s, ss_crefa(in));
 	for (size_t i = 0; i < count; i++) {
-		ss_tolower(&s);
-		ss_toupper(&s);
+		srt_stringolower(&s);
+		srt_stringoupper(&s);
 	}
 	return true;
 }
@@ -1064,7 +1064,7 @@ const size_t cat_test_ops = sizeof(cat_test) / sizeof(cat_test[0]);
 bool libsrt_string_cat(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
-	ss_t *s[cat_test_ops], *out = NULL;
+	srt_string *s[cat_test_ops], *out = NULL;
 	for (size_t i = 0; i < cat_test_ops; i++)
 		s[i] = ss_dup_c(cat_test[i]);
 	for (size_t i = 0; i < count; i++)
@@ -1117,12 +1117,12 @@ bool cxx_stringstream_cat(size_t count, int tid)
 bool libsrt_bitset(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
-	sb_t *b = sb_alloc(count);
+	srt_bitset *b = sb_alloc(count);
 	for (size_t i = 0; i < count; i++)
 		sb_set(&b, i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
-			sb_test(b, i) || putchar(0);
+			srt_bitsetest(b, i) || putchar(0);
 	sb_free(&b);
 	HOLD_EXEC(tid);
 	return true;
@@ -1145,7 +1145,7 @@ bool cxx_bitset(size_t count, int tid)
 bool libsrt_bitset_popcountN(size_t pc_count, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
-	sb_t *b = sb_alloc(count);
+	srt_bitset *b = sb_alloc(count);
 	for (size_t i = 0; i < count; i++)
 		sb_set(&b, i);
 	for (size_t j = 0; j < pc_count; j++)

@@ -20,11 +20,11 @@ int main(int argc, const char **argv)
 	size_t in_size = 0, enc_bytes, rgb1_bytes, rgb2_bytes;
 	ssize_t written;
 	struct RGB_Info ri1, ri2;
-	ss_t *iobuf = NULL, *rgb1_buf = NULL, *rgb2_buf = NULL, *rgb3_buf = NULL;
+	srt_string *iobuf = NULL, *rgb1_buf = NULL, *rgb2_buf = NULL, *rgb3_buf = NULL;
 	int exit_code = 2;
 	FILE *fin = NULL, *fout = NULL;
 	const char *exit_msg = "not enough parameters";
-	sbool_t ro;
+	srt_bool ro;
 	enum ImgTypes t_in1, t_in2, t_out;
 	#define IMGC_XTEST(test, m, c)	\
 		if (test) { exit_msg = m; exit_code = c; break; }

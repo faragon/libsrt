@@ -34,15 +34,15 @@ enum EncStep
 };
 
 typedef void (*f_enc)(enum EncStep em, const size_t nrow, const size_t nfield,
-		      const ss_t *field, ss_t **out);
+		      const srt_string *field, srt_string **out);
 typedef ssize_t (*f_dec)(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 
 static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
-		    const ss_t *field, ss_t **out);
+		    const srt_string *field, srt_string **out);
 static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
-		     const ss_t *field, ss_t **out);
+		     const srt_string *field, srt_string **out);
 static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
-		     const ss_t *field, ss_t **out);
+		     const srt_string *field, srt_string **out);
 static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
@@ -81,7 +81,7 @@ static int exit_msg(const char **argv, const char *msg, const int code)
 }
 
 static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
-		    const ss_t *field, ss_t **out)
+		    const srt_string *field, srt_string **out)
 {
 	switch (em) {
 	case SENC_field:
@@ -112,7 +112,7 @@ static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
 #define HTML_TDX_S	5
 
 static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
-		     const ss_t *field, ss_t **out)
+		     const srt_string *field, srt_string **out)
 {
 	switch (em) {
 	case SENC_begin:
@@ -155,7 +155,7 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 #define JS_QT_S		1
 
 static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
-		     const ss_t *field, ss_t **out)
+		     const srt_string *field, srt_string **out)
 {
 	switch (em) {
 	case SENC_begin:
@@ -185,10 +185,10 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 {
 	size_t l, nl, qo, co, o, nfield = 0;
 	ssize_t nrow = 0;
-	sbool_t quote_opened = S_FALSE, quote_pending = S_FALSE,
+	srt_bool quote_opened = S_FALSE, quote_pending = S_FALSE,
 		fatal_error = S_FALSE;
-	sbool_t coqo, conl, qonl, qoco, nlqo, nlco;
-	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	srt_bool coqo, conl, qonl, qoco, nlqo, nlco;
+	srt_string *rb = NULL, *wb = NULL, *field = NULL;
 	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, (size_t)nrow, nfield, field, &wb);
 	for (; ss_read(&rb, stdin, RBUF_SIZE) > 0;) {
@@ -266,7 +266,7 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 	return nrow;
 }
 
-static sbool_t sflush(ss_t *wb, FILE *out_fd, const size_t buf_size)
+static srt_bool sflush(srt_string *wb, FILE *out_fd, const size_t buf_size)
 {
 	const size_t wbss = ss_size(wb);
 	return wbss > buf_size && ss_write(out_fd, wb, 0, wbss) < 0 ?
@@ -279,8 +279,8 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 	enum eHTFSM { HTSearchTable, HTSearchRow, HTSearchField, HTFillField };
 	enum eHTFSM st = HTSearchTable;
 	size_t o = 0, p, q, z, nfield = 0, nrow = 0, ss, ss0;
-	sbool_t fatal_error = S_FALSE;
-	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	srt_bool fatal_error = S_FALSE;
+	srt_string *rb = NULL, *wb = NULL, *field = NULL;
 	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, nrow, nfield, field, &wb);
 	for (;;) {
@@ -367,9 +367,9 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		      JSFillFieldQ };
 	enum eJSFSM st = JSSearchOpen;
 	size_t o = 0, p, q, r, s, nfield = 0, nrow = 0;
-	sbool_t fatal_error = S_FALSE, done = S_FALSE,
+	srt_bool fatal_error = S_FALSE, done = S_FALSE,
 		q_wins, r_wins;
-	ss_t *rb = NULL, *wb = NULL, *field = NULL;
+	srt_string *rb = NULL, *wb = NULL, *field = NULL;
 	size_t ss, ss0, z;
 	size_t ox, next_o;
 	RETURN_IF(!in_fd || !out_fd || !out_enc_f, -1);

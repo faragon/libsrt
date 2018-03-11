@@ -46,19 +46,19 @@ int main(int argc, const char **argv)
 	int exit_code = 0;
 	uint8_t esc, dle[S_PK_U64_MAX_BYTES], *dlep;
 	const uint8_t *dlepc;
-	ss_ref_t ref;
+	srt_string_ref ref;
 	size_t lmax = 0;
 	size_t li = 0, lo = 0, j, l, l2, ss0, off;
 	const char *b;
 	int cf;
-	sbool_t done;
+	srt_bool done;
 	uint32_t acc;
-	uint32_t (*f32)(const ss_t *, uint32_t, size_t, size_t) = NULL;
-	ss_t *in = NULL, *out = NULL;
-	ss_t *(*ss_codec1_f)(ss_t **s, const ss_t *src) = NULL;
-	ss_t *(*ss_codec2_f)(ss_t **s, const ss_t *src) = NULL;
-	ss_t *(*ss_codec3_f)(ss_t **s, const ss_t *src) = NULL;
-	ss_t *(*ss_codec4_f)(ss_t **s, const ss_t *src) = NULL;
+	uint32_t (*f32)(const srt_string *, uint32_t, size_t, size_t) = NULL;
+	srt_string *in = NULL, *out = NULL;
+	srt_string *(*ss_codec1_f)(srt_string **s, const srt_string *src) = NULL;
+	srt_string *(*ss_codec2_f)(srt_string **s, const srt_string *src) = NULL;
+	srt_string *(*ss_codec3_f)(srt_string **s, const srt_string *src) = NULL;
+	srt_string *(*ss_codec4_f)(srt_string **s, const srt_string *src) = NULL;
 	size_t lzbufsize = LZBUF_SIZE;
 	if (argc < 2)
 		return syntax_error(argv, 1);

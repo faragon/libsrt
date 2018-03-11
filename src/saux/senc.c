@@ -712,7 +712,7 @@ S_INLINE void senc_lz_store_lit(uint8_t **o, const uint8_t *in, size_t size)
 	}
 }
 
-S_INLINE sbool_t senc_lz_store_ref(uint8_t **o, const uint8_t *slit,
+S_INLINE srt_bool senc_lz_store_ref(uint8_t **o, const uint8_t *slit,
 				   size_t nlit, size_t dist0, size_t *len0)
 {
 	uint64_t v64;

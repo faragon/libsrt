@@ -13,7 +13,7 @@ extern "C" {
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Designed to be used by libraries or wrapped by some abstraction (e.g.
- * ss_t/libsrt), not as general-purpose direct usage.
+ * srt_string/libsrt), not as general-purpose direct usage.
  *
  * Features:
  *

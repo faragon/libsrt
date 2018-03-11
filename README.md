@@ -132,7 +132,7 @@ Generic disadvantages/limitations
 
 * Concurrent read-only operations are safe, but concurrent read/write must be protected by the user (e.g. using mutexes or spinlocks). That can be seen as a disadvantage or as a "feature" (it is faster).
 
-String-specific advantages (ss\_t)
+String-specific advantages (srt\_string)
 ===
 
 * Binary data support
@@ -179,10 +179,10 @@ String-specific advantages (ss\_t)
   * If a string operation fails, the string is kept in the last successful state (e.g. ss\_cat(&a, b, huge\_string, other))
   * String operations always return valid strings, e.g.
 		This is OK:
-			ss\_t *s = NULL;
+			srt_string\_t *s = NULL;
 			ss_cpy_c(&s, "a");
 		Same behavior as:
-			ss\_t *s = ss_dup_c("a");
+			srt_string\_t *s = ss_dup_c("a");
   * ss\_free(&s1, ..., &sN);  (no manual set to NULL is required)
 
 String-specific disadvantages/limitations
@@ -190,7 +190,7 @@ String-specific disadvantages/limitations
 
 * No reference counting support. Rationale: simplicity.
 
-Vector-specific advantages (sv\_t)
+Vector-specific advantages (srt\_vector)
 ===
 
 * Variable-length concatenation and push functions.
@@ -206,7 +206,7 @@ Vector-specific disadvantages/limitations
 
 * No insert function. Rationale: insert is slow (O(n)). Could be added, if someone asks for it.
 
-Map-specific advantages (sm\_t)
+Map-specific advantages (srt\_map)
 ===
 
 * Abstraction over Red-Black tree implementation using linear memory pool with just 8 byte per node overhead, allowing up to (2^32)-1 nodes (for both 32 an 64 bit compilers). E.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element \-8 byte metadata, 4 + 4 byte data\-).

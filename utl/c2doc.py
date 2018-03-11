@@ -8,7 +8,7 @@
 #
 # Tag syntax example from src/smap.h:
 #	/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-#	sbool_t sm_uu32_insert(sm_t **m, const suint32_t k, const suint32_t v);
+#	srt_sbool sm_uu32_insert(srt_map **m, const uint32_t k, const uint32_t v);
 #
 #	/* #API: |a|b|c|d|e| */
 #	return_type function_name(param1, ..., paramN);
