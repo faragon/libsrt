@@ -1122,7 +1122,7 @@ bool libsrt_bitset(size_t count, int tid)
 		sb_set(&b, i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
-			srt_bitsetest(b, i) || putchar(0);
+			sb_test(b, i) || putchar(0);
 	sb_free(&b);
 	HOLD_EXEC(tid);
 	return true;

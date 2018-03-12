@@ -89,7 +89,7 @@ S_INLINE size_t sb_popcount(const srt_bitset *b)
 
 /* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)|1;2| */
 
-S_INLINE int srt_bitsetest(const srt_bitset *b, const size_t nth)
+S_INLINE int sb_test(const srt_bitset *b, const size_t nth)
 {
 	size_t pos, mask;
 	const unsigned char *buf;
@@ -161,7 +161,7 @@ S_INLINE void sb_reset(srt_bitset **b, const size_t nth)
 S_INLINE void sb_eval(srt_bitset **b, const size_t nth)
 {
 	if (b) {
-		int prev = srt_bitsetest(*b, nth);
+		int prev = sb_test(*b, nth);
 		sb_set(b, nth);
 		if (!prev)
 			sb_reset(b, nth);

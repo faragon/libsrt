@@ -696,7 +696,7 @@ srt_string *ss_resize(srt_string **s, const size_t n, char fill_byte);
 srt_string *ss_resize_u(srt_string **s, const size_t n, int fill_char);
 
 /* #API: |Remove spaces from left and right side|input/output string|output string reference (optional usage)|O(n)|1;2| */
-srt_string *srt_stringrim(srt_string **s);
+srt_string *ss_trim(srt_string **s);
 
 /* #API: |Remove spaces from left side|input/output string|output string reference (optional usage)|O(n)|1;2| */
 srt_string *ss_ltrim(srt_string **s);

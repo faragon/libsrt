@@ -199,8 +199,8 @@ static int test_sb(size_t nelems)
 		  sb_popcount(da) != sb_popcount(db) ||
 		  sb_popcount(a) != sb_popcount(da) ||
 		  sb_popcount(a) != 2 ? 1 :
-		  !srt_bitsetest(a, 0) || !srt_bitsetest(b, 0) ||
-		  !srt_bitsetest(da, 0) || !srt_bitsetest(db, 0) ? 2 : 0;
+		  !sb_test(a, 0) || !sb_test(b, 0) ||
+		  !sb_test(da, 0) || !sb_test(db, 0) ? 2 : 0;
 	/* clear 'a', 'b', 'da' all at once */
 	sb_clear(a);
 	sb_clear(b);
@@ -209,8 +209,8 @@ static int test_sb(size_t nelems)
 	sb_reset(&db, 0);
 	sb_reset(&db, nelems - 1);
 	res |= sb_popcount(a) || sb_popcount(b) || sb_popcount(da) ||
-	       sb_popcount(db) ? 4 : srt_bitsetest(da, 0) ||
-	       srt_bitsetest(db, 0) ? 8 : 0;
+	       sb_popcount(db) ? 4 : sb_test(da, 0) ||
+	       sb_test(db, 0) ? 8 : 0;
 	res |= sb_capacity(da) < nelems || sb_capacity(db) < nelems ? 16 : 0;
 	sb_shrink(&a);
 	sb_shrink(&b);
@@ -291,7 +291,7 @@ static int test_ss_trim(const char *in, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
-	res |= res ? 0 : (srt_stringrim(&a) ? 0 : 2) |
+	res |= res ? 0 : (ss_trim(&a) ? 0 : 2) |
 			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;

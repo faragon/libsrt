@@ -1851,7 +1851,7 @@ srt_string *ss_resize_u(srt_string **s, const size_t u_chars, int fill_char)
 	return aux_resize_u(s, S_FALSE, *s, u_chars, fill_char);
 }
 
-srt_string *srt_stringrim(srt_string **s)
+srt_string *ss_trim(srt_string **s)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	aux_rtrim(s, S_FALSE, *s);
