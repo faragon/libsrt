@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It covers basic needs for writing high level applications in C without worrying about managing dynamic size data structures. It is also suitable for low level and hard real time applications, as functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
+libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It is also suitable for low level and hard real-time applications, because functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
@@ -96,7 +96,7 @@ Generic advantages
 
 * RAM, ROM, and disk operation
   * Data structures can be stored in ROM memory.
-  * Data structures are suitable for memory mapped operation, and disk store/restore. This is currently true for strings, vectors, and bitsets. For maps, only when using integer data (as currently strings inside a tree are external references -this will be fixed in the future, adding the possibility of in-map arbitrary fixed data, allowing e.g. fixes size strings inside a map-)
+  * Data structures are suitable for memory mapped operation, and disk store/restore. This is currently true for strings, vectors, and bit sets. For maps, only when using integer data (as currently strings inside a tree are external references -this will be fixed in the future, adding the possibility of in-map arbitrary fixed data, allowing e.g. fixes size strings inside a map-)
 
 * Known edge case behavior
   * Allowing both "carefree code" and per-operation error check. I.e. memory errors and UTF8 format error can be checked after every operation.
@@ -179,10 +179,10 @@ String-specific advantages (srt\_string)
   * If a string operation fails, the string is kept in the last successful state (e.g. ss\_cat(&a, b, huge\_string, other))
   * String operations always return valid strings, e.g.
 		This is OK:
-			srt_string\_t *s = NULL;
+			srt_string *s = NULL;
 			ss_cpy_c(&s, "a");
 		Same behavior as:
-			srt_string\_t *s = ss_dup_c("a");
+			srt_string *s = ss_dup_c("a");
   * ss\_free(&s1, ..., &sN);  (no manual set to NULL is required)
 
 String-specific disadvantages/limitations
@@ -265,7 +265,7 @@ Other
 Status
 ---
 
-Beta. API still can change.
+Beta. API still can change: suggestions are welcome.
 
 "to do" list
 ---
