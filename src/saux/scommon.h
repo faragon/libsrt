@@ -380,17 +380,10 @@ S_INLINE void s_free(void *ptr)
 	#define S_ALLOW_LE_OPTIMIZATIONS 0
 #endif
 
-#ifdef S_UNALIGNED_MEMORY_ACCESS
-#define RS_LD_X(a, T) return *(const T *)(a)
-#define RS_ST_X(a, T, v) *(T *)(a) = v
-#else
 #define RS_LD_X(a, T)			\
 	T r;				\
 	memcpy(&r, a, sizeof(r));	\
 	return r
-#define RS_ST_X(a, T, v)		\
-	memcpy(a, &v, sizeof(T))
-#endif
 
 S_INLINE uint16_t S_LD_U16(const void *a)
 {
@@ -414,22 +407,22 @@ S_INLINE size_t S_LD_SZT(const void *a)
 
 S_INLINE void S_ST_U16(void *a, uint16_t v)
 {
-	RS_ST_X(a, uint16_t, v);
+	memcpy(a, &v, sizeof(v));
 }
 
 S_INLINE void S_ST_U32(void *a, uint32_t v)
 {
-	RS_ST_X(a, uint32_t, v);
+	memcpy(a, &v, sizeof(v));
 }
 
 S_INLINE void S_ST_U64(void *a, uint64_t v)
 {
-	RS_ST_X(a, uint64_t, v);
+	memcpy(a, &v, sizeof(v));
 }
 
 S_INLINE void S_ST_SZT(void *a, size_t v)
 {
-	RS_ST_X(a, size_t, v);
+	memcpy(a, &v, sizeof(v));
 }
 
 S_INLINE uint16_t S_LD_LE_U16(const void *a)
