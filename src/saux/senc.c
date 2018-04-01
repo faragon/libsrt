@@ -880,19 +880,9 @@ S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
 			      size_t max_size)
 {
 	size_t off = 0;
-#ifdef S_UNALIGNED_MEMORY_ACCESS
-	#if UINTPTR_MAX <= 0xffffffff
-		size_t ms4 = max_size / 4;
-		uint32_t *a32 = (uint32_t *)a, *b32 = (uint32_t *)b;
-		for (; off < ms4 && a32[off] == b32[off]; off++);
-		off *= 4;
-	#else
-		size_t ms8 = max_size / 8;
-		uint64_t *a64 = (uint64_t *)a, *b64 = (uint64_t *)b;
-		for (; off < ms8 && a64[off] == b64[off]; off++);
-		off *= 8;
-	#endif
-#endif
+	const size_t szc = UINTPTR_MAX <= 0xffffffff ? 4 : 8;
+	size_t msc = (max_size / szc) * szc;
+	for (; off < msc && !memcmp(a + off, b + off, szc); off += szc);
 	for (; off < max_size && a[off] == b[off]; off++);
 	return off;
 }
@@ -1039,11 +1029,6 @@ S_INLINE void s_reccpy(uint8_t *o, const size_t dist, size_t n)
 		return;
 	case 8:	s_memset64(o, s, (n / 8) + 1);
 		return;
-#if 0
-	case 7:	memcpy(o, s, 8 - dist);
-		s_memset64(o, s, (n / 8) + 1);
-		return;
-#endif
 	}
 	/* overlapped copy: generic */
 	memcpy(o, s, dist);

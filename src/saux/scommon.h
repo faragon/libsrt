@@ -324,38 +324,6 @@ S_INLINE void s_free(void *ptr)
 #endif
 
 /*
- * Low-level stuff
- * - Aligned memory access CPU support detection
- * - Endianess
- * - Unaligned load/store
- */
-
-#if (defined(__i386__) || defined(__x86_64__) ||			\
-    (defined(__ARM_ARCH) && __ARM_ARCH >= 6) ||				\
-    defined(_ARM_ARCH_6) || defined(__ARM_ARCH_6__) ||			\
-    defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6Z__) ||		\
-    defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_6K__) ||		\
-    defined(__ARM_ARCH_6T2__) || defined(_ARM_ARCH_7) ||		\
-    defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) ||		\
-    defined(__ARM_ARCH_7R__) ||						\
-    defined(_ARM_ARCH_8) || defined(__ARM_ARCH_8__) ||			\
-    (defined(__ARM_NEON) && __ARM_NEON > 0) ||				\
-    defined(__ARM_FEATURE_UNALIGNED) ||					\
-    defined(_MIPS_ARCH_OCTEON) && _MIPS_ARCH_OCTEON ||			\
-    defined(__OCTEON__) && __OCTEON__ ||				\
-    defined(__ppc__) || defined(__POWERPC__) || defined(__powerpc__) ||	\
-    defined(_M_AMD64) || defined(_M_IX86)) &&				\
-    (!defined(__ARM_ARCH_6M__) && !defined(__ARM_ARCH_7M__))
-	#ifndef S_DISABLE_UNALIGNED_OPTIMIZATIONS
-		#define S_UNALIGNED_MEMORY_ACCESS
-	#endif
-#endif
-
-#if defined(S_FORCE_DISABLE_UNALIGNED) && defined(S_UNALIGNED_MEMORY_ACCESS)
-	#undef S_UNALIGNED_MEMORY_ACCESS
-#endif
-
-/*
  * Little-endian detection is used for optimizing the data compression
  * routines and other internal code involving little-endian data
  * serialization.
