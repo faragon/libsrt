@@ -28,12 +28,6 @@
 #endif
 
 /*
- * Constants
- */
-
-#define S_SPLIT_MIN_ALLOC_ELEMS	32
-
-/*
  * Macros
  */
 

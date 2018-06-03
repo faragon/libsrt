@@ -125,7 +125,11 @@ extern "C" {
 			#define S_INLINE static
 		#endif
 	#endif
-	#define __STDC_FORMAT_MACROS /* req for clang 3.4 */
+
+	#if defined(__clang_major__) && __clang_major__ <= 3 && \
+	    defined(__clang_minor__) && __clang_minor__ <= 4
+		#define __STDC_FORMAT_MACROS
+	#endif
 	#include <inttypes.h>
 #elif defined(S_MODERN_COMPILER)
 	#define S_INLINE __inline__ static

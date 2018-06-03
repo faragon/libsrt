@@ -180,8 +180,8 @@ void s_memset64(void *o0, const void *s0, size_t n8)
 		memcpy(&data, s, 8);
 	}
 	o64 = (uint64_t *)o;
-	for (i = 0; i < n8; i++)
-		*o64++ = data;
+	for (i = 0; i < n8; i++, o64++)
+		memcpy(o64, &data, sizeof(data));
 	if (head)
 		memcpy(o64, s + tail, head);
 }
