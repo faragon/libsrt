@@ -674,7 +674,8 @@ static int test_ss_cpy(const char *in)
 
 static int test_ss_cpy_substr()
 {
-	srt_string *b = NULL, *a = ss_dup_c("how are you"), *c = ss_dup_c("how");
+	srt_string *b = NULL, *a = ss_dup_c("how are you"),
+		   *c = ss_dup_c("how");
 	int res = (!a || !c) ? 1 : 0;
 	res |= res ? 0 : (ss_cpy_substr(&b, a, 0, 3) ? 0 : 2);
 	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
@@ -684,7 +685,8 @@ static int test_ss_cpy_substr()
 
 static int test_ss_cpy_substr_u()
 {
-	srt_string *b = NULL, *a = ss_dup_c("how are you"), *c = ss_dup_c("how");
+	srt_string *b = NULL, *a = ss_dup_c("how are you"),
+		   *c = ss_dup_c("how");
 	int res = (!a || !c) ? 1 : 0;
 	res |= res ? 0 : (ss_cpy_substr_u(&b, a, 0, 3) ? 0 : 2);
 	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
@@ -1139,7 +1141,8 @@ static int test_ss_cat_erase(const char *prefix, const char *in,
 static int test_ss_cat_erase_u()
 {
 	int res;
-	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"), *b = ss_dup_c("x");
+	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
+		   *b = ss_dup_c("x");
 	ss_cat_erase_u(&b, a, 2, 3);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
 	ss_free(&a, &b);
@@ -1640,7 +1643,7 @@ static int test_ss_misc()
 }
 
 #define TEST_SV_ALLOC(sv_alloc_x, sv_alloc_x_t, free_op)		\
-	srt_vector *a = sv_alloc_x(sizeof(struct AA), 10, NULL),		\
+	srt_vector *a = sv_alloc_x(sizeof(struct AA), 10, NULL),	\
 	     *b = sv_alloc_x_t(SV_I8, 10);				\
 	int res = (!a || !b) ? 1 : (sv_len(a) == 0 ? 0 : 2) |		\
 				   (sv_empty(a) ? 0 : 4) |		\
@@ -1671,7 +1674,7 @@ static int test_sv_alloca()
 
 #define TEST_SV_GROW(v, pushval, ntest, sv_alloc_f, data_id, CMPF,	\
 		     initial_reserve, sv_push_x)			\
-	v = sv_alloc_f(data_id, initial_reserve CMPF);		\
+	v = sv_alloc_f(data_id, initial_reserve CMPF);			\
 	res |= !v ? 1<<(ntest*3) :					\
 			(sv_push_x(&v, pushval) &&			\
 			sv_len(v) == 1 &&				\
@@ -1744,11 +1747,11 @@ static int test_sv_reserve()
 	srt_vector *v
 
 #define TEST_SV_SHRINK_TO_FIT(v, ntest, alloc, push, type, CMPF, pushval, r) \
-	v = alloc(type, r CMPF);					\
-	res |= !v ? 1<<(ntest*3) :					\
-		(push(&v, pushval) &&					\
-		 sv_shrink(&v) &&					\
-		 sv_capacity(v) == sv_len(v)) ? 0 : 2<<(ntest*3);	\
+	v = alloc(type, r CMPF);					     \
+	res |= !v ? 1<<(ntest*3) :					     \
+		(push(&v, pushval) &&					     \
+		 sv_shrink(&v) &&					     \
+		 sv_capacity(v) == sv_len(v)) ? 0 : 2<<(ntest*3);	     \
 	sv_free(&v)
 
 static int test_sv_shrink()
@@ -2564,9 +2567,9 @@ static int test_sv_sort()
 	/*
 	 * Integer-specific sort tests
 	 */
-	if (!r8i || !r8u || !r16i || !r16u || !r32i || !r32u || !r64i || !r64u) {
+	if (!r8i || !r8u || !r16i || !r16u || !r32i || !r32u || !r64i || !r64u)
 		res = -1;
-	} else {
+	else {
 		for (i = 0; i < nelems; i += 2) {
 			sv_push_i(&v8i, i & 0xff); sv_push_u(&v8u, i & 0xff);
 			sv_push_i(&v16i, i); sv_push_u(&v16u, i);
@@ -2854,19 +2857,20 @@ static int test_st_alloc()
 	return res;
 }
 
-#define ST_ENV_TEST_AUX						          \
-	srt_tree *t = st_alloc((srt_cmp)cmp1, sizeof(struct MyNode1), 1000); \
-	srt_string *log = NULL;					          \
-	struct MyNode1 n0 = { EMPTY_STN, 0, 0 };		          \
-	srt_tnode *n = (srt_tnode *)&n0;				          \
-	srt_bool r = S_FALSE;						  \
-	if (!t)							          \
+#define ST_ENV_TEST_AUX						\
+	srt_tree *t = st_alloc((srt_cmp)cmp1,			\
+			       sizeof(struct MyNode1), 1000);	\
+	srt_string *log = NULL;					\
+	struct MyNode1 n0 = { EMPTY_STN, 0, 0 };		\
+	srt_tnode *n = (srt_tnode *)&n0;			\
+	srt_bool r = S_FALSE;					\
+	if (!t)							\
 		return 1;
 
-#define ST_ENV_TEST_AUX_LEAVE	\
-	st_free(&t);		\
-	ss_free(&log);		\
-	if (!r)			\
+#define ST_ENV_TEST_AUX_LEAVE		\
+	st_free(&t);			\
+	ss_free(&log);			\
+	if (!r)				\
 		res |= 0x40000000;
 /* #define S_EXTRA_TREE_TEST_DEBUG */
 #ifdef S_EXTRA_TREE_TEST_DEBUG
@@ -3013,7 +3017,7 @@ static int test_st_traverse()
 	static int fn()							\
 	{								\
 		size_t n = 1000;					\
-		srt_map *m = sm_alloc_X(type, n);				\
+		srt_map *m = sm_alloc_X(type, n);			\
 		int res = 0;						\
 		for (;;) {						\
 			if (!m) { res = 1; break; }			\
@@ -3102,7 +3106,7 @@ static int test_sm_shrink()
 		int j = 0;						\
 		for (; j < r; j++) {					\
 			srt_bool b1 = insf(&m, kv[j], vv[j]);		\
-			srt_bool b2 = insf(&m##2, kv[j], vv[j]);		\
+			srt_bool b2 = insf(&m##2, kv[j], vv[j]);	\
 			if (!b1 || !b2) {				\
 				res |= 2 << (ntest * 2);		\
 				break;					\
@@ -3239,7 +3243,8 @@ static int test_sm_count_i()
 static int test_sm_count_s()
 {
 	int res;
-	srt_string *s = ss_dup_c("a_1"), *t = ss_dup_c("a_2"), *u = ss_dup_c("a_3");
+	srt_string *s = ss_dup_c("a_1"), *t = ss_dup_c("a_2"),
+		   *u = ss_dup_c("a_3");
 	srt_map *m = sm_alloc(SM_SI, 3);
 	sm_insert_si(&m, s, 1);
 	sm_insert_si(&m, t, 2);
@@ -3483,10 +3488,10 @@ static int test_sm_it()
 	TEST_SM_IT_X_VARS(ss, SM_SS);
 	TEST_SM_IT_X_VARS(sp, SM_SP);
 	int res = 0;
-	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_ii32_v, cmp_ii, cmp_ii,
-		     -1, -1, -2, -2, -3, -3, res);
-	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_uu32_v, cmp_ii, cmp_ii,
-		     1, 1, 2, 2, 3, 3, res);
+	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_ii32_v, cmp_ii,
+		     cmp_ii, -1, -1, -2, -2, -3, -3, res);
+	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_uu32_v, cmp_ii,
+		     cmp_ii, 1, 1, 2, 2, 3, 3, res);
 	TEST_SM_IT_X(4, ii, SM_II, sm_it_i_k, sm_it_ii_v, cmp_ii, cmp_ii,
 		     S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
 		     S_MIN_I64 + 1, res);
@@ -3550,7 +3555,7 @@ static int test_sm_itr()
 		upper_i = -10;
 		lower_s = ss_alloca(100);
 		upper_s = ss_alloca(100);
-		ss_cpy_c(&lower_s, "k001"); /* covering from "k0010" to "k0019" */
+		ss_cpy_c(&lower_s, "k001"); /* covering "k0010" to "k0019" */
 		ss_cpy_c(&upper_s, "k002");
 		processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
 						cback_i32i32, &cnt1),
@@ -3735,7 +3740,8 @@ static int test_sms()
 	const srt_string *k[] = { ss_crefa("k000"), ss_crefa("k001"),
 				  ss_crefa("k002") };
 	size_t cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0, cnt_s2 = 0;
-	size_t processed_i32, processed_u32, processed_i, processed_s, processed_s2;
+	size_t processed_i32, processed_u32, processed_i, processed_s,
+	       processed_s2;
 	/*
 	 * Allocation: heap, stack with 3 elements, and stack with 10 elements
 	 */
@@ -4073,11 +4079,12 @@ int main()
 	char btmp1[400], btmp2[400];
 	srt_string *co;
 	int j;
-	const srt_string *ci[5] = { ss_crefa("hellohellohellohellohellohellohello!"),
-			      ss_crefa("111111111111111111111111111111111111"),
-			      ss_crefa("121212121212121212121212121212121212"),
-			      ss_crefa("123123123123123123123123123123123123"),
-			      ss_crefa("123412341234123412341234123412341234") };
+	const srt_string *ci[5] = {
+		ss_crefa("hellohellohellohellohellohellohello!"),
+		ss_crefa("111111111111111111111111111111111111"),
+		ss_crefa("121212121212121212121212121212121212"),
+		ss_crefa("123123123123123123123123123123123123"),
+		ss_crefa("123412341234123412341234123412341234") };
 	srt_string *stmp;
 	srt_bool unicode_support = S_TRUE;
 	wint_t check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
@@ -4193,16 +4200,20 @@ int main()
 #define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b) {		\
 	STEST_ASSERT(test_ss_dup_##encc(a, b));			\
 	STEST_ASSERT(test_ss_cpy_##encc(a, b)); 		\
-	ss_cpy_c(&stmp, "abc");							\
-	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("abc"), a, ss_cat(&stmp, b)));	\
-	ss_cpy_c(&stmp, "ABC");							\
-	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("ABC"), a, ss_cat(&stmp, b)));	\
+	ss_cpy_c(&stmp, "abc");					\
+	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("abc"), a,	\
+					ss_cat(&stmp, b)));	\
+	ss_cpy_c(&stmp, "ABC");					\
+	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("ABC"),	\
+					a, ss_cat(&stmp, b)));	\
 	STEST_ASSERT(test_ss_dup_##decc(b, a));			\
 	STEST_ASSERT(test_ss_cpy_##decc(b, a)); 		\
-	ss_cpy_c(&stmp, "abc");							\
-	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("abc"), b, ss_cat(&stmp, a)));	\
-	ss_cpy_c(&stmp, "ABC");							\
-	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("ABC"), b, ss_cat(&stmp, a))); }
+	ss_cpy_c(&stmp, "abc");					\
+	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("abc"),	\
+					b, ss_cat(&stmp, a)));	\
+	ss_cpy_c(&stmp, "ABC");					\
+	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("ABC"),	\
+					b, ss_cat(&stmp, a))); }
 
 	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, ss_crefa("HELLO"),
 			       ss_crefa("hello"));

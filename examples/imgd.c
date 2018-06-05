@@ -20,7 +20,8 @@ int main(int argc, const char **argv)
 	size_t in_size = 0, enc_bytes, rgb1_bytes, rgb2_bytes;
 	ssize_t written;
 	struct RGB_Info ri1, ri2;
-	srt_string *iobuf = NULL, *rgb1_buf = NULL, *rgb2_buf = NULL, *rgb3_buf = NULL;
+	srt_string *iobuf = NULL, *rgb1_buf = NULL, *rgb2_buf = NULL,
+		   *rgb3_buf = NULL;
 	int exit_code = 2;
 	FILE *fin = NULL, *fout = NULL;
 	const char *exit_msg = "not enough parameters";
@@ -59,14 +60,18 @@ int main(int argc, const char **argv)
 		IMGC_XTEST(ss_size(rgb1_buf) != ss_size(rgb2_buf),
 			   "can not process input file #2", 9);
 
-		exit_code = rgbdiff(&rgb3_buf, rgb1_buf, &ri1, rgb2_buf, &ri2) ? 1 : 0;
+		exit_code = rgbdiff(&rgb3_buf, rgb1_buf, &ri1,
+				    rgb2_buf, &ri2) ? 1 : 0;
 
 		if (exit_code == 1)
-			fprintf(stderr, "Image files %s and %s differ\n", argv[1], argv[2]);
+			fprintf(stderr, "Image files %s and %s differ\n",
+				argv[1], argv[2]);
 
 		if (t_out != IMG_none) {
-			enc_bytes = rgb2type(&iobuf, t_out, rgb3_buf, &ri1, F_None);
-			IMGC_XTEST(!enc_bytes, "output file encoding error", 10);
+			enc_bytes = rgb2type(&iobuf, t_out, rgb3_buf, &ri1,
+					     F_None);
+			IMGC_XTEST(!enc_bytes, "output file encoding error",
+				   10);
 
 			fout = fopen(argv[3], "wb+");
 			written = ss_write(fout, iobuf, 0, ss_size(iobuf));

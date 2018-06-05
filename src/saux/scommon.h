@@ -503,7 +503,7 @@ size_t s_pk_u64_size(const uint8_t *buf);
  * Standard-compliance workarounds
  */
 
-#ifdef _MSC_VER 
+#ifdef _MSC_VER
 #define snprintf sprintf_s
 #define S_FOPEN_BINARY_RW_TRUNC "wb+"
 #else

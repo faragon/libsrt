@@ -33,7 +33,7 @@ extern "C" {
  *   also two uppercase 'I' with, and without dot, so the 'i' <-> 'I' don't
  *   applies. For covering that case, equivalent to having the tr_* locale
  *   set, sc_tolower_tr()/sc_toupper_tr() are provided.
- */ 
+ */
 
 #include "scommon.h"
 

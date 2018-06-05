@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
- */ 
+ */
 
 #include "svector.h"
 #include "saux/scommon.h"
@@ -110,19 +110,21 @@ BUILD_CMP_U(__sv_cmp_u16, unsigned short)
 BUILD_CMP_U(__sv_cmp_u32, unsigned int)
 BUILD_CMP_U(__sv_cmp_u64, uint64_t)
 
-static uint8_t svt_sizes[SV_LAST_INT + 1] = {	sizeof(char),
-						sizeof(unsigned char),
-						sizeof(short),
-						sizeof(unsigned short),
-						sizeof(int),
-						sizeof(unsigned int),
-						sizeof(int64_t),
-						sizeof(uint64_t) };
+static uint8_t svt_sizes[SV_LAST_INT + 1] = {
+	sizeof(char),
+	sizeof(unsigned char),
+	sizeof(short),
+	sizeof(unsigned short),
+	sizeof(int),
+	sizeof(unsigned int),
+	sizeof(int64_t),
+	sizeof(uint64_t) };
 
-static srt_vector_cmp svt_cmpf[SV_LAST_INT + 1] = {	__sv_cmp_i8, __sv_cmp_u8,
-						__sv_cmp_i16, __sv_cmp_u16,
-						__sv_cmp_i32, __sv_cmp_u32,
-						__sv_cmp_i64, __sv_cmp_u64 };
+static srt_vector_cmp svt_cmpf[SV_LAST_INT + 1] = {
+	__sv_cmp_i8, __sv_cmp_u8,
+	__sv_cmp_i16, __sv_cmp_u16,
+	__sv_cmp_i32, __sv_cmp_u32,
+	__sv_cmp_i64, __sv_cmp_u64 };
 
 static srt_vector *
 sv_alloc_base(const enum eSV_Type t, const size_t elem_size,
@@ -342,13 +344,14 @@ uint8_t sv_elem_size(const enum eSV_Type t)
 
 srt_vector *
 sv_alloc_raw(const enum eSV_Type t, const srt_bool ext_buf, void *buffer,
-	     const size_t elem_size, const size_t max_size, const srt_vector_cmp f)
+	     const size_t elem_size, const size_t max_size,
+	     const srt_vector_cmp f)
 {
 	srt_vector *v;
 	RETURN_IF(!elem_size || !buffer, sv_void);
         v = (srt_vector *)buffer;
-	sd_reset((srt_data *)v, sizeof(srt_vector), elem_size, max_size, ext_buf,
-		 S_FALSE);
+	sd_reset((srt_data *)v, sizeof(srt_vector), elem_size, max_size,
+		 ext_buf, S_FALSE);
 	v->d.sub_type = t;
 	v->vx.cmpf = t <= SV_LAST_INT ? svt_cmpf[t] : f;
 	return v;

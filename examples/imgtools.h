@@ -51,7 +51,7 @@ enum ImgTypes
 
 enum Filters
 {
-	F_None = 0, F_HDPCM = 1, F_HRDPCM = 2, F_HDXOR = 3, F_HRDXOR = 4, 
+	F_None = 0, F_HDPCM = 1, F_HRDPCM = 2, F_HDXOR = 3, F_HRDXOR = 4,
 	F_VDPCM = 5, F_VRDPCM = 6, F_VDXOR = 7, F_VRDXOR = 8, F_AVG3 = 9,
 	F_RAVG3 = 10, F_PAETH = 11, F_RPAETH = 12, F_RSUB = 13, F_RRSUB = 14,
 	F_GSUB = 15, F_RGSUB = 16, F_BSUB = 17, F_RBSUB = 18, F_NumElems

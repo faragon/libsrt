@@ -27,7 +27,7 @@ extern "C" {
  *   is done until required, and is applied to the affected area. Also bit
  *   set to 0 on non set areas requires doing nothing, as unitialized area
  *   can be both not initialized or even not allocated (when using heap memory)
- */ 
+ */
 
 #include "svector.h"
 

@@ -197,7 +197,8 @@ static void set_unicode_size(srt_string *s, const size_t unicode_size)
 
 static void inc_unicode_size(srt_string *s, const size_t incr_size)
 {
-	set_unicode_size(s, s_size_t_add(get_unicode_size(s), incr_size, S_NPOS));
+	set_unicode_size(s, s_size_t_add(get_unicode_size(s), incr_size,
+			 S_NPOS));
 }
 
 static void dec_unicode_size(srt_string *s, const size_t dec_size)
@@ -906,7 +907,7 @@ aux_rtrim(srt_string **s, const srt_bool cat, const srt_string *src)
 	return *s;
 }
 
-static ssize_t 
+static ssize_t
 aux_read(srt_string **s, const srt_bool cat, FILE *h, const size_t max_bytes)
 {
 	ssize_t l = 0;
@@ -1126,7 +1127,7 @@ void ss_clear_errors(srt_string *s)
 {
 	if (s) {
 		ss_reset_alloc_errors(s);
-		set_encoding_errors(s, S_FALSE); 
+		set_encoding_errors(s, S_FALSE);
 	}
 }
 

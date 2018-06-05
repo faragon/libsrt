@@ -15,15 +15,16 @@ static int syntax_error(const char **argv, const int exit_code)
 	fprintf(stderr, "Histogram (libsrt example). Returns: list of elements "
 		"and its count\n\nSyntax: %s element_size  "
 		"# (1 <= element_size <= 8)\n\nExamples:\n"
-		"%s 1 <in >h.txt  # (1-byte element histogram, e.g. 8bpp bitmap)\n"
-		"%s 2 <in >h.txt  # (2-byte element histogram, e.g. 16bpp bitmap)\n"
-		"%s 3 <in >h.txt  # (3-byte element histogram, e.g. 24bpp bitmap)\n"
-		"%s 4 <in >h.txt  # (4-byte element histogram, e.g. 32bpp bitmap)\n"
+		"%s 1 <in >h.txt  # (1-byte element h. e.g. 8bpp bitmap)\n"
+		"%s 2 <in >h.txt  # (2-byte element h. e.g. 16bpp bitmap)\n"
+		"%s 3 <in >h.txt  # (3-byte element h. e.g. 24bpp bitmap)\n"
+		"%s 4 <in >h.txt  # (4-byte element h. e.g. 32bpp bitmap)\n"
 		"%s 5 <in >h.txt  # (5-byte element histogram)\n"
 		"%s 6 <in >h.txt  # (6-byte element histogram)\n"
 		"%s 7 <in >h.txt  # (7-byte element histogram)\n"
 		"%s 8 <in >h.txt  # (8-byte element histogram)\n"
-		"head -c 256MB </dev/urandom | %s 1 >h.txt  # Check random gen. quality\n",
+		"head -c 256MB </dev/urandom | %s 1 >h.txt  "
+		"# Check random gen. quality\n",
 		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }

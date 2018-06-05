@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
- */ 
+ */
 
 #include "sdbg.h"
 
@@ -17,7 +17,7 @@ const char *sv_type_to_label(const enum eSV_Type t)
 		CXSV(SV_I32); CXSV(SV_U32); CXSV(SV_I64); CXSV(SV_U64);
 		CXSV(SV_GEN);
 		#undef CXSV
-	} 
+	}
 	return "?";
 }
 

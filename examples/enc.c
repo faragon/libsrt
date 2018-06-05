@@ -55,10 +55,10 @@ int main(int argc, const char **argv)
 	uint32_t acc;
 	uint32_t (*f32)(const srt_string *, uint32_t, size_t, size_t) = NULL;
 	srt_string *in = NULL, *out = NULL;
-	srt_string *(*ss_codec1_f)(srt_string **s, const srt_string *src) = NULL;
-	srt_string *(*ss_codec2_f)(srt_string **s, const srt_string *src) = NULL;
-	srt_string *(*ss_codec3_f)(srt_string **s, const srt_string *src) = NULL;
-	srt_string *(*ss_codec4_f)(srt_string **s, const srt_string *src) = NULL;
+	srt_string *(*ss_codec1_f)(srt_string **, const srt_string *) = NULL;
+	srt_string *(*ss_codec2_f)(srt_string **, const srt_string *) = NULL;
+	srt_string *(*ss_codec3_f)(srt_string **, const srt_string *) = NULL;
+	srt_string *(*ss_codec4_f)(srt_string **, const srt_string *) = NULL;
 	size_t lzbufsize = LZBUF_SIZE;
 	if (argc < 2)
 		return syntax_error(argv, 1);

@@ -420,7 +420,8 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					o = s + JS_ESC_S + 1;
 					break;
 				}
-				o = ss; /* this should not happen; to do: validate */
+				/* this should not happen; to do: validate */
+				o = ss;
 				break;
 			case JSFillField:
 				q = ss_findr_cn(rb, o, z, JS_COM, JS_COM_S);
@@ -456,7 +457,8 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					o = s + JS_ESC_S + 1;
 					break;
 				}
-				o = ss; /* this should not happen; to do: validate */
+				/* this should not happen; to do: validate */
+				o = ss;
 				break;
 			case JSSearchField:
 				p = ss_findr_cn(rb, o, z, JS_QT, JS_QT_S);

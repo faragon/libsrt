@@ -198,7 +198,7 @@ C language
 ---
 
 * C preprocessor
-  * var args comp.lang.c FAQ http://www.lysator.liu.se/c/c-faq/c-7.html 
+  * var args comp.lang.c FAQ http://www.lysator.liu.se/c/c-faq/c-7.html
   * Count arguments: http://stackoverflow.com/questions/2124339/c-preprocessor-va-args-number-of-arguments
 * C99 standard
   * ISO/IEC 9899:TC3 Draft 20070907 http://www.open-std.org/jtc1/sc22/wg14/www/docs/n1256.pdf

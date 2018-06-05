@@ -123,10 +123,10 @@ TEST_DO_UT[19]=${TEST_DO_UT[0]}
 TEST_DO_UT[20]=${TEST_DO_UT[0]}
 TEST_DO_UT[21]=${TEST_DO_UT[0]}
 TEST_DO_UT[22]=${TEST_DO_UT[0]}
-INNER_LOOP_FLAGS[0]=""
-INNER_LOOP_FLAGS[1]="DEBUG=1"
-INNER_LOOP_FLAGS[2]="MINIMAL=1"
-INNER_LOOP_FLAGS[3]="MINIMAL=1 DEBUG=1"
+ILOOP_FLAGS[0]=""
+ILOOP_FLAGS[1]="DEBUG=1"
+ILOOP_FLAGS[2]="MINIMAL=1"
+ILOOP_FLAGS[3]="MINIMAL=1 DEBUG=1"
 VALGRIND_LOOP_FLAGS[0]="DEBUG=1"
 VALGRIND_LOOP_FLAGS[1]="DEBUG=1 ADD_FLAGS=-DS_DISABLE_SM_STRING_OPTIMIZATION"
 VALGRIND_LOOP_FLAGS[2]="MINIMAL=1 DEBUG=1"
@@ -159,10 +159,10 @@ fi
 if (($TMUX & 1)) ; then
 	for ((i = 0; i < ${#TEST_CC[@]}; i++)) ; do
 		if type ${TEST_CC[$i]} >/dev/null 2>&1 >/dev/null ; then
-			for ((j = 0 ; j < ${#INNER_LOOP_FLAGS[@]}; j++)) ; do
+			for ((j = 0 ; j < ${#ILOOP_FLAGS[@]}; j++)) ; do
 				CMD="$MAKE -j $MJOBS CC=${TEST_CC[$i]}"
 				CMD="$CMD CXX=${TEST_CXX[$i]} ${TEST_FLAGS[$i]}"
-				CMD="$CMD ${INNER_LOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
+				CMD="$CMD ${ILOOP_FLAGS[$j]} ${TEST_DO_UT[$i]}"
 				$MAKE clean >/dev/null 2>&1
 				echo -n "Test #$i.$j: [$CMD] ..."
 				if $CMD >/dev/null 2>&1 ; then
@@ -172,7 +172,7 @@ if (($TMUX & 1)) ; then
 				fi
 			done
 		else
-			echo "Test #$i: ${TEST_CC[$i]} compiler not found (skipped)"
+			echo "Test #$i: ${TEST_CC[$i]} not found (skipped)"
 		fi
 	done
 fi
@@ -185,13 +185,15 @@ if (($TMUX & 2)) && type valgrind >/dev/null 2>&1 ; then
 		MAKEFLAGS=${VALGRIND_LOOP_FLAGS[$j]}
 		echo -n "Valgrind test ($MAKEFLAGS)..."
 		VAL_ERR_FILEx=$VAL_ERR_FILE".$j"
-		if $MAKE clean >/dev/null 2>&1 &&				  \
-		   $MAKE -j $MJOBS $MAKEFLAGS >/dev/null 2>&1 &&		  \
-		   valgrind --track-origins=yes --tool=memcheck --leak-check=yes  \
-			    --show-reachable=yes --num-callers=20 --track-fds=yes \
+		if $MAKE clean >/dev/null 2>&1 &&			\
+		   $MAKE -j $MJOBS $MAKEFLAGS >/dev/null 2>&1 &&	\
+		   valgrind --track-origins=yes --tool=memcheck		\
+			    --leak-check=yes  --show-reachable=yes	\
+			    --num-callers=20 --track-fds=yes		\
 			    ./stest >/dev/null 2>$VAL_ERR_FILEx ; then
-			VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILEx" | awk -F \
-				   'ERROR SUMMARY:' '{print $2}' | awk '{print $1}')
+			VAL_ERRS=$(grep "$VAL_ERR_TAG" "$VAL_ERR_FILEx" | \
+				   awk -F 'ERROR SUMMARY:' '{print $2}' | \
+				   awk '{print $1}')
 			if (( $VAL_ERRS > 0 )) ; then
 				ERRORS=$((ERRORS + $VAL_ERRS))
 				echo " ERROR"
@@ -230,11 +232,23 @@ if (($TMUX & 16)) ; then
 	ls -1  src/*c src/saux/*c examples/*c examples/*h Makefile \
 		*\.sh utl/*\.sh | while read line ; do
 		if ! utl/check_style.sh "$line" ; then
-			echo "$line... ERROR"
+			echo "$line... ERROR: style"
 			ERRORS=$((ERRORS + 1))
 		fi
 	done
+	if type egrep >/dev/null 2>&1 ; then
+		find doc examples src utl Makefile* LICENSE README.md \
+				make_test.sh -type f | while read line ; do
+			if (($(sed -n '/ \+$/p' <$line | wc -l) > 0)) ; then
+				echo "$line... ERROR, trailing spaces:"
+				sed -n '/ \+$/p' <$line | while read l2 ; do
+					echo -e "\t$l2[*]"
+				done
+				ERRORS=$((ERRORS + 1))
+			fi
+		done
+	fi
 fi
 
-exit $ERRORS
+exit $((ERRORS > 0 ? 1 : 0))
 

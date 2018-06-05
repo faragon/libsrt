@@ -9,8 +9,8 @@
 # Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
-if (( $(grep  '.\{81,\}' $* | wc -l) > 0 )) ; then
-	grep  '.\{81,\}' $* | while read line ; do
+if (( $(cat $* | expand | grep '.\{81\}' | wc -l) > 0 )) ; then
+	cat $* | expand | grep '.\{81\}' | while read line ; do
 		echo -e -n "\t" ; echo "$line"
 	done
 	echo -n "[over 80 characters] "

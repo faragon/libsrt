@@ -66,11 +66,12 @@ for i in $SRC_PATH/*\.h ; do
 	then
 		echo "OK" >&2
 		if (( $(wc -l <"$TGT_HTML") > 2 )) ; then
-			DESC=$(grep '#SHORTDOC' "$i" | awk -F '#SHORTDOC ' '{print $2}' | head -1)
+			DESC=$(grep '#SHORTDOC' "$i" | \
+			       awk -F '#SHORTDOC ' '{print $2}' | head -1)
 			if [ "$DESC" = "" ] ; then DESC=$TGT ; fi
 			if [ ! "$INC" = "" ] ; then INC="$INC: " ; fi
-			echo '<br>'"$INC"'<a href="'"$TGT.html"'">'"$DESC"'</a><br>' \
-				>> "$INDEX"
+			echo '<br>'"$INC"'<a href="'"$TGT.html"'">'"$DESC"\
+'</a><br>' >> "$INDEX"
 		fi
 	else	ERRORS=$((ERRORS + 1))
 	fi

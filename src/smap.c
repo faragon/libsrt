@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
- */ 
+ */
 
 #include "smap.h"
 #include "saux/scommon.h"
@@ -639,7 +639,8 @@ srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
 #else
 	/* TODO: rw_add_SM_IS */
 	n.v = v;
-	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_add_SM_IS);
+	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
+			    rw_add_SM_IS);
 #endif
 }
 
