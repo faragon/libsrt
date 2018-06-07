@@ -27,8 +27,14 @@ int main(int argc, const char **argv)
 	const char *exit_msg = "not enough parameters";
 	srt_bool ro;
 	enum ImgTypes t_in1, t_in2, t_out;
-	#define IMGC_XTEST(test, m, c)	\
-		if (test) { exit_msg = m; exit_code = c; break; }
+
+#define IMGC_XTEST(test, m, c)                                                 \
+	if (test) {                                                            \
+		exit_msg = m;                                                  \
+		exit_code = c;                                                 \
+		break;                                                         \
+	}
+
 	for (;;) {
 		if (argc < 2)
 			break;
@@ -36,8 +42,9 @@ int main(int argc, const char **argv)
 		t_in1 = file_type(argv[1]);
 		t_in2 = file_type(argv[2]);
 		t_out = argc < 4 ? IMG_none : file_type(argv[3]);
-		IMGC_XTEST(t_in1 == IMG_error || t_in2 == IMG_error ||
-			   t_out == IMG_error, "invalid parameters",
+		IMGC_XTEST(t_in1 == IMG_error || t_in2 == IMG_error
+				   || t_out == IMG_error,
+			   "invalid parameters",
 			   t_in1 == IMG_error || t_in2 == IMG_error ? 3 : 4);
 
 		fin = fopen(argv[1], "rb");
@@ -60,24 +67,27 @@ int main(int argc, const char **argv)
 		IMGC_XTEST(ss_size(rgb1_buf) != ss_size(rgb2_buf),
 			   "can not process input file #2", 9);
 
-		exit_code = rgbdiff(&rgb3_buf, rgb1_buf, &ri1,
-				    rgb2_buf, &ri2) ? 1 : 0;
+		exit_code = rgbdiff(&rgb3_buf, rgb1_buf, &ri1, rgb2_buf, &ri2)
+				    ? 1
+				    : 0;
 
 		if (exit_code == 1)
 			fprintf(stderr, "Image files %s and %s differ\n",
 				argv[1], argv[2]);
 
 		if (t_out != IMG_none) {
-			enc_bytes = rgb2type(&iobuf, t_out, rgb3_buf, &ri1,
-					     F_None);
+			enc_bytes =
+				rgb2type(&iobuf, t_out, rgb3_buf, &ri1, F_None);
 			IMGC_XTEST(!enc_bytes, "output file encoding error",
 				   10);
 
 			fout = fopen(argv[3], "wb+");
 			written = ss_write(fout, iobuf, 0, ss_size(iobuf));
 
-			IMGC_XTEST(!ro && (written < 0 ||
-				   (size_t)written != ss_size(iobuf)),
+			IMGC_XTEST(!ro
+					   && (written < 0
+					       || (size_t)written
+							  != ss_size(iobuf)),
 				   "write error", 11);
 		}
 		break;
@@ -105,4 +115,3 @@ static int exit_with_error(const char **argv, const char *msg,
 		exit_code, msg, v0, IF_PNG(v0 MY_COMMA) IF_JPG(v0 MY_COMMA) v0);
 	return exit_code;
 }
-

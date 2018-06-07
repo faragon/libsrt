@@ -18,20 +18,17 @@
 #define DBG_TABLE 0
 
 #if DBG_TABLE
-	#define DBG_ENC_FIELD(type, field, nrow, nfield)		\
-		fprintf(stderr, "enc %s: '%s' (%i, %i)\n",		\
-			type, ss_to_c(field), (int)nrow, (int)nfield);
+#define DBG_ENC_FIELD(type, field, nrow, nfield)                               \
+	fprintf(stderr, "enc %s: '%s' (%i, %i)\n", type, ss_to_c(field),       \
+		(int)nrow, (int)nfield);
 #else
-	#define DBG_ENC_FIELD(type, field, nrow, nfield)
+#define DBG_ENC_FIELD(type, field, nrow, nfield)
 #endif
 
 #define RBUF_SIZE 8192
 #define WBUF_SIZE (3 * RBUF_SIZE)
 
-enum EncStep
-{
-	SENC_begin, SENC_field, SENC_end
-};
+enum EncStep { SENC_begin, SENC_field, SENC_end };
 
 typedef void (*f_enc)(enum EncStep em, const size_t nrow, const size_t nfield,
 		      const srt_string *field, srt_string **out);
@@ -54,10 +51,14 @@ int main(int argc, const char **argv)
 	f_dec df;
 	RETURN_IF(argc < 2 || strlen(argv[1]) != 3 || argv[1][0] != '-',
 		  exit_msg(argv, "syntax error", 1));
-	ef = argv[1][2] == 'c' ? enc_csv : argv[1][2] == 'h' ? enc_html :
-	     argv[1][2] == 'j' ? enc_json : NULL;
-	df = argv[1][1] == 'c' ? csv2x : argv[1][1] == 'h' ? html2x :
-	     argv[1][1] == 'j' ? json2x : NULL;
+	ef = argv[1][2] == 'c'
+		     ? enc_csv
+		     : argv[1][2] == 'h' ? enc_html
+					 : argv[1][2] == 'j' ? enc_json : NULL;
+	df = argv[1][1] == 'c'
+		     ? csv2x
+		     : argv[1][1] == 'h' ? html2x
+					 : argv[1][1] == 'j' ? json2x : NULL;
 	RETURN_IF(!ef || !df, exit_msg(argv, "syntax error", 1));
 	RETURN_IF(df(stdin, stdout, ef) < 0, exit_msg(argv, "input error", 2));
 	return 0;
@@ -66,7 +67,8 @@ int main(int argc, const char **argv)
 static int exit_msg(const char **argv, const char *msg, const int code)
 {
 	const char *v0 = argv[0];
-        fprintf(stderr, "Table import/export (libsrt example). Returns: 0: OK,"
+	fprintf(stderr,
+		"Table import/export (libsrt example). Returns: 0: OK,"
 		" 1 syntax error, 2: input error\n\nError [%i]: %s\nSyntax: %s "
 		"-{c|h|j}{c|h|j}\n(where: c = csv, h = html, j = json)\n\n"
 		"Examples:\n"
@@ -75,7 +77,8 @@ static int exit_msg(const char **argv, const char *msg, const int code)
 		"%s -hc <in.html >out.csv\n%s -hh <in.html >out.html\n%s -hj "
 		"<in.html >out.json\n"
 		"%s -jc <in.json >out.csv\n%s -jh <in.json >out.html\n%s -jj "
-		"<in.json >out.json\n""\n",
+		"<in.json >out.json\n"
+		"\n",
 		code, msg, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return code;
 }
@@ -98,18 +101,18 @@ static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
 	}
 }
 
-#define HTML_TBL	"<table>"
-#define HTML_TBL_S	7
-#define HTML_TBLX	"</table>"
-#define HTML_TBLX_S	8
-#define HTML_TR		"<tr>"
-#define HTML_TR_S	4
-#define HTML_TRX	"</tr>"
-#define HTML_TRX_S	5
-#define HTML_TD		"<td>"
-#define HTML_TD_S	4
-#define HTML_TDX	"</td>"
-#define HTML_TDX_S	5
+#define HTML_TBL "<table>"
+#define HTML_TBL_S 7
+#define HTML_TBLX "</table>"
+#define HTML_TBLX_S 8
+#define HTML_TR "<tr>"
+#define HTML_TR_S 4
+#define HTML_TRX "</tr>"
+#define HTML_TRX_S 5
+#define HTML_TD "<td>"
+#define HTML_TD_S 4
+#define HTML_TDX "</td>"
+#define HTML_TDX_S 5
 
 static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 		     const srt_string *field, srt_string **out)
@@ -121,7 +124,7 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 	case SENC_field:
 		DBG_ENC_FIELD("html", field, nrow, nfield);
 		if (nfield == 0) {
-			if (nrow > 0)	/* close previous row */
+			if (nrow > 0) /* close previous row */
 				ss_cat_cn(out, HTML_TRX, HTML_TRX_S);
 			ss_cat_cn(out, HTML_TR, HTML_TR_S);
 		}
@@ -137,22 +140,22 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 	}
 }
 
-#define JS_OPEN		"{"
-#define JS_OPEN_S	1
+#define JS_OPEN "{"
+#define JS_OPEN_S 1
 #if 0 /* not used */
-#define JS_OPENX	"}"
-#define JS_OPENX_S	1
+#define JS_OPENX "}"
+#define JS_OPENX_S 1
 #endif
-#define JS_ARR		"["
-#define JS_ARR_S	1
-#define JS_ARRX		"]"
-#define JS_ARRX_S	1
-#define JS_COM		","
-#define JS_COM_S	1
-#define JS_ESC		"\\"
-#define JS_ESC_S	1
-#define JS_QT		"\""
-#define JS_QT_S		1
+#define JS_ARR "["
+#define JS_ARR_S 1
+#define JS_ARRX "]"
+#define JS_ARRX_S 1
+#define JS_COM ","
+#define JS_COM_S 1
+#define JS_ESC "\\"
+#define JS_ESC_S 1
+#define JS_QT "\""
+#define JS_QT_S 1
 
 static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
 		     const srt_string *field, srt_string **out)
@@ -186,14 +189,14 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 	size_t l, nl, qo, co, o, nfield = 0;
 	ssize_t nrow = 0;
 	srt_bool quote_opened = S_FALSE, quote_pending = S_FALSE,
-		fatal_error = S_FALSE;
+		 fatal_error = S_FALSE;
 	srt_bool coqo, conl, qonl, qoco, nlqo, nlco;
 	srt_string *rb = NULL, *wb = NULL, *field = NULL;
 	RETURN_IF(in_fd || out_fd || !out_enc_f, -1);
 	out_enc_f(SENC_begin, (size_t)nrow, nfield, field, &wb);
 	for (; ss_read(&rb, stdin, RBUF_SIZE) > 0;) {
-		if (ss_size(wb) > WBUF_SIZE &&
-		    ss_write(out_fd, wb, 0, ss_size(wb)) < 0) {
+		if (ss_size(wb) > WBUF_SIZE
+		    && ss_write(out_fd, wb, 0, ss_size(wb)) < 0) {
 			ss_set_size(wb, 0);
 			nrow = -2; /* write error */
 			fatal_error = S_TRUE;
@@ -249,7 +252,7 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 				continue;
 			}
 			ss_cat_substr(&field, rb, o, S_NPOS);
-			break;	/* buffer empty */
+			break; /* buffer empty */
 		}
 	}
 	if (!fatal_error) {
@@ -269,9 +272,10 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 static srt_bool sflush(srt_string *wb, FILE *out_fd, const size_t buf_size)
 {
 	const size_t wbss = ss_size(wb);
-	return wbss > buf_size && ss_write(out_fd, wb, 0, wbss) < 0 ?
-		S_FALSE :	/* write error */
-		S_TRUE;		/* write OK */
+	return wbss > buf_size && ss_write(out_fd, wb, 0, wbss) < 0
+		       ? S_FALSE
+		       :       /* write error */
+		       S_TRUE; /* write OK */
 }
 
 static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
@@ -288,11 +292,11 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		ss0 = ss_size(rb);
 		ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
 		if (ss == ss0)
-			break;	/* EOF */
+			break; /* EOF */
 		z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
 		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
-			break;	/* write error */
+			break; /* write error */
 		}
 		for (o = 0; o < ss;) { /* process buffer */
 			switch (st) {
@@ -330,7 +334,7 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					o = ss;
 					break; /* buffer empty */
 				}
-				if (nfield || nrow){
+				if (nfield || nrow) {
 					nrow++;
 					nfield = 0;
 				}
@@ -354,8 +358,8 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 			nfield++;
 		}
 		out_enc_f(SENC_end, nrow, nfield, field, &wb);
-                if (!sflush(wb, out_fd, 0))
-                        fatal_error = S_TRUE;
+		if (!sflush(wb, out_fd, 0))
+			fatal_error = S_TRUE;
 	}
 	ss_free(&rb, &wb, &field);
 	return fatal_error ? -2 : (ssize_t)nrow;
@@ -363,12 +367,16 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 
 static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 {
-	enum eJSFSM { JSSearchOpen, JSSearchRow, JSSearchField, JSFillField,
-		      JSFillFieldQ };
+	enum eJSFSM {
+		JSSearchOpen,
+		JSSearchRow,
+		JSSearchField,
+		JSFillField,
+		JSFillFieldQ
+	};
 	enum eJSFSM st = JSSearchOpen;
 	size_t o = 0, p, q, r, s, nfield = 0, nrow = 0;
-	srt_bool fatal_error = S_FALSE, done = S_FALSE,
-		q_wins, r_wins;
+	srt_bool fatal_error = S_FALSE, done = S_FALSE, q_wins, r_wins;
 	srt_string *rb = NULL, *wb = NULL, *field = NULL;
 	size_t ss, ss0, z;
 	size_t ox, next_o;
@@ -379,11 +387,11 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		ss0 = ss_size(rb);
 		ss = ss_size(ss_cat_read(&rb, stdin, RBUF_SIZE));
 		if (ss == ss0)
-			break;	/* EOF */
+			break; /* EOF */
 		z = (ss < WBUF_SIZE - 10 ? ss : ss - 10);
 		if (!sflush(wb, out_fd, WBUF_SIZE)) {
 			fatal_error = S_TRUE;
-			break;	/* write error */
+			break; /* write error */
 		}
 		for (o = 0; !done && o < ss;) { /* process buffer */
 			switch (st) {
@@ -392,8 +400,8 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 				q = ss_findr_cn(rb, o, z, JS_COM, JS_COM_S);
 				r = ss_findr_cn(rb, o, z, JS_ARRX, JS_ARRX_S);
 				s = ss_findr_cn(rb, o, z, JS_ESC, JS_ESC_S);
-				if (p == S_NPOS && q == S_NPOS &&
-				    r == S_NPOS && s == S_NPOS) {
+				if (p == S_NPOS && q == S_NPOS && r == S_NPOS
+				    && s == S_NPOS) {
 					ss_cat_substr(&field, rb, o, S_NPOS);
 					o = ss;
 					break; /* buffer empty */
@@ -402,7 +410,7 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					ss_cat_substr(&field, rb, o, p - o);
 					ss_dec_esc_json(&field, field);
 					out_enc_f(SENC_field, nrow, nfield,
-								field, &wb);
+						  field, &wb);
 					ss_set_size(field, 0);
 					nfield++;
 					if (p < q && q < r) {
@@ -447,7 +455,7 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					ss_cat_substr(&field, rb, o, ox - o);
 					ss_dec_esc_json(&field, field);
 					out_enc_f(SENC_field, nrow, nfield,
-								field, &wb);
+						  field, &wb);
 					ss_set_size(field, 0);
 					nfield++;
 					o = next_o;
@@ -487,7 +495,7 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 					/*s = ss;*/ /* buffer empty */
 					break;
 				}
-				if (nfield || nrow){
+				if (nfield || nrow) {
 					nrow++;
 					nfield = 0;
 				}
@@ -520,10 +528,9 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 			nfield++;
 		}
 		out_enc_f(SENC_end, nrow, nfield, field, &wb);
-                if (!sflush(wb, out_fd, 0))
-                        fatal_error = S_TRUE;
+		if (!sflush(wb, out_fd, 0))
+			fatal_error = S_TRUE;
 	}
 	ss_free(&rb, &wb, &field);
 	return fatal_error ? -2 : (ssize_t)nrow;
 }
-

@@ -21,35 +21,35 @@
  * Unit testing helpers
  */
 
-#define STEST_START	int ss_errors = 0, atmp = 0, r
-#define STEST_END	ss_errors
-#define STEST_ASSERT_BASE(a, pre_op) {					\
-		pre_op;							\
-		r = (int)(a);						\
-		atmp += r;						\
-		if (r) {						\
-			fprintf(stderr, "%s: %08X <--------\n", #a, r);	\
-			ss_errors++;					\
-		}							\
+#define STEST_START int ss_errors = 0, atmp = 0, r
+#define STEST_END ss_errors
+#define STEST_ASSERT_BASE(a, pre_op)                                           \
+	{                                                                      \
+		pre_op;                                                        \
+		r = (int)(a);                                                  \
+		atmp += r;                                                     \
+		if (r) {                                                       \
+			fprintf(stderr, "%s: %08X <--------\n", #a, r);        \
+			ss_errors++;                                           \
+		}                                                              \
 	}
 #ifdef S_DEBUG
-#define STEST_ASSERT(a) \
-	STEST_ASSERT_BASE(a, fprintf(stderr, "%s...\n", #a))
+#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, fprintf(stderr, "%s...\n", #a))
 #else
-#define STEST_ASSERT(a) \
-	STEST_ASSERT_BASE(a, ;)
+#define STEST_ASSERT(a) STEST_ASSERT_BASE(a, ;)
 #endif
 
-#define STEST_FILE	"test.dat"
-#define S_MAX_I64	9223372036854775807LL
-#define S_MIN_I64	(0 - S_MAX_I64 - 1)
+#define STEST_FILE "test.dat"
+#define S_MAX_I64 9223372036854775807LL
+#define S_MIN_I64 (0 - S_MAX_I64 - 1)
 
 /* Integer compare functions */
 
-#define BUILD_SINT_CMPF(fn, T)				\
-        S_INLINE int fn(T a, T b) {              	\
-                return a > b ? 1 : a < b ? -1 : 0;	\
-        }
+#define BUILD_SINT_CMPF(fn, T)                                                 \
+	S_INLINE int fn(T a, T b)                                              \
+	{                                                                      \
+		return a > b ? 1 : a < b ? -1 : 0;                             \
+	}
 
 BUILD_SINT_CMPF(scmp_int32, int32_t)
 BUILD_SINT_CMPF(scmp_uint32, uint32_t)
@@ -64,37 +64,41 @@ BUILD_SINT_CMPF(scmp_ptr, const void *)
 #define TEST_AA(s, t) (s.a == t.a && s.b == t.b)
 #define TEST_INT(s, t) (s == t)
 
-struct AA { int a, b; };
-static struct AA a1 = { 1, 2 }, a2 = { 3, 4 };
-static struct AA av1[3] = { { 1, 2 }, { 3, 4 }, { 5, 6 } };
+struct AA {
+	int a, b;
+};
+static struct AA a1 = {1, 2}, a2 = {3, 4};
+static struct AA av1[3] = {{1, 2}, {3, 4}, {5, 6}};
 
-static int8_t i8v[10] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1 };
-static uint8_t u8v[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static int16_t i16v[10] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1 };
-static uint16_t u16v[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static int32_t i32v[10] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1 };
-static uint32_t u32v[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static int64_t i64v[10] = { 1, 2, 3, 4, 5, -5, -4, -3, -2, -1 };
-static uint64_t u64v[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static void *spv[10]= { 0, (void *)1, (void *)2, (void *)3, (void *)4,
-		 (void *)5, (void *)6, (void *)7, (void *)8,
-		 (void *)9 };
-static int64_t sik[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static int32_t i32k[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-static uint32_t u32k[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+static int8_t i8v[10] = {1, 2, 3, 4, 5, -5, -4, -3, -2, -1};
+static uint8_t u8v[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static int16_t i16v[10] = {1, 2, 3, 4, 5, -5, -4, -3, -2, -1};
+static uint16_t u16v[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static int32_t i32v[10] = {1, 2, 3, 4, 5, -5, -4, -3, -2, -1};
+static uint32_t u32v[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static int64_t i64v[10] = {1, 2, 3, 4, 5, -5, -4, -3, -2, -1};
+static uint64_t u64v[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static void *spv[10] = {(void *)0, (void *)1, (void *)2, (void *)3, (void *)4,
+			(void *)5, (void *)6, (void *)7, (void *)8, (void *)9};
+static int64_t sik[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static int32_t i32k[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static uint32_t u32k[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-#define NO_CMPF ,NULL
+#define NO_CMPF , NULL
 #define X_CMPF
-#define AA_CMPF ,AA_cmp
+#define AA_CMPF , AA_cmp
 
-static int AA_cmp(const void *a, const void *b) {
+static int AA_cmp(const void *a, const void *b)
+{
 	int64_t r = ((const struct AA *)a)->a - ((const struct AA *)b)->a;
 	return r < 0 ? -1 : r > 0 ? 1 : 0;
 }
-static int cmp_ii(int64_t a, int64_t b) {
+static int cmp_ii(int64_t a, int64_t b)
+{
 	return a > b ? 1 : b > a ? -1 : 0;
 }
-static int cmp_pp(const void *a, const void *b) {
+static int cmp_pp(const void *a, const void *b)
+{
 	return a > b ? 1 : b > a ? -1 : 0;
 }
 
@@ -106,54 +110,59 @@ static int cmp_pp(const void *a, const void *b) {
  * Following test template covers two cases: non-aliased (sa to sb) and
  * aliased (sa to sa)
  */
-#define MK_TEST_SS_DUP_CODEC(suffix)					      \
-	static int test_ss_dup_##suffix(const srt_string *a,		      \
-					const srt_string *b) {	      	      \
-		srt_string *sa = ss_dup(a), *sb = ss_dup_##suffix(sa),	      \
-		     *sc = ss_dup_##suffix(a);				      \
-		int res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) | \
-			(!ss_cmp(sa, b) ? 0 : 4) |			      \
-			(!ss_cmp(sb, b) ? 0 : 8) |			      \
-			(!ss_cmp(sc, b) ? 0 : 16);			      \
-		ss_free(&sa, &sb, &sc);					      \
-		return res;						      \
+#define MK_TEST_SS_DUP_CODEC(suffix)                                           \
+	static int test_ss_dup_##suffix(const srt_string *a,                   \
+					const srt_string *b)                   \
+	{                                                                      \
+		srt_string *sa = ss_dup(a), *sb = ss_dup_##suffix(sa),         \
+			   *sc = ss_dup_##suffix(a);                           \
+		int res = (!sa || !sb) ? 1                                     \
+				       : (ss_##suffix(&sa, sa) ? 0 : 2)        \
+						 | (!ss_cmp(sa, b) ? 0 : 4)    \
+						 | (!ss_cmp(sb, b) ? 0 : 8)    \
+						 | (!ss_cmp(sc, b) ? 0 : 16);  \
+		ss_free(&sa, &sb, &sc);                                        \
+		return res;                                                    \
 	}
 
-#define MK_TEST_SS_CPY_CODEC(suffix)					      \
-	static int test_ss_cpy_##suffix(const srt_string *a,		      \
-					const srt_string *b) {		      \
-		int res;						      \
-		srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()="),\
-		     *sc = ss_dup(sb);					      \
-		ss_cpy_##suffix(&sb, sa);				      \
-		ss_cpy_##suffix(&sc, a);				      \
-		res = (!sa || !sb) ? 1 : (ss_##suffix(&sa, sa) ? 0 : 2) |     \
-			(!ss_cmp(sa, b) ? 0 : 4) |			      \
-			(!ss_cmp(sb, b) ? 0 : 8) |			      \
-			(!ss_cmp(sc, b) ? 0 : 16);			      \
-		ss_free(&sa, &sb, &sc);					      \
-		return res;						      \
+#define MK_TEST_SS_CPY_CODEC(suffix)                                           \
+	static int test_ss_cpy_##suffix(const srt_string *a,                   \
+					const srt_string *b)                   \
+	{                                                                      \
+		int res;                                                       \
+		srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()="), \
+			   *sc = ss_dup(sb);                                   \
+		ss_cpy_##suffix(&sb, sa);                                      \
+		ss_cpy_##suffix(&sc, a);                                       \
+		res = (!sa || !sb) ? 1                                         \
+				   : (ss_##suffix(&sa, sa) ? 0 : 2)            \
+					     | (!ss_cmp(sa, b) ? 0 : 4)        \
+					     | (!ss_cmp(sb, b) ? 0 : 8)        \
+					     | (!ss_cmp(sc, b) ? 0 : 16);      \
+		ss_free(&sa, &sb, &sc);                                        \
+		return res;                                                    \
 	}
 
-#define MK_TEST_SS_CAT_CODEC(suffix)					   \
-	static int test_ss_cat_##suffix(const srt_string *a,		   \
-					const srt_string *b,		   \
-					const srt_string *expected) {	   \
-		int res;						   \
-		srt_string *sa = ss_dup(a), *sb = ss_dup(b),		   \
-		     *sc = ss_dup(sa);					   \
-		ss_cat_##suffix(&sa, sb);				   \
-		ss_cat_##suffix(&sc, b);				   \
-		res = (!sa || !sb) ? 1 :				   \
-			(!ss_cmp(sa, expected) ? 0 : 2) |	   	   \
-			(!ss_cmp(sc, expected) ? 0 : 4);	   	   \
-		ss_free(&sa, &sb, &sc);					   \
-		return res;						   \
+#define MK_TEST_SS_CAT_CODEC(suffix)                                           \
+	static int test_ss_cat_##suffix(const srt_string *a,                   \
+					const srt_string *b,                   \
+					const srt_string *expected)            \
+	{                                                                      \
+		int res;                                                       \
+		srt_string *sa = ss_dup(a), *sb = ss_dup(b), *sc = ss_dup(sa); \
+		ss_cat_##suffix(&sa, sb);                                      \
+		ss_cat_##suffix(&sc, b);                                       \
+		res = (!sa || !sb)                                             \
+			      ? 1                                              \
+			      : (!ss_cmp(sa, expected) ? 0 : 2)                \
+					| (!ss_cmp(sc, expected) ? 0 : 4);     \
+		ss_free(&sa, &sb, &sc);                                        \
+		return res;                                                    \
 	}
 
-#define MK_TEST_SS_DUP_CPY_CAT_CODEC(codec)	\
-	MK_TEST_SS_DUP_CODEC(codec)		\
-	MK_TEST_SS_CPY_CODEC(codec)		\
+#define MK_TEST_SS_DUP_CPY_CAT_CODEC(codec)                                    \
+	MK_TEST_SS_DUP_CODEC(codec)                                            \
+	MK_TEST_SS_CPY_CODEC(codec)                                            \
 	MK_TEST_SS_CAT_CODEC(codec)
 
 MK_TEST_SS_DUP_CPY_CAT_CODEC(enc_b64)
@@ -186,21 +195,24 @@ static int test_sb(size_t nelems)
 	int res;
 	srt_bitset *da, *db;
 	srt_bitset *a = sb_alloca(nelems), *b = sb_alloc(0);
-	#define TEST_SB(bs, ne) 	\
-		sb_eval(&bs, ne);	\
-		sb_set(&bs, 0);		\
-		sb_set(&bs, ne - 1);
+#define TEST_SB(bs, ne)                                                        \
+	sb_eval(&bs, ne);                                                      \
+	sb_set(&bs, 0);                                                        \
+	sb_set(&bs, ne - 1);
 	TEST_SB(a, nelems);
 	TEST_SB(b, nelems);
-	#undef TEST_SB
+#undef TEST_SB
 	da = sb_dup(a);
 	db = sb_dup(b);
-	res = sb_popcount(a) != sb_popcount(b) ||
-		  sb_popcount(da) != sb_popcount(db) ||
-		  sb_popcount(a) != sb_popcount(da) ||
-		  sb_popcount(a) != 2 ? 1 :
-		  !sb_test(a, 0) || !sb_test(b, 0) ||
-		  !sb_test(da, 0) || !sb_test(db, 0) ? 2 : 0;
+	res = sb_popcount(a) != sb_popcount(b)
+			      || sb_popcount(da) != sb_popcount(db)
+			      || sb_popcount(a) != sb_popcount(da)
+			      || sb_popcount(a) != 2
+		      ? 1
+		      : !sb_test(a, 0) || !sb_test(b, 0) || !sb_test(da, 0)
+					|| !sb_test(db, 0)
+				? 2
+				: 0;
 	/* clear 'a', 'b', 'da' all at once */
 	sb_clear(a);
 	sb_clear(b);
@@ -208,9 +220,10 @@ static int test_sb(size_t nelems)
 	/* clear 'db' one manually */
 	sb_reset(&db, 0);
 	sb_reset(&db, nelems - 1);
-	res |= sb_popcount(a) || sb_popcount(b) || sb_popcount(da) ||
-	       sb_popcount(db) ? 4 : sb_test(da, 0) ||
-	       sb_test(db, 0) ? 8 : 0;
+	res |= sb_popcount(a) || sb_popcount(b) || sb_popcount(da)
+			       || sb_popcount(db)
+		       ? 4
+		       : sb_test(da, 0) || sb_test(db, 0) ? 8 : 0;
 	res |= sb_capacity(da) < nelems || sb_capacity(db) < nelems ? 16 : 0;
 	sb_shrink(&a);
 	sb_shrink(&b);
@@ -225,8 +238,8 @@ static int test_sb(size_t nelems)
 static int test_ss_alloc(const size_t max_size)
 {
 	srt_string *a = ss_alloc(max_size);
-	int res = !a ? 1 : (ss_len(a) != 0) * 2 |
-			   (ss_capacity(a) != max_size) * 4;
+	int res = !a ? 1
+		     : (ss_len(a) != 0) * 2 | (ss_capacity(a) != max_size) * 4;
 	ss_free(&a);
 	return res;
 }
@@ -234,8 +247,8 @@ static int test_ss_alloc(const size_t max_size)
 static int test_ss_alloca(const size_t max_size)
 {
 	srt_string *a = ss_alloca(max_size);
-	int res = !a ? 1 : (ss_len(a) != 0) * 2 |
-			   (ss_capacity(a) != max_size) * 4;
+	int res = !a ? 1
+		     : (ss_len(a) != 0) * 2 | (ss_capacity(a) != max_size) * 4;
 	ss_free(&a);
 	return res;
 }
@@ -243,8 +256,9 @@ static int test_ss_alloca(const size_t max_size)
 static int test_ss_shrink()
 {
 	srt_string *a = ss_dup_printf(1024, "hello");
-	int res = !a ? 1 : (ss_shrink(&a) ? 0 : 2) |
-			   (ss_capacity(a) == ss_len(a) ? 0 : 4);
+	int res = !a ? 1
+		     : (ss_shrink(&a) ? 0 : 2)
+				  | (ss_capacity(a) == ss_len(a) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -275,14 +289,21 @@ static int test_ss_resize_x()
 	const char *i3 = U8_C_N_TILDE_D1 "123";
 	srt_string *a = ss_dup_c(i0), *b = ss_dup(a);
 	int res = a && b ? 0 : 1;
-	res |= res ? 0 : ((ss_resize(&a, 14, '_') &&
-			 !strcmp(ss_to_c(a), i1)) ? 0 : 2) |
-			 ((ss_resize_u(&b, 13, '_') &&
-			  !strcmp(ss_to_c(b), i1)) ? 0 : 4) |
-			 ((ss_resize(&a, 4, '_') &&
-			  !strcmp(ss_to_c(a), i2)) ? 0 : 8) |
-			 ((ss_resize_u(&b, 4, '_') &&
-			  !strcmp(ss_to_c(b), i3)) ? 0 : 16);
+	res |= res ? 0
+		   : ((ss_resize(&a, 14, '_') && !strcmp(ss_to_c(a), i1)) ? 0
+									  : 2)
+			       | ((ss_resize_u(&b, 13, '_')
+				   && !strcmp(ss_to_c(b), i1))
+					  ? 0
+					  : 4)
+			       | ((ss_resize(&a, 4, '_')
+				   && !strcmp(ss_to_c(a), i2))
+					  ? 0
+					  : 8)
+			       | ((ss_resize_u(&b, 4, '_')
+				   && !strcmp(ss_to_c(b), i3))
+					  ? 0
+					  : 16);
 	ss_free(&a, &b);
 	return res;
 }
@@ -291,8 +312,9 @@ static int test_ss_trim(const char *in, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
-	res |= res ? 0 : (ss_trim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_trim(&a) ? 0 : 2)
+			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -301,8 +323,9 @@ static int test_ss_ltrim(const char *in, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
-	res |= res ? 0 : (ss_ltrim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_ltrim(&a) ? 0 : 2)
+			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -311,35 +334,40 @@ static int test_ss_rtrim(const char *in, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
-	res |= res ? 0 : (ss_rtrim(&a) ? 0 : 2) |
-			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_rtrim(&a) ? 0 : 2)
+			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
 
 static int test_ss_erase(const char *in, const size_t byte_off,
-		const size_t num_bytes, const char *expected)
+			 const size_t num_bytes, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
-	res |= res ? 0 : (ss_erase(&a, byte_off, num_bytes) ? 0 : 2) |
-			(!strcmp(ss_to_c(a), expected) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_erase(&a, byte_off, num_bytes) ? 0 : 2)
+			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
 
 static int test_ss_erase_u(const char *in, const size_t char_off,
-		const size_t num_chars, const char *expected)
+			   const size_t num_chars, const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
 	size_t in_wlen = ss_len_u(a),
-	       expected_len = char_off >= in_wlen ? in_wlen :
-			(in_wlen - char_off) > num_chars ? in_wlen - num_chars :
-			char_off;
-	res |= res ? 0 : (ss_erase_u(&a, char_off, num_chars) ? 0 : 2) |
-			 (!strcmp(ss_to_c(a), expected) ? 0 : 4) |
-			 (expected_len == ss_len_u(a) ? 0 : 8);
+	       expected_len = char_off >= in_wlen
+				      ? in_wlen
+				      : (in_wlen - char_off) > num_chars
+						? in_wlen - num_chars
+						: char_off;
+	res |= res ? 0
+		   : (ss_erase_u(&a, char_off, num_chars) ? 0 : 2)
+			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4)
+			       | (expected_len == ss_len_u(a) ? 0 : 8);
 	ss_free(&a);
 	return res;
 }
@@ -357,9 +385,10 @@ static int test_ss_len(const char *a, const size_t expected_size)
 {
 	srt_string *sa = ss_dup_c(a);
 	const srt_string *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
-	int res = !sa ? 1 : (ss_len(sa) == expected_size ? 0 : 1) |
-			    (ss_len(sb) == expected_size ? 0 : 2) |
-			    (ss_len(sc) == expected_size ? 0 : 4);
+	int res = !sa ? 1
+		      : (ss_len(sa) == expected_size ? 0 : 1)
+				  | (ss_len(sb) == expected_size ? 0 : 2)
+				  | (ss_len(sc) == expected_size ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -368,13 +397,15 @@ static int test_ss_len_u(const char *a, const size_t expected_size)
 {
 	srt_string *sa = ss_dup_c(a);
 	const srt_string *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
-	int res = !sa ? 1 : (ss_len_u(sa) == expected_size ? 0 : 1) |
-			    (ss_len_u(sb) == expected_size ? 0 : 2) |
-			    (ss_len_u(sc) == expected_size ? 0 : 4);
+	int res = !sa ? 1
+		      : (ss_len_u(sa) == expected_size ? 0 : 1)
+				  | (ss_len_u(sb) == expected_size ? 0 : 2)
+				  | (ss_len_u(sc) == expected_size ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
 
+/* clang-format off */
 static int test_ss_capacity()
 {
 	const size_t test_max_size = 100;
@@ -396,6 +427,7 @@ static int test_ss_capacity()
 	ss_free(&a);
 	return res;
 }
+/* clang-format on */
 
 static int test_ss_len_left()
 {
@@ -423,8 +455,9 @@ static int test_ss_dup()
 {
 	srt_string *b = ss_dup_c("hello"), *a = ss_dup(b);
 	const srt_string *c = ss_crefa("hello");
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2) |
-			   (!strcmp("hello", ss_to_c(c)) ? 0 : 4);
+	int res = !a ? 1
+		     : (!strcmp("hello", ss_to_c(a)) ? 0 : 2)
+				  | (!strcmp("hello", ss_to_c(c)) ? 0 : 4);
 	ss_free(&a, &b);
 	return res;
 }
@@ -432,11 +465,13 @@ static int test_ss_dup()
 static int test_ss_dup_substr()
 {
 	srt_string *a = ss_dup_c("hello"), *b = ss_dup_substr(a, 0, 5),
-	     *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
-	int res = (!a || !b) ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
-				   (!strcmp("hello", ss_to_c(a)) ? 0 : 4) |
-				   (ss_len(a) == ss_len(c) ? 0 : 8) |
-				   (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
+		   *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
+	int res = (!a || !b)
+			  ? 1
+			  : (ss_len(a) == ss_len(b) ? 0 : 2)
+				    | (!strcmp("hello", ss_to_c(a)) ? 0 : 4)
+				    | (ss_len(a) == ss_len(c) ? 0 : 8)
+				    | (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -444,11 +479,12 @@ static int test_ss_dup_substr()
 static int test_ss_dup_substr_u()
 {
 	srt_string *b = ss_dup_c("hello"), *a = ss_dup_substr(b, 0, 5),
-	     *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
-	int res = !a ? 1 : (ss_len(a) == ss_len(b) ? 0 : 2) |
-			   (!strcmp("hello", ss_to_c(a)) ? 0 : 4) |
-			   (ss_len(a) == ss_len(c) ? 0 : 8) |
-			   (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
+		   *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
+	int res = !a ? 1
+		     : (ss_len(a) == ss_len(b) ? 0 : 2)
+				  | (!strcmp("hello", ss_to_c(a)) ? 0 : 4)
+				  | (ss_len(a) == ss_len(c) ? 0 : 8)
+				  | (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -465,8 +501,9 @@ static int test_ss_dup_c()
 {
 	srt_string *a = ss_dup_c("hello");
 	const srt_string *b = ss_crefa("hello");
-	int res = !a ? 1 : (!strcmp("hello", ss_to_c(a)) ? 0 : 2) |
-			   (!strcmp("hello", ss_to_c(b)) ? 0 : 4);
+	int res = !a ? 1
+		     : (!strcmp("hello", ss_to_c(a)) ? 0 : 2)
+				  | (!strcmp("hello", ss_to_c(b)) ? 0 : 4);
 	ss_free(&a);
 	return res;
 }
@@ -499,13 +536,13 @@ static int test_ss_dup_tolower(const srt_string *a, const srt_string *b)
 {
 	srt_string *sa = ss_dup(a), *sb = ss_dup_tolower(sa),
 		   *sc = ss_dup_tolower(a);
-	int res = (!sa || !sb || !sc) ? 1 :
-		  (ss_tolower(&sa) ? 0 : 2) |
-		  (!ss_cmp(sa, b) ? 0 : 4) |
-		  (!ss_cmp(sb, b) ? 0 : 8) |
-		  (!ss_cmp(sc, b) ? 0 : 16) |
-		  (!ss_cmp(sb, b) ? 0 : 32) |
-		  (!ss_cmp(sc, b) ? 0 : 64);
+	int res = (!sa || !sb || !sc)
+			  ? 1
+			  : (ss_tolower(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
+				    | (!ss_cmp(sb, b) ? 0 : 8)
+				    | (!ss_cmp(sc, b) ? 0 : 16)
+				    | (!ss_cmp(sb, b) ? 0 : 32)
+				    | (!ss_cmp(sc, b) ? 0 : 64);
 	ss_free(&sa, &sb, &sc);
 	return res;
 }
@@ -513,10 +550,11 @@ static int test_ss_dup_tolower(const srt_string *a, const srt_string *b)
 static int test_ss_dup_toupper(const srt_string *a, const srt_string *b)
 {
 	srt_string *sa = ss_dup(a), *sb = ss_dup_toupper(sa);
-	int res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!ss_cmp(sa, b) ? 0 : 4) |
-			   (!ss_cmp(sb, b) ? 0 : 8) |
-			   (!ss_cmp(sb, b) ? 0 : 16);
+	int res = (!sa || !sb)
+			  ? 1
+			  : (ss_toupper(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
+				    | (!ss_cmp(sb, b) ? 0 : 8)
+				    | (!ss_cmp(sb, b) ? 0 : 16);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -533,7 +571,7 @@ static int test_ss_dup_erase(const char *in, const size_t off,
 static int test_ss_dup_erase_u()
 {
 	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
-	     *b = ss_dup_erase_u(a, 2, 3);
+		   *b = ss_dup_erase_u(a, 2, 3);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
 	ss_free(&a, &b);
 	return res;
@@ -542,12 +580,14 @@ static int test_ss_dup_erase_u()
 static int test_ss_dup_replace(const char *in, const char *r, const char *s,
 			       const char *expected)
 {
-	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r),
-	     *c = ss_dup_c(s), *d = ss_dup_replace(a, 0, b, c),
-	     *e = ss_dup_replace(a, 0, a, a);
-	int res = (!a || !b) ? 1 :
-			(!strcmp(ss_to_c(d), expected) ? 0 : 2) |
-			(!strcmp(ss_to_c(e), in)? 0 : 4); /* aliasing */
+	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r), *c = ss_dup_c(s),
+		   *d = ss_dup_replace(a, 0, b, c),
+		   *e = ss_dup_replace(a, 0, a, a);
+	int res = (!a || !b) ? 1
+			     : (!strcmp(ss_to_c(d), expected) ? 0 : 2)
+				       | (!strcmp(ss_to_c(e), in)
+						  ? 0
+						  : 4); /* aliasing */
 	ss_free(&a, &b, &c, &d, &e);
 	return res;
 }
@@ -555,9 +595,10 @@ static int test_ss_dup_replace(const char *in, const char *r, const char *s,
 static int test_ss_dup_resize()
 {
 	srt_string *a = ss_dup_c("hello"), *b = ss_dup_resize(a, 10, 'z'),
-	     *c = ss_dup_resize(a, 2, 'z');
-	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+		   *c = ss_dup_resize(a, 2, 'z');
+	int res = (!a || !b) ? 1
+			     : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2)
+				       | (!strcmp(ss_to_c(c), "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -565,12 +606,16 @@ static int test_ss_dup_resize()
 static int test_ss_dup_resize_u()
 {
 	srt_string *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"),
-	     *b = ss_dup_resize_u(a, 11, 'z'),
-	     *c = ss_dup_resize_u(a, 3, 'z');
-	int res = (!a || !b) ?
-		1 :
-		(!strcmp(ss_to_c(b), U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
-		(!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he") ? 0 : 4);
+		   *b = ss_dup_resize_u(a, 11, 'z'),
+		   *c = ss_dup_resize_u(a, 3, 'z');
+	int res = (!a || !b)
+			  ? 1
+			  : (!strcmp(ss_to_c(b), U8_S_N_TILDE_F1 "hellozzzzz")
+				     ? 0
+				     : 2)
+				    | (!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he")
+					       ? 0
+					       : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -579,8 +624,9 @@ static int test_ss_dup_trim(const char *a, const char *expected)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_trim(sa);
 	const srt_string *sc = ss_dup_trim(ss_crefa(a));
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2) |
-				     (!ss_cmp(sb, sc) ? 0 : 4);
+	int res = (!sa || !sb) ? 1
+			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
+					 | (!ss_cmp(sb, sc) ? 0 : 4);
 	ss_free(&sa, &sb, &sc);
 	return res;
 }
@@ -589,8 +635,9 @@ static int test_ss_dup_ltrim(const char *a, const char *expected)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa);
 	const srt_string *sc = ss_dup_ltrim(ss_crefa(a));
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2) |
-				     (!ss_cmp(sb, sc) ? 0 : 4);
+	int res = (!sa || !sb) ? 1
+			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
+					 | (!ss_cmp(sb, sc) ? 0 : 4);
 	ss_free(&sa, &sb, &sc);
 	return res;
 }
@@ -599,8 +646,9 @@ static int test_ss_dup_rtrim(const char *a, const char *expected)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa);
 	const srt_string *sc = ss_dup_rtrim(ss_crefa(a));
-	int res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2) |
-				     (!ss_cmp(sb, sc) ? 0 : 4);
+	int res = (!sa || !sb) ? 1
+			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
+					 | (!ss_cmp(sb, sc) ? 0 : 4);
 	ss_free(&sa, &sb, &sc);
 	return res;
 }
@@ -617,7 +665,7 @@ static int test_ss_dup_printf()
 }
 
 static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
-							const char *fmt, ...)
+				 const char *fmt, ...)
 {
 	int res;
 	srt_string *a;
@@ -646,11 +694,16 @@ static int test_ss_dup_read(const char *pattern)
 	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
 	if (f) {
 		size_t write_size = fwrite(pattern, 1, pattern_size, f);
-		res = !write_size || ferror(f) ||
-		      write_size != pattern_size ? 2 :
-		      fseek(f, 0, SEEK_SET) != 0 ? 4 :
-		      (s = ss_dup_read(f, pattern_size)) == NULL ? 8 :
-		      strcmp(ss_to_c(s), pattern) ? 16 : 0;
+		res = !write_size || ferror(f) || write_size != pattern_size
+			      ? 2
+			      : fseek(f, 0, SEEK_SET) != 0
+					? 4
+					: (s = ss_dup_read(f, pattern_size))
+							  == NULL
+						  ? 8
+						  : strcmp(ss_to_c(s), pattern)
+							    ? 16
+							    : 0;
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
 			res |= 32;
@@ -662,12 +715,14 @@ static int test_ss_dup_read(const char *pattern)
 static int test_ss_cpy(const char *in)
 {
 	srt_string *a = ss_dup_c(in);
-	int res = !a ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
-			  (ss_len(a) == strlen(in) ? 0 : 4);
+	int res = !a ? 1
+		     : (!strcmp(ss_to_c(a), in) ? 0 : 2)
+				  | (ss_len(a) == strlen(in) ? 0 : 4);
 	srt_string *b = NULL;
 	ss_cpy(&b, a);
-	res = res ? 0 : (!strcmp(ss_to_c(b), in) ? 0 : 8) |
-		       (ss_len(b) == strlen(in) ? 0 : 16);
+	res = res ? 0
+		  : (!strcmp(ss_to_c(b), in) ? 0 : 8)
+			      | (ss_len(b) == strlen(in) ? 0 : 16);
 	ss_free(&a, &b);
 	return res;
 }
@@ -696,12 +751,14 @@ static int test_ss_cpy_substr_u()
 
 static int test_ss_cpy_cn()
 {
-	char b[3] = { 0, 1, 2 };
+	char b[3] = {0, 1, 2};
 	srt_string *a = NULL;
-	int res = !ss_cpy_cn(&a, b, 3) ? 1 : (ss_to_c(a)[0] == b[0] ? 0: 2) |
-					     (ss_to_c(a)[1] == b[1] ? 0: 4) |
-					     (ss_to_c(a)[2] == b[2] ? 0: 8) |
-					     (ss_len(a) == 3 ? 0 : 16);
+	int res = !ss_cpy_cn(&a, b, 3)
+			  ? 1
+			  : (ss_to_c(a)[0] == b[0] ? 0 : 2)
+				    | (ss_to_c(a)[1] == b[1] ? 0 : 4)
+				    | (ss_to_c(a)[2] == b[2] ? 0 : 8)
+				    | (ss_len(a) == 3 ? 0 : 16);
 	ss_free(&a);
 	return res;
 }
@@ -709,12 +766,14 @@ static int test_ss_cpy_cn()
 static int test_ss_cpy_c(const char *in)
 {
 	srt_string *a = NULL;
-	int res = !ss_cpy_c(&a, in) ? 1 : (!strcmp(ss_to_c(a), in) ? 0 : 2) |
-					 (ss_len(a) == strlen(in) ? 0 : 4);
+	int res = !ss_cpy_c(&a, in)
+			  ? 1
+			  : (!strcmp(ss_to_c(a), in) ? 0 : 2)
+				    | (ss_len(a) == strlen(in) ? 0 : 4);
 	char tmp[512];
 	sprintf(tmp, "%s%s", in, in);
-	res |= res ? 0 :
-		ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
+	res |= res ? 0
+		   : ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
 }
@@ -722,13 +781,15 @@ static int test_ss_cpy_c(const char *in)
 static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 {
 	srt_string *a = NULL;
-	int res = !ss_cpy_w(&a, in) ? 1 :
-				(!strcmp(ss_to_c(a), expected_utf8) ? 0 : 2) |
-				(ss_len(a) == strlen(expected_utf8) ? 0 : 4);
+	int res = !ss_cpy_w(&a, in)
+			  ? 1
+			  : (!strcmp(ss_to_c(a), expected_utf8) ? 0 : 2)
+				    | (ss_len(a) == strlen(expected_utf8) ? 0
+									  : 4);
 	char tmp[512];
 	sprintf(tmp, "%ls%ls", in, in);
-	res |= res ? 0 : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ?
-									  0 : 8;
+	res |= res ? 0
+		   : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
 }
@@ -737,24 +798,33 @@ static int test_ss_cpy_wn()
 {
 	int res = 0;
 #if WCHAR_MAX > 0 && WCHAR_MAX <= 0xffff
-	const uint16_t t16[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e,
-				 0x15f, 0xa2, 0x20ac,
-				 0xd800 | (uint16_t)(0x24b62 >> 10),
-				 0xdc00 | (uint16_t)(0x24b62 & 0x3ff), 0 };
+	const uint16_t t16[] = {0xd1,
+				0xf1,
+				0x131,
+				0x130,
+				0x11e,
+				0x11f,
+				0x15e,
+				0x15f,
+				0xa2,
+				0x20ac,
+				0xd800 | (uint16_t)(0x24b62 >> 10),
+				0xdc00 | (uint16_t)(0x24b62 & 0x3ff),
+				0};
 	const wchar_t *t = (wchar_t *)t16;
 #else
-	const uint32_t t32[] = { 0xd1, 0xf1, 0x131, 0x130, 0x11e, 0x11f, 0x15e,
-				 0x15f, 0xa2, 0x20ac, 0x24b62, 0 };
+	const uint32_t t32[] = {0xd1,  0xf1,  0x131, 0x130,  0x11e,   0x11f,
+				0x15e, 0x15f, 0xa2,  0x20ac, 0x24b62, 0};
 	const wchar_t *t = (wchar_t *)t32;
 #endif
-	#define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
-	#define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
-	#define TU8C3 U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F U8_CENT_00A2
-	#define TU8D2 U8_EURO_20AC U8_HAN_24B62
-	#define TU8ALL11 TU8A3 TU8B3 TU8C3 TU8D2
+#define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
+#define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
+#define TU8C3 U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F U8_CENT_00A2
+#define TU8D2 U8_EURO_20AC U8_HAN_24B62
+#define TU8ALL11 TU8A3 TU8B3 TU8C3 TU8D2
 	srt_string *a = ss_dup_c("hello"), *b_a3 = ss_dup_c(TU8A3),
-	     *b_b3 = ss_dup_c(TU8B3), *b_c3 = ss_dup_c(TU8C3),
-	     *b_d2 = ss_dup_c(TU8D2), *b_all11 = ss_dup_c(TU8ALL11);
+		   *b_b3 = ss_dup_c(TU8B3), *b_c3 = ss_dup_c(TU8C3),
+		   *b_d2 = ss_dup_c(TU8D2), *b_all11 = ss_dup_c(TU8ALL11);
 	ss_cpy_wn(&a, t, 3);
 	res |= !ss_cmp(a, b_a3) ? 0 : 1;
 	ss_cpy_wn(&a, t + 3, 3);
@@ -772,9 +842,10 @@ static int test_ss_cpy_wn()
 		ss_cpy_wn(&a, t, 11);
 	res |= !ss_cmp(a, b_all11) ? 0 : 16;
 	res |= !strcmp(TU8ALL11, ss_to_c(b_all11)) ? 0 : 32;
-	res |= ss_len_u(b_a3) == 3 && ss_len_u(b_b3) == 3 &&
-	       ss_len_u(b_c3) == 3 && ss_len_u(b_d2) == 2 &&
-	       ss_len_u(b_all11) == 11 ? 0 : 64;
+	res |= ss_len_u(b_a3) == 3 && ss_len_u(b_b3) == 3 && ss_len_u(b_c3) == 3
+			       && ss_len_u(b_d2) == 2 && ss_len_u(b_all11) == 11
+		       ? 0
+		       : 64;
 	ss_free(&a, &b_a3, &b_b3, &b_c3, &b_d2, &b_all11);
 	return res;
 }
@@ -794,9 +865,10 @@ static int test_ss_cpy_tolower(const srt_string *a, const srt_string *b)
 	int res;
 	srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_tolower(&sb, sa);
-	res = (!sa ||!sb) ? 1 : (ss_tolower(&sa) ? 0 : 2) |
-			   (!ss_cmp(sa, b) ? 0 : 4) |
-			   (!ss_cmp(sb, b) ? 0 : 8);
+	res = (!sa || !sb)
+		      ? 1
+		      : (ss_tolower(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
+				| (!ss_cmp(sb, b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -806,9 +878,10 @@ static int test_ss_cpy_toupper(const srt_string *a, const srt_string *b)
 	int res;
 	srt_string *sa = ss_dup(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_toupper(&sb, sa);
-	res = (!sa ||!sb) ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!ss_cmp(sa, b) ? 0 : 4) |
-			   (!ss_cmp(sb, b) ? 0 : 8);
+	res = (!sa || !sb)
+		      ? 1
+		      : (ss_toupper(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
+				| (!ss_cmp(sb, b) ? 0 : 8);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -828,7 +901,7 @@ static int test_ss_cpy_erase_u()
 {
 	int res;
 	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
-	     *b = ss_dup_c("garbage i!&/()=");
+		   *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase_u(&b, a, 2, 3);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
 	ss_free(&a, &b);
@@ -839,8 +912,8 @@ static int test_ss_cpy_replace(const char *in, const char *r, const char *s,
 			       const char *expected)
 {
 	int res;
-	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r),
-	     *c = ss_dup_c(s), *d = ss_dup_c("garbage i!&/()=");
+	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r), *c = ss_dup_c(s),
+		   *d = ss_dup_c("garbage i!&/()=");
 	ss_cpy_replace(&d, a, 0, b, c);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
 	ss_free(&a, &b, &c, &d);
@@ -851,11 +924,12 @@ static int test_ss_cpy_resize()
 {
 	int res;
 	srt_string *a = ss_dup_c("hello"), *b = ss_dup_c("garbage i!&/()="),
-	     *c = ss_dup_c("garbage i!&/()=");
+		   *c = ss_dup_c("garbage i!&/()=");
 	ss_cpy_resize(&b, a, 10, 'z');
 	ss_cpy_resize(&c, a, 2, 'z');
-	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2) |
-				   (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+	res = (!a || !b) ? 1
+			 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2)
+				   | (!strcmp(ss_to_c(c), "he") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -864,15 +938,17 @@ static int test_ss_cpy_resize_u()
 {
 	int res;
 	srt_string *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"),
-	     *b = ss_dup_c("garbage i!&/()="),
-	     *c = ss_dup_c("garbage i!&/()=");
+		   *b = ss_dup_c("garbage i!&/()="),
+		   *c = ss_dup_c("garbage i!&/()=");
 	ss_cpy_resize_u(&b, a, 11, 'z');
 	ss_cpy_resize_u(&c, a, 3, 'z');
-	res = (!a || !b) ? 1 :
-			(!strcmp(ss_to_c(b),
-				 U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
-			(!strcmp(ss_to_c(c),
-				 U8_S_N_TILDE_F1 "he") ? 0 : 4);
+	res = (!a || !b)
+		      ? 1
+		      : (!strcmp(ss_to_c(b), U8_S_N_TILDE_F1 "hellozzzzz") ? 0
+									   : 2)
+				| (!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he")
+					   ? 0
+					   : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -920,7 +996,7 @@ static int test_ss_cpy_printf()
 }
 
 static int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
-							const char *fmt, ...)
+				 const char *fmt, ...)
 {
 	int res;
 	srt_string *a = NULL;
@@ -943,6 +1019,7 @@ static int test_ss_cpy_char(const int32_t in, const char *expected)
 	return res;
 }
 
+/* clang-format off */
 static int test_ss_cpy_read()
 {
 	int res = 1;
@@ -971,40 +1048,47 @@ static int test_ss_cpy_read()
 	ss_free(&ah);
 	return res;
 }
+/* clang-format on */
 
 static int test_ss_cat(const char *a, const char *b)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	srt_string *sc = ss_dup_c("c"), *sd = ss_dup_c("d"),
-		    *se = ss_dup_c("e"), *sf = ss_dup_c("f");
+		   *se = ss_dup_c("e"), *sf = ss_dup_c("f");
 	int res = (sa && sb) ? 0 : 1;
 	char btmp[8192];
 #ifdef S_DEBUG
 	size_t alloc_calls_before, alloc_calls_after;
 #endif
 	sprintf(btmp, "%s%s%s", a, b, b);
-	res |= res ? 0 : (ss_cat(&sa, sb, sb) ? 0 : 2) |
-			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat(&sa, sb, sb) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Aliasing test: */
-	res |= res ? 0 : (sprintf(btmp, "%s%s%s%s", ss_to_c(sa), ss_to_c(sa),
-				  ss_to_c(sa), ss_to_c(sa)) &&
-			  ss_cat(&sa, sa, sa, sa) ? 0 : 8);
+	res |= res ? 0
+		   : (sprintf(btmp, "%s%s%s%s", ss_to_c(sa), ss_to_c(sa),
+			      ss_to_c(sa), ss_to_c(sa))
+				      && ss_cat(&sa, sa, sa, sa)
+			      ? 0
+			      : 8);
 	res |= res ? 0 : (!strcmp(ss_to_c(sa), btmp) ? 0 : 16);
 #ifdef S_DEBUG
 	alloc_calls_before = dbg_cnt_alloc_calls;
 #endif
-	res |= res ? 0 : (sc && sd && se && sf &&
-			  ss_cat(&sc, sd, se, sf)) ? 0 : 32;
+	res |= res ? 0
+		   : (sc && sd && se && sf && ss_cat(&sc, sd, se, sf)) ? 0 : 32;
 #ifdef S_DEBUG
 	/* Check that multiple append uses just one -or zero- allocation: */
 	alloc_calls_after = dbg_cnt_alloc_calls;
-	res |= res ? 0 :
-		     (alloc_calls_after - alloc_calls_before) <= 1 ? 0 : 128;
+	res |= res ? 0
+		   : (alloc_calls_after - alloc_calls_before) <= 1 ? 0 : 128;
 #endif
 	/* Aliasing check */
-	res |= res ? 0 :
-		     ss_cat(&sf, se, sf, se, sf, se) &&
-		     !strcmp(ss_to_c(sf), "fefefe") ? 0 : 64;
+	res |= res ? 0
+		   : ss_cat(&sf, se, sf, se, sf, se)
+				       && !strcmp(ss_to_c(sf), "fefefe")
+			       ? 0
+			       : 64;
 
 	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 256;
 	ss_free(&sa, &sb, &sc, &sd, &se, &sf);
@@ -1014,7 +1098,7 @@ static int test_ss_cat(const char *a, const char *b)
 static int test_ss_cat_substr()
 {
 	srt_string *a = ss_dup_c("how are you"), *b = ss_dup_c(" "),
-	     *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
+		   *c = ss_dup_c("are you"), *d = ss_dup_c("are ");
 	int res = (!a || !b) ? 1 : 0;
 	res |= res ? 0 : (ss_cat_substr(&d, a, 8, 3) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
@@ -1026,8 +1110,8 @@ static int test_ss_cat_substr_u()
 {
 	/* like the above, but replacing the 'e' with a Chinese character */
 	srt_string *a = ss_dup_c("how ar" U8_HAN_24B62 " you"),
-	     *b = ss_dup_c(" "), *c = ss_dup_c("ar" U8_HAN_24B62 " you"),
-	     *d = ss_dup_c("ar" U8_HAN_24B62 " ");
+		   *b = ss_dup_c(" "), *c = ss_dup_c("ar" U8_HAN_24B62 " you"),
+		   *d = ss_dup_c("ar" U8_HAN_24B62 " ");
 	int res = (!a || !b) ? 1 : 0;
 	res |= res ? 0 : (ss_cat_substr_u(&d, a, 8, 3) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
@@ -1042,8 +1126,9 @@ static int test_ss_cat_cn()
 	int res = sa ? 0 : 1;
 	char btmp[8192];
 	sprintf(btmp, "%s%s", a, b);
-	res |= res ? 0 : (ss_cat_cn(&sa, b, 5) ? 0 : 2) |
-			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat_cn(&sa, b, 5) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1054,12 +1139,15 @@ static int test_ss_cat_c(const char *a, const char *b)
 	int res = sa ? 0 : 1;
 	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
-	res |= res ? 0 : (ss_cat_c(&sa, b, b) ? 0 : 2) |
-			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat_c(&sa, b, b) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
-	res |= res ? 0 :
-		     ss_cat_c(&sb, "c", "b", "c", "b", "c") &&
-		     !strcmp(ss_to_c(sb), "bcbcbc") ? 0 : 8;
+	res |= res ? 0
+		   : ss_cat_c(&sb, "c", "b", "c", "b", "c")
+				       && !strcmp(ss_to_c(sb), "bcbcbc")
+			       ? 0
+			       : 8;
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1071,8 +1159,9 @@ static int test_ss_cat_wn()
 	int res = sa ? 0 : 1;
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls", a, b);
-	res |= res ? 0 : (ss_cat_wn(&sa, b, 5) ? 0 : 2) |
-			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat_wn(&sa, b, 5) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1083,12 +1172,15 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	int res = sa ? 0 : 1;
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls%ls%ls", a, b, b, b);
-	res |= res ? 0 : (ss_cat_w(&sa, b, b, b) ? 0 : 2) |
-			 (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat_w(&sa, b, b, b) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
-	res |= res ? 0 :
-		     ss_cat_w(&sb, L"c", L"b", L"c", L"b", L"c") &&
-		     !strcmp(ss_to_c(sb), "bcbcbc") ? 0 : 8;
+	res |= res ? 0
+		   : ss_cat_w(&sb, L"c", L"b", L"c", L"b", L"c")
+				       && !strcmp(ss_to_c(sb), "bcbcbc")
+			       ? 0
+			       : 8;
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1104,7 +1196,7 @@ static int test_ss_cat_int(const char *in, const int64_t num,
 	return res;
 }
 
-static int test_ss_cat_tolower(const srt_string *a, const srt_string*b,
+static int test_ss_cat_tolower(const srt_string *a, const srt_string *b,
 			       const srt_string *expected)
 {
 	int res;
@@ -1154,8 +1246,8 @@ static int test_ss_cat_replace(const char *prefix, const char *in,
 			       const char *expected)
 {
 	int res;
-	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r),
-	     *c = ss_dup_c(s), *d = ss_dup_c(prefix);
+	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r), *c = ss_dup_c(s),
+		   *d = ss_dup_c(prefix);
 	ss_cat_replace(&d, a, 0, b, c);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
 	ss_free(&a, &b, &c, &d);
@@ -1166,12 +1258,12 @@ static int test_ss_cat_resize()
 {
 	int res;
 	srt_string *a = ss_dup_c("hello"), *b = ss_dup_c("x"),
-	     *c = ss_dup_c("x");
+		   *c = ss_dup_c("x");
 	ss_cat_resize(&b, a, 10, 'z');
 	ss_cat_resize(&c, a, 2, 'z');
-	res = (!a || !b) ? 1 :
-		  (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2) |
-		  (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
+	res = (!a || !b) ? 1
+			 : (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2)
+				   | (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -1180,12 +1272,17 @@ static int test_ss_cat_resize_u()
 {
 	int res;
 	srt_string *a = ss_dup_c(U8_S_N_TILDE_F1 "hello"), *b = ss_dup_c("x"),
-	     *c = ss_dup_c("x");
+		   *c = ss_dup_c("x");
 	ss_cat_resize_u(&b, a, 11, 'z');
 	ss_cat_resize_u(&c, a, 3, 'z');
-	res = (!a || !b) ? 1 :
-	      (!strcmp(ss_to_c(b), "x" U8_S_N_TILDE_F1 "hellozzzzz") ? 0 : 2) |
-	      (!strcmp(ss_to_c(c), "x" U8_S_N_TILDE_F1 "he") ? 0 : 4);
+	res = (!a || !b)
+		      ? 1
+		      : (!strcmp(ss_to_c(b), "x" U8_S_N_TILDE_F1 "hellozzzzz")
+				 ? 0
+				 : 2)
+				| (!strcmp(ss_to_c(c), "x" U8_S_N_TILDE_F1 "he")
+					   ? 0
+					   : 4);
 	ss_free(&a, &b, &c);
 	return res;
 }
@@ -1227,7 +1324,7 @@ static int test_ss_cat_printf()
 	srt_string *sa = ss_dup_c("abc");
 	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
 	ss_cat_printf(&sa, 512, "%i%s%08X", 1, "hello", -1);
-	res = !sa? 1 : !strcmp(ss_to_c(sa), btmp) ? 0 : 2;
+	res = !sa ? 1 : !strcmp(ss_to_c(sa), btmp) ? 0 : 2;
 	ss_free(&sa);
 	return res;
 }
@@ -1244,12 +1341,14 @@ static int test_ss_cat_char()
 	int res = sa ? 0 : 1;
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls", a, b);
-	res |= res ? 0 : (ss_cat_char(&sa, b[0]) ? 0 : 2) |
-			(!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
+	res |= res ? 0
+		   : (ss_cat_char(&sa, b[0]) ? 0 : 2)
+			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
 
+/* clang-format off */
 static int test_ss_cat_read()
 {
 	int res = 1;
@@ -1276,12 +1375,14 @@ static int test_ss_cat_read()
 	ss_free(&ah);
 	return res;
 }
+/* clang-format on */
 
 static int test_ss_tolower(const char *a, const char *b)
 {
 	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (ss_tolower(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
+	int res = !sa ? 1
+		      : (ss_tolower(&sa) ? 0 : 2)
+				  | (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1289,8 +1390,9 @@ static int test_ss_tolower(const char *a, const char *b)
 static int test_ss_toupper(const char *a, const char *b)
 {
 	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1 : (ss_toupper(&sa) ? 0 : 2) |
-			   (!strcmp(ss_to_c(sa), b) ? 0 : 4);
+	int res = !sa ? 1
+		      : (ss_toupper(&sa) ? 0 : 2)
+				  | (!strcmp(ss_to_c(sa), b) ? 0 : 4);
 	ss_free(&sa);
 	return res;
 }
@@ -1298,8 +1400,9 @@ static int test_ss_toupper(const char *a, const char *b)
 static int test_ss_clear(const char *in)
 {
 	srt_string *sa = ss_dup_c(in);
-	int res = !sa ? 1 : (ss_len(sa) == strlen(in) ? 0 : 2) |
-			   (ss_capacity(sa) == strlen(in) ? 0 : 4);
+	int res = !sa ? 1
+		      : (ss_len(sa) == strlen(in) ? 0 : 2)
+				  | (ss_capacity(sa) == strlen(in) ? 0 : 4);
 	ss_clear(sa);
 	res |= res ? 0 : (ss_len(sa) == 0 ? 0 : 16);
 	ss_free(&sa);
@@ -1314,12 +1417,10 @@ static int test_ss_check()
 	return res;
 }
 
-static int test_ss_replace(const char *s, const size_t off,
-			   const char *s1, const char *s2,
-			   const char *expected)
+static int test_ss_replace(const char *s, const size_t off, const char *s1,
+			   const char *s2, const char *expected)
 {
-	srt_string *a = ss_dup_c(s), *b = ss_dup_c(s1),
-		    *c = ss_dup_c(s2);
+	srt_string *a = ss_dup_c(s), *b = ss_dup_c(s1), *c = ss_dup_c(s2);
 	int res = a && b && c && ss_replace(&a, off, b, c) ? 0 : 1;
 	res |= res ? 0 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
 	ss_free(&a, &b, &c);
@@ -1341,8 +1442,8 @@ static int test_ss_to_w(const char *in)
 	 * wchar_t > 2 -> UTF32
 	 */
 	const size_t ssa = ss_len(a) * (sizeof(wchar_t) == 2 ? 2 : 1);
-	wchar_t *out = a ? (wchar_t *)s_malloc(sizeof(wchar_t) * (ssa + 1)) :
-			  NULL;
+	wchar_t *out =
+		a ? (wchar_t *)s_malloc(sizeof(wchar_t) * (ssa + 1)) : NULL;
 	size_t out_size = 0;
 	int res = !a ? 1 : (ss_to_w(a, out, ssa + 1, &out_size) ? 0 : 2);
 	res |= (((ssa > 0 && out_size > 0) || ssa == out_size) ? 0 : 4);
@@ -1362,8 +1463,8 @@ static int test_ss_to_w(const char *in)
 static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 :
-		  (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
+	int res =
+		(!sa || !sb) ? 1 : (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1396,24 +1497,23 @@ static int test_ss_split()
 	const char *howareyou = "how are you";
 	srt_string *a = ss_dup_c(howareyou), *sep1 = ss_dup_c(" ");
 	const srt_string *c = ss_crefa(howareyou), *sep2 = ss_crefa(" ");
-	#define TSS_SPLIT_MAX_SUBS 16
+#define TSS_SPLIT_MAX_SUBS 16
 	srt_string_ref subs[TSS_SPLIT_MAX_SUBS];
 	size_t elems1 = ss_split(a, sep1, subs, TSS_SPLIT_MAX_SUBS), elems2;
 	int res = 0;
 	if (!a || !sep1) {
 		res |= 1;
 	} else {
-		if (elems1 != 3 ||
-			ss_cmp(ss_ref(&subs[0]), ss_crefa("how")) ||
-			ss_cmp(ss_ref(&subs[1]), ss_crefa("are")) ||
-			ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
+		if (elems1 != 3 || ss_cmp(ss_ref(&subs[0]), ss_crefa("how"))
+		    || ss_cmp(ss_ref(&subs[1]), ss_crefa("are"))
+		    || ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
 			res |= 2;
 		} else {
 			elems2 = ss_split(c, sep2, subs, TSS_SPLIT_MAX_SUBS);
-			if (elems2 != 3 ||
-				ss_cmp(ss_ref(&subs[0]), ss_crefa("how")) ||
-				ss_cmp(ss_ref(&subs[1]), ss_crefa("are")) ||
-				ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
+			if (elems2 != 3
+			    || ss_cmp(ss_ref(&subs[0]), ss_crefa("how"))
+			    || ss_cmp(ss_ref(&subs[1]), ss_crefa("are"))
+			    || ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
 				res |= 4;
 			}
 		}
@@ -1424,15 +1524,19 @@ static int test_ss_split()
 
 static int validate_cmp(int res1, int res2)
 {
-	return (res1 == 0 && res2 == 0) || (res1 < 0 && res2 < 0) ||
-		(res1 > 0 && res2 > 0) ? 1 : 0;
+	return (res1 == 0 && res2 == 0) || (res1 < 0 && res2 < 0)
+			       || (res1 > 0 && res2 > 0)
+		       ? 1
+		       : 0;
 }
 
 static int test_ss_cmp(const char *a, const char *b, int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 :
-			(validate_cmp(ss_cmp(sa, sb), expected_cmp) ? 0 : 2);
+	int res =
+		(!sa || !sb)
+			? 1
+			: (validate_cmp(ss_cmp(sa, sb), expected_cmp) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1440,30 +1544,37 @@ static int test_ss_cmp(const char *a, const char *b, int expected_cmp)
 static int test_ss_cmpi(const char *a, const char *b, int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 :
-			(validate_cmp(ss_cmpi(sa, sb), expected_cmp) ? 0 : 2);
+	int res =
+		(!sa || !sb)
+			? 1
+			: (validate_cmp(ss_cmpi(sa, sb), expected_cmp) ? 0 : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
 
 static int test_ss_ncmp(const char *a, const size_t a_off, const char *b,
-					const size_t n, int expected_cmp)
+			const size_t n, int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 :
-			(validate_cmp(ss_ncmp(sa, a_off, sb, n),
-					expected_cmp) ? 0 : 2);
+	int res =
+		(!sa || !sb)
+			? 1
+			: (validate_cmp(ss_ncmp(sa, a_off, sb, n), expected_cmp)
+				   ? 0
+				   : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
 
 static int test_ss_ncmpi(const char *a, const size_t a_off, const char *b,
-					const size_t n, int expected_cmp)
+			 const size_t n, int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	int res = (!sa || !sb) ? 1 :
-			(validate_cmp(ss_ncmpi(sa, a_off, sb, n),
-					expected_cmp) ? 0 : 2);
+	int res = (!sa || !sb) ? 1
+			       : (validate_cmp(ss_ncmpi(sa, a_off, sb, n),
+					       expected_cmp)
+					  ? 0
+					  : 2);
 	ss_free(&sa, &sb);
 	return res;
 }
@@ -1484,9 +1595,10 @@ static int test_ss_getchar()
 {
 	srt_string *a = ss_dup_c("12");
 	size_t off = 0;
-	int res = !a ? 1 : (ss_getchar(a, &off) == '1' ? 0 : 2) |
-			   (ss_getchar(a, &off) == '2' ? 0 : 4) |
-			   (ss_getchar(a, &off) == EOF ? 0 : 8);
+	int res = !a ? 1
+		     : (ss_getchar(a, &off) == '1' ? 0 : 2)
+				  | (ss_getchar(a, &off) == '2' ? 0 : 4)
+				  | (ss_getchar(a, &off) == EOF ? 0 : 8);
 	ss_free(&a);
 	return res;
 }
@@ -1503,18 +1615,20 @@ static int test_ss_putchar()
 static int test_ss_popchar()
 {
 	srt_string *a = ss_dup_c("12" U8_C_N_TILDE_D1 "a");
-	int res = !a ? 1 : (ss_popchar(&a) == 'a' ? 0 : 2) |
-			   (ss_popchar(&a) == 0xd1 ? 0 : 4) |
-			   (ss_popchar(&a) == '2' ? 0 : 8) |
-			   (ss_popchar(&a) == '1' ? 0 : 16) |
-			   (ss_popchar(&a) == EOF ? 0 : 32);
+	int res = !a ? 1
+		     : (ss_popchar(&a) == 'a' ? 0 : 2)
+				  | (ss_popchar(&a) == 0xd1 ? 0 : 4)
+				  | (ss_popchar(&a) == '2' ? 0 : 8)
+				  | (ss_popchar(&a) == '1' ? 0 : 16)
+				  | (ss_popchar(&a) == EOF ? 0 : 32);
 	ss_free(&a);
 	return res;
 }
 
+/* clang-format off */
 static int test_ss_read_write()
 {
-	int res = 1;	 /* Error: can not open file */
+	int res = 1; /* Error: can not open file */
 	FILE *f;
 	const char *a;
 	size_t la;
@@ -1538,6 +1652,7 @@ static int test_ss_read_write()
 	}
 	return res;
 }
+/* clang-format on */
 
 static int test_ss_csum32()
 {
@@ -1553,8 +1668,7 @@ static int test_sc_utf8_to_wc(const char *utf8_char,
 			      const int unicode32_expected)
 {
 	int uc_out = 0;
-	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6,
-						&uc_out, NULL);
+	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6, &uc_out, NULL);
 	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
 }
 
@@ -1563,8 +1677,9 @@ static int test_sc_wc_to_utf8(const int unicode32,
 {
 	char utf8[6];
 	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);
-	return !char_size ? 1 :
-			(!memcmp(utf8, utf8_char_expected, char_size) ? 0 : 2);
+	return !char_size
+		       ? 1
+		       : (!memcmp(utf8, utf8_char_expected, char_size) ? 0 : 2);
 }
 
 static int test_ss_null()
@@ -1588,18 +1703,15 @@ static int test_ss_misc()
 	srt_string *a = ss_alloc(10);
 	int res = a ? 0 : 1;
 	size_t gs;
-	char xutf8[5][3] = {
-		{ (char)SSU8_S2, 32, '2' },
-		{ (char)SSU8_S3, 32, '3' },
-		{ (char)SSU8_S4, 32, '4' },
-		{ (char)SSU8_S5, 32, '5' },
-		{ (char)SSU8_S6, 32, '6' } };
+	char xutf8[5][3] = {{(char)SSU8_S2, 32, '2'},
+			    {(char)SSU8_S3, 32, '3'},
+			    {(char)SSU8_S4, 32, '4'},
+			    {(char)SSU8_S5, 32, '5'},
+			    {(char)SSU8_S6, 32, '6'}};
 	const srt_string *srefs[5] = {
-		ss_refa_buf(xutf8[0], 3),
-		ss_refa_buf(xutf8[1], 3),
-		ss_refa_buf(xutf8[2], 3),
-		ss_refa_buf(xutf8[3], 3),
-		ss_refa_buf(xutf8[4], 3) };
+		ss_refa_buf(xutf8[0], 3), ss_refa_buf(xutf8[1], 3),
+		ss_refa_buf(xutf8[2], 3), ss_refa_buf(xutf8[3], 3),
+		ss_refa_buf(xutf8[4], 3)};
 	res |= (!ss_alloc_errors(a) ? 0 : 2);
 	/*
 	 * 32-bit mode: ask for growing 4 GB
@@ -1623,40 +1735,42 @@ static int test_ss_misc()
 	 * Unicode characters of size 2/3/4/5/6 that instead of
 	 * that size, have the first character broken
 	 */
-	res |= (ss_len_u(srefs[0]) == 2 &&
-		!ss_encoding_errors(srefs[0]) ? 0 : 16);
-	res |= (ss_len_u(srefs[1]) == 1 &&
-		!ss_encoding_errors(srefs[1]) ? 0 : 32);
-	res |= (ss_len_u(srefs[2]) == 3 &&
-		ss_encoding_errors(srefs[2]) ? 0 : 64);
-	res |= (ss_len_u(srefs[3]) == 3 &&
-		ss_encoding_errors(srefs[3]) ? 0 : 128);
-	res |= (ss_len_u(srefs[4]) == 3 &&
-		ss_encoding_errors(srefs[4]) ? 0 : 256);
+	res |= (ss_len_u(srefs[0]) == 2 && !ss_encoding_errors(srefs[0]) ? 0
+									 : 16);
+	res |= (ss_len_u(srefs[1]) == 1 && !ss_encoding_errors(srefs[1]) ? 0
+									 : 32);
+	res |= (ss_len_u(srefs[2]) == 3 && ss_encoding_errors(srefs[2]) ? 0
+									: 64);
+	res |= (ss_len_u(srefs[3]) == 3 && ss_encoding_errors(srefs[3]) ? 0
+									: 128);
+	res |= (ss_len_u(srefs[4]) == 3 && ss_encoding_errors(srefs[4]) ? 0
+									: 256);
 	ss_clear_errors((srt_string *)srefs[2]);
 	ss_clear_errors((srt_string *)srefs[3]);
 	ss_clear_errors((srt_string *)srefs[4]);
-	res |= (!ss_encoding_errors(srefs[2]) &&
-		!ss_encoding_errors(srefs[3]) &&
-		!ss_encoding_errors(srefs[4]) ? 0: 512);
+	res |= (!ss_encoding_errors(srefs[2]) && !ss_encoding_errors(srefs[3])
+				&& !ss_encoding_errors(srefs[4])
+			? 0
+			: 512);
 	return res;
 }
 
-#define TEST_SV_ALLOC(sv_alloc_x, sv_alloc_x_t, free_op)		\
-	srt_vector *a = sv_alloc_x(sizeof(struct AA), 10, NULL),	\
-	     *b = sv_alloc_x_t(SV_I8, 10);				\
-	int res = (!a || !b) ? 1 : (sv_len(a) == 0 ? 0 : 2) |		\
-				   (sv_empty(a) ? 0 : 4) |		\
-				   (sv_empty(b) ? 0 : 8) |		\
-				   (sv_push(&a, &a1) ? 0 : 16) |	\
-				   (sv_push_i(&b, 1) ? 0 : 32) |	\
-				   (!sv_empty(a) ? 0 : 64) |		\
-				   (!sv_empty(b) ? 0 : 128) |		\
-				   (sv_len(a) == 1 ? 0 : 256) |		\
-				   (sv_len(b) == 1 ? 0 : 512) |		\
-				   (!sv_push(&a, NULL) ? 0 : 1024) |	\
-				   (sv_len(a) == 1 ? 0 : 2048);		\
-	free_op;							\
+#define TEST_SV_ALLOC(sv_alloc_x, sv_alloc_x_t, free_op)                       \
+	srt_vector *a = sv_alloc_x(sizeof(struct AA), 10, NULL),               \
+		   *b = sv_alloc_x_t(SV_I8, 10);                               \
+	int res = (!a || !b)                                                   \
+			  ? 1                                                  \
+			  : (sv_len(a) == 0 ? 0 : 2) | (sv_empty(a) ? 0 : 4)   \
+				    | (sv_empty(b) ? 0 : 8)                    \
+				    | (sv_push(&a, &a1) ? 0 : 16)              \
+				    | (sv_push_i(&b, 1) ? 0 : 32)              \
+				    | (!sv_empty(a) ? 0 : 64)                  \
+				    | (!sv_empty(b) ? 0 : 128)                 \
+				    | (sv_len(a) == 1 ? 0 : 256)               \
+				    | (sv_len(b) == 1 ? 0 : 512)               \
+				    | (!sv_push(&a, NULL) ? 0 : 1024)          \
+				    | (sv_len(a) == 1 ? 0 : 2048);             \
+	free_op;                                                               \
 	return res;
 
 static int test_sv_alloc()
@@ -1669,18 +1783,17 @@ static int test_sv_alloca()
 	TEST_SV_ALLOC(sv_alloca, sv_alloca_t, {});
 }
 
-#define TEST_SV_GROW_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_GROW_VARS(v) srt_vector *v
 
-#define TEST_SV_GROW(v, pushval, ntest, sv_alloc_f, data_id, CMPF,	\
-		     initial_reserve, sv_push_x)			\
-	v = sv_alloc_f(data_id, initial_reserve CMPF);			\
-	res |= !v ? 1<<(ntest*3) :					\
-			(sv_push_x(&v, pushval) &&			\
-			sv_len(v) == 1 &&				\
-			sv_push_x(&v, pushval) &&			\
-			sv_len(v) == 2 &&				\
-			sv_capacity(v) >= 2) ? 0 : 2<<(ntest*3);	\
+#define TEST_SV_GROW(v, pushval, ntest, sv_alloc_f, data_id, CMPF,             \
+		     initial_reserve, sv_push_x)                               \
+	v = sv_alloc_f(data_id, initial_reserve CMPF);                         \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_push_x(&v, pushval) && sv_len(v) == 1                  \
+		     && sv_push_x(&v, pushval) && sv_len(v) == 2               \
+		     && sv_capacity(v) >= 2)                                   \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v);
 
 static int test_sv_grow()
@@ -1696,7 +1809,7 @@ static int test_sv_grow()
 	TEST_SV_GROW_VARS(i);
 	int res = 0;
 	TEST_SV_GROW(a, &a1, 0, sv_alloc, sizeof(struct AA), NO_CMPF, 1,
-								sv_push);
+		     sv_push);
 	TEST_SV_GROW(b, 123, 1, sv_alloc_t, SV_U8, X_CMPF, 1, sv_push_u);
 	TEST_SV_GROW(c, 123, 2, sv_alloc_t, SV_I8, X_CMPF, 1, sv_push_i);
 	TEST_SV_GROW(d, 123, 3, sv_alloc_t, SV_U16, X_CMPF, 1, sv_push_u);
@@ -1708,15 +1821,15 @@ static int test_sv_grow()
 	return res;
 }
 
-#define TEST_SV_RESERVE_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_RESERVE_VARS(v) srt_vector *v
 
-#define TEST_SV_RESERVE(v, ntest, sv_alloc_f, data_id, CMPF, reserve)	\
-	v = sv_alloc_f(data_id, 1 CMPF);			      	\
-	res |= !v ? 1<<(ntest*3) :					\
-		      (sv_reserve(&v, reserve) &&			\
-		       sv_len(v) == 0 &&				\
-		       sv_capacity(v) == reserve) ? 0 : 2<<(ntest*3);	\
+#define TEST_SV_RESERVE(v, ntest, sv_alloc_f, data_id, CMPF, reserve)          \
+	v = sv_alloc_f(data_id, 1 CMPF);                                       \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_reserve(&v, reserve) && sv_len(v) == 0                 \
+		     && sv_capacity(v) == reserve)                             \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v);
 
 static int test_sv_reserve()
@@ -1743,15 +1856,15 @@ static int test_sv_reserve()
 	return res;
 }
 
-#define TEST_SV_SHRINK_TO_FIT_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_SHRINK_TO_FIT_VARS(v) srt_vector *v
 
-#define TEST_SV_SHRINK_TO_FIT(v, ntest, alloc, push, type, CMPF, pushval, r) \
-	v = alloc(type, r CMPF);					     \
-	res |= !v ? 1<<(ntest*3) :					     \
-		(push(&v, pushval) &&					     \
-		 sv_shrink(&v) &&					     \
-		 sv_capacity(v) == sv_len(v)) ? 0 : 2<<(ntest*3);	     \
+#define TEST_SV_SHRINK_TO_FIT(v, ntest, alloc, push, type, CMPF, pushval, r)   \
+	v = alloc(type, r CMPF);                                               \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (push(&v, pushval) && sv_shrink(&v)                        \
+		     && sv_capacity(v) == sv_len(v))                           \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v)
 
 static int test_sv_shrink()
@@ -1766,36 +1879,37 @@ static int test_sv_shrink()
 	TEST_SV_SHRINK_TO_FIT_VARS(h);
 	TEST_SV_SHRINK_TO_FIT_VARS(i);
 	int res = 0;
-	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push,
-			      sizeof(struct AA), NO_CMPF, &a1, 100);
+	TEST_SV_SHRINK_TO_FIT(a, 0, sv_alloc, sv_push, sizeof(struct AA),
+			      NO_CMPF, &a1, 100);
 	TEST_SV_SHRINK_TO_FIT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, 123,
-									  100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, 123,
-									  100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, 123,
-									   100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(e, 4, sv_alloc_t, sv_push_u, SV_U16, X_CMPF, 123,
-									   100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(f, 5, sv_alloc_t, sv_push_i, SV_I32, X_CMPF, 123,
-									   100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(g, 6, sv_alloc_t, sv_push_u, SV_U32, X_CMPF, 123,
-									   100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(h, 7, sv_alloc_t, sv_push_i, SV_I64, X_CMPF, 123,
-									   100);
+			      100);
 	TEST_SV_SHRINK_TO_FIT(i, 8, sv_alloc_t, sv_push_u, SV_U64, X_CMPF, 123,
-									   100);
+			      100);
 	return res;
 }
 
-#define TEST_SV_LEN_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_LEN_VARS(v) srt_vector *v
 
-#define TEST_SV_LEN(v, ntest, alloc, push, type, CMPF, pushval)	\
-	v = alloc(type, 1 CMPF);				\
-	res |= !v ? 1<<(ntest*3) :				\
-		(push(&v, pushval) && push(&v, pushval) &&	\
-		 push(&v, pushval) && push(&v, pushval) &&	\
-		 sv_len(v) == 4) ? 0 : 2<<(ntest*3);		\
+#define TEST_SV_LEN(v, ntest, alloc, push, type, CMPF, pushval)                \
+	v = alloc(type, 1 CMPF);                                               \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (push(&v, pushval) && push(&v, pushval)                    \
+		     && push(&v, pushval) && push(&v, pushval)                 \
+		     && sv_len(v) == 4)                                        \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v)
 
 static int test_sv_len()
@@ -1828,15 +1942,16 @@ static int test_sv_len()
 #define SDCMP ==
 #endif
 
-#define TEST_SV_CAPACITY_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_CAPACITY_VARS(v) srt_vector *v
 
-#define TEST_SV_CAPACITY(v, ntest, alloc, push, type, CMPF, pushval)	\
-	v = alloc(type, 2 CMPF);					\
-	res |= !v ? 1<<(ntest*3) :					\
-		(sv_capacity(v) == 2 &&	sv_reserve(&v, 100) &&		\
-		 sv_capacity(v) SDCMP 100 && sv_shrink(&v) &&		\
-		 sv_capacity(v) == 0) ? 0 : 2<<(ntest*3);		\
+#define TEST_SV_CAPACITY(v, ntest, alloc, push, type, CMPF, pushval)           \
+	v = alloc(type, 2 CMPF);                                               \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_capacity(v) == 2 && sv_reserve(&v, 100)                \
+		     && sv_capacity(v) SDCMP 100 && sv_shrink(&v)              \
+		     && sv_capacity(v) == 0)                                   \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v)
 
 static int test_sv_capacity()
@@ -1851,8 +1966,8 @@ static int test_sv_capacity()
 	TEST_SV_CAPACITY_VARS(h);
 	TEST_SV_CAPACITY_VARS(i);
 	int res = 0;
-	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA),
-			 NO_CMPF, &a1);
+	TEST_SV_CAPACITY(a, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF,
+			 &a1);
 	TEST_SV_CAPACITY(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, 123);
 	TEST_SV_CAPACITY(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, 123);
 	TEST_SV_CAPACITY(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, 123);
@@ -1868,32 +1983,34 @@ static int test_sv_capacity_left()
 {
 	const size_t init_alloc = 10;
 	srt_vector *a = sv_alloc_t(SV_I8, init_alloc);
-	int res = !a ? 1 : (sv_capacity(a) - sv_len(a) == init_alloc ? 0 : 2) |
-			   (sv_capacity_left(a) == init_alloc ? 0 : 4) |
-			   (sv_push_i(&a, 1) ? 0 : 8) |
-			   (sv_capacity_left(a) == (init_alloc - 1) ? 0 : 16);
+	int res = !a ? 1
+		     : (sv_capacity(a) - sv_len(a) == init_alloc ? 0 : 2)
+				  | (sv_capacity_left(a) == init_alloc ? 0 : 4)
+				  | (sv_push_i(&a, 1) ? 0 : 8)
+				  | (sv_capacity_left(a) == (init_alloc - 1)
+					     ? 0
+					     : 16);
 	sv_free(&a);
 	return res;
 }
 
 static int test_sv_get_buffer()
 {
-	srt_vector *a = sv_alloc_t(SV_I8, 0),
-	     *b = sv_alloca_t(SV_I8, 4),
-	     *c = sv_alloc_t(SV_U32, 0),
-	     *d = sv_alloca_t(SV_U32, 1);
+	srt_vector *a = sv_alloc_t(SV_I8, 0), *b = sv_alloca_t(SV_I8, 4),
+		   *c = sv_alloc_t(SV_U32, 0), *d = sv_alloca_t(SV_U32, 1);
 	size_t sa, sb, sc, sd;
-	int res = !a || !b || !c || !d ? 1 :
-			(sv_push_i(&a, 1) ? 0 : 2) |
-			(sv_push_i(&a, 2) ? 0 : 4) |
-			(sv_push_i(&a, 2) ? 0 : 8) |
-			(sv_push_i(&a, 1) ? 0 : 0x10) |
-			(sv_push_i(&b, 1) ? 0 : 0x20) |
-			(sv_push_i(&b, 2) ? 0 : 0x40) |
-			(sv_push_i(&b, 2) ? 0 : 0x80) |
-			(sv_push_i(&b, 1) ? 0 : 0x100) |
-			(sv_push_u(&c, 0x01020201) ? 0 : 0x200) |
-			(sv_push_u(&d, 0x01020201) ? 0 : 0x400);
+	int res = !a || !b || !c || !d
+			  ? 1
+			  : (sv_push_i(&a, 1) ? 0 : 2)
+				    | (sv_push_i(&a, 2) ? 0 : 4)
+				    | (sv_push_i(&a, 2) ? 0 : 8)
+				    | (sv_push_i(&a, 1) ? 0 : 0x10)
+				    | (sv_push_i(&b, 1) ? 0 : 0x20)
+				    | (sv_push_i(&b, 2) ? 0 : 0x40)
+				    | (sv_push_i(&b, 2) ? 0 : 0x80)
+				    | (sv_push_i(&b, 1) ? 0 : 0x100)
+				    | (sv_push_u(&c, 0x01020201) ? 0 : 0x200)
+				    | (sv_push_u(&d, 0x01020201) ? 0 : 0x400);
 	if (!res) {
 		unsigned ai = S_LD_U32(sv_get_buffer(a)),
 			 bi = S_LD_U32(sv_get_buffer(b)),
@@ -1901,8 +2018,8 @@ static int test_sv_get_buffer()
 			 bir = S_LD_U32(sv_get_buffer_r(b)),
 			 cir = S_LD_U32(sv_get_buffer(c)),
 			 dir = S_LD_U32(sv_get_buffer(d));
-		if (ai != bi || air != bir || ai != air || ai != cir ||
-		    ai != dir)
+		if (ai != bi || air != bir || ai != air || ai != cir
+		    || ai != dir)
 			res |= 0x800;
 		if (ai != 0x01020201)
 			res |= 0x1000;
@@ -1919,27 +2036,25 @@ static int test_sv_get_buffer()
 
 static int test_sv_elem_size()
 {
-	int res =  (sv_elem_size(SV_I8) == 1  ? 0 : 2) |
-		   (sv_elem_size(SV_U8) == 1  ? 0 : 4) |
-		   (sv_elem_size(SV_I16) == 2  ? 0 : 8) |
-		   (sv_elem_size(SV_U16) == 2  ? 0 : 16) |
-		   (sv_elem_size(SV_I32) == 4  ? 0 : 32) |
-		   (sv_elem_size(SV_U32) == 4  ? 0 : 64) |
-		   (sv_elem_size(SV_I64) == 8  ? 0 : 128) |
-		   (sv_elem_size(SV_U64) == 8  ? 0 : 256);
+	int res = (sv_elem_size(SV_I8) == 1 ? 0 : 2)
+		  | (sv_elem_size(SV_U8) == 1 ? 0 : 4)
+		  | (sv_elem_size(SV_I16) == 2 ? 0 : 8)
+		  | (sv_elem_size(SV_U16) == 2 ? 0 : 16)
+		  | (sv_elem_size(SV_I32) == 4 ? 0 : 32)
+		  | (sv_elem_size(SV_U32) == 4 ? 0 : 64)
+		  | (sv_elem_size(SV_I64) == 8 ? 0 : 128)
+		  | (sv_elem_size(SV_U64) == 8 ? 0 : 256);
 	return res;
 }
 
-#define TEST_SV_DUP_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_DUP_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_DUP(v, ntest, alloc, push, check, check2, type, CMPF,	\
-		    pushval)						\
-	v = alloc(type, 0 CMPF);					\
-	push(&v, pushval);						\
-	v##2 = sv_dup(v);						\
-	res |= !v ? 1 << (ntest*3) :					\
-		((check) && (check2)) ? 0 : 2 << (ntest*3);		\
+#define TEST_SV_DUP(v, ntest, alloc, push, check, check2, type, CMPF, pushval) \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, pushval);                                                     \
+	v##2 = sv_dup(v);                                                      \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : ((check) && (check2)) ? 0 : 2 << (ntest * 3);              \
 	sv_free(&v, &v##2);
 
 static int test_sv_dup()
@@ -1957,13 +2072,13 @@ static int test_sv_dup()
 	const int val = 123;
 	TEST_SV_DUP(z, 0, sv_alloc, sv_push,
 		    ((const struct AA *)sv_at(z, 0))->a == a1.a,
-		    ((const struct AA *)sv_pop(z))->a ==
-					((const struct AA *)sv_pop(z2))->a,
+		    ((const struct AA *)sv_pop(z))->a
+			    == ((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), NO_CMPF, &a1);
-	#define SVIAT(v) sv_at_i(v, 0) == val
-	#define SVUAT(v) sv_at_u(v, 0) == (unsigned)val
-	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
-	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
+#define SVIAT(v) sv_at_i(v, 0) == val
+#define SVUAT(v) sv_at_u(v, 0) == (unsigned)val
+#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
+#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_DUP(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8,
 		    X_CMPF, val);
 	TEST_SV_DUP(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8,
@@ -1980,22 +2095,29 @@ static int test_sv_dup()
 		    X_CMPF, val);
 	TEST_SV_DUP(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64,
 		    X_CMPF, val);
-	#undef SVIAT
-	#undef SVUAT
-	#undef CHKPI
-	#undef CHKPU
+#undef SVIAT
+#undef SVUAT
+#undef CHKPI
+#undef CHKPU
 	return res;
 }
 
-#define TEST_SV_DUP_ERASE_VARS(v) \
-	srt_vector *v, *v##2
+#define TEST_SV_DUP_ERASE_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_DUP_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b) \
-	v = alloc(type, 0 CMPF);					  \
-	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);  \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);  \
-	v##2 = sv_dup_erase(v, 1, 5);				  	  \
-	res |= !v ? 1<<(ntest*3) : (check) ? 0 : 2<<(ntest*3);		  \
+#define TEST_SV_DUP_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)      \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	v##2 = sv_dup_erase(v, 1, 5);                                          \
+	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
 	sv_free(&v, &v##2);
 
 static int test_sv_dup_erase()
@@ -2012,11 +2134,11 @@ static int test_sv_dup_erase()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_DUP_ERASE(z, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(z2, 0))->a ==
-				((const struct AA *)sv_at(z2, 1))->a,
-	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
-	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
+			  ((const struct AA *)sv_at(z2, 0))->a
+				  == ((const struct AA *)sv_at(z2, 1))->a,
+			  sizeof(struct AA), NO_CMPF, &a1, &a2);
+#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
+#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
 	TEST_SV_DUP_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF,
 			  r, s);
 	TEST_SV_DUP_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF,
@@ -2033,24 +2155,37 @@ static int test_sv_dup_erase()
 			  r, s);
 	TEST_SV_DUP_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF,
 			  r, s);
-	#undef SVIAT
-	#undef SVUAT
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
-#define TEST_SV_DUP_RESIZE_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_DUP_RESIZE_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_DUP_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)	       \
-	v = alloc(type, 0 CMPF);					       \
-	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);       \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);       \
-	v##2 = sv_dup_resize(v, 2);				       	       \
-	res |= !v ? 1<<(ntest*3) :					       \
-		(sv_size(v##2) == 2 ? 0 : 2<<(ntest*3)) |		       \
-		(!sv_ncmp(v, 0, v##2, 0, sv_size(v##2)) ? 0 : 4 << (ntest*3)) |\
-		(sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0 ? 0 : 8 << (ntest*3)) |\
-		(sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0 ? 0 : 16 << (ntest*3));\
+#define TEST_SV_DUP_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)            \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	v##2 = sv_dup_resize(v, 2);                                            \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_size(v##2) == 2 ? 0 : 2 << (ntest * 3))                \
+			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v##2))       \
+					  ? 0                                  \
+					  : 4 << (ntest * 3))                  \
+			       | (sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0       \
+					  ? 0                                  \
+					  : 8 << (ntest * 3))                  \
+			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
+					  ? 0                                  \
+					  : 16 << (ntest * 3));                \
 	sv_free(&v, &v##2);
 
 static int test_sv_dup_resize()
@@ -2079,19 +2214,28 @@ static int test_sv_dup_resize()
 	return res;
 }
 
-#define TEST_SV_CPY_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_CPY_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_CPY(v, nt, alloc, push, type, CMPF, a, b)	       	   \
-	v = alloc(type, 0 CMPF);					   \
-	push(&v, a); push(&v, b); push(&v, a); push(&v, b); push(&v, a);   \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, a); push(&v, b);   \
-	v##2 = NULL;						   	   \
-	sv_cpy(&v##2, v);				       		   \
-	res |= !v ? 1 << (nt * 3) :					   \
-		(sv_size(v) == sv_size(v##2) ? 0 : 2 << (nt * 3)) |	   \
-		(!sv_ncmp(v, 0, v##2, 0, sv_size(v)) ? 0 : 4 << (nt * 3)); \
-		sv_free(&v, &v##2);
+#define TEST_SV_CPY(v, nt, alloc, push, type, CMPF, a, b)                      \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	v##2 = NULL;                                                           \
+	sv_cpy(&v##2, v);                                                      \
+	res |= !v ? 1 << (nt * 3)                                              \
+		  : (sv_size(v) == sv_size(v##2) ? 0 : 2 << (nt * 3))          \
+			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v))          \
+					  ? 0                                  \
+					  : 4 << (nt * 3));                    \
+	sv_free(&v, &v##2);
 
 static int test_sv_cpy()
 {
@@ -2107,9 +2251,10 @@ static int test_sv_cpy()
 	int res = 0;
 	const int r = 12, s = 34;
 	srt_vector *v1 = sv_alloc_t(SV_I8, 0), *v2 = sv_alloc_t(SV_I64, 0),
-	     *v1a3 = sv_alloca_t(SV_I8, 3), *v1a24 = sv_alloca_t(SV_I8, 24);
-	TEST_SV_CPY(z, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF,
-		    &a1, &a2);
+		   *v1a3 = sv_alloca_t(SV_I8, 3),
+		   *v1a24 = sv_alloca_t(SV_I8, 24);
+	TEST_SV_CPY(z, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF, &a1,
+		    &a2);
 	TEST_SV_CPY(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s);
 	TEST_SV_CPY(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, r, s);
 	TEST_SV_CPY(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, r, s);
@@ -2127,27 +2272,38 @@ static int test_sv_cpy()
 	sv_cpy(&v1, v2);
 	sv_cpy(&v1a3, v2);
 	sv_cpy(&v1a24, v2);
-	res |= (sv_size(v1) == 3 ? 0 : 1<<25);
-	res |= (sv_size(v1a3) == 0 ? 0 : 1<<26);
-	res |= (sv_size(v1a24) == 3 ? 0 : 1<<27);
-	res |= (sv_at_i(v1, 0) == 1 && sv_at_i(v1, 1) == 2 &&
-		sv_at_i(v1, 2) == 3 ? 0 : 1<<28);
-	res |= (sv_at_i(v1a24, 0) == 1 && sv_at_i(v1a24, 1) == 2 &&
-		sv_at_i(v1a24, 2) == 3 ? 0 : 1<<29);
+	res |= (sv_size(v1) == 3 ? 0 : 1 << 25);
+	res |= (sv_size(v1a3) == 0 ? 0 : 1 << 26);
+	res |= (sv_size(v1a24) == 3 ? 0 : 1 << 27);
+	res |= (sv_at_i(v1, 0) == 1 && sv_at_i(v1, 1) == 2
+				&& sv_at_i(v1, 2) == 3
+			? 0
+			: 1 << 28);
+	res |= (sv_at_i(v1a24, 0) == 1 && sv_at_i(v1a24, 1) == 2
+				&& sv_at_i(v1a24, 2) == 3
+			? 0
+			: 1 << 29);
 	sv_free(&v1, &v2);
 	return res;
 }
 
-#define TEST_SV_CPY_ERASE_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_CPY_ERASE_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_CPY_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)\
-	v = alloc(type, 0 CMPF);					 \
-	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b); \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b); \
-	v##2 = NULL;						 	 \
-	sv_cpy_erase(&v##2, v, 1, 5);					 \
-	res |= !v ? 1<<(ntest*3) : (check) ? 0 : 2<<(ntest*3);		 \
+#define TEST_SV_CPY_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)      \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	v##2 = NULL;                                                           \
+	sv_cpy_erase(&v##2, v, 1, 5);                                          \
+	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
 	sv_free(&v, &v##2);
 
 static int test_sv_cpy_erase()
@@ -2164,11 +2320,11 @@ static int test_sv_cpy_erase()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_CPY_ERASE(z, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(z2, 0))->a ==
-				((const struct AA *)sv_at(z2, 1))->a,
-	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
-	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
+			  ((const struct AA *)sv_at(z2, 0))->a
+				  == ((const struct AA *)sv_at(z2, 1))->a,
+			  sizeof(struct AA), NO_CMPF, &a1, &a2);
+#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 1)
+#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 1)
 	TEST_SV_CPY_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF,
 			  r, s);
 	TEST_SV_CPY_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF,
@@ -2185,24 +2341,37 @@ static int test_sv_cpy_erase()
 			  r, s);
 	TEST_SV_CPY_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF,
 			  r, s);
-	#undef SVIAT
-	#undef SVUAT
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
-#define TEST_SV_CPY_RESIZE_VARS(v)	\
-	srt_vector *v, *v##2
-#define TEST_SV_CPY_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)	       \
-	v = alloc(type, 0 CMPF);					       \
-	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);       \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);       \
-	v##2 = NULL;						       	       \
-	sv_cpy_resize(&v##2, v, 2);					       \
-	res |= !v ? 1<<(ntest*3) :					       \
-		(sv_size(v##2) == 2 ? 0 : 2<<(ntest*3)) |		       \
-		(!sv_ncmp(v, 0, v##2, 0, sv_size(v##2)) ? 0 : 4 << (ntest*3)) |\
-		(sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0 ? 0 : 8 << (ntest*3)) |\
-		(sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0 ? 0 : 16 << (ntest*3));\
+#define TEST_SV_CPY_RESIZE_VARS(v) srt_vector *v, *v##2
+#define TEST_SV_CPY_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)            \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	v##2 = NULL;                                                           \
+	sv_cpy_resize(&v##2, v, 2);                                            \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_size(v##2) == 2 ? 0 : 2 << (ntest * 3))                \
+			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v##2))       \
+					  ? 0                                  \
+					  : 4 << (ntest * 3))                  \
+			       | (sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0       \
+					  ? 0                                  \
+					  : 8 << (ntest * 3))                  \
+			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
+					  ? 0                                  \
+					  : 16 << (ntest * 3));                \
 	sv_free(&v, &v##2);
 
 static int test_sv_cpy_resize()
@@ -2231,16 +2400,17 @@ static int test_sv_cpy_resize()
 	return res;
 }
 
-#define TEST_SV_CAT_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_CAT_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_CAT(v, ntest, alloc, push, check, check2, type, CMPF, pushval)\
-	v = alloc(type, 0 CMPF);					      \
-	push(&v, pushval);						      \
-	v##2 = sv_dup(v);						      \
-	res |= !v ? 1<<(ntest*3) :					      \
-		(sv_cat(&v, v##2) && sv_cat(&v, v) && sv_len(v) == 4 &&	      \
-		 (check) && (check2)) ? 0 : 2<<(ntest*3);		      \
+#define TEST_SV_CAT(v, ntest, alloc, push, check, check2, type, CMPF, pushval) \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, pushval);                                                     \
+	v##2 = sv_dup(v);                                                      \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_cat(&v, v##2) && sv_cat(&v, v) && sv_len(v) == 4       \
+		     && (check) && (check2))                                   \
+			       ? 0                                             \
+			       : 2 << (ntest * 3);                             \
 	sv_free(&v, &v##2);
 
 static int test_sv_cat()
@@ -2258,13 +2428,13 @@ static int test_sv_cat()
 	const int w = 123;
 	TEST_SV_CAT(z, 0, sv_alloc, sv_push,
 		    ((const struct AA *)sv_at(z, 3))->a == a1.a,
-		    ((const struct AA *)sv_pop(z))->a ==
-					((const struct AA *)sv_pop(z2))->a,
+		    ((const struct AA *)sv_pop(z))->a
+			    == ((const struct AA *)sv_pop(z2))->a,
 		    sizeof(struct AA), NO_CMPF, &a1);
-	#define SVIAT(v) sv_at_i(v, 3) == w
-	#define SVUAT(v) sv_at_u(v, 3) == (unsigned)w
-	#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
-	#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
+#define SVIAT(v) sv_at_i(v, 3) == w
+#define SVUAT(v) sv_at_u(v, 3) == (unsigned)w
+#define CHKPI(v) sv_pop_i(v) == sv_pop_i(v##2)
+#define CHKPU(v) sv_pop_u(v) == sv_pop_u(v##2)
 	TEST_SV_CAT(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), CHKPI(b), SV_I8,
 		    X_CMPF, w);
 	TEST_SV_CAT(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), CHKPU(c), SV_U8,
@@ -2281,26 +2451,33 @@ static int test_sv_cat()
 		    X_CMPF, w);
 	TEST_SV_CAT(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), CHKPU(i), SV_U64,
 		    X_CMPF, w);
-	#undef SVIAT
-	#undef SVUAT
-	#undef CHKPI
-	#undef CHKPU
+#undef SVIAT
+#undef SVUAT
+#undef CHKPI
+#undef CHKPU
 	return res;
 }
 
-#define TEST_SV_CAT_ERASE_VARS(v)	\
-	srt_vector *v, *v##2
+#define TEST_SV_CAT_ERASE_VARS(v) srt_vector *v, *v##2
 
-#define TEST_SV_CAT_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)\
-	v = alloc(type, 0 CMPF);					 \
-	v##2 = alloc(type, 0 CMPF);					 \
-	push(&v, a); push(&v, a); push(&v, a); push(&v, a); push(&v, a); \
-	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
-	push(&v##2, b);							 \
-	sv_cat_erase(&v##2, v, 1, 5);					 \
-	res |= !v ? 1<<(ntest*3) :					 \
-		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
-		    (sv_size(v##2) == 6 ? 0 : 4 << (ntest * 3));	 \
+#define TEST_SV_CAT_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)      \
+	v = alloc(type, 0 CMPF);                                               \
+	v##2 = alloc(type, 0 CMPF);                                            \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v##2, b);                                                        \
+	sv_cat_erase(&v##2, v, 1, 5);                                          \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : ((check) ? 0 : 2 << (ntest * 3))                           \
+			       | (sv_size(v##2) == 6 ? 0 : 4 << (ntest * 3));  \
 	sv_free(&v, &v##2);
 
 static int test_sv_cat_erase()
@@ -2317,45 +2494,58 @@ static int test_sv_cat_erase()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_CAT_ERASE(z, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(z2, 0))->a ==
-				((const struct AA *)sv_at(z2, 2))->a,
-	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 2)
-	#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 2)
-	TEST_SV_CAT_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64,
-			  X_CMPF, r, s);
-	TEST_SV_CAT_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64,
-			  X_CMPF, r, s);
-	#undef SVIAT
-	#undef SVUAT
+			  ((const struct AA *)sv_at(z2, 0))->a
+				  == ((const struct AA *)sv_at(z2, 2))->a,
+			  sizeof(struct AA), NO_CMPF, &a1, &a2);
+#define SVIAT(v) sv_at_i(v##2, 0) == sv_at_i(v##2, 2)
+#define SVUAT(v) sv_at_u(v##2, 0) == sv_at_u(v##2, 2)
+	TEST_SV_CAT_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, X_CMPF,
+			  r, s);
+	TEST_SV_CAT_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF,
+			  r, s);
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
-#define TEST_SV_CAT_RESIZE_VARS(v)	\
-	srt_vector *v, *v##2
-#define TEST_SV_CAT_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)	       \
-	v = alloc(type, 0 CMPF);					       \
-	push(&v, a); push(&v, b); push(&v, b); push(&v, b); push(&v, b);       \
-	push(&v, b); push(&v, a); push(&v, b); push(&v, b); push(&v, b);       \
-	v##2 = NULL;						       	       \
-	sv_cat_resize(&v##2, v, 2);					       \
-	res |= !v ? 1<<(ntest*3) :					       \
-		(sv_size(v##2) == 2 ? 0 : 2<<(ntest*3)) |		       \
-		(!sv_ncmp(v, 0, v##2, 0, sv_size(v##2)) ? 0 : 4 << (ntest*3)) |\
-		(sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0 ? 0 : 8 << (ntest*3)) |\
-		(sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0 ? 0 : 16 << (ntest*3));\
+#define TEST_SV_CAT_RESIZE_VARS(v) srt_vector *v, *v##2
+#define TEST_SV_CAT_RESIZE(v, ntest, alloc, push, type, CMPF, a, b)            \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	v##2 = NULL;                                                           \
+	sv_cat_resize(&v##2, v, 2);                                            \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : (sv_size(v##2) == 2 ? 0 : 2 << (ntest * 3))                \
+			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v##2))       \
+					  ? 0                                  \
+					  : 4 << (ntest * 3))                  \
+			       | (sv_ncmp(v, 0, v##2, 0, sv_size(v)) > 0       \
+					  ? 0                                  \
+					  : 8 << (ntest * 3))                  \
+			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
+					  ? 0                                  \
+					  : 16 << (ntest * 3));                \
 	sv_free(&v, &v##2);
 
 static int test_sv_cat_resize()
@@ -2384,17 +2574,24 @@ static int test_sv_cat_resize()
 	return res;
 }
 
-#define TEST_SV_ERASE_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_ERASE_VARS(v) srt_vector *v
 
-#define TEST_SV_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)	 \
-	v = alloc(type, 0 CMPF);					 \
-	push(&v, b); push(&v, a); push(&v, a); push(&v, a); push(&v, a); \
-	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
-	sv_erase(&v, 1, 5);						 \
-	res |= !v ? 1 << (ntest * 3) :					 \
-		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
-		    (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));		 \
+#define TEST_SV_ERASE(v, ntest, alloc, push, check, type, CMPF, a, b)          \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	sv_erase(&v, 1, 5);                                                    \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : ((check) ? 0 : 2 << (ntest * 3))                           \
+			       | (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));     \
 	sv_free(&v);
 
 static int test_sv_erase()
@@ -2411,45 +2608,52 @@ static int test_sv_erase()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_ERASE(z, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(z, 0))->a ==
-		    ((const struct AA *)sv_at(z, 1))->a,
-	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
-	#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
-	TEST_SV_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64,
-		      X_CMPF, r, s);
-	TEST_SV_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64,
-		      X_CMPF, r, s);
-	#undef SVIAT
-	#undef SVUAT
+		      ((const struct AA *)sv_at(z, 0))->a
+			      == ((const struct AA *)sv_at(z, 1))->a,
+		      sizeof(struct AA), NO_CMPF, &a1, &a2);
+#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
+#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
+	TEST_SV_ERASE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, X_CMPF, r,
+		      s);
+	TEST_SV_ERASE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF, r,
+		      s);
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
-#define TEST_SV_RESIZE_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_RESIZE_VARS(v) srt_vector *v
 
-#define TEST_SV_RESIZE(v, ntest, alloc, push, check, type, CMPF, a, b)	 \
-	v = alloc(type, 0 CMPF);					 \
-	push(&v, b); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
-	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
-	sv_resize(&v, 5);						 \
-	res |= !v ? 1 << (ntest * 3) :					 \
-		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
-		    (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));		 \
-	sv_clear(v);							 \
-	res |= (!sv_size(v) ? 0 : 4 << (ntest * 3));			 \
+#define TEST_SV_RESIZE(v, ntest, alloc, push, check, type, CMPF, a, b)         \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, b);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	sv_resize(&v, 5);                                                      \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : ((check) ? 0 : 2 << (ntest * 3))                           \
+			       | (sv_size(v) == 5 ? 0 : 4 << (ntest * 3));     \
+	sv_clear(v);                                                           \
+	res |= (!sv_size(v) ? 0 : 4 << (ntest * 3));                           \
 	sv_free(&v);
 
 static int test_sv_resize()
@@ -2466,53 +2670,59 @@ static int test_sv_resize()
 	int res = 0;
 	const int r = 12, s = 34;
 	TEST_SV_RESIZE(z, 0, sv_alloc, sv_push,
-	    ((const struct AA *)sv_at(z, 0))->a ==
-		    ((const struct AA *)sv_at(z, 1))->a,
-	    sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
-	#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
-	TEST_SV_RESIZE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64,
-		       X_CMPF, r, s);
-	TEST_SV_RESIZE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64,
-		       X_CMPF, r, s);
-	#undef SVIAT
-	#undef SVUAT
+		       ((const struct AA *)sv_at(z, 0))->a
+			       == ((const struct AA *)sv_at(z, 1))->a,
+		       sizeof(struct AA), NO_CMPF, &a1, &a2);
+#define SVIAT(v) sv_at_i(v, 0) == sv_at_i(v, 1)
+#define SVUAT(v) sv_at_u(v, 0) == sv_at_u(v, 1)
+	TEST_SV_RESIZE(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, X_CMPF, r,
+		       s);
+	TEST_SV_RESIZE(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF, r,
+		       s);
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
-#define TEST_SV_SORT_VARS(v)	\
-	srt_vector *v;		\
+#define TEST_SV_SORT_VARS(v)                                                   \
+	srt_vector *v;                                                         \
 	int v##i, v##r
 
-#define TEST_SV_SORT(v, ntest, alloc, push, type, CMPF, a, b, c)	 \
-	v = alloc(type, 0 CMPF);					 \
-	push(&v, c); push(&v, b); push(&v, a); push(&v, a); push(&v, b); \
-	push(&v, c); push(&v, c); push(&v, b); push(&v, a);		 \
-	sv_sort(v);							 \
-	v##r = 0;						 	 \
-	for (v##i = 1; v##i < 9 && v##r <= 0; v##i++)			 \
-		v##r = sv_cmp(v, (size_t)(v##i - 1), (size_t)v##i);	 \
-	res |= !v ? 1 << (ntest * 3) :					 \
-		    v##r <= 0 ? 0 : 2 << (ntest * 3);			 \
+#define TEST_SV_SORT(v, ntest, alloc, push, type, CMPF, a, b, c)               \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, c);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, c);                                                           \
+	push(&v, c);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	sv_sort(v);                                                            \
+	v##r = 0;                                                              \
+	for (v##i = 1; v##i < 9 && v##r <= 0; v##i++)                          \
+		v##r = sv_cmp(v, (size_t)(v##i - 1), (size_t)v##i);            \
+	res |= !v ? 1 << (ntest * 3) : v##r <= 0 ? 0 : 2 << (ntest * 3);       \
 	sv_free(&v);
 
-#define BUILD_CMPF(FN, T)				\
-	int FN(const void *a, const void *b)		\
-	{						\
-		return *(T *)(a) < *(T *)(b) ? -1 :	\
-		       *(T *)(a) == *(T *)(b) ? 0 : 1;	\
+#define BUILD_CMPF(FN, T)                                                      \
+	int FN(const void *a, const void *b)                                   \
+	{                                                                      \
+		return *(T *)(a) < *(T *)(b) ? -1                              \
+					     : *(T *)(a) == *(T *)(b) ? 0 : 1; \
 	}
 
 BUILD_CMPF(cmp8i, int8_t)
@@ -2539,9 +2749,9 @@ static int test_sv_sort()
 	const int r = 12, s = 34, t = -1;
 	const unsigned tu = 11;
 	srt_vector *v8i = sv_alloc_t(SV_I8, 0), *v8u = sv_alloc_t(SV_U8, 0),
-	     *v16i = sv_alloc_t(SV_I16, 0), *v16u = sv_alloc_t(SV_U16, 0),
-	     *v32i = sv_alloc_t(SV_I32, 0), *v32u = sv_alloc_t(SV_U32, 0),
-	     *v64i = sv_alloc_t(SV_I64, 0), *v64u = sv_alloc_t(SV_U64, 0);
+		   *v16i = sv_alloc_t(SV_I16, 0), *v16u = sv_alloc_t(SV_U16, 0),
+		   *v32i = sv_alloc_t(SV_I32, 0), *v32u = sv_alloc_t(SV_U32, 0),
+		   *v64i = sv_alloc_t(SV_I64, 0), *v64u = sv_alloc_t(SV_U64, 0);
 	int i, nelems = 1000;
 	int8_t *r8i = (int8_t *)s_malloc(nelems * sizeof(int8_t));
 	uint8_t *r8u = (uint8_t *)s_malloc(nelems * sizeof(uint8_t));
@@ -2554,8 +2764,8 @@ static int test_sv_sort()
 	/*
 	 * Generic sort tests
 	 */
-	TEST_SV_SORT(z, 0, sv_alloc, sv_push,
-		sizeof(struct AA), AA_CMPF, &a1, &a2, &a1);
+	TEST_SV_SORT(z, 0, sv_alloc, sv_push, sizeof(struct AA), AA_CMPF, &a1,
+		     &a2, &a1);
 	TEST_SV_SORT(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s, t);
 	TEST_SV_SORT(c, 2, sv_alloc_t, sv_push_u, SV_U8, X_CMPF, r, s, tu);
 	TEST_SV_SORT(d, 3, sv_alloc_t, sv_push_i, SV_I16, X_CMPF, r, s, t);
@@ -2571,25 +2781,49 @@ static int test_sv_sort()
 		res = -1;
 	else {
 		for (i = 0; i < nelems; i += 2) {
-			sv_push_i(&v8i, i & 0xff); sv_push_u(&v8u, i & 0xff);
-			sv_push_i(&v16i, i); sv_push_u(&v16u, i);
-			sv_push_i(&v32i, i); sv_push_u(&v32u, i);
-			sv_push_i(&v64i, i); sv_push_u(&v64u, i);
-			r8i[i] = i & 0xff; r8u[i] = i & 0xff; r16i[i] = i;
-			r16u[i] = i; r32i[i] = i; r32u[i] = i; r64i[i] = i;
+			sv_push_i(&v8i, i & 0xff);
+			sv_push_u(&v8u, i & 0xff);
+			sv_push_i(&v16i, i);
+			sv_push_u(&v16u, i);
+			sv_push_i(&v32i, i);
+			sv_push_u(&v32u, i);
+			sv_push_i(&v64i, i);
+			sv_push_u(&v64u, i);
+			r8i[i] = i & 0xff;
+			r8u[i] = i & 0xff;
+			r16i[i] = i;
+			r16u[i] = i;
+			r32i[i] = i;
+			r32u[i] = i;
+			r64i[i] = i;
 			r64u[i] = i;
 		}
 		for (i = 1; i < nelems; i += 2) {
-			sv_push_i(&v8i, i & 0xff); sv_push_u(&v8u, i & 0xff);
-			sv_push_i(&v16i, i); sv_push_u(&v16u, i);
-			sv_push_i(&v32i, i); sv_push_u(&v32u, i);
-			sv_push_i(&v64i, i); sv_push_u(&v64u, i);
-			r8i[i] = i & 0xff; r8u[i] = i & 0xff; r16i[i] = i;
-			r16u[i] = i; r32i[i] = i; r32u[i] = i; r64i[i] = i;
+			sv_push_i(&v8i, i & 0xff);
+			sv_push_u(&v8u, i & 0xff);
+			sv_push_i(&v16i, i);
+			sv_push_u(&v16u, i);
+			sv_push_i(&v32i, i);
+			sv_push_u(&v32u, i);
+			sv_push_i(&v64i, i);
+			sv_push_u(&v64u, i);
+			r8i[i] = i & 0xff;
+			r8u[i] = i & 0xff;
+			r16i[i] = i;
+			r16u[i] = i;
+			r32i[i] = i;
+			r32u[i] = i;
+			r64i[i] = i;
 			r64u[i] = i;
 		}
-		sv_sort(v8i); sv_sort(v8u); sv_sort(v16i); sv_sort(v16u);
-		sv_sort(v32i); sv_sort(v32u); sv_sort(v64i); sv_sort(v64u);
+		sv_sort(v8i);
+		sv_sort(v8u);
+		sv_sort(v16i);
+		sv_sort(v16u);
+		sv_sort(v32i);
+		sv_sort(v32u);
+		sv_sort(v64i);
+		sv_sort(v64u);
 		qsort(r8i, nelems, 1, cmp8i);
 		qsort(r8u, nelems, 1, cmp8u);
 		qsort(r16i, nelems, 2, cmp16i);
@@ -2599,32 +2833,47 @@ static int test_sv_sort()
 		qsort(r64i, nelems, 8, cmp64i);
 		qsort(r64u, nelems, 8, cmp64u);
 		for (i = 0; i < nelems; i++) {
-			res |= sv_at_i(v8i, i) == r8i[i] &&
-				sv_at_u(v8u, i) == r8u[i] &&
-				(int)sv_at_i(v16i, i) == i &&
-				(int)sv_at_u(v16u, i) == i &&
-				(int)sv_at_i(v32i, i) == i &&
-				(int)sv_at_u(v32u, i) == i &&
-				(int)sv_at_i(v64i, i) == i &&
-				(int)sv_at_u(v64u, i) == i ? 0 : 1 << 31;
+			res |= sv_at_i(v8i, i) == r8i[i]
+					       && sv_at_u(v8u, i) == r8u[i]
+					       && (int)sv_at_i(v16i, i) == i
+					       && (int)sv_at_u(v16u, i) == i
+					       && (int)sv_at_i(v32i, i) == i
+					       && (int)sv_at_u(v32u, i) == i
+					       && (int)sv_at_i(v64i, i) == i
+					       && (int)sv_at_u(v64u, i) == i
+				       ? 0
+				       : 1 << 31;
 		}
 	}
 	sv_free(&v8i, &v8u, &v16i, &v16u, &v32i, &v32u, &v64i, &v64u);
-	s_free(r8i); s_free(r8u); s_free(r16i); s_free(r16u);
-	s_free(r32i); s_free(r32u); s_free(r64i); s_free(r64u);
+	s_free(r8i);
+	s_free(r8u);
+	s_free(r16i);
+	s_free(r16u);
+	s_free(r32i);
+	s_free(r32u);
+	s_free(r64i);
+	s_free(r64u);
 	return res;
 }
 
-#define TEST_SV_FIND_VARS(v)	\
-	srt_vector *v
+#define TEST_SV_FIND_VARS(v) srt_vector *v
 
-#define TEST_SV_FIND(v, ntest, alloc, push, check, type, CMPF, a, b)	 \
-	v = alloc(type, 0 CMPF);					 \
-	push(&v, a); push(&v, a); push(&v, a); push(&v, a); push(&v, a); \
-	push(&v, a); push(&v, b); push(&v, a); push(&v, a); push(&v, a); \
-	res |= !v ? 1 << (ntest * 3) :					 \
-		    ((check) ? 0 : 2 << (ntest * 3)) |			 \
-		    (sv_size(v) == 10 ? 0 : 4 << (ntest * 3));		 \
+#define TEST_SV_FIND(v, ntest, alloc, push, check, type, CMPF, a, b)           \
+	v = alloc(type, 0 CMPF);                                               \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, b);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	push(&v, a);                                                           \
+	res |= !v ? 1 << (ntest * 3)                                           \
+		  : ((check) ? 0 : 2 << (ntest * 3))                           \
+			       | (sv_size(v) == 10 ? 0 : 4 << (ntest * 3));    \
 	sv_free(&v);
 
 static int test_sv_find()
@@ -2642,26 +2891,26 @@ static int test_sv_find()
 	const int r = 12, s = 34;
 	TEST_SV_FIND(z, 0, sv_alloc, sv_push, sv_find(z, 0, &a2) == 6,
 		     sizeof(struct AA), NO_CMPF, &a1, &a2);
-	#define SVIAT(v) sv_find_i(v, 0, s) == 6
-	#define SVUAT(v) sv_find_u(v, 0, s) == 6
-	TEST_SV_FIND(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64,
-		     X_CMPF, r, s);
-	TEST_SV_FIND(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64,
-		     X_CMPF, r, s);
-	#undef SVIAT
-	#undef SVUAT
+#define SVIAT(v) sv_find_i(v, 0, s) == 6
+#define SVUAT(v) sv_find_u(v, 0, s) == 6
+	TEST_SV_FIND(b, 1, sv_alloc_t, sv_push_i, SVIAT(b), SV_I8, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(c, 2, sv_alloc_t, sv_push_u, SVUAT(c), SV_U8, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(d, 3, sv_alloc_t, sv_push_i, SVIAT(d), SV_I16, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(e, 4, sv_alloc_t, sv_push_u, SVUAT(e), SV_U16, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(f, 5, sv_alloc_t, sv_push_i, SVIAT(f), SV_I32, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(g, 6, sv_alloc_t, sv_push_u, SVUAT(g), SV_U32, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(h, 7, sv_alloc_t, sv_push_i, SVIAT(h), SV_I64, X_CMPF, r,
+		     s);
+	TEST_SV_FIND(i, 8, sv_alloc_t, sv_push_u, SVUAT(i), SV_U64, X_CMPF, r,
+		     s);
+#undef SVIAT
+#undef SVUAT
 	return res;
 }
 
@@ -2669,19 +2918,23 @@ static int test_sv_push_pop_set()
 {
 	size_t as = 10;
 	srt_vector *a = sv_alloc(sizeof(struct AA), as, NULL),
-	     *b = sv_alloca(sizeof(struct AA), as, NULL);
+		   *b = sv_alloca(sizeof(struct AA), as, NULL);
 	const struct AA *t = NULL;
 	int res = (!a || !b) ? 1 : 0;
 	if (!res) {
 		res |= (sv_push(&a, &a2, &a2, &a1) ? 0 : 4);
 		res |= (sv_len(a) == 3 ? 0 : 8);
-		res |= (((t = (const struct AA *)sv_pop(a)) &&
-			t->a == a1.a && t->b == a1.b)? 0 : 16);
+		res |= (((t = (const struct AA *)sv_pop(a)) && t->a == a1.a
+			 && t->b == a1.b)
+				? 0
+				: 16);
 		res |= (sv_len(a) == 2 ? 0 : 32);
 		res |= (sv_push(&b, &a2) ? 0 : 64);
 		res |= (sv_len(b) == 1 ? 0 : 128);
-		res |= (((t = (struct AA *)sv_pop(b)) &&
-			 t->a == a2.a && t->b == a2.b)? 0 : 256);
+		res |= (((t = (struct AA *)sv_pop(b)) && t->a == a2.a
+			 && t->b == a2.b)
+				? 0
+				: 256);
 		res |= (sv_len(b) == 0 ? 0 : 512);
 		sv_set(&a, 0, &a2);
 		sv_set(&a, 1000, &a1);
@@ -2702,8 +2955,8 @@ static int test_sv_push_pop_set()
 
 static int test_sv_push_pop_set_i()
 {
-	enum eSV_Type t[] = { SV_I8, SV_I16, SV_I32, SV_I64 };
-	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
+	enum eSV_Type t[] = {SV_I8, SV_I16, SV_I32, SV_I64};
+	int i = 0, ntests = sizeof(t) / sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
 		size_t as = 10;
 		srt_vector *a = sv_alloc_t(t[i], as);
@@ -2721,7 +2974,7 @@ static int test_sv_push_pop_set_i()
 				res |= 3 << (i * 4);
 				break;
 			}
-			if (sv_len(a) != 0 || sv_len(b) != 0 ){
+			if (sv_len(a) != 0 || sv_len(b) != 0) {
 				res |= 4 << (i * 4);
 				break;
 			}
@@ -2741,41 +2994,39 @@ static int test_sv_push_pop_set_i()
 
 static int test_sv_push_pop_set_u()
 {
-	uint64_t init[] = { (uint64_t)-1, (uint64_t)-1, (uint64_t)-1,
-			    (uint64_t)-1 },
-		expected[] = { 0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL };
-	enum eSV_Type t[] = { SV_U8, SV_U16, SV_U32, SV_U64 };
-	int i = 0, ntests = sizeof(t)/sizeof(t[0]), res = 0;
+	uint64_t init[] = {(uint64_t)-1, (uint64_t)-1, (uint64_t)-1,
+			   (uint64_t)-1},
+		 expected[] = {0xff, 0xffff, 0xffffffff, 0xffffffffffffffffLL};
+	enum eSV_Type t[] = {SV_U8, SV_U16, SV_U32, SV_U64};
+	int i = 0, ntests = sizeof(t) / sizeof(t[0]), res = 0;
 	for (; i < ntests; i++) {
 		size_t as = 10;
 		srt_vector *a = sv_alloc_t(t[i], as);
 		srt_vector *b = sv_alloca_t(t[i], as);
 		int64_t r;
-		if (!(a && b && sv_push_u(&a, (uint64_t)-1) &&
-		      sv_push_u(&b, init[i]) &&
-		      (r = (int64_t)sv_pop_u(a)) && r == sv_pop_i(b) &&
-		      r == (int64_t)expected[i] &&
-		      sv_len(a) == 0 && sv_len(b) == 0))
+		if (!(a && b && sv_push_u(&a, (uint64_t)-1)
+		      && sv_push_u(&b, init[i]) && (r = (int64_t)sv_pop_u(a))
+		      && r == sv_pop_i(b) && r == (int64_t)expected[i]
+		      && sv_len(a) == 0 && sv_len(b) == 0))
 			res |= 1 << i;
 		sv_free(&a);
 	}
 	return res;
 }
 
-#define TEST_SV_PUSH_RAW_VARS(v, T)	\
-	srt_vector *v;			\
-	const T *v##b;			\
+#define TEST_SV_PUSH_RAW_VARS(v, T)                                            \
+	srt_vector *v;                                                         \
+	const T *v##b;                                                         \
 	int v##i, v##r
 
-#define TEST_SV_PUSH_RAW(v, ntest, alloc, type, CMPF, T, TEST, vbuf, ve)\
-	v = alloc(type, 0 CMPF);					\
-	sv_push_raw(&v, vbuf, ve);					\
-	v##b = (const T *)sv_get_buffer_r(v);				\
-	v##r = 0;							\
-	for (v##i = 0; v##i < ve && v##r == 0; v##i++)			\
-		v##r = TEST(vbuf[v##i], v##b[v##i]) ? 0 : 1;		\
-	res |= !v ? 1 << (ntest * 3) :					\
-		    v##r <= 0 ? 0 : 2 << (ntest * 3);			\
+#define TEST_SV_PUSH_RAW(v, ntest, alloc, type, CMPF, T, TEST, vbuf, ve)       \
+	v = alloc(type, 0 CMPF);                                               \
+	sv_push_raw(&v, vbuf, ve);                                             \
+	v##b = (const T *)sv_get_buffer_r(v);                                  \
+	v##r = 0;                                                              \
+	for (v##i = 0; v##i < ve && v##r == 0; v##i++)                         \
+		v##r = TEST(vbuf[v##i], v##b[v##i]) ? 0 : 1;                   \
+	res |= !v ? 1 << (ntest * 3) : v##r <= 0 ? 0 : 2 << (ntest * 3);       \
 	sv_free(&v);
 
 static int test_sv_push_raw()
@@ -2792,27 +3043,26 @@ static int test_sv_push_raw()
 	int res = 0;
 	TEST_SV_PUSH_RAW(z, 0, sv_alloc, sizeof(struct AA), NO_CMPF, struct AA,
 			 TEST_AA, av1, 3);
-	TEST_SV_PUSH_RAW(b, 1, sv_alloc_t, SV_I8, X_CMPF, int8_t,
-			 TEST_INT, i8v, 3);
-	TEST_SV_PUSH_RAW(c, 2, sv_alloc_t, SV_U8, X_CMPF, uint8_t,
-			 TEST_INT, u8v, 3);
-	TEST_SV_PUSH_RAW(d, 3, sv_alloc_t, SV_I16, X_CMPF, int16_t,
-			 TEST_INT, i16v, 3);
-	TEST_SV_PUSH_RAW(e, 4, sv_alloc_t, SV_U16, X_CMPF, uint16_t,
-			 TEST_INT, u16v, 3);
-	TEST_SV_PUSH_RAW(f, 5, sv_alloc_t, SV_I32, X_CMPF, int32_t,
-			 TEST_INT, i32v, 3);
-	TEST_SV_PUSH_RAW(g, 6, sv_alloc_t, SV_U32, X_CMPF, uint32_t,
-			 TEST_INT, u32v, 3);
-	TEST_SV_PUSH_RAW(h, 7, sv_alloc_t, SV_I64, X_CMPF, int64_t,
-			 TEST_INT, i64v, 3);
-	TEST_SV_PUSH_RAW(i, 8, sv_alloc_t, SV_U64, X_CMPF, uint64_t,
-			 TEST_INT, u64v, 3);
+	TEST_SV_PUSH_RAW(b, 1, sv_alloc_t, SV_I8, X_CMPF, int8_t, TEST_INT, i8v,
+			 3);
+	TEST_SV_PUSH_RAW(c, 2, sv_alloc_t, SV_U8, X_CMPF, uint8_t, TEST_INT,
+			 u8v, 3);
+	TEST_SV_PUSH_RAW(d, 3, sv_alloc_t, SV_I16, X_CMPF, int16_t, TEST_INT,
+			 i16v, 3);
+	TEST_SV_PUSH_RAW(e, 4, sv_alloc_t, SV_U16, X_CMPF, uint16_t, TEST_INT,
+			 u16v, 3);
+	TEST_SV_PUSH_RAW(f, 5, sv_alloc_t, SV_I32, X_CMPF, int32_t, TEST_INT,
+			 i32v, 3);
+	TEST_SV_PUSH_RAW(g, 6, sv_alloc_t, SV_U32, X_CMPF, uint32_t, TEST_INT,
+			 u32v, 3);
+	TEST_SV_PUSH_RAW(h, 7, sv_alloc_t, SV_I64, X_CMPF, int64_t, TEST_INT,
+			 i64v, 3);
+	TEST_SV_PUSH_RAW(i, 8, sv_alloc_t, SV_U64, X_CMPF, uint64_t, TEST_INT,
+			 u64v, 3);
 	return res;
 }
 
-struct MyNode1
-{
+struct MyNode1 {
 	struct S_Node n;
 	int k;
 	int v;
@@ -2832,16 +3082,16 @@ static void ndx2s(char *out, const size_t out_max, const srt_tndx id)
 		snprintf(out, out_max, "%u", (unsigned)id);
 }
 
-static srt_string *
-ss_cat_stn_MyNode1(srt_string **s, const srt_tnode *n, const srt_tndx id)
+static srt_string *ss_cat_stn_MyNode1(srt_string **s, const srt_tnode *n,
+				      const srt_tndx id)
 {
 	ASSERT_RETURN_IF(!s, NULL);
 	struct MyNode1 *node = (struct MyNode1 *)n;
 	char l[128], r[128];
 	ndx2s(l, sizeof(l), n->x.l);
 	ndx2s(r, sizeof(r), n->r);
-	ss_cat_printf(s, 128, "[%u: (%i, %c) -> (%s, %s; r:%u)]",
-		     (unsigned)id, node->k, node->v, l, r, n->x.is_red );
+	ss_cat_printf(s, 128, "[%u: (%i, %c) -> (%s, %s; r:%u)]", (unsigned)id,
+		      node->k, node->v, l, r, n->x.is_red);
 	return *s;
 }
 #endif
@@ -2849,51 +3099,55 @@ ss_cat_stn_MyNode1(srt_string **s, const srt_tnode *n, const srt_tndx id)
 static int test_st_alloc()
 {
 	srt_tree *t = st_alloc((srt_cmp)cmp1, sizeof(struct MyNode1), 1000);
-	struct MyNode1 n = { EMPTY_STN, 0, 0 };
-	int res = !t ? 1 : st_len(t) != 0 ? 2 :
-			   (!st_insert(&t, (const srt_tnode *)&n) ||
-			    st_len(t) != 1) ? 4 : 0;
+	struct MyNode1 n = {EMPTY_STN, 0, 0};
+	int res = !t ? 1
+		     : st_len(t) != 0 ? 2
+				      : (!st_insert(&t, (const srt_tnode *)&n)
+					 || st_len(t) != 1)
+						? 4
+						: 0;
 	st_free(&t);
 	return res;
 }
 
-#define ST_ENV_TEST_AUX						\
-	srt_tree *t = st_alloc((srt_cmp)cmp1,			\
-			       sizeof(struct MyNode1), 1000);	\
-	srt_string *log = NULL;					\
-	struct MyNode1 n0 = { EMPTY_STN, 0, 0 };		\
-	srt_tnode *n = (srt_tnode *)&n0;			\
-	srt_bool r = S_FALSE;					\
-	if (!t)							\
+#define ST_ENV_TEST_AUX                                                        \
+	srt_tree *t = st_alloc((srt_cmp)cmp1, sizeof(struct MyNode1), 1000);   \
+	srt_string *log = NULL;                                                \
+	struct MyNode1 n0 = {EMPTY_STN, 0, 0};                                 \
+	srt_tnode *n = (srt_tnode *)&n0;                                       \
+	srt_bool r = S_FALSE;                                                  \
+	if (!t)                                                                \
 		return 1;
 
-#define ST_ENV_TEST_AUX_LEAVE		\
-	st_free(&t);			\
-	ss_free(&log);			\
-	if (!r)				\
+#define ST_ENV_TEST_AUX_LEAVE                                                  \
+	st_free(&t);                                                           \
+	ss_free(&log);                                                         \
+	if (!r)                                                                \
 		res |= 0x40000000;
 /* #define S_EXTRA_TREE_TEST_DEBUG */
 #ifdef S_EXTRA_TREE_TEST_DEBUG
-	#define STLOGMYT(t) st_log_obj(&log, t, ss_cat_stn_MyNode1)
+#define STLOGMYT(t) st_log_obj(&log, t, ss_cat_stn_MyNode1)
 #else
-	#define STLOGMYT(t)
+#define STLOGMYT(t)
 #endif
-#define ST_A_INS(key, val) {			\
-			n0.k = key;		\
-			n0.v = val;		\
-			r = st_insert(&t, n);	\
-			STLOGMYT(t);		\
-		}
-#define ST_A_DEL(key) {					\
-			n0.k = key;			\
-			r = st_delete(t, n, NULL);	\
-			STLOGMYT(t);			\
-		}
-#define ST_CHK_BRK(t, len, err)				\
-		if (st_len(t) != (size_t)(len)) {	\
-			res = err;			\
-			break;				\
-		}
+#define ST_A_INS(key, val)                                                     \
+	{                                                                      \
+		n0.k = key;                                                    \
+		n0.v = val;                                                    \
+		r = st_insert(&t, n);                                          \
+		STLOGMYT(t);                                                   \
+	}
+#define ST_A_DEL(key)                                                          \
+	{                                                                      \
+		n0.k = key;                                                    \
+		r = st_delete(t, n, NULL);                                     \
+		STLOGMYT(t);                                                   \
+	}
+#define ST_CHK_BRK(t, len, err)                                                \
+	if (st_len(t) != (size_t)(len)) {                                      \
+		res = err;                                                     \
+		break;                                                         \
+	}
 
 static int test_st_insert_del()
 {
@@ -2913,8 +3167,8 @@ static int test_st_insert_del()
 		ST_CHK_BRK(t, 1, 2);
 		n0.k = tree_elems - 1;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != (cbase + tree_elems - 1) ||
-		    st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != (cbase + tree_elems - 1)
+		    || st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 3;
 			break;
 		}
@@ -2929,8 +3183,8 @@ static int test_st_insert_del()
 		ST_CHK_BRK(t, 1, 5);
 		n0.k = tree_elems - 1;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != (cbase + tree_elems - 1) ||
-		    st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != (cbase + tree_elems - 1)
+		    || st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 6;
 			break;
 		}
@@ -2938,15 +3192,15 @@ static int test_st_insert_del()
 		ST_CHK_BRK(t, 0, tree_elems);
 		/* Case 3: add in order, delete in reverse order */
 		for (i = 0; i < (int)tree_elems; i++) /* ST_A_INS(2, 'c'); */
-			ST_A_INS(i, cbase + i);	      /* double rotation   */
+			ST_A_INS(i, cbase + i);       /* double rotation   */
 		ST_CHK_BRK(t, tree_elems, 8);
 		for (i = (tree_elems - 1); i > 0; i--)
 			ST_A_DEL(i);
 		ST_CHK_BRK(t, 1, 9);
 		n0.k = 0;
 		nr = (const struct MyNode1 *)st_locate(t, &n0.n);
-		if (!nr || nr->v != cbase ||
-		    st_traverse_levelorder(t, NULL, NULL) != 1) {
+		if (!nr || nr->v != cbase
+		    || st_traverse_levelorder(t, NULL, NULL) != 1) {
 			res = 10;
 			break;
 		}
@@ -2961,8 +3215,8 @@ static int test_st_insert_del()
 static int test_traverse(struct STraverseParams *tp)
 {
 	srt_string **log = (srt_string **)tp->context;
-	const struct MyNode1 *node = (const struct MyNode1 *)
-						get_node_r(tp->t, tp->c);
+	const struct MyNode1 *node =
+		(const struct MyNode1 *)get_node_r(tp->t, tp->c);
 	if (node)
 		ss_cat_printf(log, 512, "%c", node->v);
 	return 0;
@@ -2975,9 +3229,15 @@ static int test_st_traverse()
 	const char *out;
 	ST_ENV_TEST_AUX;
 	for (;;) {
-		ST_A_INS(6, 'g'); ST_A_INS(7, 'h'); ST_A_INS(8, 'i');
-		ST_A_INS(3, 'd'); ST_A_INS(4, 'e'); ST_A_INS(5, 'f');
-		ST_A_INS(0, 'a'); ST_A_INS(1, 'b'); ST_A_INS(2, 'c');
+		ST_A_INS(6, 'g');
+		ST_A_INS(7, 'h');
+		ST_A_INS(8, 'i');
+		ST_A_INS(3, 'd');
+		ST_A_INS(4, 'e');
+		ST_A_INS(5, 'f');
+		ST_A_INS(0, 'a');
+		ST_A_INS(1, 'b');
+		ST_A_INS(2, 'c');
 		ss_cpy_c(&log, "");
 		levels = st_traverse_preorder(t, test_traverse, (void *)&log);
 		out = ss_to_c(log);
@@ -3013,39 +3273,54 @@ static int test_st_traverse()
 }
 
 #define TEST_SM_ALLOC_DONOTHING(a)
-#define TEST_SM_ALLOC_X(fn, sm_alloc_X, type, insert, at, sm_free_X)	\
-	static int fn()							\
-	{								\
-		size_t n = 1000;					\
-		srt_map *m = sm_alloc_X(type, n);			\
-		int res = 0;						\
-		for (;;) {						\
-			if (!m) { res = 1; break; }			\
-			if (!sm_empty(m) || sm_capacity(m) != n ||	\
-			    sm_capacity_left(m) != n) {			\
-				res = 2;				\
-				break;					\
-			}						\
-			insert(&m, 1, 1001);				\
-			if (sm_size(m) != 1) { res = 3; break; }	\
-			insert(&m, 2, 1002);				\
-			insert(&m, 3, 1003);				\
-			if (sm_empty(m) ||sm_capacity(m) != n ||	\
-			    sm_capacity_left(m) != n - 3) {		\
-				res = 4;				\
-				break;					\
-			}						\
-			if (at(m, 1) != 1001) { res = 5; break; }	\
-			if (at(m, 2) != 1002) { res = 6; break; }	\
-			if (at(m, 3) != 1003) { res = 7; break; }	\
-			break;						\
-		}							\
-		if (!res) {						\
-			sm_clear(m);					\
-			res = !sm_size(m) ? 0 : 8;			\
-		}							\
-		sm_free_X(&m);						\
-		return res;						\
+#define TEST_SM_ALLOC_X(fn, sm_alloc_X, type, insert, at, sm_free_X)           \
+	static int fn()                                                        \
+	{                                                                      \
+		size_t n = 1000;                                               \
+		srt_map *m = sm_alloc_X(type, n);                              \
+		int res = 0;                                                   \
+		for (;;) {                                                     \
+			if (!m) {                                              \
+				res = 1;                                       \
+				break;                                         \
+			}                                                      \
+			if (!sm_empty(m) || sm_capacity(m) != n                \
+			    || sm_capacity_left(m) != n) {                     \
+				res = 2;                                       \
+				break;                                         \
+			}                                                      \
+			insert(&m, 1, 1001);                                   \
+			if (sm_size(m) != 1) {                                 \
+				res = 3;                                       \
+				break;                                         \
+			}                                                      \
+			insert(&m, 2, 1002);                                   \
+			insert(&m, 3, 1003);                                   \
+			if (sm_empty(m) || sm_capacity(m) != n                 \
+			    || sm_capacity_left(m) != n - 3) {                 \
+				res = 4;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 1) != 1001) {                                \
+				res = 5;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 2) != 1002) {                                \
+				res = 6;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 3) != 1003) {                                \
+				res = 7;                                       \
+				break;                                         \
+			}                                                      \
+			break;                                                 \
+		}                                                              \
+		if (!res) {                                                    \
+			sm_clear(m);                                           \
+			res = !sm_size(m) ? 0 : 8;                             \
+		}                                                              \
+		sm_free_X(&m);                                                 \
+		return res;                                                    \
 	}
 
 TEST_SM_ALLOC_X(test_sm_alloc_ii32, sm_alloc, SM_II32, sm_insert_ii32,
@@ -3058,20 +3333,27 @@ TEST_SM_ALLOC_X(test_sm_alloca_uu32, sm_alloca, SM_UU32, sm_insert_uu32,
 		sm_at_uu32, TEST_SM_ALLOC_DONOTHING)
 TEST_SM_ALLOC_X(test_sm_alloc_ii, sm_alloc, SM_II, sm_insert_ii, sm_at_ii,
 		sm_free)
-TEST_SM_ALLOC_X(test_sm_alloca_ii, sm_alloca, SM_II, sm_insert_ii,
-		sm_at_ii, TEST_SM_ALLOC_DONOTHING)
+TEST_SM_ALLOC_X(test_sm_alloca_ii, sm_alloca, SM_II, sm_insert_ii, sm_at_ii,
+		TEST_SM_ALLOC_DONOTHING)
 
-#define TEST_SM_SHRINK_TO_FIT_VARS(m, atype, r)	\
+#define TEST_SM_SHRINK_TO_FIT_VARS(m, atype, r)                                \
 	srt_map *m = sm_alloc(atype, r), *m##2 = sm_alloca(atype, r)
 
-#define TEST_SM_SHRINK_TO_FIT(m, ntest, atype, r)			\
-	res |= !m ? 1 << (ntest * 4) : !m##2 ? 2 << (ntest * 4) :	\
-		(sm_max_size(m) == r ? 0 : 3 << (ntest * 4)) |		\
-		(sm_max_size(m##2) == r ? 0 : 4 << (ntest * 4)) |	\
-		(sm_shrink(&m) && sm_max_size(m) == 0 ? 0 :		\
-		 5 << (ntest * 4)) |					\
-		(sm_shrink(&m##2) && sm_max_size(m##2) == r ? 0 :	\
-		 6 << (ntest * 4));					\
+#define TEST_SM_SHRINK_TO_FIT(m, ntest, atype, r)                              \
+	res |= !m ? 1 << (ntest * 4)                                           \
+		  : !m##2 ? 2 << (ntest * 4)                                   \
+			  : (sm_max_size(m) == r ? 0 : 3 << (ntest * 4))       \
+				       | (sm_max_size(m##2) == r               \
+						  ? 0                          \
+						  : 4 << (ntest * 4))          \
+				       | (sm_shrink(&m) && sm_max_size(m) == 0 \
+						  ? 0                          \
+						  : 5 << (ntest * 4))          \
+				       | (sm_shrink(&m##2)                     \
+							  && sm_max_size(m##2) \
+								     == r      \
+						  ? 0                          \
+						  : 6 << (ntest * 4));         \
 	sm_free(&m)
 
 static int test_sm_shrink()
@@ -3096,42 +3378,44 @@ static int test_sm_shrink()
 	return res;
 }
 
-#define TEST_SM_DUP_VARS(m, atype, r)					\
-	srt_map *m = sm_alloc(atype, r), *m##2 = sm_alloca(atype, r),	\
-	     *m##b = NULL, *m##2b = NULL
+#define TEST_SM_DUP_VARS(m, atype, r)                                          \
+	srt_map *m = sm_alloc(atype, r), *m##2 = sm_alloca(atype, r),          \
+		*m##b = NULL, *m##2b = NULL
 
-#define TEST_SM_DUP(m, ntest, atype, insf, kv, vv, atf, cmpf, r)	\
-	res |= !m || !m##2 ? 1 << (ntest * 2) : 0;			\
-	if (!res) {							\
-		int j = 0;						\
-		for (; j < r; j++) {					\
-			srt_bool b1 = insf(&m, kv[j], vv[j]);		\
-			srt_bool b2 = insf(&m##2, kv[j], vv[j]);	\
-			if (!b1 || !b2) {				\
-				res |= 2 << (ntest * 2);		\
-				break;					\
-			}						\
-		}							\
-	}								\
-	if (!res) {							\
-		m##b = sm_dup(m);					\
-		m##2b = sm_dup(m##2);					\
-		res = (!m##b || !m##2b) ? 4 << (ntest * 2) :		\
-			(sm_size(m) != r || sm_size(m##2) != r ||	\
-			 sm_size(m##b) != r || sm_size(m##2b) != r) ?	\
-			2 << (ntest * 2) : 0;				\
-	}								\
-	if (!res) {							\
-		int j = 0;						\
-		for (; j < r; j++)	{				\
-			if (cmpf(atf(m, kv[j]), atf(m##2, kv[j])) ||	\
-			    cmpf(atf(m, kv[j]), atf(m##b, kv[j])) ||	\
-			    cmpf(atf(m##b, kv[j]), atf(m##2b, kv[j]))) {\
-				res |= 3 << (ntest * 2);		\
-				break;					\
-			}						\
-		}							\
-	}								\
+#define TEST_SM_DUP(m, ntest, atype, insf, kv, vv, atf, cmpf, r)               \
+	res |= !m || !m##2 ? 1 << (ntest * 2) : 0;                             \
+	if (!res) {                                                            \
+		int j = 0;                                                     \
+		for (; j < r; j++) {                                           \
+			srt_bool b1 = insf(&m, kv[j], vv[j]);                  \
+			srt_bool b2 = insf(&m##2, kv[j], vv[j]);               \
+			if (!b1 || !b2) {                                      \
+				res |= 2 << (ntest * 2);                       \
+				break;                                         \
+			}                                                      \
+		}                                                              \
+	}                                                                      \
+	if (!res) {                                                            \
+		m##b = sm_dup(m);                                              \
+		m##2b = sm_dup(m##2);                                          \
+		res = (!m##b || !m##2b)                                        \
+			      ? 4 << (ntest * 2)                               \
+			      : (sm_size(m) != r || sm_size(m##2) != r         \
+				 || sm_size(m##b) != r || sm_size(m##2b) != r) \
+					? 2 << (ntest * 2)                     \
+					: 0;                                   \
+	}                                                                      \
+	if (!res) {                                                            \
+		int j = 0;                                                     \
+		for (; j < r; j++) {                                           \
+			if (cmpf(atf(m, kv[j]), atf(m##2, kv[j]))              \
+			    || cmpf(atf(m, kv[j]), atf(m##b, kv[j]))           \
+			    || cmpf(atf(m##b, kv[j]), atf(m##2b, kv[j]))) {    \
+				res |= 3 << (ntest * 2);                       \
+				break;                                         \
+			}                                                      \
+		}                                                              \
+	}                                                                      \
 	sm_free(&m, &m##2, &m##b, &m##2b)
 
 /*
@@ -3164,18 +3448,16 @@ static int test_sm_dup()
 		    scmp_int32, 10);
 	TEST_SM_DUP(bb, 1, SM_UU32, sm_insert_uu32, u32k, u32v, sm_at_uu32,
 		    scmp_uint32, 10);
-	TEST_SM_DUP(cc, 2, SM_II, sm_insert_ii, sik, i64v, sm_at_ii,
-		    scmp_int64, 10);
-	TEST_SM_DUP(dd, 3, SM_IS, sm_insert_is, sik, ssv, sm_at_is,
-		    ss_cmp, 10);
-	TEST_SM_DUP(ee, 4, SM_IP, sm_insert_ip, sik, spv, sm_at_ip,
-		    scmp_ptr, 10);
-	TEST_SM_DUP(ff, 5, SM_SI, sm_insert_si, ssk, i64v, sm_at_si,
-		    scmp_int64, 10);
-	TEST_SM_DUP(gg, 6, SM_SS, sm_insert_ss, ssk, ssv, sm_at_ss,
-		    ss_cmp, 10);
-	TEST_SM_DUP(hh, 7, SM_SP, sm_insert_sp, ssk, spv, sm_at_sp,
-		    scmp_ptr, 10);
+	TEST_SM_DUP(cc, 2, SM_II, sm_insert_ii, sik, i64v, sm_at_ii, scmp_int64,
+		    10);
+	TEST_SM_DUP(dd, 3, SM_IS, sm_insert_is, sik, ssv, sm_at_is, ss_cmp, 10);
+	TEST_SM_DUP(ee, 4, SM_IP, sm_insert_ip, sik, spv, sm_at_ip, scmp_ptr,
+		    10);
+	TEST_SM_DUP(ff, 5, SM_SI, sm_insert_si, ssk, i64v, sm_at_si, scmp_int64,
+		    10);
+	TEST_SM_DUP(gg, 6, SM_SS, sm_insert_ss, ssk, ssv, sm_at_ss, ss_cmp, 10);
+	TEST_SM_DUP(hh, 7, SM_SP, sm_insert_sp, ssk, spv, sm_at_sp, scmp_ptr,
+		    10);
 	ss_free(&s);
 	return res;
 }
@@ -3184,7 +3466,7 @@ static int test_sm_cpy()
 {
 	int res = 0;
 	srt_map *m1 = sm_alloc(SM_II32, 0), *m2 = sm_alloc(SM_SS, 0),
-	     *m1a3 = sm_alloca(SM_II32, 3), *m1a10 = sm_alloca(SM_II32, 10);
+		*m1a3 = sm_alloca(SM_II32, 3), *m1a10 = sm_alloca(SM_II32, 10);
 	sm_insert_ii32(&m1, 1, 1);
 	sm_insert_ii32(&m1, 2, 2);
 	sm_insert_ii32(&m1, 3, 3);
@@ -3216,18 +3498,18 @@ static int test_sm_cpy()
 	return res;
 }
 
-#define TEST_SM_X_COUNT(T, insf, cntf, v)	\
-	int res = 0;				\
-	uint32_t i, tcount = 100;		\
-	srt_map *m = sm_alloc(T, tcount);		\
-	for (i = 0; i < tcount; i++)		\
-		insf(&m, (unsigned)i, v);	\
-	for (i = 0; i < tcount; i++)		\
-		if (!cntf(m, i)) {		\
-			res = 1 + (int)i;	\
-			break;			\
-		}				\
-	sm_free(&m);				\
+#define TEST_SM_X_COUNT(T, insf, cntf, v)                                      \
+	int res = 0;                                                           \
+	uint32_t i, tcount = 100;                                              \
+	srt_map *m = sm_alloc(T, tcount);                                      \
+	for (i = 0; i < tcount; i++)                                           \
+		insf(&m, (unsigned)i, v);                                      \
+	for (i = 0; i < tcount; i++)                                           \
+		if (!cntf(m, i)) {                                             \
+			res = 1 + (int)i;                                      \
+			break;                                                 \
+		}                                                              \
+	sm_free(&m);                                                           \
 	return res;
 
 static int test_sm_count_u()
@@ -3249,8 +3531,7 @@ static int test_sm_count_s()
 	sm_insert_si(&m, s, 1);
 	sm_insert_si(&m, t, 2);
 	sm_insert_si(&m, u, 3);
-	res = sm_count_s(m, s) && sm_count_s(m, t) &&
-		  sm_count_s(m, u) ? 0 : 1;
+	res = sm_count_s(m, s) && sm_count_s(m, t) && sm_count_s(m, u) ? 0 : 1;
 	ss_free(&s, &t, &u);
 	sm_free(&m);
 	return res;
@@ -3309,7 +3590,7 @@ static int test_sm_delete_i()
 {
 	int res;
 	srt_map *m_ii32 = sm_alloc(SM_II32, 0), *m_uu32 = sm_alloc(SM_UU32, 0),
-	     *m_ii = sm_alloc(SM_II, 0);
+		*m_ii = sm_alloc(SM_II, 0);
 	/*
 	 * Insert elements
 	 */
@@ -3353,13 +3634,13 @@ static int test_sm_delete_s()
 {
 	int res;
 	srt_map *m_si = sm_alloc(SM_SI, 0), *m_sp = sm_alloc(SM_SP, 0),
-	     *m_ss = sm_alloc(SM_SS, 0);
+		*m_ss = sm_alloc(SM_SS, 0);
 	/*
 	 * Insert elements
 	 */
 	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
-		   *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
-		   *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	sm_insert_si(&m_si, k1, -1);
 	sm_insert_si(&m_si, k2, S_MAX_I64);
 	sm_insert_si(&m_si, k3, -3);
@@ -3405,8 +3686,8 @@ static srt_bool cback_i32i32(int32_t k, int32_t v, void *context)
 	return S_TRUE;
 }
 
-static srt_bool
-cback_ss(const srt_string *k, const srt_string *v, void *context)
+static srt_bool cback_ss(const srt_string *k, const srt_string *v,
+			 void *context)
 {
 	(void)k;
 	(void)v;
@@ -3447,35 +3728,41 @@ static srt_bool cback_s(const srt_string *k, void *context)
 	return S_TRUE;
 }
 
-#define TEST_SM_IT_X_VARS(id, et)	\
+#define TEST_SM_IT_X_VARS(id, et)                                              \
 	srt_map *m_##id = sm_alloc(et, 0), *m_a##id = sm_alloca(et, 3)
 
-#define TEST_SM_IT_X(n, id, et, itk, itv, cmpkf, cmpvf, k1, v1, k2, v2, k3, v3,\
-		     res)						       \
-	sm_insert_##id(&m_##id, k1, v1); sm_insert_##id(&m_a##id, k1, v1);     \
-	res |= (!cmpkf(itk(m_##id, 0), k1) &&				       \
-		!cmpvf(itv(m_##id, 0), v1)) ? 0 : n;			       \
-	sm_insert_##id(&m_##id, k2, v2); sm_insert_##id(&m_##id, k3, v3);      \
-	sm_insert_##id(&m_a##id, k2, v2); sm_insert_##id(&m_a##id, k3, v3);    \
-	res |= (!cmpvf(sm_at_##id(m_##id, k1), v1) &&			       \
-		!cmpvf(sm_at_##id(m_##id, k2), v2) &&			       \
-		!cmpvf(sm_at_##id(m_##id, k3), v3) &&			       \
-		!cmpvf(sm_at_##id(m_a##id, k1), v1) &&			       \
-		!cmpvf(sm_at_##id(m_a##id, k2), v2) &&			       \
-		!cmpvf(sm_at_##id(m_a##id, k3), v3) &&			       \
-		!cmpkf(itk(m_##id, 0), itk(m_a##id, 0)) &&		       \
-		!cmpkf(itk(m_##id, 1), itk(m_a##id, 1)) &&		       \
-		!cmpkf(itk(m_##id, 2), itk(m_a##id, 2)) &&		       \
-		!cmpvf(itv(m_##id, 0), itv(m_a##id, 0)) &&		       \
-		!cmpvf(itv(m_##id, 1), itv(m_a##id, 1)) &&		       \
-		!cmpvf(itv(m_##id, 2), itv(m_a##id, 2)) &&		       \
-		cmpkf(itk(m_##id, 0), 0) && cmpkf(itk(m_a##id, 0), 0) &&       \
-		cmpkf(itk(m_##id, 1), 0) && cmpkf(itk(m_a##id, 1), 0) &&       \
-		cmpkf(itk(m_##id, 2), 0) && cmpkf(itk(m_a##id, 2), 0) &&       \
-		cmpvf(itv(m_##id, 0), 0) && cmpvf(itv(m_a##id, 0), 0) &&       \
-		cmpvf(itv(m_##id, 1), 0) && cmpvf(itv(m_a##id, 1), 0) &&       \
-		cmpvf(itv(m_##id, 2), 0) && cmpvf(itv(m_a##id, 2), 0)) ? 0 : n;\
-	sm_free(&m_##id); sm_free(&m_a##id);
+#define TEST_SM_IT_X(n, id, et, itk, itv, cmpkf, cmpvf, k1, v1, k2, v2, k3,    \
+		     v3, res)                                                  \
+	sm_insert_##id(&m_##id, k1, v1);                                       \
+	sm_insert_##id(&m_a##id, k1, v1);                                      \
+	res |= (!cmpkf(itk(m_##id, 0), k1) && !cmpvf(itv(m_##id, 0), v1)) ? 0  \
+									  : n; \
+	sm_insert_##id(&m_##id, k2, v2);                                       \
+	sm_insert_##id(&m_##id, k3, v3);                                       \
+	sm_insert_##id(&m_a##id, k2, v2);                                      \
+	sm_insert_##id(&m_a##id, k3, v3);                                      \
+	res |= (!cmpvf(sm_at_##id(m_##id, k1), v1)                             \
+		&& !cmpvf(sm_at_##id(m_##id, k2), v2)                          \
+		&& !cmpvf(sm_at_##id(m_##id, k3), v3)                          \
+		&& !cmpvf(sm_at_##id(m_a##id, k1), v1)                         \
+		&& !cmpvf(sm_at_##id(m_a##id, k2), v2)                         \
+		&& !cmpvf(sm_at_##id(m_a##id, k3), v3)                         \
+		&& !cmpkf(itk(m_##id, 0), itk(m_a##id, 0))                     \
+		&& !cmpkf(itk(m_##id, 1), itk(m_a##id, 1))                     \
+		&& !cmpkf(itk(m_##id, 2), itk(m_a##id, 2))                     \
+		&& !cmpvf(itv(m_##id, 0), itv(m_a##id, 0))                     \
+		&& !cmpvf(itv(m_##id, 1), itv(m_a##id, 1))                     \
+		&& !cmpvf(itv(m_##id, 2), itv(m_a##id, 2))                     \
+		&& cmpkf(itk(m_##id, 0), 0) && cmpkf(itk(m_a##id, 0), 0)       \
+		&& cmpkf(itk(m_##id, 1), 0) && cmpkf(itk(m_a##id, 1), 0)       \
+		&& cmpkf(itk(m_##id, 2), 0) && cmpkf(itk(m_a##id, 2), 0)       \
+		&& cmpvf(itv(m_##id, 0), 0) && cmpvf(itv(m_a##id, 0), 0)       \
+		&& cmpvf(itv(m_##id, 1), 0) && cmpvf(itv(m_a##id, 1), 0)       \
+		&& cmpvf(itv(m_##id, 2), 0) && cmpvf(itv(m_a##id, 2), 0))      \
+		       ? 0                                                     \
+		       : n;                                                    \
+	sm_free(&m_##id);                                                      \
+	sm_free(&m_a##id);
 
 static int test_sm_it()
 {
@@ -3497,8 +3784,8 @@ static int test_sm_it()
 		     S_MIN_I64 + 1, res);
 	TEST_SM_IT_X(8, is, SM_IS, sm_it_i_k, sm_it_is_v, cmp_ii, ss_cmp, 1,
 		     ss_crefa("v1"), 2, ss_crefa("v2"), 3, ss_crefa("v3"), res);
-	TEST_SM_IT_X(16, ip, SM_IP, sm_it_i_k, sm_it_ip_v, cmp_ii, cmp_pp,
-		     1, (void *)1, 2, (void *)2, 3, (void *)3, res);
+	TEST_SM_IT_X(16, ip, SM_IP, sm_it_i_k, sm_it_ip_v, cmp_ii, cmp_pp, 1,
+		     (void *)1, 2, (void *)2, 3, (void *)3, res);
 	TEST_SM_IT_X(32, si, SM_SI, sm_it_s_k, sm_it_si_v, ss_cmp, cmp_ii,
 		     ss_crefa("v1"), 1, ss_crefa("v2"), 2, ss_crefa("v3"), 3,
 		     res);
@@ -3516,16 +3803,16 @@ static int test_sm_itr()
 	int res = 1;
 	size_t nelems = 100;
 	srt_map *m_ii32 = sm_alloc(SM_II32, nelems),
-	     *m_uu32 = sm_alloc(SM_UU32, nelems),
-	     *m_ii = sm_alloc(SM_II, nelems),
-	     *m_is = sm_alloc(SM_IS, nelems),
-	     *m_ip = sm_alloc(SM_IP, nelems),
-	     *m_si = sm_alloc(SM_SI, nelems),
-	     *m_ss = sm_alloc(SM_SS, nelems),
-	     *m_sp = sm_alloc(SM_SP, nelems);
+		*m_uu32 = sm_alloc(SM_UU32, nelems),
+		*m_ii = sm_alloc(SM_II, nelems),
+		*m_is = sm_alloc(SM_IS, nelems),
+		*m_ip = sm_alloc(SM_IP, nelems),
+		*m_si = sm_alloc(SM_SI, nelems),
+		*m_ss = sm_alloc(SM_SS, nelems),
+		*m_sp = sm_alloc(SM_SP, nelems);
 	size_t processed_ii321, processed_ii322, processed_uu32, processed_ii,
-	       processed_is, processed_ip, processed_si, processed_ss1,
-	       processed_ss2, processed_sp, cnt1, cnt2;
+		processed_is, processed_ip, processed_si, processed_ss1,
+		processed_ss2, processed_sp, cnt1, cnt2;
 	int32_t lower_i32, upper_i32;
 	uint32_t lower_u32, upper_u32;
 	int64_t lower_i, upper_i;
@@ -3558,25 +3845,19 @@ static int test_sm_itr()
 		ss_cpy_c(&lower_s, "k001"); /* covering "k0010" to "k0019" */
 		ss_cpy_c(&upper_s, "k002");
 		processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
-						cback_i32i32, &cnt1),
-		processed_ii322 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
-						NULL, NULL),
-		processed_uu32 = sm_itr_uu32(m_uu32, lower_u32, upper_u32,
-					NULL, NULL),
-		processed_ii = sm_itr_ii(m_ii, lower_i, upper_i,
-					NULL, NULL),
-		processed_is = sm_itr_is(m_is, lower_i, upper_i,
-					NULL, NULL),
-		processed_ip = sm_itr_ip(m_ip, lower_i, upper_i,
-					NULL, NULL),
-		processed_si = sm_itr_si(m_si, lower_s, upper_s,
-					NULL, NULL),
-		processed_ss1 = sm_itr_ss(m_ss, lower_s, upper_s,
-					cback_ss, &cnt2),
-		processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s,
-					NULL, NULL),
-		processed_sp = sm_itr_sp(m_sp, lower_s, upper_s,
-							NULL, NULL);
+					      cback_i32i32, &cnt1),
+		processed_ii322 =
+			sm_itr_ii32(m_ii32, lower_i32, upper_i32, NULL, NULL),
+		processed_uu32 =
+			sm_itr_uu32(m_uu32, lower_u32, upper_u32, NULL, NULL),
+		processed_ii = sm_itr_ii(m_ii, lower_i, upper_i, NULL, NULL),
+		processed_is = sm_itr_is(m_is, lower_i, upper_i, NULL, NULL),
+		processed_ip = sm_itr_ip(m_ip, lower_i, upper_i, NULL, NULL),
+		processed_si = sm_itr_si(m_si, lower_s, upper_s, NULL, NULL),
+		processed_ss1 =
+			sm_itr_ss(m_ss, lower_s, upper_s, cback_ss, &cnt2),
+		processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s, NULL, NULL),
+		processed_sp = sm_itr_sp(m_sp, lower_s, upper_s, NULL, NULL);
 		res = processed_ii321 == 11 ? 0 : 2;
 		res |= processed_ii321 == processed_ii322 ? 0 : 4;
 		res |= processed_ii322 == cnt1 ? 0 : 8;
@@ -3596,10 +3877,14 @@ static int test_sm_itr()
 		res |= sm_itr_ii(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x4000 : 0;
 		res |= sm_itr_is(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x8000 : 0;
 		res |= sm_itr_ip(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x10000 : 0;
-		res |= sm_itr_si(m_ii32, ss_crefa("10"), ss_crefa("20"),
-				 NULL, NULL) > 0 ? 0x20000 : 0;
-		res |= sm_itr_sp(m_ii32, ss_crefa("10"), ss_crefa("20"),
-				 NULL, NULL) > 0 ? 0x40000 : 0;
+		res |= sm_itr_si(m_ii32, ss_crefa("10"), ss_crefa("20"), NULL,
+				 NULL) > 0
+			       ? 0x20000
+			       : 0;
+		res |= sm_itr_sp(m_ii32, ss_crefa("10"), ss_crefa("20"), NULL,
+				 NULL) > 0
+			       ? 0x40000
+			       : 0;
 	}
 
 	/*
@@ -3607,7 +3892,7 @@ static int test_sm_itr()
 	 */
 
 	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
-        return res;
+	return res;
 }
 
 static int test_sm_sort_to_vectors()
@@ -3622,8 +3907,8 @@ static int test_sm_sort_to_vectors()
 		 * Add elements
 		 */
 		for (i = test_elems; i > 0 && !res; i--) {
-			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
-			    !st_assert((srt_tree *)m)) {
+			if (!sm_insert_ii32(&m, (int)i, (int)-i)
+			    || !st_assert((srt_tree *)m)) {
 				res |= 2;
 				break;
 			}
@@ -3672,8 +3957,8 @@ static int test_sm_double_rotation()
 		 * Add elements
 		 */
 		for (i = test_elems; i > 0; i--) {
-			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
-			    !st_assert((srt_tree *)m)) {
+			if (!sm_insert_ii32(&m, (int)i, (int)-i)
+			    || !st_assert((srt_tree *)m)) {
 				res = 2;
 				break;
 			}
@@ -3700,8 +3985,8 @@ static int test_sm_double_rotation()
 		for (i = 1; i <= (ssize_t)test_elems; i++) {
 			if ((i % 2))
 				continue;
-			if (!sm_insert_ii32(&m, (int)i, (int)-i) ||
-			    !st_assert((srt_tree *)m)) {
+			if (!sm_insert_ii32(&m, (int)i, (int)-i)
+			    || !st_assert((srt_tree *)m)) {
 				res = 4;
 				break;
 			}
@@ -3737,24 +4022,23 @@ static int test_sm_double_rotation()
 static int test_sms()
 {
 	int i, res = 0;
-	const srt_string *k[] = { ss_crefa("k000"), ss_crefa("k001"),
-				  ss_crefa("k002") };
+	const srt_string *k[] = {ss_crefa("k000"), ss_crefa("k001"),
+				 ss_crefa("k002")};
 	size_t cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0, cnt_s2 = 0;
 	size_t processed_i32, processed_u32, processed_i, processed_s,
-	       processed_s2;
+		processed_s2;
 	/*
 	 * Allocation: heap, stack with 3 elements, and stack with 10 elements
 	 */
-	srt_set *s_i32 = sms_alloc(SMS_I32, 0),
-	      *s_u32 = sms_alloc(SMS_U32, 0),
-	      *s_i = sms_alloc(SMS_I, 0),
-	      *s_s = sms_alloc(SMS_S, 0),
-	      *s_s2 = NULL,
-	      *s_a3 = sms_alloca(SMS_I32, 3),
-	      *s_a10 = sms_alloca(SMS_I32, 10);
-	res |= (sms_empty(s_i32) && sms_empty(s_u32) && sms_empty(s_i) &&
-		sms_empty(s_s) && sms_empty(s_s2) && sms_empty(s_a3) &&
-		sms_empty(s_a10) ? 0 : 1<<0);
+	srt_set *s_i32 = sms_alloc(SMS_I32, 0), *s_u32 = sms_alloc(SMS_U32, 0),
+		*s_i = sms_alloc(SMS_I, 0), *s_s = sms_alloc(SMS_S, 0),
+		*s_s2 = NULL, *s_a3 = sms_alloca(SMS_I32, 3),
+		*s_a10 = sms_alloca(SMS_I32, 10);
+	res |= (sms_empty(s_i32) && sms_empty(s_u32) && sms_empty(s_i)
+				&& sms_empty(s_s) && sms_empty(s_s2)
+				&& sms_empty(s_a3) && sms_empty(s_a10)
+			? 0
+			: 1 << 0);
 	/*
 	 * Insert elements
 	 */
@@ -3764,15 +4048,22 @@ static int test_sms()
 		sms_insert_i(&s_i, i);
 		sms_insert_s(&s_s, k[i]);
 	}
-	res |= (!sms_empty(s_i32) && !sms_empty(s_u32) && !sms_empty(s_i) &&
-		!sms_empty(s_s) && sms_empty(s_s2) && sms_empty(s_a3) &&
-		sms_empty(s_a10) ? 0 : 1<<1);
-	res |= (sms_count_i(s_i32, 10) && sms_count_i(s_i32, 11) &&
-		sms_count_i(s_i32, 12) && sms_count_u(s_u32, 20) &&
-		sms_count_u(s_u32, 21) && sms_count_u(s_u32, 22) &&
-		sms_count_i(s_i, 0) && sms_count_i(s_i, 1) &&
-		sms_count_i(s_i, 2) && sms_count_s(s_s, k[0]) &&
-		sms_count_s(s_s, k[1]) && sms_count_s(s_s, k[2]) ? 0 : 1<<2);
+	res |= (!sms_empty(s_i32) && !sms_empty(s_u32) && !sms_empty(s_i)
+				&& !sms_empty(s_s) && sms_empty(s_s2)
+				&& sms_empty(s_a3) && sms_empty(s_a10)
+			? 0
+			: 1 << 1);
+	res |= (sms_count_i(s_i32, 10) && sms_count_i(s_i32, 11)
+				&& sms_count_i(s_i32, 12)
+				&& sms_count_u(s_u32, 20)
+				&& sms_count_u(s_u32, 21)
+				&& sms_count_u(s_u32, 22) && sms_count_i(s_i, 0)
+				&& sms_count_i(s_i, 1) && sms_count_i(s_i, 2)
+				&& sms_count_s(s_s, k[0])
+				&& sms_count_s(s_s, k[1])
+				&& sms_count_s(s_s, k[2])
+			? 0
+			: 1 << 2);
 	/*
 	 * Enumeration
 	 */
@@ -3782,68 +4073,75 @@ static int test_sms()
 	processed_i = sms_itr_i(s_i, -1, 100, cback_i, &cnt_i);
 	processed_s = sms_itr_s(s_s, k[0], k[2], cback_s, &cnt_s);
 	processed_s2 = sms_itr_s(s_s2, k[0], k[2], cback_s, &cnt_s2);
-	res |= (processed_i32 == cnt_i32 && cnt_i32 == 3 ? 0 : 1<<3);
-	res |= (processed_u32 == cnt_u32 && cnt_u32 == 3 ? 0 : 1<<4);
-	res |= (processed_i == cnt_i && cnt_i == 3 ? 0 : 1<<5);
-	res |= (processed_s == cnt_s && cnt_s == 3 ? 0 : 1<<6);
-	res |= (processed_s2 == cnt_s2 && cnt_s2 == 3 ? 0 : 1<<7);
+	res |= (processed_i32 == cnt_i32 && cnt_i32 == 3 ? 0 : 1 << 3);
+	res |= (processed_u32 == cnt_u32 && cnt_u32 == 3 ? 0 : 1 << 4);
+	res |= (processed_i == cnt_i && cnt_i == 3 ? 0 : 1 << 5);
+	res |= (processed_s == cnt_s && cnt_s == 3 ? 0 : 1 << 6);
+	res |= (processed_s2 == cnt_s2 && cnt_s2 == 3 ? 0 : 1 << 7);
 	/*
 	 * sms_cpy() to stack with small stack allocation size
 	 */
 	sms_cpy(&s_a3, s_i32);
-	res |= (sms_size(s_a3) == 3 ? 0 : 1<<8);
+	res |= (sms_size(s_a3) == 3 ? 0 : 1 << 8);
 	sms_cpy(&s_a3, s_u32);
-	res |= (sms_size(s_a3) == 3 ? 0 : 1<<9);
+	res |= (sms_size(s_a3) == 3 ? 0 : 1 << 9);
 	sms_cpy(&s_a3, s_i);
-	res |= (sms_size(s_a3) == 0 ? 0 : 1<<10);
+	res |= (sms_size(s_a3) == 0 ? 0 : 1 << 10);
 	sms_cpy(&s_a3, s_s);
-	res |= (sms_size(s_a3) == 0 ? 0 : 1<<11);
+	res |= (sms_size(s_a3) == 0 ? 0 : 1 << 11);
 	/*
 	 * sms_cpy() to stack with enough stack allocation size
 	 */
 	sms_cpy(&s_a10, s_i32);
-	res |= (sms_size(s_a10) == 3 ? 0 : 1<<12);
+	res |= (sms_size(s_a10) == 3 ? 0 : 1 << 12);
 	sms_cpy(&s_a10, s_u32);
-	res |= (sms_size(s_a10) == 3 ? 0 : 1<<13);
+	res |= (sms_size(s_a10) == 3 ? 0 : 1 << 13);
 	sms_cpy(&s_a10, s_i);
-	res |= (sms_size(s_a10) == 3 ? 0 : 1<<14);
+	res |= (sms_size(s_a10) == 3 ? 0 : 1 << 14);
 	sms_cpy(&s_a10, s_s);
-	res |= (sms_size(s_a10) == 3 ? 0 : 1<<15);
+	res |= (sms_size(s_a10) == 3 ? 0 : 1 << 15);
 	sms_clear(s_a10);
-	res |= (sms_size(s_a10) == 0 ? 0 : 1<<16);
+	res |= (sms_size(s_a10) == 0 ? 0 : 1 << 16);
 	/*
 	 * Reserve/grow
 	 */
 	sms_reserve(&s_i32, 1000);
 	sms_grow(&s_u32, 1000 - sms_max_size(s_u32));
-	res |= (sms_capacity(s_i32) >= 1000 &&
-		sms_capacity(s_u32) >= 1000 &&
-		sms_capacity_left(s_i32) >= 997 &&
-		sms_capacity_left(s_u32) >= 997 ? 0 : 1<<17);
+	res |= (sms_capacity(s_i32) >= 1000 && sms_capacity(s_u32) >= 1000
+				&& sms_capacity_left(s_i32) >= 997
+				&& sms_capacity_left(s_u32) >= 997
+			? 0
+			: 1 << 17);
 	/*
 	 * Shrink memory
 	 */
 	sms_shrink(&s_i32);
 	sms_shrink(&s_u32);
-	res |= (sms_capacity(s_i32) == 3 &&
-		sms_capacity(s_u32) == 3 &&
-		sms_capacity_left(s_i32) == 0 &&
-		sms_capacity_left(s_u32) == 0 ? 0 : 1<<18);
+	res |= (sms_capacity(s_i32) == 3 && sms_capacity(s_u32) == 3
+				&& sms_capacity_left(s_i32) == 0
+				&& sms_capacity_left(s_u32) == 0
+			? 0
+			: 1 << 18);
 	/*
 	 * Random access
 	 */
-	res |= (sms_it_i32(s_i32, 0) == 10 &&
-		sms_it_i32(s_i32, 1) == 11 &&
-		sms_it_i32(s_i32, 2) == 12 ? 0 : 1<<19);
-	res |= (sms_it_u32(s_u32, 0) == 20 &&
-		sms_it_u32(s_u32, 1) == 21 &&
-		sms_it_u32(s_u32, 2) == 22 ? 0 : 1<<20);
-	res |= (sms_it_i(s_i, 0) == 0 &&
-		sms_it_i(s_i, 1) == 1 &&
-		sms_it_i(s_i, 2) == 2 ? 0 : 1<<21);
-	res |= (!ss_cmp(sms_it_s(s_s, 0), k[0]) &&
-		!ss_cmp(sms_it_s(s_s, 1), k[1]) &&
-		!ss_cmp(sms_it_s(s_s, 2), k[2]) ? 0 : 1<<22);
+	res |= (sms_it_i32(s_i32, 0) == 10 && sms_it_i32(s_i32, 1) == 11
+				&& sms_it_i32(s_i32, 2) == 12
+			? 0
+			: 1 << 19);
+	res |= (sms_it_u32(s_u32, 0) == 20 && sms_it_u32(s_u32, 1) == 21
+				&& sms_it_u32(s_u32, 2) == 22
+			? 0
+			: 1 << 20);
+	res |= (sms_it_i(s_i, 0) == 0 && sms_it_i(s_i, 1) == 1
+				&& sms_it_i(s_i, 2) == 2
+			? 0
+			: 1 << 21);
+	res |= (!ss_cmp(sms_it_s(s_s, 0), k[0])
+				&& !ss_cmp(sms_it_s(s_s, 1), k[1])
+				&& !ss_cmp(sms_it_s(s_s, 2), k[2])
+			? 0
+			: 1 << 22);
 	/*
 	 * Delete
 	 */
@@ -3851,8 +4149,11 @@ static int test_sms()
 	sms_delete_i(s_u32, 20);
 	sms_delete_i(s_i, 0);
 	sms_delete_s(s_s, k[1]);
-	res |= (!sms_count_i(s_i32, 10) && !sms_count_i(s_u32, 20) &&
-		!sms_count_i(s_i, 0) && !sms_count_s(s_s, k[1]) ? 0 : 1<<23);
+	res |= (!sms_count_i(s_i32, 10) && !sms_count_i(s_u32, 20)
+				&& !sms_count_i(s_i, 0)
+				&& !sms_count_s(s_s, k[1])
+			? 0
+			: 1 << 23);
 	/*
 	 * Release memory
 	 */
@@ -3893,7 +4194,7 @@ static int test_endianess()
 static int test_alignment()
 {
 	int res = 0;
-	char ac[sizeof(uint32_t)] = { 0 }, bc[sizeof(uint32_t)] = { 0 },
+	char ac[sizeof(uint32_t)] = {0}, bc[sizeof(uint32_t)] = {0},
 	     cc[sizeof(size_t)], dd[sizeof(uint64_t)];
 	unsigned a = 0x12345678, b = 0x87654321;
 	size_t c = ((size_t)-1) & a;
@@ -3911,64 +4212,54 @@ static int test_alignment()
 
 static int test_lsb_msb()
 {
-	uint8_t tv8[9] =
-		{ 0x00, 0x01, 0x0f, 0x01, 0x0f, 0x80, 0xf0, 0x80, 0xf0 },
-		tv8l[9] =
-		{ 0x00, 0x01, 0x01, 0x01, 0x01, 0x80, 0x10, 0x80, 0x10 },
-		tv8m[9] =
-		{ 0x00, 0x01, 0x08, 0x01, 0x08, 0x80, 0x80, 0x80, 0x80 };
-	uint16_t tv16[9] =
-		{ 0x0000, 0x0001, 0x000f, 0x0ff1, 0x0fff, 0x8000, 0xf000,
-		  0x8ff0, 0xfff0 },
-		 tv16l[9] =
-		{ 0x0000, 0x0001, 0x0001, 0x0001, 0x0001, 0x8000, 0x1000,
-		  0x0010, 0x0010 },
-		 tv16m[9] =
-		{ 0x0000, 0x0001, 0x0008, 0x0800, 0x0800, 0x8000, 0x8000,
-		  0x8000, 0x8000 };
-	uint32_t tv32[9] =
-		{ 0x00000000, 0x00000001, 0x0000000f, 0x0ffffff1, 0x0fffffff,
-		  0x80000000, 0xf0000000, 0x8ffffff0, 0xfffffff0 },
-		 tv32l[9] =
-		{ 0x00000000, 0x00000001, 0x00000001, 0x00000001, 0x00000001,
-		  0x80000000, 0x10000000, 0x00000010, 0x00000010 },
-		 tv32m[9] =
-		{ 0x00000000, 0x00000001, 0x00000008, 0x08000000, 0x08000000,
-		  0x80000000, 0x80000000, 0x80000000, 0x80000000 };
-	uint64_t tv64[9] =
-		{ 0x0000000000000000LL, 0x0000000000000001LL,
-		  0x000000000000000fLL,
-		  0x0ffffffffffffff1LL, 0x0fffffffffffffffLL,
-		  0x8000000000000000LL,
-		  0xf000000000000000LL, 0x8ffffffffffffff0LL,
-		  0xfffffffffffffff0LL },
-		 tv64l[9] =
-		{ 0x0000000000000000LL, 0x0000000000000001LL,
-		  0x0000000000000001LL,
-		  0x0000000000000001LL, 0x0000000000000001LL,
-		  0x8000000000000000LL,
-		  0x1000000000000000LL, 0x0000000000000010LL,
-		  0x0000000000000010LL },
-		 tv64m[9] =
-		{ 0x0000000000000000LL, 0x0000000000000001LL,
-		  0x0000000000000008LL,
-		  0x0800000000000000LL, 0x0800000000000000LL,
-		  0x8000000000000000LL,
-		  0x8000000000000000LL, 0x8000000000000000LL,
-		  0x8000000000000000LL };
+	uint8_t tv8[9] = {0x00, 0x01, 0x0f, 0x01, 0x0f, 0x80, 0xf0, 0x80, 0xf0},
+		tv8l[9] = {0x00, 0x01, 0x01, 0x01, 0x01,
+			   0x80, 0x10, 0x80, 0x10},
+		tv8m[9] = {0x00, 0x01, 0x08, 0x01, 0x08,
+			   0x80, 0x80, 0x80, 0x80};
+	uint16_t tv16[9] = {0x0000, 0x0001, 0x000f, 0x0ff1, 0x0fff,
+			    0x8000, 0xf000, 0x8ff0, 0xfff0},
+		 tv16l[9] = {0x0000, 0x0001, 0x0001, 0x0001, 0x0001,
+			     0x8000, 0x1000, 0x0010, 0x0010},
+		 tv16m[9] = {0x0000, 0x0001, 0x0008, 0x0800, 0x0800,
+			     0x8000, 0x8000, 0x8000, 0x8000};
+	uint32_t tv32[9] = {0x00000000, 0x00000001, 0x0000000f,
+			    0x0ffffff1, 0x0fffffff, 0x80000000,
+			    0xf0000000, 0x8ffffff0, 0xfffffff0},
+		 tv32l[9] = {0x00000000, 0x00000001, 0x00000001,
+			     0x00000001, 0x00000001, 0x80000000,
+			     0x10000000, 0x00000010, 0x00000010},
+		 tv32m[9] = {0x00000000, 0x00000001, 0x00000008,
+			     0x08000000, 0x08000000, 0x80000000,
+			     0x80000000, 0x80000000, 0x80000000};
+	uint64_t tv64[9] = {0x0000000000000000LL, 0x0000000000000001LL,
+			    0x000000000000000fLL, 0x0ffffffffffffff1LL,
+			    0x0fffffffffffffffLL, 0x8000000000000000LL,
+			    0xf000000000000000LL, 0x8ffffffffffffff0LL,
+			    0xfffffffffffffff0LL},
+		 tv64l[9] = {0x0000000000000000LL, 0x0000000000000001LL,
+			     0x0000000000000001LL, 0x0000000000000001LL,
+			     0x0000000000000001LL, 0x8000000000000000LL,
+			     0x1000000000000000LL, 0x0000000000000010LL,
+			     0x0000000000000010LL},
+		 tv64m[9] = {0x0000000000000000LL, 0x0000000000000001LL,
+			     0x0000000000000008LL, 0x0800000000000000LL,
+			     0x0800000000000000LL, 0x8000000000000000LL,
+			     0x8000000000000000LL, 0x8000000000000000LL,
+			     0x8000000000000000LL};
 	int res = 0;
 	size_t i;
-	#define LSBMSB_TEST(tvx, tvxl, tvxm, lsb, msb, err)		\
-		for (i = 0; i < sizeof(tvx)/sizeof(tvx[0]); i++)	\
-		if (lsb(tvx[i]) != tvxl[i] || msb(tvx[i]) != tvxm[i]) {	\
-			res |= err;					\
-			break;						\
+#define LSBMSB_TEST(tvx, tvxl, tvxm, lsb, msb, err)                            \
+	for (i = 0; i < sizeof(tvx) / sizeof(tvx[0]); i++)                     \
+		if (lsb(tvx[i]) != tvxl[i] || msb(tvx[i]) != tvxm[i]) {        \
+			res |= err;                                            \
+			break;                                                 \
 		}
-	LSBMSB_TEST(tv8, tv8l, tv8m, s_lsb8, s_msb8, 1<<0)
-	LSBMSB_TEST(tv16, tv16l, tv16m, s_lsb16, s_msb16, 1<<1)
-	LSBMSB_TEST(tv32, tv32l, tv32m, s_lsb32, s_msb32, 1<<2)
-	LSBMSB_TEST(tv64, tv64l, tv64m, s_lsb64, s_msb64, 1<<3)
-	#undef LSBMSB_TEST
+	LSBMSB_TEST(tv8, tv8l, tv8m, s_lsb8, s_msb8, 1 << 0)
+	LSBMSB_TEST(tv16, tv16l, tv16m, s_lsb16, s_msb16, 1 << 1)
+	LSBMSB_TEST(tv32, tv32l, tv32m, s_lsb32, s_msb32, 1 << 2)
+	LSBMSB_TEST(tv64, tv64l, tv64m, s_lsb64, s_msb64, 1 << 3)
+#undef LSBMSB_TEST
 	return res;
 }
 
@@ -4037,8 +4328,8 @@ static int test_smemset()
 {
 	int res = 0, i;
 	uint8_t p64[64];
-	uint8_t v16[2] = { 0x01, 0x23 };
-	uint8_t v24[3] = { 0x01, 0x23, 0x45 };
+	uint8_t v16[2] = {0x01, 0x23};
+	uint8_t v24[3] = {0x01, 0x23, 0x45};
 	uint32_t v32 = 0x01234567;
 	uint64_t v64 = 0x0123456789abcdefLL;
 	for (i = 0; i < 32; i++) {
@@ -4052,13 +4343,11 @@ static int test_smemset()
 			res |= 1 << i;
 		memset(p64, 0, sizeof(p64));
 		s_memset24(&p64[i], v24, 2);
-		if (!memcpy(&p64[i], v24, 3) &&
-			!memcpy(&p64[i] + 3, v24, 3))
+		if (!memcpy(&p64[i], v24, 3) && !memcpy(&p64[i] + 3, v24, 3))
 			res |= 1 << i;
 		memset(p64, 0, sizeof(p64));
 		s_memset16(&p64[i], v16, 2);
-		if (!memcpy(&p64[i], v16, 2) &&
-			!memcpy(&p64[i] + 2, v16, 2))
+		if (!memcpy(&p64[i], v16, 2) && !memcpy(&p64[i] + 2, v16, 2))
 			res |= 1 << i;
 	}
 	return res;
@@ -4071,10 +4360,14 @@ static int test_smemset()
 int main()
 {
 	STEST_START;
-	const char *utf8[] = { "a", "$", U8_CENT_00A2, U8_EURO_20AC,
-			       U8_HAN_24B62, U8_C_N_TILDE_D1,
-			       U8_S_N_TILDE_F1 };
-	const int32_t uc[] = { 'a', '$', 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1 };
+	const char *utf8[] = {"a",
+			      "$",
+			      U8_CENT_00A2,
+			      U8_EURO_20AC,
+			      U8_HAN_24B62,
+			      U8_C_N_TILDE_D1,
+			      U8_S_N_TILDE_F1};
+	const int32_t uc[] = {'a', '$', 0xa2, 0x20ac, 0x24b62, 0xd1, 0xf1};
 	unsigned i = 0;
 	char btmp1[400], btmp2[400];
 	srt_string *co;
@@ -4084,10 +4377,10 @@ int main()
 		ss_crefa("111111111111111111111111111111111111"),
 		ss_crefa("121212121212121212121212121212121212"),
 		ss_crefa("123123123123123123123123123123123123"),
-		ss_crefa("123412341234123412341234123412341234") };
+		ss_crefa("123412341234123412341234123412341234")};
 	srt_string *stmp;
 	srt_bool unicode_support = S_TRUE;
-	wint_t check[] = { 0xc0, 0x23a, 0x10a0, 0x1e9e };
+	wint_t check[] = {0xc0, 0x23a, 0x10a0, 0x1e9e};
 	size_t chkl = 0;
 #ifdef GOOD_LOCALE_SUPPORT
 	unsigned wchar_range;
@@ -4101,13 +4394,14 @@ int main()
 #else
 	setlocale(LC_ALL, "");
 #endif
-	for (; chkl < sizeof(check)/sizeof(check[0]); chkl++)
+	for (; chkl < sizeof(check) / sizeof(check[0]); chkl++)
 		if (towlower(check[chkl]) == check[chkl]) {
 			unicode_support = S_FALSE;
 			break;
 		}
 	if (!unicode_support) {
-		fprintf(stderr, "warning: OS without full built-in Unicode "
+		fprintf(stderr,
+			"warning: OS without full built-in Unicode "
 			"support (not required by libsrt, but used for "
 			"some tests -those will be skipped-)\n");
 	}
@@ -4149,34 +4443,38 @@ int main()
 	STEST_ASSERT(test_ss_erase_u("abcde", 2, 10000, "ab"));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 5, ""));
 	STEST_ASSERT(test_ss_erase_u("abcde", 0, 10000, ""));
-	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 1,
-				     2, U8_C_N_TILDE_D1));
-	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 2,
-				     1, U8_C_N_TILDE_D1 "a"));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 1, 2,
+				     U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 2, 1,
+				     U8_C_N_TILDE_D1 "a"));
 	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 "a" U8_C_N_TILDE_D1, 2,
 				     1000, U8_C_N_TILDE_D1 "a"));
-	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 1,
-				     2, U8_C_N_TILDE_D1));
-	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 2,
-				     1, U8_C_N_TILDE_D1 U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 1, 2,
+				     U8_C_N_TILDE_D1));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 2, 1,
+				     U8_C_N_TILDE_D1 U8_C_N_TILDE_D1));
 	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 2,
 				     1000, U8_C_N_TILDE_D1 U8_C_N_TILDE_D1));
-	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 0,
-				     1, U8_C_N_TILDE_D1 "a"));
+	STEST_ASSERT(test_ss_erase_u(U8_C_N_TILDE_D1 U8_C_N_TILDE_D1 "a", 0, 1,
+				     U8_C_N_TILDE_D1 "a"));
 	STEST_ASSERT(test_ss_free(0));
 	STEST_ASSERT(test_ss_free(16));
 	STEST_ASSERT(test_ss_len("hello", 5));
 	STEST_ASSERT(test_ss_len(U8_HAN_24B62, 4));
-	STEST_ASSERT(test_ss_len(U8_C_N_TILDE_D1 U8_S_N_TILDE_F1
-		U8_S_I_DOTLESS_131 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E
-		U8_S_G_BREVE_11F U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
-		U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62, 25)); /* bytes */
+	STEST_ASSERT(test_ss_len(
+		U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
+			U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
+				U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
+					U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62,
+		25)); /* bytes */
 	STEST_ASSERT(test_ss_len_u("hello" U8_C_N_TILDE_D1, 6));
 	STEST_ASSERT(test_ss_len_u(U8_HAN_24B62, 1));
-	STEST_ASSERT(test_ss_len_u(U8_C_N_TILDE_D1 U8_S_N_TILDE_F1
-		U8_S_I_DOTLESS_131 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E
-		U8_S_G_BREVE_11F U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
-		U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62, 11)); /* Unicode chrs */
+	STEST_ASSERT(test_ss_len_u(
+		U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
+			U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
+				U8_C_S_CEDILLA_15E U8_S_S_CEDILLA_15F
+					U8_CENT_00A2 U8_EURO_20AC U8_HAN_24B62,
+		11)); /* Unicode chrs */
 	STEST_ASSERT(test_ss_capacity());
 	STEST_ASSERT(test_ss_len_left());
 	STEST_ASSERT(test_ss_max());
@@ -4192,28 +4490,30 @@ int main()
 	STEST_ASSERT(test_ss_dup_int(-1, "-1"));
 	STEST_ASSERT(test_ss_dup_int(2147483647, "2147483647"));
 	STEST_ASSERT(test_ss_dup_int(-2147483647, "-2147483647"));
-	STEST_ASSERT(test_ss_dup_int(9223372036854775807LL,
-				     "9223372036854775807"));
+	STEST_ASSERT(
+		test_ss_dup_int(9223372036854775807LL, "9223372036854775807"));
 	STEST_ASSERT(test_ss_dup_int(-9223372036854775807LL,
 				     "-9223372036854775807"));
 	stmp = ss_alloca(128);
-#define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b) {		\
-	STEST_ASSERT(test_ss_dup_##encc(a, b));			\
-	STEST_ASSERT(test_ss_cpy_##encc(a, b)); 		\
-	ss_cpy_c(&stmp, "abc");					\
-	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("abc"), a,	\
-					ss_cat(&stmp, b)));	\
-	ss_cpy_c(&stmp, "ABC");					\
-	STEST_ASSERT(test_ss_cat_##encc(ss_crefa("ABC"),	\
-					a, ss_cat(&stmp, b)));	\
-	STEST_ASSERT(test_ss_dup_##decc(b, a));			\
-	STEST_ASSERT(test_ss_cpy_##decc(b, a)); 		\
-	ss_cpy_c(&stmp, "abc");					\
-	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("abc"),	\
-					b, ss_cat(&stmp, a)));	\
-	ss_cpy_c(&stmp, "ABC");					\
-	STEST_ASSERT(test_ss_cat_##decc(ss_crefa("ABC"),	\
-					b, ss_cat(&stmp, a))); }
+#define MK_TEST_SS_DUP_CPY_CAT(encc, decc, a, b)                               \
+	{                                                                      \
+		STEST_ASSERT(test_ss_dup_##encc(a, b));                        \
+		STEST_ASSERT(test_ss_cpy_##encc(a, b));                        \
+		ss_cpy_c(&stmp, "abc");                                        \
+		STEST_ASSERT(test_ss_cat_##encc(ss_crefa("abc"), a,            \
+						ss_cat(&stmp, b)));            \
+		ss_cpy_c(&stmp, "ABC");                                        \
+		STEST_ASSERT(test_ss_cat_##encc(ss_crefa("ABC"), a,            \
+						ss_cat(&stmp, b)));            \
+		STEST_ASSERT(test_ss_dup_##decc(b, a));                        \
+		STEST_ASSERT(test_ss_cpy_##decc(b, a));                        \
+		ss_cpy_c(&stmp, "abc");                                        \
+		STEST_ASSERT(test_ss_cat_##decc(ss_crefa("abc"), b,            \
+						ss_cat(&stmp, a)));            \
+		ss_cpy_c(&stmp, "ABC");                                        \
+		STEST_ASSERT(test_ss_cat_##decc(ss_crefa("ABC"), b,            \
+						ss_cat(&stmp, a)));            \
+	}
 
 	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, ss_crefa("HELLO"),
 			       ss_crefa("hello"));
@@ -4260,7 +4560,7 @@ int main()
 	}
 	STEST_ASSERT(test_ss_dup_erase("hello", 2, 2, "heo"));
 	STEST_ASSERT(test_ss_dup_erase_u());
-        STEST_ASSERT(test_ss_dup_replace("hello", "ll", "*LL*", "he*LL*o"));
+	STEST_ASSERT(test_ss_dup_replace("hello", "ll", "*LL*", "he*LL*o"));
 	STEST_ASSERT(test_ss_dup_resize());
 	STEST_ASSERT(test_ss_dup_resize_u());
 	STEST_ASSERT(test_ss_dup_trim("  hello  ", "hello"));
@@ -4287,8 +4587,8 @@ int main()
 	STEST_ASSERT(test_ss_cpy_int(-1, "-1"));
 	STEST_ASSERT(test_ss_cpy_int(2147483647, "2147483647"));
 	STEST_ASSERT(test_ss_cpy_int(-2147483647, "-2147483647"));
-	STEST_ASSERT(test_ss_cpy_int(9223372036854775807LL,
-				     "9223372036854775807"));
+	STEST_ASSERT(
+		test_ss_cpy_int(9223372036854775807LL, "9223372036854775807"));
 	STEST_ASSERT(test_ss_cpy_int(-9223372036854775807LL,
 				     "-9223372036854775807"));
 	STEST_ASSERT(test_ss_cpy_erase("hello", 2, 2, "heo"));
@@ -4301,7 +4601,7 @@ int main()
 	STEST_ASSERT(test_ss_cpy_rtrim("  hello  ", "  hello"));
 	STEST_ASSERT(test_ss_cpy_printf());
 	STEST_ASSERT(test_ss_cpy_printf_va("abc1helloFFFFFFFF", 512,
-	       			    "abc%i%s%08X", 1, "hello", -1));
+					   "abc%i%s%08X", 1, "hello", -1));
 	STEST_ASSERT(test_ss_cpy_char('a', "a"));
 	STEST_ASSERT(test_ss_cpy_char(0x24b62, U8_HAN_24B62));
 	STEST_ASSERT(test_ss_cat("hello", "all"));
@@ -4318,8 +4618,8 @@ int main()
 	STEST_ASSERT(test_ss_cat_int("prefix", 1, "prefix1"));
 	STEST_ASSERT(test_ss_cat_erase("x", "hello", 2, 2, "xheo"));
 	STEST_ASSERT(test_ss_cat_erase_u());
-	STEST_ASSERT(test_ss_cat_replace("x", "hello", "ll", "*LL*",
-					 "xhe*LL*o"));
+	STEST_ASSERT(
+		test_ss_cat_replace("x", "hello", "ll", "*LL*", "xhe*LL*o"));
 	STEST_ASSERT(test_ss_cat_resize());
 	STEST_ASSERT(test_ss_cat_resize_u());
 	STEST_ASSERT(test_ss_cat_trim("aaa", " hello ", "aaahello"));
@@ -4338,29 +4638,25 @@ int main()
 	STEST_ASSERT(test_ss_toupper(U8_S_N_TILDE_F1, U8_C_N_TILDE_D1));
 	STEST_ASSERT(!ss_set_turkish_mode(1));
 	STEST_ASSERT(test_ss_tolower("I", U8_S_I_DOTLESS_131));
-	STEST_ASSERT(test_ss_tolower("III", U8_S_I_DOTLESS_131 \
-					    U8_S_I_DOTLESS_131 \
-					    U8_S_I_DOTLESS_131));
+	STEST_ASSERT(test_ss_tolower(
+		"III",
+		U8_S_I_DOTLESS_131 U8_S_I_DOTLESS_131 U8_S_I_DOTLESS_131));
 	STEST_ASSERT(test_ss_toupper(U8_S_I_DOTLESS_131, "I"));
 	STEST_ASSERT(test_ss_tolower(U8_C_I_DOTTED_130, "i"));
 	STEST_ASSERT(test_ss_toupper("i", U8_C_I_DOTTED_130));
 	STEST_ASSERT(test_ss_tolower(U8_C_G_BREVE_11E, U8_S_G_BREVE_11F));
 	STEST_ASSERT(test_ss_toupper(U8_S_G_BREVE_11F, U8_C_G_BREVE_11E));
-	STEST_ASSERT(test_ss_tolower(U8_C_S_CEDILLA_15E,
-				     U8_S_S_CEDILLA_15F));
-	STEST_ASSERT(test_ss_toupper(U8_S_S_CEDILLA_15F,
-				     U8_C_S_CEDILLA_15E));
+	STEST_ASSERT(test_ss_tolower(U8_C_S_CEDILLA_15E, U8_S_S_CEDILLA_15F));
+	STEST_ASSERT(test_ss_toupper(U8_S_S_CEDILLA_15F, U8_C_S_CEDILLA_15E));
 	STEST_ASSERT(!ss_set_turkish_mode(0));
 #endif
 	STEST_ASSERT(test_ss_clear(""));
 	STEST_ASSERT(test_ss_clear("hello"));
 	STEST_ASSERT(test_ss_check());
-	STEST_ASSERT(test_ss_replace("where are you? where are we?", 0,
-				      "where", "who",
-				      "who are you? who are we?"));
-	STEST_ASSERT(test_ss_replace("who are you? who are we?", 0,
-				      "who", "where",
-				      "where are you? where are we?"));
+	STEST_ASSERT(test_ss_replace("where are you? where are we?", 0, "where",
+				     "who", "who are you? who are we?"));
+	STEST_ASSERT(test_ss_replace("who are you? who are we?", 0, "who",
+				     "where", "where are you? where are we?"));
 	STEST_ASSERT(test_ss_to_c(""));
 	STEST_ASSERT(test_ss_to_c("hello"));
 	STEST_ASSERT(test_ss_to_w(""));
@@ -4411,41 +4707,43 @@ int main()
 		STEST_ASSERT(test_sc_utf8_to_wc(utf8[i], uc[i]));
 		STEST_ASSERT(test_sc_wc_to_utf8(uc[i], utf8[i]));
 	}
-	/*
-	 * Windows require specific locale for doing case conversions properly
-	 */
+		/*
+		 * Windows require specific locale for doing case conversions
+		 * properly
+		 */
 #ifdef GOOD_LOCALE_SUPPORT
 	if (unicode_support) {
-		wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff :
-						     0x3fffff;
+		wchar_range = sizeof(wchar_t) == 2 ? 0xd7ff : 0x3fffff;
 		test_tolower = 0;
 		for (i = 0; i <= wchar_range; i++) {
 			l0 = (int32_t)towlower((wint_t)i);
 			l = sc_tolower((int)i);
 			if (l != l0) {
-				fprintf(stderr, "Warning: sc_tolower(%x): %x "
-					"[%x system reported]\n", i,
-					(unsigned)l, (unsigned)l0);
+				fprintf(stderr,
+					"Warning: sc_tolower(%x): %x "
+					"[%x system reported]\n",
+					i, (unsigned)l, (unsigned)l0);
 				test_tolower++;
 			}
 		}
-	#if 0 /* do not break the build if system has no full Unicode support */
+#if 0 /* do not break the build if system has no full Unicode support */
 		STEST_ASSERT(test_tolower);
-	#endif
+#endif
 		test_toupper = 0;
 		for (i = 0; i <= wchar_range; i++) {
 			u0 = (int32_t)towupper((wint_t)i);
 			u = sc_toupper((int)i);
 			if (u != u0) {
-				fprintf(stderr, "Warning sc_toupper(%x): %x "
-					"[%x system reported]\n", i,
-					(unsigned)u, (unsigned)u0);
+				fprintf(stderr,
+					"Warning sc_toupper(%x): %x "
+					"[%x system reported]\n",
+					i, (unsigned)u, (unsigned)u0);
 				test_toupper++;
 			}
 		}
-	#if 0 /* do not break the build if system has no full Unicode support */
+#if 0 /* do not break the build if system has no full Unicode support */
 		STEST_ASSERT(test_toupper);
-	#endif
+#endif
 	}
 #endif /* #ifndef _MSC_VER */
 	/*
@@ -4527,7 +4825,7 @@ int main()
 		(unsigned)sizeof(struct SDataSmall));
 	fprintf(stderr, "sizeof(srt_string): %u (full mode)\n",
 		(unsigned)sizeof(srt_string));
-        fprintf(stderr, "max srt_string string length: " FMT_ZU "\n", SS_RANGE);
+	fprintf(stderr, "max srt_string string length: " FMT_ZU "\n", SS_RANGE);
 	fprintf(stderr, "sizeof(srt_bitset): %u\n",
 		(unsigned)sizeof(srt_bitset));
 	fprintf(stderr, "sizeof(srt_vector): %u\n",
@@ -4537,4 +4835,3 @@ int main()
 #endif
 	return STEST_END;
 }
-

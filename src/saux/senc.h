@@ -68,7 +68,6 @@ size_t sdec_lz(const uint8_t *s, const size_t ss, uint8_t *o);
 #define sdec_b16 sdec_hex
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SENC_H */
-
+#endif /* SENC_H */

@@ -12,11 +12,19 @@
 const char *sv_type_to_label(const enum eSV_Type t)
 {
 	switch (t) {
-		#define CXSV(t) case t: return #t
-		CXSV(SV_I8); CXSV(SV_U8); CXSV(SV_I16); CXSV(SV_U16);
-		CXSV(SV_I32); CXSV(SV_U32); CXSV(SV_I64); CXSV(SV_U64);
+#define CXSV(t)                                                                \
+	case t:                                                                \
+		return #t
+		CXSV(SV_I8);
+		CXSV(SV_U8);
+		CXSV(SV_I16);
+		CXSV(SV_U16);
+		CXSV(SV_I32);
+		CXSV(SV_U32);
+		CXSV(SV_I64);
+		CXSV(SV_U64);
 		CXSV(SV_GEN);
-		#undef CXSV
+#undef CXSV
 	}
 	return "?";
 }
@@ -33,13 +41,15 @@ void sv_log_obj(srt_string **log, const srt_vector *v)
 	elems = sd_size((const srt_data *)v);
 	t = v ? (enum eSV_Type)v->d.sub_type : SV_GEN;
 	elem_size = v ? v->d.elem_size : 0;
-	ss_cat_printf(log, 512, "srt_vector: t: %s, elem size: " FMT_ZU ", sz: "
-		      FMT_ZU ", { ", sv_type_to_label(t), elem_size, elems);
+	ss_cat_printf(log, 512,
+		      "srt_vector: t: %s, elem size: " FMT_ZU ", sz: " FMT_ZU
+		      ", { ",
+		      sv_type_to_label(t), elem_size, elems);
 	i = 0;
 	aux = ss_alloca(elem_size * 2);
 	buf = (const char *)sv_get_buffer_r(v);
 	for (; i < elems; i++) {
-		ss_cpy_cn(&aux, buf + i * elem_size , elem_size);
+		ss_cpy_cn(&aux, buf + i * elem_size, elem_size);
 		ss_cat_enc_hex(log, aux);
 		if (i + 1 < elems)
 			ss_cat_cn(log, ", ", 2);
@@ -47,8 +57,7 @@ void sv_log_obj(srt_string **log, const srt_vector *v)
 	ss_cat_c(log, " }\n");
 }
 
-struct st_log_context_data
-{
+struct st_log_context_data {
 	srt_string **log;
 	ss_cat_stn tf;
 };
@@ -56,12 +65,11 @@ struct st_log_context_data
 static int aux_st_log_traverse(struct STraverseParams *tp)
 {
 	struct st_log_context_data *d =
-				(struct st_log_context_data *)tp->context;
+		(struct st_log_context_data *)tp->context;
 	if (tp->c == ST_NIL) {
 		ss_cat_printf(d->log, 128, "\nLevel: %u\n",
 			      (unsigned)tp->level);
-	}
-	else {
+	} else {
 		const srt_tnode *cn = get_node_r(tp->t, tp->c);
 		d->tf(d->log, cn, tp->c);
 		ss_cat_c(d->log, " ");
@@ -72,12 +80,11 @@ static int aux_st_log_traverse(struct STraverseParams *tp)
 void st_log_obj(srt_string **log, const srt_tree *t, ss_cat_stn f)
 {
 	ssize_t levels;
-	struct st_log_context_data context = { log, f };
+	struct st_log_context_data context = {log, f};
 	if (!log)
 		return;
 	ss_cpy_c(log, "");
-	levels = st_traverse_levelorder(t, aux_st_log_traverse,
-						&context);
+	levels = st_traverse_levelorder(t, aux_st_log_traverse, &context);
 	if (levels == 0)
 		ss_cat_c(log, "empty tree");
 	else
@@ -141,23 +148,21 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 			ss_to_c(SMStrGet(&((const struct SMapIS *)cn)->v)));
 		break;
 	case SM_IP:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapIP *)cn)->v);
+		sprintf(k, "%p", (const void *)((const struct SMapIP *)cn)->v);
 		break;
 	case SM_SS:
 		sprintf(k, "%s",
 			ss_to_c(SMStrGet(&((const struct SMapSS *)cn)->v)));
 		break;
 	case SM_SP:
-		sprintf(k, "%p",
-			(const void *)((const struct SMapSP *)cn)->v);
+		sprintf(k, "%p", (const void *)((const struct SMapSP *)cn)->v);
 		break;
 	}
 	ndx2s(id, sizeof(id), tp->c);
 	ndx2s(l, sizeof(l), cn->x.l);
 	ndx2s(r, sizeof(r), cn->r);
-	ss_cat_printf(log, 128, "[%s: (%s, %s) -> (%s, %s; r:%u)] ",
-		id, k, v, l, r, cn->x.is_red);
+	ss_cat_printf(log, 128, "[%s: (%s, %s) -> (%s, %s; r:%u)] ", id, k, v,
+		      l, r, cn->x.is_red);
 	return 0;
 }
 
@@ -167,9 +172,8 @@ void sm_log_obj(srt_string **log, const srt_map *m)
 	if (!log)
 		return;
 	ss_cpy_c(log, "");
-	levels = st_traverse_levelorder(
-				(const srt_tree *)m,
-				(st_traverse)aux_sm_log_traverse, log);
+	levels = st_traverse_levelorder((const srt_tree *)m,
+					(st_traverse)aux_sm_log_traverse, log);
 	if (levels == 0)
 		ss_cat_c(log, "empty map");
 	else
@@ -190,4 +194,3 @@ void s_hex_dump(srt_string **log, const char *label, const char *buf,
 	ss_cat_enc_hex(log, aux);
 	ss_free(&aux);
 }
-

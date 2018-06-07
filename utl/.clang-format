@@ -1,0 +1,33 @@
+---
+Language: Cpp
+# BasedOnStyle: LLVM
+# AccessModifierOffset: -2
+AlignAfterOpenBracket: true
+# AlignConsecutiveAssignments: false
+# AlignConsecutiveDeclarations: false
+# AlignEscapedNewlines: Right
+# AlignOperands: true
+AlignEscapedNewlinesLeft: false
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false
+# AllowShortBlocksOnASingleLine: false
+# AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+# AlwaysBreakAfterDefinitionReturnType: None
+# AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+BreakBeforeBinaryOperators: NonAssignment
+BreakBeforeBraces: Linux
+# BreakBeforeTernaryOperators: true
+BreakStringLiterals: false
+# BreakStringLiterals: true
+ContinuationIndentWidth: 8
+IndentCaseLabels: false
+IndentWidth: 8
+MaxEmptyLinesToKeep: 1
+SortIncludes: true
+SpaceAfterCStyleCast: false
+UseTab: Always
+TabWidth: 8

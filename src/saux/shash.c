@@ -13,7 +13,7 @@
  * Constants
  */
 
-#define S_CRC32_POLY	0xedb88320
+#define S_CRC32_POLY 0xedb88320
 
 /*
  * CRC-32 implementations
@@ -48,6 +48,26 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 
 #include "scrc32.h"
 
+#define S_U32_BYTE0(a) ((a)&0xff)
+#define S_U32_BYTE1(a) (((a) >> 8) & 0xff)
+#define S_U32_BYTE2(a) (((a) >> 16) & 0xff)
+#define S_U32_BYTE3(a) (((a) >> 24) & 0xff)
+#if S_CRC32_SLC == 4
+#define SC32A a
+#elif S_CRC32_SLC == 8
+#define SC32A b
+#define SC32B a
+#elif S_CRC32_SLC == 12
+#define SC32A c
+#define SC32B b
+#define SC32C a
+#else
+#define SC32A d
+#define SC32B c
+#define SC32C b
+#define SC32D a
+#endif
+
 /*
  * 1, 4, 8, 12, and 16 bytes per loop using 1024 to 16384 bytes table
  */
@@ -59,62 +79,46 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 	i = 0;
 	p = (const uint8_t *)buf;
 	crc = ~crc;
-#if (S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12 ||	  \
-    S_CRC32_SLC == 16)
-	#define S_U32_BYTE0(a) ((a) & 0xff)
-	#define S_U32_BYTE1(a) (((a) >> 8) & 0xff)
-	#define S_U32_BYTE2(a) (((a) >> 16) & 0xff)
-	#define S_U32_BYTE3(a) (((a) >> 24) & 0xff)
+#if (S_CRC32_SLC == 4 || S_CRC32_SLC == 8 || S_CRC32_SLC == 12                 \
+     || S_CRC32_SLC == 16)
 	bsX = (buf_size / S_CRC32_SLC) * S_CRC32_SLC;
 	for (; i < bsX; i += S_CRC32_SLC) {
 		uint32_t a = S_LD_LE_U32(p + i) ^ crc
-	#if S_CRC32_SLC >= 8
-		       , b = S_LD_LE_U32(p + i + 4)
-	#endif
-	#if S_CRC32_SLC >= 12
-		       , c = S_LD_LE_U32(p + i + 8)
-	#endif
-	#if S_CRC32_SLC == 16
-		       , d = S_LD_LE_U32(p + i + 12)
-	#endif
+#if S_CRC32_SLC >= 8
+			,
+			 b = S_LD_LE_U32(p + i + 4)
+#endif
+#if S_CRC32_SLC >= 12
+				 ,
+			 c = S_LD_LE_U32(p + i + 8)
+#endif
+#if S_CRC32_SLC == 16
+				 ,
+			 d = S_LD_LE_U32(p + i + 12)
+#endif
 			;
-	#if S_CRC32_SLC == 4
-		#define SC32A a
-	#elif S_CRC32_SLC == 8
-		#define SC32A b
-		#define SC32B a
-	#elif S_CRC32_SLC == 12
-		#define SC32A c
-		#define SC32B b
-		#define SC32C a
-	#else
-		#define SC32A d
-		#define SC32B c
-		#define SC32C b
-		#define SC32D a
-	#endif
-		crc = crc32_tab[0][S_U32_BYTE3(SC32A)] ^
-		      crc32_tab[1][S_U32_BYTE2(SC32A)] ^
-		      crc32_tab[2][S_U32_BYTE1(SC32A)] ^
-		      crc32_tab[3][S_U32_BYTE0(SC32A)]
-        #if S_CRC32_SLC >= 8
-		    ^ crc32_tab[4][S_U32_BYTE3(SC32B)] ^
-		      crc32_tab[5][S_U32_BYTE2(SC32B)] ^
-		      crc32_tab[6][S_U32_BYTE1(SC32B)] ^
-		      crc32_tab[7][S_U32_BYTE0(SC32B)]
-	#endif
-	#if S_CRC32_SLC >= 12
-		    ^ crc32_tab[8][S_U32_BYTE3(SC32C)] ^
-		      crc32_tab[9][S_U32_BYTE2(SC32C)] ^
-		      crc32_tab[10][S_U32_BYTE1(SC32C)] ^
-		      crc32_tab[11][S_U32_BYTE0(SC32C)]
-	#endif
-        #if S_CRC32_SLC == 16
-		    ^ crc32_tab[12][S_U32_BYTE3(SC32D)] ^
-		      crc32_tab[13][S_U32_BYTE2(SC32D)] ^
-		      crc32_tab[14][S_U32_BYTE1(SC32D)] ^
-		      crc32_tab[15][S_U32_BYTE0(SC32D)]
-	#endif
+		crc = crc32_tab[0][S_U32_BYTE3(SC32A)]
+		      ^ crc32_tab[1][S_U32_BYTE2(SC32A)]
+		      ^ crc32_tab[2][S_U32_BYTE1(SC32A)]
+		      ^ crc32_tab[3][S_U32_BYTE0(SC32A)]
+#if S_CRC32_SLC >= 8
+		      ^ crc32_tab[4][S_U32_BYTE3(SC32B)]
+		      ^ crc32_tab[5][S_U32_BYTE2(SC32B)]
+		      ^ crc32_tab[6][S_U32_BYTE1(SC32B)]
+		      ^ crc32_tab[7][S_U32_BYTE0(SC32B)]
+#endif
+#if S_CRC32_SLC >= 12
+		      ^ crc32_tab[8][S_U32_BYTE3(SC32C)]
+		      ^ crc32_tab[9][S_U32_BYTE2(SC32C)]
+		      ^ crc32_tab[10][S_U32_BYTE1(SC32C)]
+		      ^ crc32_tab[11][S_U32_BYTE0(SC32C)]
+#endif
+#if S_CRC32_SLC == 16
+		      ^ crc32_tab[12][S_U32_BYTE3(SC32D)]
+		      ^ crc32_tab[13][S_U32_BYTE2(SC32D)]
+		      ^ crc32_tab[14][S_U32_BYTE1(SC32D)]
+		      ^ crc32_tab[15][S_U32_BYTE0(SC32D)]
+#endif
 			;
 	}
 #endif
@@ -125,8 +129,8 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 
 #endif /* #ifdef S_MINIMAL */
 
-#define ADLER32_BASE	65521	/* Largest prime below 2^16 */
-#define ADLER32_NMAX	 5552
+#define ADLER32_BASE 65521 /* Largest prime below 2^16 */
+#define ADLER32_NMAX 5552
 
 uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 {
@@ -142,24 +146,41 @@ uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 		k = remaining < ADLER32_NMAX ? remaining : ADLER32_NMAX;
 		remaining -= k;
 		for (; k >= 16; buf += 16, k -= 16) {
-			s1 += buf[ 0]; s2 += s1;
-			s1 += buf[ 1]; s2 += s1;
-			s1 += buf[ 2]; s2 += s1;
-			s1 += buf[ 3]; s2 += s1;
-			s1 += buf[ 4]; s2 += s1;
-			s1 += buf[ 5]; s2 += s1;
-			s1 += buf[ 6]; s2 += s1;
-			s1 += buf[ 7]; s2 += s1;
-			s1 += buf[ 8]; s2 += s1;
-			s1 += buf[ 9]; s2 += s1;
-			s1 += buf[10]; s2 += s1;
-			s1 += buf[11]; s2 += s1;
-			s1 += buf[12]; s2 += s1;
-			s1 += buf[13]; s2 += s1;
-			s1 += buf[14]; s2 += s1;
-			s1 += buf[15]; s2 += s1;
+			s1 += buf[0];
+			s2 += s1;
+			s1 += buf[1];
+			s2 += s1;
+			s1 += buf[2];
+			s2 += s1;
+			s1 += buf[3];
+			s2 += s1;
+			s1 += buf[4];
+			s2 += s1;
+			s1 += buf[5];
+			s2 += s1;
+			s1 += buf[6];
+			s2 += s1;
+			s1 += buf[7];
+			s2 += s1;
+			s1 += buf[8];
+			s2 += s1;
+			s1 += buf[9];
+			s2 += s1;
+			s1 += buf[10];
+			s2 += s1;
+			s1 += buf[11];
+			s2 += s1;
+			s1 += buf[12];
+			s2 += s1;
+			s1 += buf[13];
+			s2 += s1;
+			s1 += buf[14];
+			s2 += s1;
+			s1 += buf[15];
+			s2 += s1;
 		}
-		for (; k > 0; k--, s1 += *buf++, s2 += s1);
+		for (; k > 0; k--, s1 += *buf++, s2 += s1)
+			;
 	}
 	return (s2 << 16) | s1;
 }
@@ -193,12 +214,23 @@ int main(int argc, const char **argv)
 	}
 	for (j = 1; j < 16; j++) {
 		for (i = 0; i < 256; i++) {
-			#define C32L(s) \
-				c32t[s][i] = (c32t[s - 1][i] >> 8) ^ \
-				c32t[0][c32t[s - 1][i] & 0xff];
-			C32L(1); C32L(2); C32L(3); C32L(4); C32L(5); C32L(6);
-			C32L(7); C32L(8); C32L(9); C32L(10); C32L(11);
-			C32L(12); C32L(13); C32L(14); C32L(15);
+#define C32L(s)                                                                \
+	c32t[s][i] = (c32t[s - 1][i] >> 8) ^ c32t[0][c32t[s - 1][i] & 0xff];
+			C32L(1);
+			C32L(2);
+			C32L(3);
+			C32L(4);
+			C32L(5);
+			C32L(6);
+			C32L(7);
+			C32L(8);
+			C32L(9);
+			C32L(10);
+			C32L(11);
+			C32L(12);
+			C32L(13);
+			C32L(14);
+			C32L(15);
 		}
 	}
 	/*
@@ -210,8 +242,10 @@ int main(int argc, const char **argv)
 	       " * Precomputed CRC-32 for polynomial 0x%08x\n"
 	       " * (gcc shash.c -DS_BUILD_CRC32_TABLES -o a; ./a >scrc32.h)\n"
 	       " *\n"
-	       " * " LIBSRT_COPYRIGHT "\n"
-	       " * " LIBSRT_LICENSE "\n"
+	       " * " LIBSRT_COPYRIGHT
+	       "\n"
+	       " * " LIBSRT_LICENSE
+	       "\n"
 	       " */\n\n"
 	       "#ifndef SCRC32_H\n"
 	       "#define SCRC32_H\n\n"
@@ -219,9 +253,9 @@ int main(int argc, const char **argv)
 	       "#define S_CRC32_SLC 12\n"
 	       "#else\n"
 	       "#if S_CRC32_SLC != 0 && S_CRC32_SLC != 1 && "
-						"S_CRC32_SLC != 4 && \\\n"
+	       "S_CRC32_SLC != 4 && \\\n"
 	       "    S_CRC32_SLC != 8 && S_CRC32_SLC != 12 && "
-						"S_CRC32_SLC != 16\n"
+	       "S_CRC32_SLC != 16\n"
 	       "#undef S_CRC32_SLC /* if invalid slice size, default to 1 */\n"
 	       "#define S_CRC32_SLC 1\n"
 	       "#endif\n"
@@ -243,15 +277,26 @@ int main(int argc, const char **argv)
 		}
 		printf("\n\t}");
 		switch (i) {
-		case 0: printf("\n#if S_CRC32_SLC >= 4\n\t,"); break;
-		case 3: printf("\n#endif /*#if S_CRC32_SLC >= 4*/");
-			printf("\n#if S_CRC32_SLC >= 8\n\t,"); break;
-		case 7: printf("\n#endif /*#if S_CRC32_SLC >= 8*/");
-			printf("\n#if S_CRC32_SLC >= 12\n\t,"); break;
-		case 11: printf("\n#endif /*#if S_CRC32_SLC >= 12*/");
-			 printf("\n#if S_CRC32_SLC >= 16\n\t,"); break;
-		case 15: printf("\n#endif /*#if S_CRC32_SLC >= 16*/\n"); break;
-		default: printf(",");
+		case 0:
+			printf("\n#if S_CRC32_SLC >= 4\n\t,");
+			break;
+		case 3:
+			printf("\n#endif /*#if S_CRC32_SLC >= 4*/");
+			printf("\n#if S_CRC32_SLC >= 8\n\t,");
+			break;
+		case 7:
+			printf("\n#endif /*#if S_CRC32_SLC >= 8*/");
+			printf("\n#if S_CRC32_SLC >= 12\n\t,");
+			break;
+		case 11:
+			printf("\n#endif /*#if S_CRC32_SLC >= 12*/");
+			printf("\n#if S_CRC32_SLC >= 16\n\t,");
+			break;
+		case 15:
+			printf("\n#endif /*#if S_CRC32_SLC >= 16*/\n");
+			break;
+		default:
+			printf(",");
 		}
 		printf("\n");
 	}
@@ -261,4 +306,3 @@ int main(int argc, const char **argv)
 }
 
 #endif /* #ifndef S_BUILD_CRC32_TABLES */
-

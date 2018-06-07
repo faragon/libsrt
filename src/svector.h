@@ -22,8 +22,7 @@ extern "C" {
  * Structures
  */
 
-enum eSV_Type
-{
+enum eSV_Type {
 	SV_FIRST,
 	SV_I8 = SV_FIRST,
 	SV_U8,
@@ -39,16 +38,17 @@ enum eSV_Type
 
 typedef int (*srt_vector_cmp)(const void *a, const void *b);
 
-struct SVector
-{
+struct SVector {
 	struct SDataFull d;
 	union {
-		srt_vector_cmp cmpf;	/* compare function */
-		uintptr_t cnt;	/* counter (for derivative types, e.g. srt_bitset) */
+		srt_vector_cmp cmpf; /* compare function */
+		uintptr_t cnt;       /* counter (for derivative types, e.g.
+					srt_bitset) */
 	} vx;
 };
 
-typedef struct SVector srt_vector; /* Opaque structure (accessors are provided) */
+typedef struct SVector
+	srt_vector; /* Opaque structure (accessors are provided) */
 
 #define EMPTY_SV { EMPTY_SData(sizeof(srt_vector)), NULL }
 
@@ -77,18 +77,21 @@ srt_vector *sv_alloca_t(const enum eSV_Type t, const size_t initial_num_elems_re
 #API: |Allocate generic vector (stack)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2|
 srt_vector *sv_alloca(const size_t elem_size, const size_t initial_num_elems_reserve, const srt_vector_cmp f)
 */
-#define sv_alloca(elem_size, max_size, cmp_f)				\
-	sv_alloc_raw(SV_GEN, S_TRUE,					\
-		     s_alloca(sd_alloc_size_raw(sizeof(srt_vector), elem_size,	\
-					      max_size, S_FALSE)),	\
+#define sv_alloca(elem_size, max_size, cmp_f)                                  \
+	sv_alloc_raw(SV_GEN, S_TRUE,                                           \
+		     s_alloca(sd_alloc_size_raw(sizeof(srt_vector), elem_size, \
+						max_size, S_FALSE)),           \
 		     elem_size, max_size, cmp_f)
-#define sv_alloca_t(type, max_size)					       \
-	sv_alloc_raw(type, S_TRUE,					       \
-		     s_alloca(sd_alloc_size_raw(sizeof(srt_vector), sv_elem_size(type),\
-			    max_size, S_FALSE)),			       \
+#define sv_alloca_t(type, max_size)                                            \
+	sv_alloc_raw(type, S_TRUE,                                             \
+		     s_alloca(sd_alloc_size_raw(sizeof(srt_vector),            \
+						sv_elem_size(type), max_size,  \
+						S_FALSE)),                     \
 		     sv_elem_size(type), max_size, NULL)
 
-srt_vector *sv_alloc_raw(const enum eSV_Type t, const srt_bool ext_buf, void *buffer, const size_t elem_size, const size_t max_size, const srt_vector_cmp f);
+srt_vector *sv_alloc_raw(const enum eSV_Type t, const srt_bool ext_buf,
+			 void *buffer, const size_t elem_size,
+			 const size_t max_size, const srt_vector_cmp f);
 
 /* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2| */
 srt_vector *sv_alloc(const size_t elem_size, const size_t initial_num_elems_reserve, const srt_vector_cmp f);
@@ -164,7 +167,6 @@ srt_vector *sv_dup_resize(const srt_vector *src, const size_t n);
 
 /* #API: |Reset/clean vector (keeping vector type)|vector|-|O(1)|1;2| */
 void sv_clear(srt_vector *v);
-
 
 /*
  * Assignment
@@ -294,7 +296,6 @@ uint64_t sv_pop_u(srt_vector *v);
  */
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SVECTOR_H */
-
+#endif /* SVECTOR_H */

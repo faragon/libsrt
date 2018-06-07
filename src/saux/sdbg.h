@@ -16,9 +16,9 @@ extern "C" {
  * - This is intended for debugging.
  */
 
+#include "../smap.h"
 #include "../sstring.h"
 #include "../svector.h"
-#include "../smap.h"
 #include "stree.h"
 
 typedef srt_string *(*ss_cat_stn)(srt_string **s, const srt_tnode *n, const srt_tndx id);
@@ -30,7 +30,6 @@ void sm_log_obj(srt_string **log, const srt_map *m);
 void s_hex_dump(srt_string **log, const char *label, const char *buf, const size_t buf_size);
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif  /* SDBG_H */
-
+#endif /* SDBG_H */

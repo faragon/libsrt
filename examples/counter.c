@@ -23,7 +23,8 @@
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
-	fprintf(stderr, "Code counter (libsrt example). Returns: elements "
+	fprintf(stderr,
+		"Code counter (libsrt example). Returns: elements "
 		"processed, unique elements\n\nSyntax: %s unit_size "
 		"diff_max_stop\n(1 <= unit_size <= 4; diff_max_stop = 0: no "
 		"max, != 0: max)\n\n"
@@ -46,12 +47,12 @@ int main(int argc, const char **argv)
 	size_t count, cmax, climit, i, l;
 	unsigned char buf[3 * 4 * 128];
 #ifdef COUNTER_USE_BITSET
-	#define COUNTER_SET(val) sb_set(&bs, val)
-	#define COUNTER_POPCOUNT sb_popcount(bs)
+#define COUNTER_SET(val) sb_set(&bs, val)
+#define COUNTER_POPCOUNT sb_popcount(bs)
 	srt_bitset *bs;
 #else
-	#define COUNTER_SET(val) sm_insert_uu32(&m, val, 1)
-	#define COUNTER_POPCOUNT sm_size(m)
+#define COUNTER_SET(val) sm_insert_uu32(&m, val, 1)
+#define COUNTER_POPCOUNT sm_size(m)
 	srt_map *m;
 #endif
 	if (argc < 3)
@@ -64,8 +65,7 @@ int main(int argc, const char **argv)
 		return syntax_error(argv, 7);
 	exit_code = 0;
 	count = 0;
-	cmax = csize == 4 ? 0xffffffff :
-			   0xffffffff & ((1 << (csize * 8)) - 1);
+	cmax = csize == 4 ? 0xffffffff : 0xffffffff & ((1 << (csize * 8)) - 1);
 	climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
 #ifdef COUNTER_USE_BITSET
 	bs = sb_alloc(0);
@@ -78,31 +78,34 @@ int main(int argc, const char **argv)
 		l = (l / (size_t)csize) * (size_t)csize;
 		if (!l)
 			break;
-		#define CNTLOOP(inc, val)			\
-			for (i = 0; i < l; i += inc) {		\
-				COUNTER_SET(val);		\
-				count++;			\
-				if (COUNTER_POPCOUNT >= climit)	\
-					goto done;		\
-			}
+#define CNTLOOP(inc, val)                                                      \
+	for (i = 0; i < l; i += inc) {                                         \
+		COUNTER_SET(val);                                              \
+		count++;                                                       \
+		if (COUNTER_POPCOUNT >= climit)                                \
+			goto done;                                             \
+	}
 		switch (csize) {
-		case 1:	CNTLOOP(1, buf[i]);
+		case 1:
+			CNTLOOP(1, buf[i]);
 			break;
-		case 2:	CNTLOOP(2, (size_t)(buf[i] << 8 | buf[i + 1]));
+		case 2:
+			CNTLOOP(2, (size_t)(buf[i] << 8 | buf[i + 1]));
 			break;
-		case 3:	CNTLOOP(3, (size_t)(buf[i] << 16 |
-					    buf[i + 1] << 8 |
-					    buf[i + 2]));
+		case 3:
+			CNTLOOP(3, (size_t)(buf[i] << 16 | buf[i + 1] << 8
+					    | buf[i + 2]));
 			break;
-		case 4:	CNTLOOP(4, (size_t)buf[i] << 24 |
-				   (size_t)buf[i + 1] << 16 |
-				   (size_t)buf[i + 2] << 8 |
-				   (size_t)buf[i + 3]);
+		case 4:
+			CNTLOOP(4, (size_t)buf[i] << 24
+					   | (size_t)buf[i + 1] << 16
+					   | (size_t)buf[i + 2] << 8
+					   | (size_t)buf[i + 3]);
 			break;
 		default:
 			goto done;
 		}
-		#undef CNTLOOP
+#undef CNTLOOP
 	}
 done:
 	printf(FMT_ZU ", " FMT_ZU, count, COUNTER_POPCOUNT);
@@ -113,4 +116,3 @@ done:
 #endif
 	return exit_code;
 }
-

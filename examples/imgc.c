@@ -27,8 +27,14 @@ int main(int argc, const char **argv)
 	int filter = F_None;
 	enum ImgTypes t_in, t_out;
 	srt_bool ro;
-	#define IMGC_XTEST(test, m, c)	\
-		if (test) { exit_msg = m; exit_code = c; break; }
+
+#define IMGC_XTEST(test, m, c)                                                 \
+	if (test) {                                                            \
+		exit_msg = m;                                                  \
+		exit_code = c;                                                 \
+		break;                                                         \
+	}
+
 	for (;;) {
 		if (argc < 2)
 			break;
@@ -58,20 +64,20 @@ int main(int argc, const char **argv)
 
 		fout = fopen(argv[2], "wb+");
 		written = ro ? 0 : ss_write(fout, iobuf, 0, ss_size(iobuf));
-		IMGC_XTEST(!ro && (written < 0 ||
-				   (size_t)written != ss_size(iobuf)),
+		IMGC_XTEST(!ro
+				   && (written < 0
+				       || (size_t)written != ss_size(iobuf)),
 			   "write error", 7);
 
 		exit_code = 0;
 		if (!ro)
-			IF_DEBUG_IMGC(
-				fprintf(stderr,
-					"%s (%ix%i %ibpp %ich) %u bytes"
-					" > %s %u bytes\n", argv[1],
-					(int)ri.width, (int)ri.height,
-					(int)ri.bpp, (int)ri.chn,
-					(unsigned)in_size, argv[2],
-					(unsigned)ss_size(iobuf)));
+			IF_DEBUG_IMGC(fprintf(
+				stderr,
+				"%s (%ix%i %ibpp %ich) %u bytes"
+				" > %s %u bytes\n",
+				argv[1], (int)ri.width, (int)ri.height,
+				(int)ri.bpp, (int)ri.chn, (unsigned)in_size,
+				argv[2], (unsigned)ss_size(iobuf)));
 		break;
 	}
 	ss_free(&iobuf, &rgb_buf);
@@ -107,4 +113,3 @@ static int exit_with_error(const char **argv, const char *msg,
 		v0, v0);
 	return exit_code;
 }
-

@@ -12,7 +12,8 @@
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
-	fprintf(stderr, "Histogram (libsrt example). Returns: list of elements "
+	fprintf(stderr,
+		"Histogram (libsrt example). Returns: list of elements "
 		"and its count\n\nSyntax: %s element_size  "
 		"# (1 <= element_size <= 8)\n\nExamples:\n"
 		"%s 1 <in >h.txt  # (1-byte element h. e.g. 8bpp bitmap)\n"
@@ -39,8 +40,8 @@ static srt_bool cb32(uint32_t k, uint32_t v, void *context)
 static srt_bool cb64(int64_t k, int64_t v, void *context)
 {
 	S_UNUSED(context);
-	printf("%08x%08x " FMT_U "\n",
-	       (unsigned)(k >> 32), (unsigned)k, (uint64_t)v);
+	printf("%08x%08x " FMT_U "\n", (unsigned)(k >> 32), (unsigned)k,
+	       (uint64_t)v);
 	return S_TRUE;
 }
 
@@ -65,56 +66,64 @@ int main(int argc, const char **argv)
 		l = (l / (size_t)csize) * (size_t)csize;
 		if (!l)
 			break;
-		/*
-		 * Local optimization: instead of calling N times to the
-		 * map for the case of repeated elements, we keep the
-		 * count and set the counter for all the repeated
-		 * elements at once (3x speed-up for non random data).
-		 */
-		#define CNTLOOP(inc, k, ki, kip, f)		\
-			rep_cnt = 0;				\
-			for (i = 0; i < l; i += inc) {		\
-				ki = k;				\
-				if (ki == kip) {		\
-					rep_cnt++;		\
-					continue;		\
-				}				\
-				if (rep_cnt) {			\
-					f(&m, kip, rep_cnt);	\
-					rep_cnt = 0;		\
-				}				\
-				kip = ki;			\
-				f(&m, ki, 1);			\
-			}					\
-			if (rep_cnt)				\
-				f(&m, kip, rep_cnt)
+/*
+ * Local optimization: instead of calling N times to the
+ * map for the case of repeated elements, we keep the
+ * count and set the counter for all the repeated
+ * elements at once (3x speed-up for non random data).
+ */
+#define CNTLOOP(inc, k, ki, kip, f)                                            \
+	rep_cnt = 0;                                                           \
+	for (i = 0; i < l; i += inc) {                                         \
+		ki = k;                                                        \
+		if (ki == kip) {                                               \
+			rep_cnt++;                                             \
+			continue;                                              \
+		}                                                              \
+		if (rep_cnt) {                                                 \
+			f(&m, kip, rep_cnt);                                   \
+			rep_cnt = 0;                                           \
+		}                                                              \
+		kip = ki;                                                      \
+		f(&m, ki, 1);                                                  \
+	}                                                                      \
+	if (rep_cnt)                                                           \
+	f(&m, kip, rep_cnt)
 		switch (csize) {
-		case 1:	CNTLOOP(1, buf[i], k32, kp32, sm_inc_uu32);
+		case 1:
+			CNTLOOP(1, buf[i], k32, kp32, sm_inc_uu32);
 			break;
-		case 2:	CNTLOOP(2, S_LD_LE_U16(buf + i),
-				k32, kp32, sm_inc_uu32);
+		case 2:
+			CNTLOOP(2, S_LD_LE_U16(buf + i), k32, kp32,
+				sm_inc_uu32);
 			break;
-		case 3:	CNTLOOP(3, S_LD_LE_U32(buf + i) & 0xffffff,
-				k32, kp32, sm_inc_uu32);
+		case 3:
+			CNTLOOP(3, S_LD_LE_U32(buf + i) & 0xffffff, k32, kp32,
+				sm_inc_uu32);
 			break;
-		case 4:	CNTLOOP(4, S_LD_LE_U32(buf + i),
-				k32, kp32, sm_inc_uu32);
+		case 4:
+			CNTLOOP(4, S_LD_LE_U32(buf + i), k32, kp32,
+				sm_inc_uu32);
 			break;
-		case 5:	CNTLOOP(5, S_LD_LE_U64(buf + i) & 0xffffffffffLL,
+		case 5:
+			CNTLOOP(5, S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64,
+				kp64, sm_inc_ii);
+			break;
+		case 6:
+			CNTLOOP(6, S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64,
+				kp64, sm_inc_ii);
+			break;
+		case 7:
+			CNTLOOP(7, S_LD_LE_U64(buf + i) & 0xffffffffffffffLL,
 				k64, kp64, sm_inc_ii);
 			break;
-		case 6:	CNTLOOP(6, S_LD_LE_U64(buf + i) & 0xffffffffffffLL,
-				k64, kp64, sm_inc_ii);
-			break;
-		case 7:	CNTLOOP(7, S_LD_LE_U64(buf + i) & 0xffffffffffffffLL,
-				k64, kp64, sm_inc_ii);
-			break;
-		case 8:	CNTLOOP(8, S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii);
+		case 8:
+			CNTLOOP(8, S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii);
 			break;
 		default:
 			goto done;
 		}
-		#undef CNTLOOP
+#undef CNTLOOP
 	}
 done:
 	if (csize <= 4)
@@ -124,4 +133,3 @@ done:
 	sm_free(&m);
 	return exit_code;
 }
-

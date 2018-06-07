@@ -9,14 +9,14 @@
 
 #include "../src/libsrt.h"
 
-#define LZHBUF_SIZE	S_NPOS /* -ezh high compression: infinite buffer size */
-#define LZBUF_SIZE	1000000 /* -ez fast compression: 1 MB buffer size */
-#define IBUF_SIZE	(3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
-#define ESC_MAX_SIZE	16 /* maximum size for an escape sequence: 16 bytes */
+#define LZHBUF_SIZE S_NPOS /* -ezh high compression: infinite buffer size */
+#define LZBUF_SIZE 1000000 /* -ez fast compression: 1 MB buffer size */
+#define IBUF_SIZE (3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
+#define ESC_MAX_SIZE 16 /* maximum size for an escape sequence: 16 bytes */
 
 #if SZ_DEBUG_STATS
-	extern size_t lz_st_lit[9], lz_st_lit_bytes;
-	extern size_t lz_st_ref[9], lz_st_ref_bytes;
+extern size_t lz_st_lit[9], lz_st_lit_bytes;
+extern size_t lz_st_ref[9], lz_st_ref_bytes;
 #endif
 
 static int syntax_error(const char **argv, const int exit_code)
@@ -36,8 +36,8 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s -ezh <in >in.lz\n%s -dz <in.lz >out\n"
 		"%s -crc32 <in\n%s -crc32 <in >out\n"
 		"%s -adler32 <in\n%s -adler32 <in >out\n",
-		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
-		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
+		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
+		v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
@@ -107,10 +107,12 @@ int main(int argc, const char **argv)
 		ss_codec4_f = ss_dec_lz;
 	else
 		return syntax_error(argv, 2);
-	esc = ss_codec2_f == ss_dec_esc_xml ? '&' :
-			    ss_codec2_f == ss_dec_esc_json ? '\\' : '%';
-	cf = ss_codec1_f ? 1 : ss_codec2_f ? 2 :
-	     ss_codec3_f ? 3 : ss_codec4_f ? 4 : 0;
+	esc = ss_codec2_f == ss_dec_esc_xml
+		      ? '&'
+		      : ss_codec2_f == ss_dec_esc_json ? '\\' : '%';
+	cf = ss_codec1_f
+		     ? 1
+		     : ss_codec2_f ? 2 : ss_codec3_f ? 3 : ss_codec4_f ? 4 : 0;
 	done = S_FALSE;
 	ss_reserve(&in, IBUF_SIZE);
 	while (!done) {
@@ -137,8 +139,8 @@ int main(int argc, const char **argv)
 			b = ss_get_buffer_r(in);
 			off = 0;
 			if (l > ESC_MAX_SIZE)
-				for (j = (size_t)(l - ESC_MAX_SIZE + 1);
-				     j < l; j++)
+				for (j = (size_t)(l - ESC_MAX_SIZE + 1); j < l;
+				     j++)
 					if (b[j] == esc && b[j - 1] != esc) {
 						off = (size_t)(l - j);
 						break;
@@ -238,4 +240,3 @@ int main(int argc, const char **argv)
 	ss_free(&in, &out);
 	return exit_code;
 }
-

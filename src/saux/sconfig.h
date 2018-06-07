@@ -18,16 +18,16 @@ extern "C" {
  */
 
 #ifndef S_MALLOC
-	#define _s_malloc malloc
+#define _s_malloc malloc
 #endif
 #ifndef S_CALLOC
-	#define _s_calloc calloc
+#define _s_calloc calloc
 #endif
 #ifndef S_REALLOC
-	#define _s_realloc realloc
+#define _s_realloc realloc
 #endif
 #ifndef S_FREE
-	#define _s_free free
+#define _s_free free
 #endif
 
 /*
@@ -35,8 +35,8 @@ extern "C" {
  * returning the same base address, a mechanism for detecting those errors
  * is provided (used in the Valgrind test phase, protecting the build)
  */
-#if defined(S_FORCE_REALLOC_COPY) && defined(_s_realloc) &&		\
-    (defined(__GNUC__) || defined(__clang__) || defined(__TINYC__))
+#if defined(S_FORCE_REALLOC_COPY) && defined(_s_realloc)                       \
+	&& (defined(__GNUC__) || defined(__clang__) || defined(__TINYC__))
 #include <malloc.h>
 #include <string.h>
 #undef _s_realloc
@@ -56,7 +56,6 @@ inline static void *_s_realloc(void *ptr, size_t size)
 #endif
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SCONFIG_H */
-
+#endif /* SCONFIG_H */

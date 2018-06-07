@@ -12,20 +12,20 @@
 
 #include "../src/libsrt.h"
 
-struct RGB_Info
-{
+struct RGB_Info {
 	size_t width, height, bpp, Bpp, chn, bpc, Bpc, row_size, bmp_size;
 };
 
 S_INLINE srt_bool rgbi_valid(const struct RGB_Info *ri)
 {
-	return ri && ri->chn > 0 && ri->bpp >= 8 && ri->Bpp > 0 &&
-	       ri->width > 0 && ri->height > 0 && ri->row_size > 0 ? S_TRUE :
-								     S_FALSE;
+	return ri && ri->chn > 0 && ri->bpp >= 8 && ri->Bpp > 0 && ri->width > 0
+			       && ri->height > 0 && ri->row_size > 0
+		       ? S_TRUE
+		       : S_FALSE;
 }
 
 S_INLINE void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
-		     size_t c)
+		       size_t c)
 {
 	if (i) {
 		i->width = w;
@@ -42,9 +42,8 @@ S_INLINE void rgbi_set(struct RGB_Info *i, size_t w, size_t h, size_t b,
 
 S_INLINE srt_bool rgbi_cmp(const struct RGB_Info *a, const struct RGB_Info *b)
 {
-	return a && b && a->width == b->width &&
-	       a->height == b->height && a->bpp == b->bpp &&
-	       a->chn == b->chn && a->bpc == b->bpc;
+	return a && b && a->width == b->width && a->height == b->height
+	       && a->bpp == b->bpp && a->chn == b->chn && a->bpc == b->bpc;
 }
 
 /*
@@ -82,16 +81,22 @@ uint64_t rgbi_get(const char *buf, size_t x, size_t y, size_t rs, size_t ps)
 {
 	const unsigned char *b = (const unsigned char *)buf;
 	switch (ps) {
-	case 1: return (unsigned char)b[y * rs + x];
-	case 2: return rgbi_pack2(b + y * rs + x * ps);
-	case 3: return rgbi_pack3(b + y * rs + x * ps);
-	case 4: return rgbi_pack4(b + y * rs + x * ps);
-	case 6: return rgbi_pack6(b + y * rs + x * ps);
-	case 8: return rgbi_pack8(b + y * rs + x * ps);
-	default: break;
+	case 1:
+		return (unsigned char)b[y * rs + x];
+	case 2:
+		return rgbi_pack2(b + y * rs + x * ps);
+	case 3:
+		return rgbi_pack3(b + y * rs + x * ps);
+	case 4:
+		return rgbi_pack4(b + y * rs + x * ps);
+	case 6:
+		return rgbi_pack6(b + y * rs + x * ps);
+	case 8:
+		return rgbi_pack8(b + y * rs + x * ps);
+	default:
+		break;
 	}
 	return 0;
 }
 
-#endif  /* RGBI_H */
-
+#endif /* RGBI_H */

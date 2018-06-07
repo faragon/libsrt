@@ -23,9 +23,9 @@ extern "C" {
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
-#include "svector.h"
 #include "saux/scommon.h"
 #include "saux/sdata.h"
+#include "svector.h"
 
 /*
  * String base structure
@@ -42,26 +42,26 @@ extern "C" {
  *	flag4: string reference with C terminator (built using ss_cref[a]())
  */
 
-struct SString
-{
+struct SString {
 	struct SDataFull d;
 	size_t unicode_size;
 };
 
-struct SStringRef
-{
+struct SStringRef {
 	struct SString s;
 	const char *cstr;
 };
 
-struct SStringRefRW
-{
+struct SStringRefRW {
 	struct SString s;
 	char *str;
 };
 
-#define SS_RANGE	(sizeof(size_t) - sizeof(srt_string))
-#define EMPTY_SS	{ EMPTY_SDataFull, 0 }
+#define SS_RANGE (sizeof(size_t) - sizeof(srt_string))
+#define EMPTY_SS                                                               \
+	{                                                                      \
+		EMPTY_SDataFull, 0                                             \
+	}
 
 /*
  * Types
@@ -161,9 +161,10 @@ srt_string *ss_alloca(const size_t max_size)
 /*
  * +1 extra byte allocated for the \0 required by ss_to_c()
  */
-#define	ss_alloca(max_size)						   \
-	ss_alloc_into_ext_buf(s_alloca(sd_alloc_size_raw(sizeof(srt_string), 1,  \
-						   max_size, S_TRUE) + 1), \
+#define ss_alloca(max_size)                                                    \
+	ss_alloc_into_ext_buf(s_alloca(sd_alloc_size_raw(sizeof(srt_string),   \
+							 1, max_size, S_TRUE)  \
+				       + 1),                                   \
 			      max_size)
 
 srt_string *ss_alloc_into_ext_buf(void *buf, const size_t max_size);
@@ -174,7 +175,7 @@ const srt_string *ss_cref(srt_string_ref *s_ref, const char *c_str);
 /* #API: |Create a reference from C string using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-)|input C string (0 terminated ASCII or UTF-8 string)|srt_string string derived from srt_string_ref|O(1)|1;2|
 const srt_string *ss_crefa(const char *c_str)
 */
-#define ss_crefa(c_str)	\
+#define ss_crefa(c_str)                                                        \
 	ss_cref((srt_string_ref *)s_alloca(sizeof(srt_string_ref)), c_str)
 
 /* #API: |Create a reference from raw data, i.e. not assuming is 0 terminated. WARNING: when using raw references when calling ss_to_c() will return a "" string (safety)), so, if you need a reference to the internal raw buffer use ss_get_buffer_r() instead|string reference to be built (can be on heap or stack, it is a small structure);input raw data buffer;input buffer size (bytes)|srt_string string derived from srt_string_ref|O(1)|1;2| */
@@ -183,8 +184,9 @@ const srt_string *ss_ref_buf(srt_string_ref *s_ref, const char *buf, const size_
 /* #API: |Create a reference from raw data, i.e. not 0 terminated, using implicit stack allocation for the reference handling (be cafeful not using this inside a loop -for loops you can e.g. use ss_build_ref() instead of this, using a local variable allocated in the stack for the reference-). WARNING: when using raw references when calling ss_to_c() will return a "" string (safety), so, if you need a reference to the internal raw buffer use ss_get_buffer_r() instead|input raw data buffer;input buffer size (bytes)|srt_string string derived from srt_string_ref|O(1)|1;2|
 const srt_string *ss_refa_buf(const char *buf, const size_t buf_size)
 */
-#define ss_refa_buf(buf, buf_size)	\
-	ss_ref_buf((srt_string_ref *)s_alloca(sizeof(srt_string_ref)), buf, buf_size)
+#define ss_refa_buf(buf, buf_size)                                             \
+	ss_ref_buf((srt_string_ref *)s_alloca(sizeof(srt_string_ref)), buf,    \
+		   buf_size)
 
 /* #API: |Get string reference from string reference container|string reference container|srt_string string derived from srt_string_ref|O(1)|1;2| */
 S_INLINE const srt_string *ss_ref(const srt_string_ref *s_ref)
@@ -845,26 +847,25 @@ S_INLINE char *ss_get_buffer(srt_string *s)
 	/*
 	 * Constness breaking will be addressed once the ss_to_c gets fixed.
 	 */
-	return ss_is_ref(s) ? ((struct SStringRefRW *)s)->str :
-			      sdx_get_buffer((srt_data *)s);
+	return ss_is_ref(s) ? ((struct SStringRefRW *)s)->str
+			    : sdx_get_buffer((srt_data *)s);
 }
 
 S_INLINE const char *ss_get_buffer_r(const srt_string *s)
 {
-	return ss_is_ref(s) ? ((const struct SStringRef *)s)->cstr :
-			      sdx_get_buffer_r((const srt_data *)s);
+	return ss_is_ref(s) ? ((const struct SStringRef *)s)->cstr
+			    : sdx_get_buffer_r((const srt_data *)s);
 }
 
-/*
- * Aux
- */
+	/*
+	 * Aux
+	 */
 
 #ifdef S_DEBUG
-extern size_t dbg_cnt_alloc_calls;	/* alloc or realloc calls */
+extern size_t dbg_cnt_alloc_calls; /* alloc or realloc calls */
 #endif
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SSTRING_H */
-
+#endif /* SSTRING_H */

@@ -24,17 +24,16 @@ extern "C" {
  * Structures and types
  */
 
-#define ST_NODE_BITS	31
-#define ST_NIL		((((uint32_t)1)<<ST_NODE_BITS) - 1)
-#define ST_NDX_MAX	(ST_NIL - 1)
+#define ST_NODE_BITS 31
+#define ST_NIL ((((uint32_t)1) << ST_NODE_BITS) - 1)
+#define ST_NDX_MAX (ST_NIL - 1)
 
 typedef uint32_t srt_tndx;
 
 typedef int (*srt_cmp)(const void *tree_node, const void *new_node);
-typedef void(*srt_tree_callback)(void *tree_node);
+typedef void (*srt_tree_callback)(void *tree_node);
 
-struct S_Node
-{
+struct S_Node {
 	struct {
 		srt_tndx is_red : 1;
 		srt_tndx l : ST_NODE_BITS;
@@ -42,8 +41,7 @@ struct S_Node
 	srt_tndx r;
 };
 
-struct S_Tree
-{
+struct S_Tree {
 	struct SDataFull d;
 	srt_tndx root;
 	srt_cmp cmp_f;
@@ -52,8 +50,7 @@ struct S_Tree
 typedef struct S_Node srt_tnode;
 typedef struct S_Tree srt_tree;
 
-struct STraverseParams
-{
+struct STraverseParams {
 	void *context;
 	const srt_tree *t;
 	srt_tndx c;
@@ -62,11 +59,12 @@ struct STraverseParams
 };
 
 typedef int (*st_traverse)(struct STraverseParams *p);
-typedef void (*srt_tree_rewrite)(srt_tnode *node, const srt_tnode *new_data, const srt_bool existing);
+typedef void (*srt_tree_rewrite)(srt_tnode *node, const srt_tnode *new_data,
+				 const srt_bool existing);
 
 /*
-* Constants
-*/
+ * Constants
+ */
 
 #define EMPTY_STN { { 0, ST_NIL }, ST_NIL }
 
@@ -191,14 +189,14 @@ S_INLINE const srt_tnode *st_enum_r(const srt_tree *t, const srt_tndx index)
  */
 
 enum STreeScanState {
-	STS_ScanStart	= 0,
-	STS_ScanLeft	= 1,
-	STS_ScanRight	= 2,
-	STS_ScanDone	= 3
+	STS_ScanStart,
+	STS_ScanLeft,
+	STS_ScanRight,
+	STS_ScanDone
 };
 
 struct STreeScan {
-	srt_tndx p, c;		/* parent, current */
+	srt_tndx p, c; /* parent, current */
 	enum STreeScanState s;
 };
 
@@ -207,4 +205,3 @@ struct STreeScan {
 #endif
 
 #endif /* #ifndef STREE_H */
-

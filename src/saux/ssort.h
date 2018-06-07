@@ -38,7 +38,6 @@ void ssort_i64(int64_t *b, size_t elems);
 void ssort_u64(uint64_t *b, size_t elems);
 
 #ifdef __cplusplus
-}	/* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SSORT_H */
-
+#endif /* SSORT_H */

@@ -107,7 +107,6 @@ size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss, cons
 size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
 
 #ifdef __cplusplus
-}	/* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SSEARCH_H */
-
+#endif /* SSEARCH_H */

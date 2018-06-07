@@ -35,18 +35,18 @@ extern "C" {
  * Structures
  */
 
-typedef srt_vector srt_bitset;	/* Opaque structure (accessors are provided) */
-			/* (bitset is implemented using a vector)    */
+typedef srt_vector srt_bitset; /* Opaque structure (accessors are provided) */
+			       /* (bitset is implemented using a vector)    */
 
 /*
  * Allocation
  */
 
-#define SB_BITS2BYTES(n)	(1 + n / 8)
-#define sb_alloc(n)		sv_alloc(1, SB_BITS2BYTES(n), NULL)
-#define sb_alloca(n)		sv_alloca(1, SB_BITS2BYTES(n), NULL)
-#define sb_dup(b)		sv_dup(b)
-#define sb_free			sv_free
+#define SB_BITS2BYTES(n) (1 + n / 8)
+#define sb_alloc(n) sv_alloc(1, SB_BITS2BYTES(n), NULL)
+#define sb_alloca(n) sv_alloca(1, SB_BITS2BYTES(n), NULL)
+#define sb_dup(b) sv_dup(b)
+#define sb_free sv_free
 
 /*
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|1;2|
@@ -143,8 +143,7 @@ S_INLINE void sb_reset(srt_bitset **b, const size_t nth)
 	if (b && *b) {
 		const size_t pos = nth / 8;
 		if (pos < sv_size(*b)) {
-			unsigned char *buf =
-				(unsigned char *)sv_get_buffer(*b);
+			unsigned char *buf = (unsigned char *)sv_get_buffer(*b);
 			size_t mask = (size_t)1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;
@@ -193,4 +192,3 @@ S_INLINE srt_bitset *sb_shrink(srt_bitset **b)
 } /* extern "C" { */
 #endif
 #endif /* #ifndef SBITSET_H */
-

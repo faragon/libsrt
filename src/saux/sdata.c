@@ -19,11 +19,11 @@
  */
 
 #ifdef S_MINIMAL
-#define SD_GROW_PCT	10
+#define SD_GROW_PCT 10
 #else
-#define SD_GROW_PCT	25
+#define SD_GROW_PCT 25
 #endif
-#define SD_GROW_MAX_INC	1000000
+#define SD_GROW_MAX_INC 1000000
 
 static srt_data sd_void0 = EMPTY_SDataFull;
 srt_data *sd_void = &sd_void0;
@@ -33,8 +33,8 @@ srt_data *sd_void = &sd_void0;
  */
 
 srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size,
-	       const size_t initial_reserve, const srt_bool dyn_st,
-	       const size_t extra_tail_bytes)
+		   const size_t initial_reserve, const srt_bool dyn_st,
+		   const size_t extra_tail_bytes)
 {
 	size_t alloc_size = sd_alloc_size_raw(header_size, elem_size,
 					      initial_reserve, dyn_st);
@@ -51,8 +51,8 @@ srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size,
 }
 
 srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size,
-			    const uint8_t header_size, const size_t elem_size,
-			    const srt_bool dyn_st)
+				const uint8_t header_size,
+				const size_t elem_size, const srt_bool dyn_st)
 {
 	srt_data *d;
 	RETURN_IF(!buffer || !max_size, NULL); /* not enough memory */
@@ -94,9 +94,9 @@ void sd_reset(srt_data *d, const uint8_t header_size, const size_t elem_size,
 		d->f.ext_buffer = ext_buf;
 		sd_reset_alloc_errors(d);
 		d->f.flag1 = d->f.flag2 = d->f.flag3 = d->f.flag4 = 0;
-		d->f.st_mode = !dyn_st ?	  SData_Full :
-				max_size <= 255 ? SData_DynSmall :
-						  SData_DynFull;
+		d->f.st_mode = !dyn_st ? SData_Full
+				       : max_size <= 255 ? SData_DynSmall
+							 : SData_DynFull;
 		if (sdx_full_st(d)) {
 			d->header_size = header_size;
 			d->elem_size = elem_size;
@@ -110,8 +110,8 @@ void sd_reset(srt_data *d, const uint8_t header_size, const size_t elem_size,
 }
 
 /* Acknowledgements: similar to git's strbuf_grow */
-size_t
-sd_grow(srt_data **d, const size_t extra_size, const size_t extra_tail_bytes)
+size_t sd_grow(srt_data **d, const size_t extra_size,
+	       const size_t extra_tail_bytes)
 {
 	size_t size, new_size;
 	RETURN_IF(!d, 0);
@@ -149,12 +149,10 @@ S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
 		is_dyn = sdx_dyn_st(*d);
 		chg = sdx_chk_st_change(*d, max_size);
 		curr_hdr_size = sdx_header_size(*d);
-		next_hdr_size = chg > 0 ?
-					full_header_size :
-					curr_hdr_size;
+		next_hdr_size = chg > 0 ? full_header_size : curr_hdr_size;
 		elem_size = sdx_elem_size(*d);
-		as = sd_alloc_size_raw(full_header_size,
-					      elem_size, max_size, is_dyn);
+		as = sd_alloc_size_raw(full_header_size, elem_size, max_size,
+				       is_dyn);
 		d_next = (srt_data *)s_realloc(*d, as + extra_tail_bytes);
 		if (!d_next) {
 			S_ERROR("sd_reserve: not enough memory");
@@ -181,8 +179,7 @@ S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
 size_t sd_reserve(srt_data **d, size_t max_size, const size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);
-	return sd_reserve_aux(d, max_size, (*d)->header_size,
-			      extra_tail_bytes);
+	return sd_reserve_aux(d, max_size, (*d)->header_size, extra_tail_bytes);
 }
 
 size_t sdx_reserve(srt_data **d, size_t max_size, uint8_t full_header_size,
@@ -197,14 +194,13 @@ srt_data *sd_shrink(srt_data **d, const size_t extra_tail_bytes)
 	size_t max_size, new_max_size, as;
 	srt_data *d_next;
 	ASSERT_RETURN_IF(!d || !(*d), sd_void); /* BEHAVIOR */
-	RETURN_IF((*d)->f.ext_buffer, *d); /* non-shrinkable */
+	RETURN_IF((*d)->f.ext_buffer, *d);      /* non-shrinkable */
 	RETURN_IF(!sdx_full_st(*d), *d); /* BEHAVIOR: shrink only full st */
 	max_size = sd_max_size(*d);
 	new_max_size = (*d)->size;
 	if (new_max_size < max_size) {
-		as = sd_alloc_size_raw((*d)->header_size,
-					      (*d)->elem_size, new_max_size,
-					      S_FALSE);
+		as = sd_alloc_size_raw((*d)->header_size, (*d)->elem_size,
+				       new_max_size, S_FALSE);
 		d_next = (srt_data *)s_realloc(*d, as + extra_tail_bytes);
 		if (d_next) {
 			*d = d_next;
@@ -215,4 +211,3 @@ srt_data *sd_shrink(srt_data **d, const size_t extra_tail_bytes)
 	}
 	return *d;
 }
-

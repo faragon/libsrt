@@ -23,4 +23,3 @@ extern "C" {
 } /* extern "C" { */
 #endif
 #endif /* #ifndef LIBSRT_H */
-

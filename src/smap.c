@@ -39,7 +39,7 @@ static void rw_inc_SM_II32(srt_tnode *node, const srt_tnode *new_data,
 {
 	if (existing)
 		((struct SMapii *)node)->v +=
-				((const struct SMapii *)new_data)->v;
+			((const struct SMapii *)new_data)->v;
 }
 
 static void rw_inc_SM_UU32(srt_tnode *node, const srt_tnode *new_data,
@@ -47,7 +47,7 @@ static void rw_inc_SM_UU32(srt_tnode *node, const srt_tnode *new_data,
 {
 	if (existing)
 		((struct SMapuu *)node)->v +=
-				((const struct SMapuu *)new_data)->v;
+			((const struct SMapuu *)new_data)->v;
 }
 
 static void rw_inc_SM_II(srt_tnode *node, const srt_tnode *new_data,
@@ -55,7 +55,7 @@ static void rw_inc_SM_II(srt_tnode *node, const srt_tnode *new_data,
 {
 	if (existing)
 		((struct SMapII *)node)->v +=
-				((const struct SMapII *)new_data)->v;
+			((const struct SMapII *)new_data)->v;
 }
 
 static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
@@ -101,7 +101,7 @@ static void rw_inc_SM_SI(srt_tnode *node, const srt_tnode *new_data,
 		rw_add_SM_SI(node, new_data, existing);
 	else
 		((struct SMapSI *)node)->v +=
-					((const struct SMapSI *)new_data)->v;
+			((const struct SMapSI *)new_data)->v;
 }
 
 static void aux_is_delete(void *node)
@@ -120,12 +120,14 @@ static void aux_ss_delete(void *node)
 	SMStrFree(&((struct SMapSS *)node)->v);
 }
 
-struct SV2X { srt_vector *kv, *vv; };
+struct SV2X {
+	srt_vector *kv, *vv;
+};
 
 static int aux_ii32_sort(struct STraverseParams *tp)
 {
 	const struct SMapii *cn =
-			(const struct SMapii *)get_node_r(tp->t, tp->c);
+		(const struct SMapii *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->x.k);
@@ -137,7 +139,7 @@ static int aux_ii32_sort(struct STraverseParams *tp)
 static int aux_uu32_sort(struct STraverseParams *tp)
 {
 	const struct SMapuu *cn =
-			(const struct SMapuu *)get_node_r(tp->t, tp->c);
+		(const struct SMapuu *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_u(&v2x->kv, cn->x.k);
@@ -149,7 +151,7 @@ static int aux_uu32_sort(struct STraverseParams *tp)
 static int aux_ii_sort(struct STraverseParams *tp)
 {
 	const struct SMapII *cn =
-			(const struct SMapII *)get_node_r(tp->t, tp->c);
+		(const struct SMapII *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->x.k);
@@ -161,7 +163,7 @@ static int aux_ii_sort(struct STraverseParams *tp)
 static int aux_is_ip_sort(struct STraverseParams *tp)
 {
 	const struct SMapIP *cn =
-			(const struct SMapIP *)get_node_r(tp->t, tp->c);
+		(const struct SMapIP *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push_i(&v2x->kv, cn->x.k);
@@ -173,7 +175,7 @@ static int aux_is_ip_sort(struct STraverseParams *tp)
 static int aux_si_sort(struct STraverseParams *tp)
 {
 	const struct SMapII *cn =
-			(const struct SMapII *)get_node_r(tp->t, tp->c);
+		(const struct SMapII *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push(&v2x->kv, &cn->x.k);
@@ -185,7 +187,7 @@ static int aux_si_sort(struct STraverseParams *tp)
 static int aux_sp_ss_sort(struct STraverseParams *tp)
 {
 	const struct SMapII *cn =
-			(const struct SMapII *)get_node_r(tp->t, tp->c);
+		(const struct SMapII *)get_node_r(tp->t, tp->c);
 	if (cn) {
 		struct SV2X *v2x = (struct SV2X *)tp->context;
 		sv_push(&v2x->kv, &cn->x.k);
@@ -197,13 +199,21 @@ static int aux_sp_ss_sort(struct STraverseParams *tp)
 static srt_cmp type2cmpf(const enum eSM_Type0 t)
 {
 	switch (t) {
-	case SM0_U32: case SM0_UU32:
+	case SM0_U32:
+	case SM0_UU32:
 		return (srt_cmp)cmp_u;
-	case SM0_I32: case SM0_II32:
+	case SM0_I32:
+	case SM0_II32:
 		return (srt_cmp)cmp_i;
-	case SM0_I: case SM0_II: case SM0_IS: case SM0_IP:
+	case SM0_I:
+	case SM0_II:
+	case SM0_IS:
+	case SM0_IP:
 		return (srt_cmp)cmp_I;
-	case SM0_S: case SM0_SI: case SM0_SS: case SM0_SP:
+	case SM0_S:
+	case SM0_SI:
+	case SM0_SS:
+	case SM0_SP:
 		return (srt_cmp)cmp_s;
 	}
 	return NULL;
@@ -214,8 +224,9 @@ S_INLINE srt_bool sm_chk_Ix(const srt_map *m)
 	int t;
 	RETURN_IF(!m, S_FALSE);
 	t = m->d.sub_type;
-	return t == SM0_II || t == SM0_IS || t == SM0_IP || t == SM0_I ?
-	       S_TRUE : S_FALSE;
+	return t == SM0_II || t == SM0_IS || t == SM0_IP || t == SM0_I
+		       ? S_TRUE
+		       : S_FALSE;
 }
 
 S_INLINE srt_bool sm_chk_sx(const srt_map *m)
@@ -223,8 +234,9 @@ S_INLINE srt_bool sm_chk_sx(const srt_map *m)
 	int t;
 	RETURN_IF(!m, S_FALSE);
 	t = m->d.sub_type;
-	return t == SM0_SS || t == SM0_SI || t == SM0_SP || t == SM0_S ?
-	       S_TRUE : S_FALSE;
+	return t == SM0_SS || t == SM0_SI || t == SM0_SP || t == SM0_S
+		       ? S_TRUE
+		       : S_FALSE;
 }
 
 S_INLINE srt_bool sm_chk_t(const srt_map *m, int t)
@@ -289,22 +301,22 @@ SM_ENUM_INORDER_XX(sm_itr_sp, srt_map_it_sp, SM_SP, const srt_string *,
  * Allocation
  */
 
-srt_map *
-sm_alloc_raw0(const enum eSM_Type0 t, const srt_bool ext_buf, void *buffer,
-	      const size_t elem_size, const size_t max_size)
+srt_map *sm_alloc_raw0(const enum eSM_Type0 t, const srt_bool ext_buf,
+		       void *buffer, const size_t elem_size,
+		       const size_t max_size)
 {
 	srt_map *m;
 	RETURN_IF(!buffer || !max_size, NULL);
 	m = (srt_map *)st_alloc_raw(type2cmpf(t), ext_buf, buffer, elem_size,
-				       max_size);
+				    max_size);
 	m->d.sub_type = t;
 	return m;
 }
 
 srt_map *sm_alloc0(const enum eSM_Type0 t, const size_t init_size)
 {
-	srt_map *m = (srt_map *)st_alloc(type2cmpf(t), sm_elem_size(t),
-					 init_size);
+	srt_map *m =
+		(srt_map *)st_alloc(type2cmpf(t), sm_elem_size(t), init_size);
 	m->d.sub_type = t;
 	return m;
 }
@@ -343,11 +355,13 @@ void sm_clear(srt_map *m)
 	case SM0_SS:
 		delete_callback = aux_ss_delete;
 		break;
-	case SM0_S: case SM0_SI: case SM0_SP:
+	case SM0_S:
+	case SM0_SI:
+	case SM0_SP:
 		delete_callback = aux_sx_delete;
 		break;
 	}
-	if (delete_callback) {	/* deletion of dynamic memory elems */
+	if (delete_callback) { /* deletion of dynamic memory elems */
 		srt_tndx i = 0;
 		for (; i < (srt_tndx)m->d.size; i++) {
 			srt_tnode *n = st_enum(m, i);
@@ -410,7 +424,9 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			SMStrSet(&mt->v, SMStrGet(&ms->v));
 		}
 		break;
-	case SM0_S: case SM0_SI: case SM0_SP:
+	case SM0_S:
+	case SM0_SI:
+	case SM0_SP:
 		for (i = 0; i < ss; i++) {
 			const struct SMapS *ms =
 				(const struct SMapS *)st_enum_r(src, i);
@@ -427,8 +443,13 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			SMStrSet(&mt->v, SMStrGet(&ms->v));
 		}
 		break;
-	case SM0_II32: case SM0_UU32: case SM0_II: case SM0_IP:
-	case SM0_I: case SM0_I32: case SM0_U32:
+	case SM0_II32:
+	case SM0_UU32:
+	case SM0_II:
+	case SM0_IP:
+	case SM0_I:
+	case SM0_I32:
+	case SM0_U32:
 		/* no additional action required */
 		break;
 	}
@@ -541,8 +562,9 @@ srt_bool sm_count_i(const srt_map *m, const int64_t k)
 		n1.k = k;
 		n = (const srt_tnode *)&n1;
 	} else {
-		RETURN_IF((!sm_chk_t(m, SM0_II32) && !sm_chk_t(m, SM0_I32)) ||
-			  !sm_i32_range(k), S_FALSE);
+		RETURN_IF((!sm_chk_t(m, SM0_II32) && !sm_chk_t(m, SM0_I32))
+				  || !sm_i32_range(k),
+			  S_FALSE);
 		n2.k = (int32_t)k;
 		n = (const srt_tnode *)&n2;
 	}
@@ -561,9 +583,9 @@ srt_bool sm_count_s(const srt_map *m, const srt_string *k)
  * Insert
  */
 
-S_INLINE srt_bool
-sm_insert_ii32_aux(srt_map **m, const int32_t k, const int32_t v,
-		   const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_ii32_aux(srt_map **m, const int32_t k,
+				     const int32_t v,
+				     const srt_tree_rewrite rw_f)
 {
 	struct SMapii n;
 	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II32), S_FALSE);
@@ -582,9 +604,9 @@ srt_bool sm_inc_ii32(srt_map **m, const int32_t k, const int32_t v)
 	return sm_insert_ii32_aux(m, k, v, rw_inc_SM_II32);
 }
 
-S_INLINE srt_bool
-sm_insert_uu32_aux(srt_map **m, const uint32_t k, const uint32_t v,
-		   const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_uu32_aux(srt_map **m, const uint32_t k,
+				     const uint32_t v,
+				     const srt_tree_rewrite rw_f)
 {
 	struct SMapuu n;
 	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_UU32), S_FALSE);
@@ -603,9 +625,8 @@ srt_bool sm_inc_uu32(srt_map **m, const uint32_t k, const uint32_t v)
 	return sm_insert_uu32_aux(m, k, v, rw_inc_SM_UU32);
 }
 
-S_INLINE srt_bool
-sm_insert_ii_aux(srt_map **m, const int64_t k, const int64_t v,
-		 const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_ii_aux(srt_map **m, const int64_t k,
+				   const int64_t v, const srt_tree_rewrite rw_f)
 {
 	struct SMapII n;
 	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II), S_FALSE);
@@ -707,17 +728,22 @@ srt_bool sm_delete_i(srt_map *m, const int64_t k)
 	const srt_tnode *n;
 	srt_tree_callback callback = NULL;
 	switch (m->d.sub_type) {
-	case SM0_I32: case SM0_II32:
+	case SM0_I32:
+	case SM0_II32:
 		RETURN_IF(!sm_i32_range(k), S_FALSE);
 		n_i32.k = (int32_t)k;
 		n = (const srt_tnode *)&n_i32;
 		break;
-	case SM0_U32: case SM0_UU32:
+	case SM0_U32:
+	case SM0_UU32:
 		RETURN_IF(k > UINT32_MAX, S_FALSE);
 		n_u32.k = (uint32_t)k;
 		n = (const srt_tnode *)&n_u32;
 		break;
-	case SM0_IS: case SM0_I: case SM0_II: case SM0_IP:
+	case SM0_IS:
+	case SM0_I:
+	case SM0_II:
+	case SM0_IP:
 		if (m->d.sub_type == SM0_IS)
 			callback = aux_is_delete;
 		n_i64.k = k;
@@ -735,14 +761,16 @@ srt_bool sm_delete_s(srt_map *m, const srt_string *k)
 	struct SMapS sx;
 	SMStrSetRef(&sx.k, k);
 	switch (m->d.sub_type) {
-		case SM0_SS:
-			callback = aux_ss_delete;
-			break;
-		case SM0_S: case SM0_SP: case SM0_SI:
-			callback = aux_sx_delete;
-			break;
-		default:
-			return S_FALSE;
+	case SM0_SS:
+		callback = aux_ss_delete;
+		break;
+	case SM0_S:
+	case SM0_SP:
+	case SM0_SI:
+		callback = aux_sx_delete;
+		break;
+	default:
+		return S_FALSE;
 	}
 	return st_delete(m, (const srt_tnode *)&sx, callback);
 }
@@ -767,15 +795,20 @@ ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv)
 	case SM_UU32:
 		kt = vt = SV_U32;
 		break;
-	case SM_II: case SM_IS: case SM_IP:
+	case SM_II:
+	case SM_IS:
+	case SM_IP:
 		kt = SV_I64;
 		vt = sm_chk_t(m, SM_II) ? SV_I64 : SV_GEN;
 		break;
-	case SM_SI: case SM_SS: case SM_SP:
+	case SM_SI:
+	case SM_SS:
+	case SM_SP:
 		kt = SV_GEN;
 		vt = sm_chk_t(m, SM_SI) ? SV_I64 : SV_GEN;
 		break;
-	default: return 0; /* BEHAVIOR: invalid type */
+	default:
+		return 0; /* BEHAVIOR: invalid type */
 	}
 	if (v2x.kv) {
 		if (v2x.kv->d.sub_type != (uint8_t)kt)
@@ -794,15 +827,28 @@ ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv)
 	if (!v2x.vv)
 		v2x.vv = sv_alloc_t(vt, m->d.size);
 	switch (m->d.sub_type) {
-	case SM_II32: traverse_f = aux_ii32_sort; break;
-	case SM_UU32: traverse_f = aux_uu32_sort; break;
-	case SM_II: traverse_f = aux_ii_sort; break;
-	case SM_IS: case SM_IP: traverse_f = aux_is_ip_sort; break;
-	case SM_SI: traverse_f = aux_si_sort; break;
-	case SM_SS: case SM_SP: traverse_f = aux_sp_ss_sort; break;
+	case SM_II32:
+		traverse_f = aux_ii32_sort;
+		break;
+	case SM_UU32:
+		traverse_f = aux_uu32_sort;
+		break;
+	case SM_II:
+		traverse_f = aux_ii_sort;
+		break;
+	case SM_IS:
+	case SM_IP:
+		traverse_f = aux_is_ip_sort;
+		break;
+	case SM_SI:
+		traverse_f = aux_si_sort;
+		break;
+	case SM_SS:
+	case SM_SP:
+		traverse_f = aux_sp_ss_sort;
+		break;
 	}
-	r = st_traverse_inorder((const srt_tree *)m, traverse_f,
-				(void *)&v2x);
+	r = st_traverse_inorder((const srt_tree *)m, traverse_f, (void *)&v2x);
 	*kv = v2x.kv;
 	*vv = v2x.vv;
 	return r;
@@ -829,4 +875,3 @@ void SMStrUpdate_unsafe(union SMStr *sstr, const srt_string *s)
 }
 
 #endif
-

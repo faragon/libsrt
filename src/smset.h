@@ -29,23 +29,22 @@ extern "C" {
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
-#include "sstring.h"
 #include "smap.h"
+#include "sstring.h"
 
 /*
  * Structures
  */
 
-enum eSMS_Type
-{
-	SMS_I	= SM0_I,
-	SMS_I32	= SM0_I32,
-	SMS_U32	= SM0_U32,
-	SMS_S	= SM0_S
+enum eSMS_Type {
+	SMS_I = SM0_I,
+	SMS_I32 = SM0_I32,
+	SMS_U32 = SM0_U32,
+	SMS_S = SM0_S
 };
 
-typedef srt_map srt_set;	/* Opaque structure (accessors are provided) */
-			/* (set is implemented over key-only map)    */
+typedef srt_map srt_set; /* Opaque structure (accessors are provided) */
+			 /* (set is implemented over key-only map)    */
 
 typedef srt_bool (*srt_set_it_i32)(int32_t k, void *context);
 typedef srt_bool (*srt_set_it_u32)(uint32_t k, void *context);
@@ -60,21 +59,25 @@ typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
 #API: |Allocate set (stack)|set type; initial reserve|set|O(1)|1;2|
 srt_set *sms_alloca(const enum eSMS_Type t, const size_t n);
 */
-#define sms_alloca(type, max_size)					\
-	sms_alloc_raw(type, S_TRUE,					\
-		      s_alloca(sd_alloc_size_raw(sizeof(srt_set),		\
-			     sm_elem_size(type), max_size, S_FALSE)),	\
-		     sm_elem_size(type), max_size)
+#define sms_alloca(type, max_size)                                             \
+	sms_alloc_raw(type, S_TRUE,                                            \
+		      s_alloca(sd_alloc_size_raw(sizeof(srt_set),              \
+						 sm_elem_size(type), max_size, \
+						 S_FALSE)),                    \
+		      sm_elem_size(type), max_size)
 
-S_INLINE srt_set *sms_alloc_raw(const enum eSMS_Type t, const srt_bool ext_buf, void *buffer, const size_t elem_size, const size_t max_size)
+S_INLINE srt_set *sms_alloc_raw(const enum eSMS_Type t, const srt_bool ext_buf,
+				void *buffer, const size_t elem_size,
+				const size_t max_size)
 {
-	return sm_alloc_raw0((enum eSM_Type0)t, ext_buf, buffer, elem_size, max_size);
+	return sm_alloc_raw0((enum eSM_Type0)t, ext_buf, buffer, elem_size,
+			     max_size);
 }
 
 /* #API: |Allocate set (heap)|set type; initial reserve|set|O(1)|1;2| */
 S_INLINE srt_set *sms_alloc(const enum eSMS_Type t, const size_t initial_num_elems_reserve)
 {
-        return sm_alloc0((enum eSM_Type0)t, initial_num_elems_reserve);
+	return sm_alloc0((enum eSM_Type0)t, initial_num_elems_reserve);
 }
 
 /* #API: |Duplicate set|input set|output set|O(n)|1;2| */
@@ -163,36 +166,36 @@ S_INLINE srt_bool sms_count_s(const srt_set *s, const srt_string *k)
 /* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_i32(srt_set **s, const int32_t k)
 {
-        struct SMapi n;
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
-        n.k = k;
-        return st_insert((srt_tree **)s, (const srt_tnode *)&n);
+	struct SMapi n;
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
+	n.k = k;
+	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_u32(srt_set **s, const uint32_t k)
 {
-        struct SMapu n;
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
-        n.k = k;
-        return st_insert((srt_tree **)s, (const srt_tnode *)&n);
+	struct SMapu n;
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
+	n.k = k;
+	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_i(srt_set **s, const int64_t k)
 {
-        struct SMapI n;
-        RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
-        n.k = k;
-        return st_insert((srt_tree **)s, (const srt_tnode *)&n);
+	struct SMapI n;
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
+	n.k = k;
+	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
 /* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 {
-        struct SMapS n;
+	struct SMapS n;
 	srt_bool ins_ok;
-        RETURN_IF(!s  || (*s)->d.sub_type != SMS_S, S_FALSE);
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_S, S_FALSE);
 #if 1 /* workaround */
 	SMStrSet(&n.k, k);
 	ins_ok = st_insert((srt_tree **)s, (const srt_tnode *)&n);
@@ -201,8 +204,9 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 	return ins_ok;
 #else
 	/* TODO: rw_add_SMS_S */
-        n.k = k;
-	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_add_SMS_S);
+	n.k = k;
+	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
+			    rw_add_SMS_S);
 #endif
 }
 
@@ -268,4 +272,3 @@ int32_t sms_it_s(const srt_set *s, srt_tndx i);
 #endif
 
 #endif /* #ifndef SMSET_H */
-

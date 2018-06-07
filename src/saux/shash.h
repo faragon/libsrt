@@ -31,7 +31,6 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size);
 uint32_t sh_adler32(uint32_t adler, const void *buf, size_t buf_size);
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SHASH_H */
-
+#endif /* SHASH_H */

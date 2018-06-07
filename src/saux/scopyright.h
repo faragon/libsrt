@@ -13,13 +13,12 @@ extern "C" {
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
-#define LIBSRT_COPYRIGHT \
+#define LIBSRT_COPYRIGHT                                                       \
 	"Copyright (c) 2015-2018 F. Aragon. All rights reserved."
-#define LIBSRT_LICENSE \
+#define LIBSRT_LICENSE                                                         \
 	"Released under the BSD 3-Clause License (see the doc/LICENSE)"
 
 #ifdef __cplusplus
-}      /* extern "C" { */
+} /* extern "C" { */
 #endif
-#endif	/* SCOPYRIGHT_H */
-
+#endif /* SCOPYRIGHT_H */
