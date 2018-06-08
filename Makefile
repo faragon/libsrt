@@ -76,6 +76,7 @@ run_tests: stest
 	@./$(TEST)
 clean:
 	@rm -f $(OBJECTS) $(LIBSRT) $(ELIBSRT) *\.o *\.dSYM *\.gcno *\.gcda \
-		*\.out callgrind* out\.txt clang_analysis.txt *\.errors*
+		*\.gcov *\.out callgrind* out\.txt clang_analysis.txt \
+		*\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
 .PHONY: clean all run_tests

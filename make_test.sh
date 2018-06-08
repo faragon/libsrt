@@ -218,10 +218,26 @@ fi
 
 if (($TMUX & 8)) ; then
 	if  type python3 >/dev/null 2>&1 ; then
+		OUT_DOC=out_doc
+		COVERAGE_OUT=$OUT_DOC/coverage.txt
 		echo "Documentation generation test..."
-		if ! utl/mk_doc.sh src out_doc ; then
+		if ! utl/mk_doc.sh src $OUT_DOC ; then
 			ERRORS=$((ERRORS + 1))
 		fi
+		make clean
+		make -j $MJOBS CC=gcc PROFILING=1 2>/dev/null >/dev/null
+		for f in schar scommon sdata senc shash smap smset ssearch \
+			 ssort sstring stree svector stest ; do
+			gcov $f.c >/dev/null 2>/dev/null
+		done
+		rm -f $COVERAGE_OUT 2>/dev/null
+		ls -1 *c.gcov | awk -F '.gcov' '{print $1}' | while read f ; do
+			echo "$f:"$(gcov $f | sed -e "/$f.gcov/"',$d' | \
+			     awk -F ':' '{print $2}' | awk '{print $1}') >> \
+								$COVERAGE_OUT
+		done
+		echo "$COVERAGE_OUT:"
+		cat $COVERAGE_OUT
 	else
 		echo "WARNING: doc not generated (python3 not found)"
 	fi
@@ -249,6 +265,8 @@ if (($TMUX & 16)) ; then
 		done
 	fi
 fi
+
+make clean
 
 exit $((ERRORS > 0 ? 1 : 0))
 
