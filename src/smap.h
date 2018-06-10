@@ -10,7 +10,7 @@ extern "C" {
  * #SHORTDOC map handling (key-value storage)
  *
  * #DOC Map functions handle key-value storage, which is implemented as a
- * #DOC Red-Black tree (O(n log n) maximum complexity for insert/read/delete).
+ * #DOC Red-Black tree (O(log n) time complexity for insert/read/delete)
  * #DOC
  * #DOC
  * #DOC Supported key/value modes (enum eSM_Type):
