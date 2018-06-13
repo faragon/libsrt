@@ -557,7 +557,7 @@ srt_bool sm_count_i(const srt_map *m, const int64_t k)
 	const srt_tnode *n;
 	struct SMapI n1;
 	struct SMapi n2;
-	ASSERT_RETURN_IF(!m, S_FALSE);
+	RETURN_IF(!m, S_FALSE);
 	if (sm_chk_Ix(m)) {
 		n1.k = k;
 		n = (const srt_tnode *)&n1;
@@ -574,7 +574,7 @@ srt_bool sm_count_i(const srt_map *m, const int64_t k)
 srt_bool sm_count_s(const srt_map *m, const srt_string *k)
 {
 	struct SMapS n;
-	ASSERT_RETURN_IF(!sm_chk_sx(m), S_FALSE);
+	RETURN_IF(!sm_chk_sx(m), S_FALSE);
 	SMStrSetRef(&n.k, k);
 	return st_locate(m, (const srt_tnode *)&n) ? S_TRUE : S_FALSE;
 }
@@ -588,7 +588,7 @@ S_INLINE srt_bool sm_insert_ii32_aux(srt_map **m, const int32_t k,
 				     const srt_tree_rewrite rw_f)
 {
 	struct SMapii n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II32), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_II32), S_FALSE);
 	n.x.k = k;
 	n.v = v;
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
@@ -609,7 +609,7 @@ S_INLINE srt_bool sm_insert_uu32_aux(srt_map **m, const uint32_t k,
 				     const srt_tree_rewrite rw_f)
 {
 	struct SMapuu n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_UU32), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_UU32), S_FALSE);
 	n.x.k = k;
 	n.v = v;
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
@@ -629,7 +629,7 @@ S_INLINE srt_bool sm_insert_ii_aux(srt_map **m, const int64_t k,
 				   const int64_t v, const srt_tree_rewrite rw_f)
 {
 	struct SMapII n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_II), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_II), S_FALSE);
 	n.x.k = k;
 	n.v = v;
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
@@ -649,7 +649,7 @@ srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
 {
 	srt_bool ins_ok;
 	struct SMapIS n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_IS), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_IS), S_FALSE);
 	n.x.k = k;
 #if 1 /* workaround */
 	SMStrSet(&n.v, v);
@@ -668,7 +668,7 @@ srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
 srt_bool sm_insert_ip(srt_map **m, const int64_t k, const void *v)
 {
 	struct SMapIP n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_IP), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_IP), S_FALSE);
 	n.x.k = k;
 	n.v = v;
 	return st_insert((srt_tree **)m, (const srt_tnode *)&n);
@@ -679,7 +679,7 @@ S_INLINE srt_bool sm_insert_si_aux(srt_map **m, const srt_string *k,
 {
 	srt_bool r;
 	struct SMapSI n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SI), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_SI), S_FALSE);
 	SMStrSetRef(&n.x.k, k);
 	n.v = v;
 	r = st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
@@ -699,7 +699,7 @@ srt_bool sm_inc_si(srt_map **m, const srt_string *k, const int64_t v)
 srt_bool sm_insert_ss(srt_map **m, const srt_string *k, const srt_string *v)
 {
 	struct SMapSS n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SS), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_SS), S_FALSE);
 	SMStrSetRef(&n.x.k, k);
 	SMStrSetRef(&n.v, v);
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
@@ -709,7 +709,7 @@ srt_bool sm_insert_ss(srt_map **m, const srt_string *k, const srt_string *v)
 srt_bool sm_insert_sp(srt_map **m, const srt_string *k, const void *v)
 {
 	struct SMapSP n;
-	ASSERT_RETURN_IF(!m || !sm_chk_t(*m, SM0_SP), S_FALSE);
+	RETURN_IF(!m || !sm_chk_t(*m, SM0_SP), S_FALSE);
 	SMStrSetRef(&n.x.k, k);
 	n.v = v;
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
@@ -727,6 +727,7 @@ srt_bool sm_delete_i(srt_map *m, const int64_t k)
 	struct SMapu n_u32;
 	const srt_tnode *n;
 	srt_tree_callback callback = NULL;
+	RETURN_IF(!m, S_FALSE);
 	switch (m->d.sub_type) {
 	case SM0_I32:
 	case SM0_II32:
@@ -759,6 +760,7 @@ srt_bool sm_delete_s(srt_map *m, const srt_string *k)
 {
 	srt_tree_callback callback = NULL;
 	struct SMapS sx;
+	RETURN_IF(!m, S_FALSE);
 	SMStrSetRef(&sx.k, k);
 	switch (m->d.sub_type) {
 	case SM0_SS:
