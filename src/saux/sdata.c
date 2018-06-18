@@ -125,10 +125,13 @@ S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
 			       uint8_t full_header_size,
 			       const size_t extra_tail_bytes)
 {
+#ifdef SD_ENABLE_HEURISTIC_GROWTH
+	size_t inc;
+#endif
 	int chg;
 	srt_bool is_dyn;
 	uint8_t curr_hdr_size, next_hdr_size;
-	size_t curr_max_size, inc, elem_size, as, size;
+	size_t curr_max_size, elem_size, as, size;
 	srt_data *d_next;
 	char *p;
 	RETURN_IF(!d || !*d || (*d)->f.st_mode == SData_VoidData, 0);

@@ -375,7 +375,7 @@ struct aux_jpeg {
 
 static void aux_jpegd_init(j_decompress_ptr jc)
 {
-	jc = jc; /* pedantic */
+	(void)jc;
 }
 
 static boolean aux_jpegd_fill_input_buffer(j_decompress_ptr jc)
@@ -398,7 +398,7 @@ static void aux_jpegd_skip_input_data(j_decompress_ptr jc, long size)
 
 static void aux_jpegd_term_source(j_decompress_ptr jc)
 {
-	jc = jc; /* pedantic */
+	(void)jc;
 }
 
 static void aux_jpege_init(j_compress_ptr jc)

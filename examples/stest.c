@@ -54,7 +54,6 @@
 BUILD_SINT_CMPF(scmp_int32, int32_t)
 BUILD_SINT_CMPF(scmp_uint32, uint32_t)
 BUILD_SINT_CMPF(scmp_int64, int64_t)
-BUILD_SINT_CMPF(scmp_uint64, uint64_t)
 BUILD_SINT_CMPF(scmp_ptr, const void *)
 
 /*

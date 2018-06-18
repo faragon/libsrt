@@ -361,8 +361,10 @@ static srt_string *aux_toXcase(srt_string **s, const srt_bool cat,
 			       const srt_string *src, int32_t (*towX)(int32_t))
 {
 	int c, c2;
-	size_t ss, sso_max, cached_usize, at, at_ss, sso_req, i, i2, csize,
-		csize2;
+	size_t ss, sso_max, cached_usize, at, at_ss, sso_req, i, csize, csize2;
+#ifdef S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
+	size_t i2;
+#endif
 	const char *ps;
 	char *po0, *po, *pout, u8[SSU8_MAX_SIZE];
 	srt_string *out;

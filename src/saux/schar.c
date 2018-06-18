@@ -96,8 +96,11 @@ size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
 size_t sc_utf8_count_chars(const char *s, const size_t s_size,
 			   size_t *enc_errors)
 {
+#ifdef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
 	union s_u32 m1;
-	size_t i, unicode_sz, size_cutted;
+	size_t size_cutted;
+#endif
+	size_t i, unicode_sz;
 	if (!s || !s_size)
 		return 0;
 	i = unicode_sz = 0;

@@ -73,7 +73,10 @@ uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
-	size_t i, bsX;
+#if S_CRC32_SLC >= 4
+	size_t bsX;
+#endif
+	size_t i;
 	const uint8_t *p;
 	RETURN_IF(!buf, S_CRC32_INIT);
 	i = 0;

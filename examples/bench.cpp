@@ -1132,7 +1132,6 @@ bool cxx_bitset(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	std::bitset <S_TEST_ELEMS/*count*/> b; // Compile-time size required
-	std::map <int32_t, int32_t> m;
 	for (size_t i = 0; i < count; i++)
 		b[i] = 1;
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -1159,7 +1158,6 @@ bool cxx_bitset_popcountN(size_t pc_count, size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
 	std::bitset <S_TEST_ELEMS/*count*/> b; // Compile-time size required
-	std::map <int32_t, int32_t> m;
 	for (size_t i = 0; i < count; i++)
 		b[i] = 1;
 	for (size_t j = 0; j < pc_count; j++)
