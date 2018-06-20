@@ -72,14 +72,15 @@ S_INLINE srt_tndx get_lr(const srt_tnode *n, const enum STNDir d)
 S_INLINE srt_tnode *locate_parent(srt_tree *t, const struct NodeContext *son,
 				  enum STNDir *d)
 {
+	srt_tndx lr;
 	srt_tnode *cn;
 	if (t->root == son->x)
 		return son->n;
 	cn = get_node(t, t->root);
-	for (; cn && cn->x.l != son->x && cn->r != son->x;)
-		cn = get_node(t,
-			      get_lr(cn, t->cmp_f(cn, son->n) < 0 ? ST_Right
-								  : ST_Left));
+	for (; cn && cn->x.l != son->x && cn->r != son->x;) {
+		lr = get_lr(cn, t->cmp_f(cn, son->n) < 0 ? ST_Right : ST_Left);
+		cn = get_node(t, lr);
+	}
 	*d = cn && cn->x.l == son->x ? ST_Left : ST_Right;
 	return cn;
 }

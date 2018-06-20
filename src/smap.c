@@ -309,7 +309,8 @@ srt_map *sm_alloc_raw0(const enum eSM_Type0 t, const srt_bool ext_buf,
 	RETURN_IF(!buffer || !max_size, NULL);
 	m = (srt_map *)st_alloc_raw(type2cmpf(t), ext_buf, buffer, elem_size,
 				    max_size);
-	m->d.sub_type = t;
+	if (m)
+		m->d.sub_type = t;
 	return m;
 }
 
@@ -317,7 +318,8 @@ srt_map *sm_alloc0(const enum eSM_Type0 t, const size_t init_size)
 {
 	srt_map *m =
 		(srt_map *)st_alloc(type2cmpf(t), sm_elem_size(t), init_size);
-	m->d.sub_type = t;
+	if (m)
+		m->d.sub_type = t;
 	return m;
 }
 

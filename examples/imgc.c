@@ -40,8 +40,7 @@ int main(int argc, const char **argv)
 			break;
 		if (argc > 3) {
 			filter = atoi(argv[3]);
-			IMGC_XTEST(filter && filter >= F_NumElems,
-				   "invalid filter", 10);
+			IMGC_XTEST(filter >= F_NumElems, "invalid filter", 10);
 		}
 		ro = argc < 3 ? S_TRUE : S_FALSE;
 		t_in = file_type(argv[1]);

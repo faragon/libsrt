@@ -1721,6 +1721,8 @@ static int test_ss_misc()
 	gs = ss_grow(&a, (size_t)0xffffff00);
 #elif UINTPTR_MAX > 0xffffffff
 	gs = ss_grow(&a, (int64_t)1000 * 1000 * 1000 * 1000 * 1000);
+#else
+	gs = 0;
 #endif
 	res |= (gs == 0 && ss_alloc_errors(a) ? 0 : 4);
 	/*
