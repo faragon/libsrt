@@ -1631,7 +1631,7 @@ srt_string *ss_cat_wn(srt_string **s, const wchar_t *src, const size_t src_size)
 			inc_size(*s, l);
 			char_count++;
 		}
-		inc_unicode_size(*s, char_count++);
+		inc_unicode_size(*s, char_count);
 	}
 	return ss_check(s);
 }
