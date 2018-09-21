@@ -63,13 +63,19 @@ static srt_bool tga_rgb_swap(const size_t bpp, const size_t buf_size,
 	RETURN_IF(!s || !t, S_FALSE);
 	switch (bpp) {
 	case 24:
-		for (i = 0; i < buf_size; i += 3)
-			t[i] = s[i + 2], t[i + 1] = s[i + 1], t[i + 2] = s[i];
+		for (i = 0; i < buf_size; i += 3) {
+			t[i] = s[i + 2];
+			t[i + 1] = s[i + 1];
+			t[i + 2] = s[i];
+		}
 		return S_TRUE;
 	case 32:
-		for (i = 0; i < buf_size; i += 4) /* RGBA <-> BGRA */
-			t[i] = s[i + 2], t[i + 1] = s[i + 1], t[i + 2] = s[i],
+		for (i = 0; i < buf_size; i += 4) { /* RGBA <-> BGRA */
+			t[i] = s[i + 2];
+			t[i + 1] = s[i + 1];
+			t[i + 2] = s[i];
 			t[i + 3] = s[i + 3];
+		}
 		return S_TRUE;
 	default:
 		return S_FALSE;
@@ -587,14 +593,14 @@ static size_t rgb2jpg(srt_string **jpg, const srt_string *rgb,
 #define RGB_COUNT_LOOP(i, p, ss, ps, bs, cmx, out)                             \
 	sb_clear(bs);                                                          \
 	for (i = 0; i < ss && sb_popcount(bs) < cmx; i += ps) {                \
-		unsigned c = (unsigned)p[i] & 0xff;                            \
+		unsigned _c = (unsigned)p[i] & 0xff;                           \
 		if (ps > 1)                                                    \
-			c |= ((unsigned)p[i + 1] & 0xff) << 8;                 \
+			_c |= ((unsigned)p[i + 1] & 0xff) << 8;                \
 		if (ps > 2)                                                    \
-			c |= ((unsigned)p[i + 2] & 0xff) << 16;                \
+			_c |= ((unsigned)p[i + 2] & 0xff) << 16;               \
 		if (ps > 3)                                                    \
-			c |= ((unsigned)p[i + 3] & 0xff) << 24;                \
-		sb_set(&bs, c);                                                \
+			_c |= ((unsigned)p[i + 3] & 0xff) << 24;               \
+		sb_set(&bs, _c);                                               \
 	}                                                                      \
 	out = sb_popcount(bs);
 

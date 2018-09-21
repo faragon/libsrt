@@ -814,7 +814,7 @@ static int test_ss_cpy_wn()
 #else
 	const uint32_t t32[] = {0xd1,  0xf1,  0x131, 0x130,  0x11e,   0x11f,
 				0x15e, 0x15f, 0xa2,  0x20ac, 0x24b62, 0};
-	const wchar_t *t = (wchar_t *)t32;
+	const wchar_t *t = (const wchar_t *)t32;
 #endif
 #define TU8A3 U8_C_N_TILDE_D1 U8_S_N_TILDE_F1 U8_S_I_DOTLESS_131
 #define TU8B3 U8_C_I_DOTTED_130 U8_C_G_BREVE_11E U8_S_G_BREVE_11F
@@ -2720,10 +2720,10 @@ static int test_sv_resize()
 	sv_free(&v);
 
 #define BUILD_CMPF(FN, T)                                                      \
-	int FN(const void *a, const void *b)                                   \
+	static int FN(const void *a, const void *b)                            \
 	{                                                                      \
-		return *(T *)(a) < *(T *)(b) ? -1                              \
-					     : *(T *)(a) == *(T *)(b) ? 0 : 1; \
+		return *(const T *)(a) < *(const T *)(b) ? -1                  \
+		     : *(const T *)(a) == *(const T *)(b) ? 0 : 1;	       \
 	}
 
 BUILD_CMPF(cmp8i, int8_t)
@@ -2843,7 +2843,7 @@ static int test_sv_sort()
 					       && (int)sv_at_i(v64i, i) == i
 					       && (int)sv_at_u(v64u, i) == i
 				       ? 0
-				       : 1 << 31;
+				       : 1 << 30;
 		}
 	}
 	sv_free(&v8i, &v8u, &v16i, &v16u, &v32i, &v32u, &v64i, &v64u);
@@ -3846,18 +3846,18 @@ static int test_sm_itr()
 		ss_cpy_c(&lower_s, "k001"); /* covering "k0010" to "k0019" */
 		ss_cpy_c(&upper_s, "k002");
 		processed_ii321 = sm_itr_ii32(m_ii32, lower_i32, upper_i32,
-					      cback_i32i32, &cnt1),
+					      cback_i32i32, &cnt1);
 		processed_ii322 =
-			sm_itr_ii32(m_ii32, lower_i32, upper_i32, NULL, NULL),
+			sm_itr_ii32(m_ii32, lower_i32, upper_i32, NULL, NULL);
 		processed_uu32 =
-			sm_itr_uu32(m_uu32, lower_u32, upper_u32, NULL, NULL),
-		processed_ii = sm_itr_ii(m_ii, lower_i, upper_i, NULL, NULL),
-		processed_is = sm_itr_is(m_is, lower_i, upper_i, NULL, NULL),
-		processed_ip = sm_itr_ip(m_ip, lower_i, upper_i, NULL, NULL),
-		processed_si = sm_itr_si(m_si, lower_s, upper_s, NULL, NULL),
+			sm_itr_uu32(m_uu32, lower_u32, upper_u32, NULL, NULL);
+		processed_ii = sm_itr_ii(m_ii, lower_i, upper_i, NULL, NULL);
+		processed_is = sm_itr_is(m_is, lower_i, upper_i, NULL, NULL);
+		processed_ip = sm_itr_ip(m_ip, lower_i, upper_i, NULL, NULL);
+		processed_si = sm_itr_si(m_si, lower_s, upper_s, NULL, NULL);
 		processed_ss1 =
-			sm_itr_ss(m_ss, lower_s, upper_s, cback_ss, &cnt2),
-		processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s, NULL, NULL),
+			sm_itr_ss(m_ss, lower_s, upper_s, cback_ss, &cnt2);
+		processed_ss2 = sm_itr_ss(m_ss, lower_s, upper_s, NULL, NULL);
 		processed_sp = sm_itr_sp(m_sp, lower_s, upper_s, NULL, NULL);
 		res = processed_ii321 == 11 ? 0 : 2;
 		res |= processed_ii321 == processed_ii322 ? 0 : 4;

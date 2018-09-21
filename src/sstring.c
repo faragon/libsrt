@@ -597,7 +597,7 @@ static srt_string *aux_erase_u(srt_string **s, const srt_bool cat,
 		at = (cat && *s) ? ss_size(*s) : 0;
 		out_size += at;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
-			char *po = ss_get_buffer(*s);
+			po = ss_get_buffer(*s);
 			memcpy(po + at, ss_get_buffer_r(src), head_size);
 			memcpy(po + at + head_size,
 			       ss_get_buffer_r(src) + head_size + cut_size,

@@ -397,7 +397,7 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 	enum STNDir d0 = ST_Right;
 	struct NodeContext w[CW_SIZE];
 	int64_t cmp;
-	enum STNDir d;
+	enum STNDir d, ds, dt;
 	srt_tndx nd;
 	srt_tnode *ndn;
 	srt_tndx y;
@@ -483,14 +483,12 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 				break;
 			d2 = w[cpp].n->r == w[cp].x ? ST_Right : ST_Left;
 			if (is_red(t, get_lr(sn, d0))) {
-				const srt_tndx y =
-					rot2x(t, w[cp].n, w[cp].x, d0, xd0);
+				y = rot2x(t, w[cp].n, w[cp].x, d0, xd0);
 				set_lr(w[cpp].n, d2, y);
 				st_checkfix_root(t, w[cp].x, y);
 			} else {
 				if (is_red(t, get_lr(sn, xd0))) {
-					srt_tndx y = rot1x(t, w[cp].n, w[cp].x,
-							   d0, xd0);
+					y = rot1x(t, w[cp].n, w[cp].x, d0, xd0);
 					set_lr(w[cpp].n, d2, y);
 					st_checkfix_root(t, w[cp].x, y);
 				}
@@ -529,10 +527,8 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 			t->root =
 				w[c].n->x.l != ST_NIL ? w[c].n->x.l : w[c].n->r;
 		} else {
-			enum STNDir ds =
-				w[c].n->x.l == ST_NIL ? ST_Right : ST_Left;
-			enum STNDir dt =
-				w[cp].n->r == w[c].x ? ST_Right : ST_Left;
+			ds = w[c].n->x.l == ST_NIL ? ST_Right : ST_Left;
+			dt = w[cp].n->r == w[c].x ? ST_Right : ST_Left;
 			set_lr(w[cp].n, dt, get_lr(w[c].n, ds));
 		}
 		/*
@@ -546,7 +542,7 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 		S_ASSERT(ts - 1 < ST_NIL);
 		sz = ts - 1; /* BEHAVIOR */
 		if (w[c].x != sz) {
-			enum STNDir d = ST_Left;
+			d = ST_Left;
 			const struct NodeContext ct = {sz, get_node(t, sz)};
 			/* TODO: cache this (!) */
 			srt_tnode *fpn = locate_parent(t, &ct, &d);
