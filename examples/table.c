@@ -265,7 +265,13 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		if (ss_size(wb) > 0 && ss_write(out_fd, wb, 0, ss_size(wb)) < 0)
 			nrow = -2; /* write error */
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&rb, &wb, &field);
+#else
+	ss_free(&rb);
+	ss_free(&wb);
+	ss_free(&field);
+#endif
 	return nrow;
 }
 
@@ -361,7 +367,13 @@ static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		if (!sflush(wb, out_fd, 0))
 			fatal_error = S_TRUE;
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&rb, &wb, &field);
+#else
+	ss_free(&rb);
+	ss_free(&wb);
+	ss_free(&field);
+#endif
 	return fatal_error ? -2 : (ssize_t)nrow;
 }
 
@@ -531,6 +543,12 @@ static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 		if (!sflush(wb, out_fd, 0))
 			fatal_error = S_TRUE;
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&rb, &wb, &field);
+#else
+	ss_free(&rb);
+	ss_free(&wb);
+	ss_free(&field);
+#endif
 	return fatal_error ? -2 : (ssize_t)nrow;
 }

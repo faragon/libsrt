@@ -237,6 +237,11 @@ int main(int argc, const char **argv)
 		lz_st_ref[4], lz_st_ref[5], lz_st_ref[6], lz_st_ref[7],
 		lz_st_ref[8], lz_st_ref_bytes);
 #endif
+#ifdef S_USE_VA_ARGS
 	ss_free(&in, &out);
+#else
+	ss_free(&in);
+	ss_free(&out);
+#endif
 	return exit_code;
 }

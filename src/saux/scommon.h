@@ -56,14 +56,31 @@ extern "C" {
 #include <wchar.h>
 #include <wctype.h>
 
+#define S_WCHAR32
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L                   \
+	|| __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800      \
+	|| (defined(__APPLE_CC__) && __APPLE_CC__ >= 5658)                     \
+	|| defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 2 && __GNUC_MINOR__ > 7)
+#ifndef S_C90
+#define S_C99_SUPPORT
+#endif
+#else
+#if defined(__GNUC__) && (__GNUC__ < 2 || __GNUC__ == 2 && __GNUC_MINOR__ <= 8)
+#define S_OLD_C_PREPROCESSOR
+#endif
+#endif
+
 /*
  * C99 requires to define __STDC_LIMIT_MACROS before stdint.h if in C++ mode
  * (WG14/N1256 Committee Draft 20070907 ISO/IEC 9899:TC3, 7.18.2, page 257)
  */
+#ifdef S_C99_SUPPORT
 #ifdef __cplusplus
 #define __STDC_LIMIT_MACROS
 #endif
 #include <stdint.h>
+#endif
 
 #ifndef WCHAR_MAX
 #define WCHAR_MAX ((wchar_t)-1)
@@ -87,18 +104,15 @@ extern "C" {
 #define INT64_MIN ((int64_t)0x8000000000000000LL)
 #endif
 
+#ifndef S_OLD_C_PREPROCESSOR
+#if WCHAR_MAX > 0 && WCHAR_MAX <= 0xffff
+#undef S_WCHAR32
+#endif
+#endif
+
 /*
  * Context
  */
-
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L                   \
-	|| __cplusplus >= 19971L || defined(_MSC_VER) && _MSC_VER >= 1800      \
-	|| (defined(__APPLE_CC__) && __APPLE_CC__ >= 5658)                     \
-	|| defined(__GNUC__)
-#ifndef S_C90
-#define S_C99_SUPPORT
-#endif
-#endif
 
 #if defined(__GNUC__) && __GNUC__ >= 4 || defined(__clang__)                   \
 	|| defined(__INTEL_COMPILER)
@@ -110,9 +124,11 @@ extern "C" {
 #define S_LIKELY(expr) S_EXPECT((expr) != 0, 1)
 #define S_UNLIKELY(expr) S_EXPECT((expr) != 0, 0)
 
-#if defined(S_C99_SUPPORT) || defined(__GNUC__) || defined(__TINYC__)
+#if defined(S_C99_SUPPORT) || defined(__TINYC__)
 #define S_MODERN_COMPILER
+#ifndef S_NO_VARGS
 #define S_USE_VA_ARGS
+#endif
 #endif
 
 #ifdef S_C99_SUPPORT
@@ -216,10 +232,12 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 typedef SSIZE_T ssize_t;
 #endif
 
-#if !defined(S_C99_SUPPORT) && !defined(__GNUC__)
+#if !defined(S_C99_SUPPORT)
+#if !defined(__GNUC__)
 typedef char int8_t;
 typedef short int16_t;
 typedef long int32_t;
+#endif
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned long uint32_t;
@@ -227,8 +245,18 @@ typedef unsigned long uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else
+typedef long intptr_t;
+typedef unsigned long uintptr_t;
+#if !defined(__GNUC__)
 typedef long long int64_t;
+#endif
 typedef unsigned long long uint64_t;
+#endif
+#ifndef SIZE_MAX
+#define SIZE_MAX (size_t)-1
+#endif
+#ifndef UINTPTR_MAX
+#define UINTPTR_MAX (uintptr_t)-1
 #endif
 #endif
 

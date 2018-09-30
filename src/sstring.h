@@ -89,12 +89,12 @@ extern srt_string *ss_void;
 #define ss_cat_c(s, ...) ss_cat_c_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #define ss_cat_w(s, ...) ss_cat_w_aux(s, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #else
-#define ss_free(...)
-#define ss_cpy_c(s, ...) return NULL;
-#define ss_cpy_w(s, ...) return NULL;
-#define ss_cat(s, ...) return NULL;
-#define ss_cat_c(s, ...) return NULL;
-#define ss_cat_w(s, ...) return NULL;
+#define ss_free(s) ss_free_aux(s, S_INVALID_PTR_VARG_TAIL)
+#define ss_cpy_c(s, a) ss_cpy_c_aux(s, a, S_INVALID_PTR_VARG_TAIL)
+#define ss_cpy_w(s, a) ss_cpy_w_aux(s, a, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat(s, a) ss_cat_aux(s, a, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat_c(s, a) ss_cat_c_aux(s, a, S_INVALID_PTR_VARG_TAIL)
+#define ss_cat_w(s, a) ss_cat_w_aux(s, a, S_INVALID_PTR_VARG_TAIL)
 #endif
 
 /*

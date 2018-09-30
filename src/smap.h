@@ -261,7 +261,11 @@ void sm_clear(srt_map *m);
 #API: |Free one or more maps (heap)|map; more maps (optional)|-|O(1) for simple maps, O(n) for maps having nodes with strings|1;2|
 void sm_free(srt_map **m, ...)
 */
+#ifdef S_USE_VA_ARGS
 #define sm_free(...) sm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#else
+#define sm_free(m) sm_free_aux(m, S_INVALID_PTR_VARG_TAIL)
+#endif
 void sm_free_aux(srt_map **m, ...);
 
 SD_BUILDFUNCS_FULL_ST(sm, srt_map, 0)

@@ -92,7 +92,14 @@ int main(int argc, const char **argv)
 		}
 		break;
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&iobuf, &rgb1_buf, &rgb2_buf, &rgb3_buf);
+#else
+	ss_free(&iobuf);
+	ss_free(&rgb1_buf);
+	ss_free(&rgb2_buf);
+	ss_free(&rgb3_buf);
+#endif
 	if (fin)
 		fclose(fin);
 	if (fout)

@@ -24,6 +24,8 @@
 #   or	make -this is the default-
 # Build with CRC32 16384 byte hash table, 16 bytes/loop (2700MB/s on i5@3GHz):
 #	make ADD_CFLAGS="-DS_CRC32_SLC=16"
+# Build without VARGS support (default VARGS=1):
+#	make VARGS=0
 #
 # Observations:
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",

@@ -96,7 +96,11 @@ S_INLINE void sms_clear(srt_set *s)
 #API: |Free one or more sets (heap)|set; more sets (optional)|-|O(1) for simple sets, O(n) for string sets|1;2|
 void sms_free(srt_map **s, ...)
 */
+#ifdef S_USE_VA_ARGS
 #define sms_free(...) sm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#else
+#define sms_free(m) sm_free_aux(m, S_INVALID_PTR_VARG_TAIL)
+#endif
 
 SD_BUILDFUNCS_FULL_ST(sms, srt_set, 0)
 

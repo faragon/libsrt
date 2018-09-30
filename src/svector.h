@@ -61,9 +61,9 @@ typedef struct SVector
 #define sv_cat(v, ...) sv_cat_aux(v, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #define sv_push(v, ...) sv_push_aux(v, __VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
 #else
-#define sv_free(...)
-#define sv_cat(v, ...) NULL
-#define sv_push(...) S_FALSE
+#define sv_free(v) sv_free_aux(v, S_INVALID_PTR_VARG_TAIL)
+#define sv_cat(v, a) sv_cat_aux(v, a, S_INVALID_PTR_VARG_TAIL)
+#define sv_push(v, a) sv_push_aux(v, a, S_INVALID_PTR_VARG_TAIL)
 #endif
 
 /*

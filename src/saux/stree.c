@@ -542,13 +542,13 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 		S_ASSERT(ts - 1 < ST_NIL);
 		sz = ts - 1; /* BEHAVIOR */
 		if (w[c].x != sz) {
-			d = ST_Left;
 			const struct NodeContext ct = {sz, get_node(t, sz)};
+			enum STNDir dl = ST_Left;
 			/* TODO: cache this (!) */
-			srt_tnode *fpn = locate_parent(t, &ct, &d);
+			srt_tnode *fpn = locate_parent(t, &ct, &dl);
 			if (fpn) {
 				copy_node(t, w[c].n, ct.n);
-				set_lr(fpn, d, w[c].x);
+				set_lr(fpn, dl, w[c].x);
 				if (t->root == sz)
 					t->root = w[c].x;
 			} else {
@@ -746,7 +746,12 @@ ssize_t st_traverse_levelorder(const srt_tree *t, st_traverse f, void *context)
 		next = tmp;
 		sv_set_size(next, 0);
 	}
+#ifdef S_USE_VA_ARGS
 	sv_free(&curr, &next);
+#else
+	sv_free(&curr);
+	sv_free(&next);
+#endif
 	return tp.max_level + 1;
 }
 

@@ -120,7 +120,9 @@ static int cmp_pp(const void *a, const void *b)
 						 | (!ss_cmp(sa, b) ? 0 : 4)    \
 						 | (!ss_cmp(sb, b) ? 0 : 8)    \
 						 | (!ss_cmp(sc, b) ? 0 : 16);  \
-		ss_free(&sa, &sb, &sc);                                        \
+		ss_free(&sa);   	                                       \
+		ss_free(&sb);  		                                       \
+		ss_free(&sc);		                                       \
 		return res;                                                    \
 	}
 
@@ -138,7 +140,9 @@ static int cmp_pp(const void *a, const void *b)
 					     | (!ss_cmp(sa, b) ? 0 : 4)        \
 					     | (!ss_cmp(sb, b) ? 0 : 8)        \
 					     | (!ss_cmp(sc, b) ? 0 : 16);      \
-		ss_free(&sa, &sb, &sc);                                        \
+		ss_free(&sa);   	                                       \
+		ss_free(&sb);  		                                       \
+		ss_free(&sc);		                                       \
 		return res;                                                    \
 	}
 
@@ -155,7 +159,9 @@ static int cmp_pp(const void *a, const void *b)
 			      ? 1                                              \
 			      : (!ss_cmp(sa, expected) ? 0 : 2)                \
 					| (!ss_cmp(sc, expected) ? 0 : 4);     \
-		ss_free(&sa, &sb, &sc);                                        \
+		ss_free(&sa);   	                                       \
+		ss_free(&sb);  		                                       \
+		ss_free(&sc);		                                       \
 		return res;                                                    \
 	}
 
@@ -230,7 +236,13 @@ static int test_sb(size_t nelems)
 	sb_shrink(&db);
 	res |= sb_capacity(a) < nelems ? 32 : 0; /* stack is not shrinkable */
 	res |= sb_capacity(b) || sb_capacity(da) || sb_capacity(db) ? 64 : 0;
+#ifdef S_USE_VA_ARGS
 	sb_free(&b, &da, &db);
+#else
+	sb_free(&b);
+	sb_free(&da);
+	sb_free(&db);
+#endif
 	return res;
 }
 
@@ -303,7 +315,12 @@ static int test_ss_resize_x()
 				   && !strcmp(ss_to_c(b), i3))
 					  ? 0
 					  : 16);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -457,7 +474,12 @@ static int test_ss_dup()
 	int res = !a ? 1
 		     : (!strcmp("hello", ss_to_c(a)) ? 0 : 2)
 				  | (!strcmp("hello", ss_to_c(c)) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -471,7 +493,13 @@ static int test_ss_dup_substr()
 				    | (!strcmp("hello", ss_to_c(a)) ? 0 : 4)
 				    | (ss_len(a) == ss_len(c) ? 0 : 8)
 				    | (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -484,7 +512,13 @@ static int test_ss_dup_substr_u()
 				  | (!strcmp("hello", ss_to_c(a)) ? 0 : 4)
 				  | (ss_len(a) == ss_len(c) ? 0 : 8)
 				  | (!strcmp("hello", ss_to_c(c)) ? 0 : 16);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -542,7 +576,13 @@ static int test_ss_dup_tolower(const srt_string *a, const srt_string *b)
 				    | (!ss_cmp(sc, b) ? 0 : 16)
 				    | (!ss_cmp(sb, b) ? 0 : 32)
 				    | (!ss_cmp(sc, b) ? 0 : 64);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb, &sc);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+	ss_free(&sc);
+#endif
 	return res;
 }
 
@@ -554,7 +594,12 @@ static int test_ss_dup_toupper(const srt_string *a, const srt_string *b)
 			  : (ss_toupper(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
 				    | (!ss_cmp(sb, b) ? 0 : 8)
 				    | (!ss_cmp(sb, b) ? 0 : 16);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -563,7 +608,12 @@ static int test_ss_dup_erase(const char *in, const size_t off,
 {
 	srt_string *a = ss_dup_c(in), *b = ss_dup_erase(a, off, size);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -572,7 +622,12 @@ static int test_ss_dup_erase_u()
 	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
 		   *b = ss_dup_erase_u(a, 2, 3);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -587,7 +642,15 @@ static int test_ss_dup_replace(const char *in, const char *r, const char *s,
 				       | (!strcmp(ss_to_c(e), in)
 						  ? 0
 						  : 4); /* aliasing */
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c, &d, &e);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+	ss_free(&d);
+	ss_free(&e);
+#endif
 	return res;
 }
 
@@ -598,7 +661,13 @@ static int test_ss_dup_resize()
 	int res = (!a || !b) ? 1
 			     : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2)
 				       | (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -615,40 +684,64 @@ static int test_ss_dup_resize_u()
 				    | (!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he")
 					       ? 0
 					       : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
 static int test_ss_dup_trim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_trim(sa);
-	const srt_string *sc = ss_dup_trim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_trim(sa),
+		   *sc = ss_dup_trim(ss_crefa(a));
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb, &sc);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+	ss_free(&sc);
+#endif
 	return res;
 }
 
 static int test_ss_dup_ltrim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa);
-	const srt_string *sc = ss_dup_ltrim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa),
+		   *sc = ss_dup_ltrim(ss_crefa(a));
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb, &sc);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+	ss_free(&sc);
+#endif
 	return res;
 }
 
 static int test_ss_dup_rtrim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa);
-	const srt_string *sc = ss_dup_rtrim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa),
+		   *sc = ss_dup_rtrim(ss_crefa(a));
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb, &sc);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+	ss_free(&sc);
+#endif
 	return res;
 }
 
@@ -722,7 +815,12 @@ static int test_ss_cpy(const char *in)
 	res = res ? 0
 		  : (!strcmp(ss_to_c(b), in) ? 0 : 8)
 			      | (ss_len(b) == strlen(in) ? 0 : 16);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -733,7 +831,13 @@ static int test_ss_cpy_substr()
 	int res = (!a || !c) ? 1 : 0;
 	res |= res ? 0 : (ss_cpy_substr(&b, a, 0, 3) ? 0 : 2);
 	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -744,7 +848,13 @@ static int test_ss_cpy_substr_u()
 	int res = (!a || !c) ? 1 : 0;
 	res |= res ? 0 : (ss_cpy_substr_u(&b, a, 0, 3) ? 0 : 2);
 	res |= res ? 0 : (!ss_cmp(b, c) ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -764,6 +874,7 @@ static int test_ss_cpy_cn()
 
 static int test_ss_cpy_c(const char *in)
 {
+#ifdef S_USE_VA_ARGS
 	srt_string *a = NULL;
 	int res = !ss_cpy_c(&a, in)
 			  ? 1
@@ -775,10 +886,14 @@ static int test_ss_cpy_c(const char *in)
 		   : ss_cpy_c(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
+#else
+	return 0;
+#endif
 }
 
 static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 {
+#ifdef S_USE_VA_ARGS
 	srt_string *a = NULL;
 	int res = !ss_cpy_w(&a, in)
 			  ? 1
@@ -791,12 +906,15 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 		   : ss_cpy_w(&a, in, in) && !strcmp(ss_to_c(a), tmp) ? 0 : 8;
 	ss_free(&a);
 	return res;
+#else
+	return 0;
+#endif
 }
 
 static int test_ss_cpy_wn()
 {
 	int res = 0;
-#if WCHAR_MAX > 0 && WCHAR_MAX <= 0xffff
+#ifndef S_WCHAR32
 	const uint16_t t16[] = {0xd1,
 				0xf1,
 				0x131,
@@ -845,7 +963,16 @@ static int test_ss_cpy_wn()
 			       && ss_len_u(b_d2) == 2 && ss_len_u(b_all11) == 11
 		       ? 0
 		       : 64;
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b_a3, &b_b3, &b_c3, &b_d2, &b_all11);
+#else
+	ss_free(&a);
+	ss_free(&b_a3);
+	ss_free(&b_b3);
+	ss_free(&b_c3);
+	ss_free(&b_d2);
+	ss_free(&b_all11);
+#endif
 	return res;
 }
 
@@ -868,7 +995,12 @@ static int test_ss_cpy_tolower(const srt_string *a, const srt_string *b)
 		      ? 1
 		      : (ss_tolower(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
 				| (!ss_cmp(sb, b) ? 0 : 8);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -881,7 +1013,12 @@ static int test_ss_cpy_toupper(const srt_string *a, const srt_string *b)
 		      ? 1
 		      : (ss_toupper(&sa) ? 0 : 2) | (!ss_cmp(sa, b) ? 0 : 4)
 				| (!ss_cmp(sb, b) ? 0 : 8);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -892,7 +1029,12 @@ static int test_ss_cpy_erase(const char *in, const size_t off,
 	srt_string *a = ss_dup_c(in), *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase(&b, a, off, size);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -903,7 +1045,12 @@ static int test_ss_cpy_erase_u()
 		   *b = ss_dup_c("garbage i!&/()=");
 	ss_cpy_erase_u(&b, a, 2, 3);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "heo") ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -915,7 +1062,14 @@ static int test_ss_cpy_replace(const char *in, const char *r, const char *s,
 		   *d = ss_dup_c("garbage i!&/()=");
 	ss_cpy_replace(&d, a, 0, b, c);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c, &d);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+	ss_free(&d);
+#endif
 	return res;
 }
 
@@ -929,7 +1083,13 @@ static int test_ss_cpy_resize()
 	res = (!a || !b) ? 1
 			 : (!strcmp(ss_to_c(b), "hellozzzzz") ? 0 : 2)
 				   | (!strcmp(ss_to_c(c), "he") ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -948,7 +1108,13 @@ static int test_ss_cpy_resize_u()
 				| (!strcmp(ss_to_c(c), U8_S_N_TILDE_F1 "he")
 					   ? 0
 					   : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -958,7 +1124,12 @@ static int test_ss_cpy_trim(const char *a, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_trim(&sb, sa);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -968,7 +1139,12 @@ static int test_ss_cpy_ltrim(const char *a, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_ltrim(&sb, sa);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -978,7 +1154,12 @@ static int test_ss_cpy_rtrim(const char *a, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c("garbage i!&/()=");
 	ss_cpy_rtrim(&sb, sa);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sb), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1061,22 +1242,36 @@ static int test_ss_cat(const char *a, const char *b)
 #endif
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : (ss_cat(&sa, sb, sb) ? 0 : 2)
+#else
+		   : (ss_cat(&sa, sb) && ss_cat(&sa, sb) ? 0 : 2)
+#endif
 			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Aliasing test: */
 	res |= res ? 0
 		   : (sprintf(btmp, "%s%s%s%s", ss_to_c(sa), ss_to_c(sa),
 			      ss_to_c(sa), ss_to_c(sa))
-				      && ss_cat(&sa, sa, sa, sa)
+#ifdef S_USE_VA_ARGS
+		     && ss_cat(&sa, sa, sa, sa)
+#else
+		     && ss_cat(&sa, sa) && ss_cat(&sa, sa)
+#endif
 			      ? 0
 			      : 8);
 	res |= res ? 0 : (!strcmp(ss_to_c(sa), btmp) ? 0 : 16);
-#ifdef S_DEBUG
+#if defined(S_USE_VA_ARGS) && defined(S_DEBUG)
 	alloc_calls_before = dbg_cnt_alloc_calls;
 #endif
 	res |= res ? 0
-		   : (sc && sd && se && sf && ss_cat(&sc, sd, se, sf)) ? 0 : 32;
-#ifdef S_DEBUG
+		   : (sc && sd && se && sf
+#ifdef S_USE_VA_ARGS
+		      && ss_cat(&sc, sd, se, sf)
+#else
+		      && ss_cat(&sc, sd) && ss_cat(&sc, se) && ss_cat(&sc, sf)
+#endif
+		     ) ? 0 : 32;
+#if defined(S_USE_VA_ARGS) && defined(S_DEBUG)
 	/* Check that multiple append uses just one -or zero- allocation: */
 	alloc_calls_after = dbg_cnt_alloc_calls;
 	res |= res ? 0
@@ -1084,13 +1279,25 @@ static int test_ss_cat(const char *a, const char *b)
 #endif
 	/* Aliasing check */
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : ss_cat(&sf, se, sf, se, sf, se)
-				       && !strcmp(ss_to_c(sf), "fefefe")
+#else
+		   : ss_cat(&sf, se) && ss_cat(&sf, sf) && ss_cat_c(&sf, "fe")
+#endif
+		     && !strcmp(ss_to_c(sf), "fefefe")
 			       ? 0
 			       : 64;
-
 	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 256;
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb, &sc, &sd, &se, &sf);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+	ss_free(&sc);
+	ss_free(&sd);
+	ss_free(&se);
+	ss_free(&sf);
+#endif
 	return res;
 }
 
@@ -1101,7 +1308,14 @@ static int test_ss_cat_substr()
 	int res = (!a || !b) ? 1 : 0;
 	res |= res ? 0 : (ss_cat_substr(&d, a, 8, 3) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c, &d);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+	ss_free(&d);
+#endif
 	return res;
 }
 
@@ -1114,7 +1328,14 @@ static int test_ss_cat_substr_u()
 	int res = (!a || !b) ? 1 : 0;
 	res |= res ? 0 : (ss_cat_substr_u(&d, a, 8, 3) ? 0 : 4);
 	res |= res ? 0 : (!ss_cmp(c, d) ? 0 : 8);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c, &d);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+	ss_free(&d);
+#endif
 	return res;
 }
 
@@ -1139,15 +1360,30 @@ static int test_ss_cat_c(const char *a, const char *b)
 	char btmp[8192];
 	sprintf(btmp, "%s%s%s", a, b, b);
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : (ss_cat_c(&sa, b, b) ? 0 : 2)
+#else
+		   : (ss_cat_c(&sa, b) && ss_cat_c(&sa, b) ? 0 : 2)
+#endif
 			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : ss_cat_c(&sb, "c", "b", "c", "b", "c")
-				       && !strcmp(ss_to_c(sb), "bcbcbc")
+#else
+		   : ss_cat_c(&sb, "c") && ss_cat_c(&sb, "b")
+		     && ss_cat_c(&sb, "c") && ss_cat_c(&sb, "b")
+		     && ss_cat_c(&sb, "c")
+#endif
+		     && !strcmp(ss_to_c(sb), "bcbcbc")
 			       ? 0
 			       : 8;
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1172,15 +1408,31 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	char btmp[8192];
 	sprintf(btmp, "%ls%ls%ls%ls", a, b, b, b);
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : (ss_cat_w(&sa, b, b, b) ? 0 : 2)
+#else
+		   : (ss_cat_w(&sa, b) && ss_cat_w(&sa, b)
+		     && ss_cat_w(&sa, b) ? 0 : 2)
+#endif
 			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
 	res |= res ? 0
+#ifdef S_USE_VA_ARGS
 		   : ss_cat_w(&sb, L"c", L"b", L"c", L"b", L"c")
-				       && !strcmp(ss_to_c(sb), "bcbcbc")
+#else
+		   : ss_cat_w(&sb, L"c") && ss_cat_w(&sb, L"b")
+		     && ss_cat_w(&sb, L"c") && ss_cat_w(&sb, L"b")
+		     && ss_cat_w(&sb, L"c")
+#endif
+		     && !strcmp(ss_to_c(sb), "bcbcbc")
 			       ? 0
 			       : 8;
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1202,7 +1454,12 @@ static int test_ss_cat_tolower(const srt_string *a, const srt_string *b,
 	srt_string *sa = ss_dup(a), *sb = ss_dup(b);
 	ss_cat_tolower(&sa, sb);
 	res = (!sa || !sb) ? 1 : (!ss_cmp(sa, expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1213,7 +1470,12 @@ static int test_ss_cat_toupper(const srt_string *a, const srt_string *b,
 	srt_string *sa = ss_dup(a), *sb = ss_dup(b);
 	ss_cat_toupper(&sa, sb);
 	res = (!sa || !sb) ? 1 : (!ss_cmp(sa, expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1225,7 +1487,12 @@ static int test_ss_cat_erase(const char *prefix, const char *in,
 	srt_string *a = ss_dup_c(in), *b = ss_dup_c(prefix);
 	ss_cat_erase(&b, a, off, size);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -1236,7 +1503,12 @@ static int test_ss_cat_erase_u()
 		   *b = ss_dup_c("x");
 	ss_cat_erase_u(&b, a, 2, 3);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b);
+#else
+	ss_free(&a);
+	ss_free(&b);
+#endif
 	return res;
 }
 
@@ -1249,7 +1521,14 @@ static int test_ss_cat_replace(const char *prefix, const char *in,
 		   *d = ss_dup_c(prefix);
 	ss_cat_replace(&d, a, 0, b, c);
 	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c, &d);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+	ss_free(&d);
+#endif
 	return res;
 }
 
@@ -1263,7 +1542,13 @@ static int test_ss_cat_resize()
 	res = (!a || !b) ? 1
 			 : (!strcmp(ss_to_c(b), "xhellozzzzz") ? 0 : 2)
 				   | (!strcmp(ss_to_c(c), "xhe") ? 0 : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -1282,7 +1567,13 @@ static int test_ss_cat_resize_u()
 				| (!strcmp(ss_to_c(c), "x" U8_S_N_TILDE_F1 "he")
 					   ? 0
 					   : 4);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -1292,7 +1583,12 @@ static int test_ss_cat_trim(const char *a, const char *b, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_trim(&sa, sb);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1302,7 +1598,12 @@ static int test_ss_cat_ltrim(const char *a, const char *b, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_ltrim(&sa, sb);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1312,7 +1613,12 @@ static int test_ss_cat_rtrim(const char *a, const char *b, const char *expected)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	ss_cat_rtrim(&sa, sb);
 	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1422,7 +1728,13 @@ static int test_ss_replace(const char *s, const size_t off, const char *s1,
 	srt_string *a = ss_dup_c(s), *b = ss_dup_c(s1), *c = ss_dup_c(s2);
 	int res = a && b && c && ss_replace(&a, off, b, c) ? 0 : 1;
 	res |= res ? 0 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &b, &c);
+#else
+	ss_free(&a);
+	ss_free(&b);
+	ss_free(&c);
+#endif
 	return res;
 }
 
@@ -1464,7 +1776,12 @@ static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	int res =
 		(!sa || !sb) ? 1 : (ss_find(sa, 0, sb) == expected_loc ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1517,7 +1834,12 @@ static int test_ss_split()
 			}
 		}
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&a, &sep1);
+#else
+	ss_free(&a);
+	ss_free(&sep1);
+#endif
 	return res;
 }
 
@@ -1536,7 +1858,12 @@ static int test_ss_cmp(const char *a, const char *b, int expected_cmp)
 		(!sa || !sb)
 			? 1
 			: (validate_cmp(ss_cmp(sa, sb), expected_cmp) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1547,7 +1874,12 @@ static int test_ss_cmpi(const char *a, const char *b, int expected_cmp)
 		(!sa || !sb)
 			? 1
 			: (validate_cmp(ss_cmpi(sa, sb), expected_cmp) ? 0 : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1561,7 +1893,12 @@ static int test_ss_ncmp(const char *a, const size_t a_off, const char *b,
 			: (validate_cmp(ss_ncmp(sa, a_off, sb, n), expected_cmp)
 				   ? 0
 				   : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1574,7 +1911,12 @@ static int test_ss_ncmpi(const char *a, const size_t a_off, const char *b,
 					       expected_cmp)
 					  ? 0
 					  : 2);
+#ifdef S_USE_VA_ARGS
 	ss_free(&sa, &sb);
+#else
+	ss_free(&sa);
+	ss_free(&sb);
+#endif
 	return res;
 }
 
@@ -1644,7 +1986,12 @@ static int test_ss_read_write()
 			fseek(f, 0, SEEK_SET) != 0 ? 4 :
 			ss_read(&sb, f, 4000) != (ssize_t)la ? 5 :
 			strcmp(ss_to_c(sa), ss_to_c(sb)) != 0 ? 6 : 0;
+#ifdef S_USE_VA_ARGS
 		ss_free(&sa, &sb);
+#else
+		ss_free(&sa);
+		ss_free(&sb);
+#endif
 		fclose(f);
 		if (remove(STEST_FILE) != 0)
 			res |= 32;
@@ -1776,7 +2123,11 @@ static int test_ss_misc()
 
 static int test_sv_alloc()
 {
+#ifdef S_USE_VA_ARGS
 	TEST_SV_ALLOC(sv_alloc, sv_alloc_t, sv_free(&a, &b));
+#else
+	TEST_SV_ALLOC(sv_alloc, sv_alloc_t, sv_free(&a); sv_free(&b));
+#endif
 }
 
 static int test_sv_alloca()
@@ -2031,7 +2382,12 @@ static int test_sv_get_buffer()
 		if (sa != sb || sa != sc || sa != sd)
 			res |= 0x2000;
 	}
+#ifdef S_USE_VA_ARGS
 	sv_free(&a, &c);
+#else
+	sv_free(&a);
+	sv_free(&c);
+#endif
 	return res;
 }
 
@@ -2056,7 +2412,8 @@ static int test_sv_elem_size()
 	v##2 = sv_dup(v);                                                      \
 	res |= !v ? 1 << (ntest * 3)                                           \
 		  : ((check) && (check2)) ? 0 : 2 << (ntest * 3);              \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_dup()
 {
@@ -2119,7 +2476,8 @@ static int test_sv_dup()
 	push(&v, b);                                                           \
 	v##2 = sv_dup_erase(v, 1, 5);                                          \
 	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_dup_erase()
 {
@@ -2187,7 +2545,8 @@ static int test_sv_dup_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2);
 
 static int test_sv_dup_resize()
 {
@@ -2236,7 +2595,8 @@ static int test_sv_dup_resize()
 			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v))          \
 					  ? 0                                  \
 					  : 4 << (nt * 3));                    \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cpy()
 {
@@ -2284,7 +2644,12 @@ static int test_sv_cpy()
 				&& sv_at_i(v1a24, 2) == 3
 			? 0
 			: 1 << 29);
+#ifdef S_USE_VA_ARGS
 	sv_free(&v1, &v2);
+#else
+	sv_free(&v1);
+	sv_free(&v2);
+#endif
 	return res;
 }
 
@@ -2305,7 +2670,8 @@ static int test_sv_cpy()
 	v##2 = NULL;                                                           \
 	sv_cpy_erase(&v##2, v, 1, 5);                                          \
 	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cpy_erase()
 {
@@ -2373,7 +2739,8 @@ static int test_sv_cpy_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cpy_resize()
 {
@@ -2412,7 +2779,8 @@ static int test_sv_cpy_resize()
 		     && (check) && (check2))                                   \
 			       ? 0                                             \
 			       : 2 << (ntest * 3);                             \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cat()
 {
@@ -2479,7 +2847,8 @@ static int test_sv_cat()
 	res |= !v ? 1 << (ntest * 3)                                           \
 		  : ((check) ? 0 : 2 << (ntest * 3))                           \
 			       | (sv_size(v##2) == 6 ? 0 : 4 << (ntest * 3));  \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cat_erase()
 {
@@ -2547,7 +2916,8 @@ static int test_sv_cat_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v, &v##2);
+	sv_free(&v);							       \
+	sv_free(&v##2)
 
 static int test_sv_cat_resize()
 {
@@ -2846,7 +3216,18 @@ static int test_sv_sort()
 				       : 1 << 30;
 		}
 	}
+#ifdef S_USE_VA_ARGS
 	sv_free(&v8i, &v8u, &v16i, &v16u, &v32i, &v32u, &v64i, &v64u);
+#else
+	sv_free(&v8i);
+	sv_free(&v8u);
+	sv_free(&v16i);
+	sv_free(&v16u);
+	sv_free(&v32i);
+	sv_free(&v32u);
+	sv_free(&v64i);
+	sv_free(&v64u);
+#endif
 	s_free(r8i);
 	s_free(r8u);
 	s_free(r16i);
@@ -2923,7 +3304,12 @@ static int test_sv_push_pop_set()
 	const struct AA *t = NULL;
 	int res = (!a || !b) ? 1 : 0;
 	if (!res) {
+#ifdef S_USE_VA_ARGS
 		res |= (sv_push(&a, &a2, &a2, &a1) ? 0 : 4);
+#else
+		res |= (sv_push(&a, &a2) && sv_push(&a, &a2)
+		       && sv_push(&a, &a1) ? 0 : 4);
+#endif
 		res |= (sv_len(a) == 3 ? 0 : 8);
 		res |= (((t = (const struct AA *)sv_pop(a)) && t->a == a1.a
 			 && t->b == a1.b)
@@ -3417,7 +3803,10 @@ static int test_sm_shrink()
 			}                                                      \
 		}                                                              \
 	}                                                                      \
-	sm_free(&m, &m##2, &m##b, &m##2b)
+	sm_free(&m);							       \
+	sm_free(&m##2);							       \
+	sm_free(&m##b);							       \
+	sm_free(&m##2b)
 
 /*
  * Covers: sm_dup, sm_insert_ii32, sm_insert_uu32, sm_insert_ii, sm_insert_is,
@@ -3495,7 +3884,14 @@ static int test_sm_cpy()
 	res |= (!ss_cmp(sm_it_s_k(m1, 1), sm_it_s_k(m1a10, 1)) ? 0 : 256);
 	res |= (!ss_cmp(sm_it_s_k(m1, 2), sm_it_s_k(m1a10, 2)) ? 0 : 512);
 #endif
+#ifdef S_USE_VA_ARGS
 	sm_free(&m1, &m2, &m1a3, &m1a10);
+#else
+	sm_free(&m1);
+	sm_free(&m2);
+	sm_free(&m1a3);
+	sm_free(&m1a10);
+#endif
 	return res;
 }
 
@@ -3533,7 +3929,13 @@ static int test_sm_count_s()
 	sm_insert_si(&m, t, 2);
 	sm_insert_si(&m, u, 3);
 	res = sm_count_s(m, s) && sm_count_s(m, t) && sm_count_s(m, u) ? 0 : 1;
+#ifdef S_USE_VA_ARGS
 	ss_free(&s, &t, &u);
+#else
+	ss_free(&s);
+	ss_free(&t);
+	ss_free(&u);
+#endif
 	sm_free(&m);
 	return res;
 }
@@ -3627,7 +4029,13 @@ static int test_sm_delete_i()
 	res |= (sm_at_ii32(m_ii32, -2) == 0 ? 0 : 1024);
 	res |= (sm_at_uu32(m_uu32, 2) == 0 ? 0 : 2048);
 	res |= (sm_at_ii(m_ii, S_MAX_I64 - 1) == 0 ? 0 : 4096);
+#ifdef S_USE_VA_ARGS
 	sm_free(&m_ii32, &m_uu32, &m_ii);
+#else
+	sm_free(&m_ii32);
+	sm_free(&m_uu32);
+	sm_free(&m_ii);
+#endif
 	return res;
 }
 
@@ -3674,7 +4082,13 @@ static int test_sm_delete_s()
 	res |= (sm_at_si(m_si, k2) == 0 ? 0 : 1024);
 	res |= (sm_at_sp(m_sp, k2) == 0 ? 0 : 2048);
 	res |= (!ss_cmp(sm_at_ss(m_ss, k2), ss_void) ? 0 : 4096);
+#ifdef S_USE_VA_ARGS
 	sm_free(&m_si, &m_sp, &m_ss);
+#else
+	sm_free(&m_si);
+	sm_free(&m_sp);
+	sm_free(&m_ss);
+#endif
 	return res;
 }
 
@@ -3891,8 +4305,18 @@ static int test_sm_itr()
 	/*
 	 * TODO: add sm_itr_i32, sm_itr_u32, sm_itr_i, sm_itr_s
 	 */
-
+#ifdef S_USE_VA_ARGS
 	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
+#else
+	sm_free(&m_ii32);
+	sm_free(&m_uu32);
+	sm_free(&m_ii);
+	sm_free(&m_is);
+	sm_free(&m_ip);
+	sm_free(&m_si);
+	sm_free(&m_ss);
+	sm_free(&m_sp);
+#endif
 	return res;
 }
 
@@ -3942,7 +4366,14 @@ static int test_sm_sort_to_vectors()
 		}
 	} while (0);
 	sm_free(&m);
+#ifdef S_USE_VA_ARGS
 	sv_free(&kv, &vv, &kv2, &vv2);
+#else
+	sv_free(&kv);
+	sv_free(&vv);
+	sv_free(&kv2);
+	sv_free(&vv2);
+#endif
 	return res;
 }
 
@@ -4016,7 +4447,14 @@ static int test_sm_double_rotation()
 		break;
 	}
 	sm_free(&m);
+#ifdef S_USE_VA_ARGS
 	sv_free(&kv, &vv, &kv2, &vv2);
+#else
+	sv_free(&kv);
+	sv_free(&vv);
+	sv_free(&kv2);
+	sv_free(&vv2);
+#endif
 	return res;
 }
 
@@ -4158,7 +4596,17 @@ static int test_sms()
 	/*
 	 * Release memory
 	 */
+#ifdef S_USE_VA_ARGS
 	sms_free(&s_i32, &s_u32, &s_i, &s_s, &s_s2, &s_a3, &s_a10);
+#else
+	sms_free(&s_i32);
+	sms_free(&s_u32);
+	sms_free(&s_i);
+	sms_free(&s_s);
+	sms_free(&s_s2);
+	sms_free(&s_a3);
+	sms_free(&s_a10);
+#endif
 	return res;
 }
 

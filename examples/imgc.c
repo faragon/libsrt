@@ -79,7 +79,12 @@ int main(int argc, const char **argv)
 				argv[2], (unsigned)ss_size(iobuf)));
 		break;
 	}
+#ifdef S_USE_VA_ARGS
 	ss_free(&iobuf, &rgb_buf);
+#else
+	ss_free(&iobuf);
+	ss_free(&rgb_buf);
+#endif
 	if (fin)
 		fclose(fin);
 	if (fout)

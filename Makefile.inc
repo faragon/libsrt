@@ -17,6 +17,9 @@ endif
 ifdef C89
 	C90 = $(C89)
 endif
+ifndef VARGS
+	VARGS=1
+endif
 ifndef C11
 	C11 = 0
 endif
@@ -83,17 +86,32 @@ COMMON_FLAGS = -pipe
 CPP_MODE = 0
 GNUC = 0
 CLANG = 0
+USE_LRT = 0
 
 ifeq (,$(findstring mingw,$(CC)))
 	ifeq (,$(findstring Darwin,$(UNAME)))
 		# Add librt for all but for mingw and Darwin cases
-		LDLIBS = -lrt
+		USE_LRT = 1
 	endif
 endif
 
 ifeq ($(CC), gcc)
 	GNUC = 1
 endif
+
+GCCLOC = $(shell cc -dM -E - < /dev/null | grep __GNUC__ | head -1 | wc -l)
+ifeq ($(shell expr $(GCCLOC) == 1), 1)
+	GNUC = 1
+endif
+
+ifeq ($(GNUC), 1)
+	GCCV = $(shell gcc --version | head -c 3)
+	ifeq ($(shell expr $(GCCV) \<= 2.7), 1)
+		OLD_GCC = 1
+		USE_LRT = 0
+	endif
+endif
+
 ifeq ($(CC), g++)
 	GNUC = 1
 	CPP_MODE = 1
@@ -148,9 +166,16 @@ else
 		COMMON_FLAGS += -pedantic
 	endif
 	ifeq ($(GNUC), 1)
-		COMMON_FLAGS += -Wstrict-aliasing
+		ifneq ($(OLD_GCC), 1)
+			COMMON_FLAGS += -Wstrict-aliasing
+		endif
 	endif
 endif
+
+ifeq ($(VARGS), 0)
+	CFLAGS += -DS_NO_VARGS
+endif
+
 ifeq ($(DEBUG), 1)
 	COMMON_FLAGS += -O0 -ggdb -DS_DEBUG
 	ifeq ($(MINIMAL), 1)
@@ -163,6 +188,7 @@ else
 		COMMON_FLAGS += -O3
 	endif
 endif
+
 ifeq ($(PROFILING), 1)
 	COMMON_FLAGS += -ggdb
 	# gcov flags:
@@ -200,6 +226,10 @@ else
 	ifeq ($(UNAME_M), ppc64)
 		COMMON_FLAGS += -m64
 	endif
+endif
+
+ifeq ($(USE_LRT), 1)
+	LDLIBS = -lrt
 endif
 
 # ARM v6 little endian (e.g. ARM11 on Raspberr Pi I): the flag will enable

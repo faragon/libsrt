@@ -113,7 +113,11 @@ void st_set_size(srt_tree *t, const size_t s)
 size_t st_len(const srt_tree *t)
 */
 
+#ifdef S_USE_VA_ARGS
 #define st_free(...) st_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#else
+#define st_free(t) st_free_aux(t, S_INVALID_PTR_VARG_TAIL)
+#endif
 
 /*
  * Operations
