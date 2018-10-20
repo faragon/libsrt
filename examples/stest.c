@@ -887,6 +887,7 @@ static int test_ss_cpy_c(const char *in)
 	ss_free(&a);
 	return res;
 #else
+	(void)in;
 	return 0;
 #endif
 }
@@ -907,6 +908,8 @@ static int test_ss_cpy_w(const wchar_t *in, const char *expected_utf8)
 	ss_free(&a);
 	return res;
 #else
+	(void)in;
+	(void)expected_utf8;
 	return 0;
 #endif
 }
@@ -5270,16 +5273,44 @@ int main()
 	 * Report
 	 */
 #ifdef S_DEBUG
-	fprintf(stderr, "sizeof(srt_string): %u (small mode)\n",
+	#define S_LOGSZ(t)	\
+		fprintf(stderr, "\tsizeof(" #t "): %u\n", (unsigned)sizeof(t));
+	fprintf(stderr, "Internal data structures:\n");
+	S_LOGSZ(srt_tree);
+	S_LOGSZ(srt_data);
+	S_LOGSZ(srt_tnode);
+	S_LOGSZ(srt_string_ref);
+	S_LOGSZ(srt_stringo);
+	S_LOGSZ(srt_stringo1);
+	fprintf(stderr, "\tsrt_stringo1 max in-place length: %u\n",
+		(unsigned)OptStrMaxSize);
+	fprintf(stderr, "\tsrt_stringo max in-place length DD: %u\n",
+		(unsigned)OptStr_MaxSize_DD);
+	fprintf(stderr, "\tsrt_stringo max in-place length DI/ID: %u\n",
+		(unsigned)OptStr_MaxSize_DI);
+	S_LOGSZ(struct SMapi);
+	S_LOGSZ(struct SMapu);
+	S_LOGSZ(struct SMapI);
+	S_LOGSZ(struct SMapS);
+	S_LOGSZ(struct SMapii);
+	S_LOGSZ(struct SMapuu);
+	S_LOGSZ(struct SMapII);
+	S_LOGSZ(struct SMapIS);
+	S_LOGSZ(struct SMapIP);
+	S_LOGSZ(struct SMapSI);
+	S_LOGSZ(struct SMapSS);
+	S_LOGSZ(struct SMapSP);
+	fprintf(stderr, "Data structures exposed via API:\n");
+	fprintf(stderr, "\tsizeof(srt_string): %u (small mode)\n",
 		(unsigned)sizeof(struct SDataSmall));
-	fprintf(stderr, "sizeof(srt_string): %u (full mode)\n",
+	fprintf(stderr, "\tsizeof(srt_string): %u (full mode)\n",
 		(unsigned)sizeof(srt_string));
-	fprintf(stderr, "max srt_string string length: " FMT_ZU "\n", SS_RANGE);
-	fprintf(stderr, "sizeof(srt_bitset): %u\n",
-		(unsigned)sizeof(srt_bitset));
-	fprintf(stderr, "sizeof(srt_vector): %u\n",
-		(unsigned)sizeof(srt_vector));
-	fprintf(stderr, "sizeof(srt_map): %u\n", (unsigned)sizeof(srt_map));
+	fprintf(stderr, "\tmax srt_string string length: " FMT_ZU "\n", SS_RANGE);
+	S_LOGSZ(srt_bitset);
+	S_LOGSZ(srt_vector);
+	S_LOGSZ(srt_map);
+	S_LOGSZ(srt_set);
+	S_LOGSZ(srt_bool);
 	fprintf(stderr, "Errors: %i\n", ss_errors);
 #endif
 	return STEST_END;

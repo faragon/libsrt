@@ -31,9 +31,11 @@ table
 gmon.out
 # Other
 *.suo
+*.swp
 win/vs2013/Debug/
 win/vs2013/Release/
 win/vs2013/stest_Debug/
 win/vs2013/stest_Release/
 win/vs2013/x64/
 private/
+out_doc/

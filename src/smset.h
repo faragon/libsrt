@@ -201,10 +201,10 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 	srt_bool ins_ok;
 	RETURN_IF(!s || (*s)->d.sub_type != SMS_S, S_FALSE);
 #if 1 /* workaround */
-	SMStrSet(&n.k, k);
+	sso_set((srt_stringo *)&n.k, k);
 	ins_ok = st_insert((srt_tree **)s, (const srt_tnode *)&n);
 	if (!ins_ok)
-		SMStrFree(&n.k);
+		sso_free((srt_stringo *)&n.k);
 	return ins_ok;
 #else
 	/* TODO: rw_add_SMS_S */
