@@ -156,7 +156,7 @@ uint8_t sv_elem_size(const enum eSV_Type t);
  * Allocation from other sources: "dup"
  */
 
-/* #API: |Duplicate vector|vector|output vector|O(n)|1;!| */
+/* #API: |Duplicate vector|vector|output vector|O(n)|1;2| */
 srt_vector *sv_dup(const srt_vector *src);
 
 /* #API: |Duplicate vector portion|vector; offset start; number of elements to take|output vector|O(n)|1;2| */

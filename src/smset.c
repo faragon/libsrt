@@ -29,4 +29,4 @@ SM_ENUM_INORDER_XX(sms_itr_s, srt_set_it_s, SM0_S, const srt_string *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
 		   cmp_ns_s((const struct SMapS *)cn, kmax),
 		   f(sso_get((srt_stringo *)&((const struct SMapS *)cn)->k),
-			     context))
+		     context))

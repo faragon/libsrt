@@ -100,11 +100,11 @@ extern "C" {
 	}
 
 #define SD_BUILDFUNCS_ST2(pfix, t, stpfix)                                     \
-	S_INLINE char *pfix##_get_buffer(t *c)                                 \
+	S_INLINE uint8_t *pfix##_get_buffer(t *c)                              \
 	{                                                                      \
 		return stpfix##_get_buffer((srt_data *)c);                     \
 	}                                                                      \
-	S_INLINE const char *pfix##_get_buffer_r(const t *c)                   \
+	S_INLINE const uint8_t *pfix##_get_buffer_r(const t *c)                \
 	{                                                                      \
 		return stpfix##_get_buffer_r((const srt_data *)c);             \
 	}
@@ -224,20 +224,20 @@ struct SDataSmall /* 4-byte structure */
 	uint8_t aux;
 };
 
-struct SDataFull /* 16-byte structure (32-bit compiler), 32-byte (64-bit c.) */
+struct SDataFull /* 20-byte structure (32-bit compiler), 40-byte (64-bit c.) */
 {
 	struct SDataFlags f;
-
-	/*
-	 * Header size: struct SData size plus additional header from type
-	 * build on top of it.
-	 */
-	uint8_t header_size;
 
 	/*
 	 * Type-specific configuration
 	 */
 	uint8_t sub_type;
+
+	/*
+	 * Header size: struct SData size plus additional header from type
+	 * build on top of it.
+	 */
+	size_t header_size;
 
 	/*
 	 * Type element size
@@ -308,14 +308,14 @@ S_INLINE size_t sd_max_size(const srt_data *d)
 	return d->max_size;
 }
 
-S_INLINE char *sd_get_buffer(srt_data *d)
+S_INLINE uint8_t *sd_get_buffer(srt_data *d)
 {
-	return !d ? NULL : (char *)d + d->header_size;
+	return !d ? NULL : (uint8_t *)d + d->header_size;
 }
 
-S_INLINE const char *sd_get_buffer_r(const srt_data *d)
+S_INLINE const uint8_t *sd_get_buffer_r(const srt_data *d)
 {
-	return !d ? NULL : (const char *)d + d->header_size;
+	return !d ? NULL : (const uint8_t *)d + d->header_size;
 }
 
 S_INLINE void *sd_elem_addr(srt_data *d, const size_t pos)
@@ -397,18 +397,18 @@ S_INLINE size_t sdx_max_size(const srt_data *d)
 	return ((const struct SDataSmall *)d)->max_size;
 }
 
-S_INLINE char *sdx_get_buffer(srt_data *d)
+S_INLINE uint8_t *sdx_get_buffer(srt_data *d)
 {
 	return !d ? NULL
-		  : (char *)d
+		  : (uint8_t *)d
 			       + (sdx_full_st(d) ? d->header_size
 						 : sizeof(struct SDataSmall));
 }
 
-S_INLINE const char *sdx_get_buffer_r(const srt_data *d)
+S_INLINE const uint8_t *sdx_get_buffer_r(const srt_data *d)
 {
 	return !d ? NULL
-		  : (const char *)d
+		  : (const uint8_t *)d
 			       + (sdx_full_st(d) ? d->header_size
 						 : sizeof(struct SDataSmall));
 }
@@ -433,7 +433,7 @@ S_INLINE const void *sdx_elem_addr_r(const srt_data *d, const size_t pos)
 						    + pos); /* BEHAVIOR */
 }
 
-S_INLINE uint8_t sdx_header_size(const srt_data *d)
+S_INLINE size_t sdx_header_size(const srt_data *d)
 {
 	RETURN_IF(!d, 0);
 	RETURN_IF(sdx_full_st(d), d->header_size);
@@ -468,7 +468,7 @@ S_INLINE int sdx_chk_st_change(const srt_data *d, size_t new_max_size)
 		       : 0;
 }
 
-S_INLINE size_t sd_alloc_size_raw(uint8_t header_size, size_t elem_size,
+S_INLINE size_t sd_alloc_size_raw(size_t header_size, size_t elem_size,
 				  size_t size, const srt_bool dyn_st)
 {
 	if (dyn_st && size < 255) {
@@ -487,14 +487,14 @@ S_INLINE size_t sd_compute_max_elems(size_t buffer_size, size_t header_size,
 }
 
 void sd_set_alloc_size(srt_data *d, const size_t alloc_size);
-srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size, const size_t initial_reserve, const srt_bool dyn_st, const size_t extra_tail_bytes);
-srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const uint8_t header_size, const size_t elem_size, const srt_bool dyn_st);
+srt_data *sd_alloc(const size_t header_size, const size_t elem_size, const size_t initial_reserve, const srt_bool dyn_st, const size_t extra_tail_bytes);
+srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size, const size_t header_size, const size_t elem_size, const srt_bool dyn_st);
 void sd_free(srt_data **d);
 void sd_free_va(srt_data **first, va_list ap);
-void sd_reset(srt_data *d, const uint8_t header_size, const size_t elem_size, const size_t max_size, const srt_bool ext_buf, const srt_bool dyn_st);
+void sd_reset(srt_data *d, const size_t header_size, const size_t elem_size, const size_t max_size, const srt_bool ext_buf, const srt_bool dyn_st);
 size_t sd_grow(srt_data **d, const size_t extra_size, const size_t extra_tail_bytes);
 size_t sd_reserve(srt_data **d, size_t max_size, const size_t extra_tail_bytes);
-size_t sdx_reserve(srt_data **d, size_t max_size, uint8_t full_header_size, const size_t extra_tail_bytes);
+size_t sdx_reserve(srt_data **d, size_t max_size, size_t full_header_size, const size_t extra_tail_bytes);
 srt_data *sd_shrink(srt_data **d, const size_t extra_tail_bytes);
 
 #ifdef __cplusplus

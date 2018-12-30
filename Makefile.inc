@@ -187,6 +187,7 @@ else
 	else
 		COMMON_FLAGS += -O3
 	endif
+	COMMON_FLAGS += -DNDEBUG
 endif
 
 ifeq ($(PROFILING), 1)

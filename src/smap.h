@@ -189,7 +189,7 @@ S_INLINE srt_map *sm_alloc(const enum eSM_Type t, const size_t initial_num_elems
 	return sm_alloc0((enum eSM_Type0)t, initial_num_elems_reserve);
 }
 
-/* #API: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|1;2| */
+/* #NOTAPI: |Get map node size from map type|map type|bytes required for storing a single node|O(1)|1;2| */
 S_INLINE uint8_t sm_elem_size(const int t)
 {
 	switch (t) {
@@ -261,7 +261,7 @@ size_t sm_capacity(const srt_map *m);
 #API: |Preallocated space left|map|allocated space left|O(1)|1;2|
 size_t sm_capacity_left(const srt_map *m);
 
-#API: |Tells if a map is empty (zero elements)|map|S_TRUE: empty vector; S_FALSE: not empty|O(1)|1;2|
+#API: |Tells if a map is empty (zero elements)|map|S_TRUE: empty; S_FALSE: not empty|O(1)|1;2|
 srt_bool sm_empty(const srt_map *m)
 */
 

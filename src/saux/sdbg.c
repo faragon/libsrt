@@ -128,14 +128,16 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		break;
 	case SM_SI:
 		sprintf(k, "%s",
-			ss_to_c(sso_get((srt_stringo *)
-					&((const struct SMapSI *)cn)->x.k)));
+			ss_to_c(sso_get(
+				(srt_stringo *)&((const struct SMapSI *)cn)
+					->x.k)));
 		break;
 	case SM_SS:
 	case SM_SP:
 		sprintf(k, "%s",
-			ss_to_c(sso_get((srt_stringo *)
-					&((const struct SMapS *)cn)->k)));
+			ss_to_c(sso_get(
+				(srt_stringo *)&((const struct SMapS *)cn)
+					->k)));
 		break;
 	}
 	switch (tp->t->d.sub_type) {
@@ -147,16 +149,16 @@ static int aux_sm_log_traverse(struct STraverseParams *tp)
 		break;
 	case SM_IS:
 		sprintf(k, "%s",
-			ss_to_c(sso_get((srt_stringo *)
-					&((const struct SMapIS *)cn)->v)));
+			ss_to_c(sso_get(
+				(srt_stringo *)&((const struct SMapIS *)cn)
+					->v)));
 		break;
 	case SM_IP:
 		sprintf(k, "%p", (const void *)((const struct SMapIP *)cn)->v);
 		break;
 	case SM_SS:
 		sprintf(k, "%s",
-			ss_to_c(sso_get(
-					&((const struct SMapSS *)cn)->s)));
+			ss_to_c(sso_get(&((const struct SMapSS *)cn)->s)));
 		break;
 	case SM_SP:
 		sprintf(k, "%p", (const void *)((const struct SMapSP *)cn)->v);
@@ -184,6 +186,43 @@ void sm_log_obj(srt_string **log, const srt_map *m)
 		ss_cat_printf(log, 128, "\nlevels: %i, nodes: %u\n",
 			      (int)levels, (unsigned)st_size(m));
 	fprintf(stdout, "%s", ss_to_c(*log));
+}
+
+void shm_log_obj(srt_string **log, const srt_hmap *h)
+{
+	size_t es;
+	unsigned i;
+	const struct SHMBucket *b;
+	const struct SHMapii *e;
+	if (!log)
+		return;
+	ss_cpy_c(log, "");
+	switch (h->d.sub_type) {
+	case SHM0_II32:
+	case SHM0_UU32:
+		b = shm_get_buckets_r(h);
+		e = (const struct SHMapii *)shm_get_buffer_r(h);
+		ss_cat_printf(log, 128, "hbits: %u, size: %u, max_size: %u\n",
+			      h->hbits, shm_size(h), shm_max_size(h));
+		for (i = 0; i < h->hmask + 1; i++) {
+#if 0
+			if (b[i].hbits != h->hbits)
+				continue;
+#endif
+			ss_cat_printf(log, 128,
+				      "b[%u] h: %08x "
+				      "l: %u cnt: %u\n",
+				      i, b[i].hash, b[i].loc, b[i].cnt);
+		}
+		es = shm_size(h);
+		for (i = 0; i < es; i++)
+			ss_cat_printf(log, 128, "e[%u] kv: %u, %u\n", i,
+				      e[i].x.k, e[i].v);
+		break;
+	default:
+		ss_cpy_c(log, "[not implemented]");
+		break;
+	}
 }
 
 void s_hex_dump(srt_string **log, const char *label, const char *buf,

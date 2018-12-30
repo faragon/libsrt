@@ -32,7 +32,7 @@ srt_data *sd_void = &sd_void0;
  * Allocation
  */
 
-srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size,
+srt_data *sd_alloc(const size_t header_size, const size_t elem_size,
 		   const size_t initial_reserve, const srt_bool dyn_st,
 		   const size_t extra_tail_bytes)
 {
@@ -51,7 +51,7 @@ srt_data *sd_alloc(const uint8_t header_size, const size_t elem_size,
 }
 
 srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size,
-				const uint8_t header_size,
+				const size_t header_size,
 				const size_t elem_size, const srt_bool dyn_st)
 {
 	srt_data *d;
@@ -86,7 +86,7 @@ void sd_free_va(srt_data **first, va_list ap)
 	}
 }
 
-void sd_reset(srt_data *d, const uint8_t header_size, const size_t elem_size,
+void sd_reset(srt_data *d, const size_t header_size, const size_t elem_size,
 	      const size_t max_size, const srt_bool ext_buf,
 	      const srt_bool dyn_st)
 {
@@ -122,7 +122,7 @@ size_t sd_grow(srt_data **d, const size_t extra_size,
 }
 
 S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
-			       uint8_t full_header_size,
+			       size_t full_header_size,
 			       const size_t extra_tail_bytes)
 {
 #ifdef SD_ENABLE_HEURISTIC_GROWTH
@@ -130,7 +130,7 @@ S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
 #endif
 	int chg;
 	srt_bool is_dyn;
-	uint8_t curr_hdr_size, next_hdr_size;
+	size_t curr_hdr_size, next_hdr_size;
 	size_t curr_max_size, elem_size, as, size;
 	srt_data *d_next;
 	char *p;
@@ -185,7 +185,7 @@ size_t sd_reserve(srt_data **d, size_t max_size, const size_t extra_tail_bytes)
 	return sd_reserve_aux(d, max_size, (*d)->header_size, extra_tail_bytes);
 }
 
-size_t sdx_reserve(srt_data **d, size_t max_size, uint8_t full_header_size,
+size_t sdx_reserve(srt_data **d, size_t max_size, size_t full_header_size,
 		   const size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);

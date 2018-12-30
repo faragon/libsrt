@@ -25,6 +25,7 @@ extern "C" {
 
 #include "saux/scommon.h"
 #include "saux/sdata.h"
+#include "saux/shash.h"
 #include "svector.h"
 
 /*
@@ -827,6 +828,23 @@ uint32_t ss_adler32(const srt_string *s);
 /* #API: |Adler32 checksum for substring|string; Adler32 resulting from previous chained Adler32 calls (use S_ADLER32_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
 uint32_t ss_adler32r(const srt_string *s, uint32_t adler, size_t off1, size_t off2);
 
+/* #API: |String FNV-1 checksum|string|32-bit hash|O(n)|1;2| */
+uint32_t ss_fnv1(const srt_string *s);
+
+/* #API: |FNV-1 checksum for substring|string; FNV-1 resulting from previous chained FNV-1 calls (use S_FNV1_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
+uint32_t ss_fnv1r(const srt_string *s, uint32_t fnv, size_t off1, size_t off2);
+
+/* #API: |String FNV-1A checksum|string|32-bit hash|O(n)|1;2| */
+uint32_t ss_fnv1a(const srt_string *s);
+
+/* #API: |FNV-1A checksum for substring|string; FNV resulting from previous chained FNV-1A calls (use S_FNV1_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
+uint32_t ss_fnv1ar(const srt_string *s, uint32_t fnv, size_t off1, size_t off2);
+
+/* #API: |String MurmurHash3-32 checksum|string|32-bit hash|O(n)|1;2| */
+uint32_t ss_mh3_32(const srt_string *s);
+
+/* #API: |MurmurHash3-32 checksum for substring|string; MH3-32 accumulator from previous chained MH3-32 calls (use S_MH3_32_INIT for the first call); start offset; end offset|32-bit hash|O(n)|1;2| */
+uint32_t ss_mh3_32r(const srt_string *s, uint32_t acc, size_t off1, size_t off2);
 
 /*
  * Inlined functions
@@ -848,13 +866,14 @@ S_INLINE char *ss_get_buffer(srt_string *s)
 	 * Constness breaking will be addressed once the ss_to_c gets fixed.
 	 */
 	return ss_is_ref(s) ? ((struct SStringRefRW *)s)->str
-			    : sdx_get_buffer((srt_data *)s);
+			    : (char *)sdx_get_buffer((srt_data *)s);
 }
 
 S_INLINE const char *ss_get_buffer_r(const srt_string *s)
 {
-	return ss_is_ref(s) ? ((const struct SStringRef *)s)->cstr
-			    : sdx_get_buffer_r((const srt_data *)s);
+	return ss_is_ref(s) ?
+		  ((const struct SStringRef *)s)->cstr
+		: (const char *)sdx_get_buffer_r((const srt_data *)s);
 }
 
 	/*

@@ -137,8 +137,22 @@ Hash tables
 
 * uthash
   * https://troydhanson.github.io/uthash/
+* Malte Skarupte blog posts
+  * https://probablydance.com/2017/02/26/i-wrote-the-fastest-hashtable/
+  * https://probablydance.com/2018/05/28/a-new-fast-hash-table-in-response-to-googles-new-fast-hash-table/
+  * https://probablydance.com/2018/06/16/fibonacci-hashing-the-optimization-that-the-world-forgot-or-a-better-alternative-to-integer-modulo/
+  * https://github.com/skarupke/flat_hash_map
+* Misc
+  * https://research.cs.vt.edu/AVresearch/hashing/
+  * https://aras-p.info/blog/2016/08/02/Hash-Functions-all-the-way-down/
+  * https://rcoh.me/posts/hash-map-analysis/
+  * http://www.idryman.org/blog/2017/05/03/writing-a-damn-fast-hash-table-with-tiny-memory-footprints/
+  * http://www.ilikebigbits.com/2016_08_28_hash_table.html
 * Benchmarks
   * http://incise.org/hash-table-benchmarks.html
+  * https://tessil.github.io/2016/08/29/benchmark-hopscotch-map.html
+  * https://lonewolfer.wordpress.com/2015/02/07/benchmarking-string-hash-tables/
+  * https://github.com/nfergu/hashtableperf
 
 Trees
 ---

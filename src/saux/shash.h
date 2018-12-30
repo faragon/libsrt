@@ -25,10 +25,35 @@ extern "C" {
 
 #include "scommon.h"
 
+/* Linux hashing algorithm for 32 and 64-bit values */
+#define S_GR32 0x61C88647
+#define S_GR64 0x61C8864680B583EBULL
+
+#define S_CRC32_INIT 0
+#define S_ADLER32_INIT 1
+#define S_FNV1_INIT ((uint32_t)0x811c9dc5)
+#define S_MH3_32_INIT 42
+
 /* #notAPI: |CRC-32 (0xedb88320 polynomial)|CRC accumulator (for offset 0 must be 0);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size);
 /* #notAPI: |Adler32 checksum|Adler32 accumulator (for offset 0 must be 1);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
 uint32_t sh_adler32(uint32_t adler, const void *buf, size_t buf_size);
+/* #notAPI: |FNV-1 hash|FNV accumulator (for offset 0 must be S_FNV_INIT);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+uint32_t sh_fnv1(uint32_t fnv, const void *buf, size_t buf_size);
+/* #notAPI: |FNV-1A hash|FNV-1A accumulator (for offset 0 must be S_FNV1A_INIT);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+uint32_t sh_fnv1a(uint32_t fnv, const void *buf, size_t buf_size);
+/* #notAPI: |MurmurHash3-32 hash|MH3 accumulator (for offset 0 must be S_MM3_32_INIT);buffer;buffer size (in bytes)|32-bit hash|O(n)|1;2| */
+uint32_t sh_mh3_32(uint32_t acc, const void *buf, size_t buf_size);
+
+S_INLINE uint32_t sh_hash32(uint32_t v)
+{
+        return (v * S_GR32);
+}
+
+S_INLINE uint32_t sh_hash64(uint64_t v)
+{
+        return (uint32_t)(v * S_GR64);
+}
 
 #ifdef __cplusplus
 } /* extern "C" { */

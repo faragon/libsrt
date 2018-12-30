@@ -24,6 +24,17 @@ extern "C" {
  * #DOC
  * #DOC 	SMS_S: string key
  * #DOC
+ * #DOC
+ * #DOC Callback types for the sm_itr_*() functions:
+ * #DOC
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_i32)(int32_t k, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_u32)(uint32_t k, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_i)(int64_t k, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
  *
  * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
@@ -201,10 +212,10 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 	srt_bool ins_ok;
 	RETURN_IF(!s || (*s)->d.sub_type != SMS_S, S_FALSE);
 #if 1 /* workaround */
-	sso_set((srt_stringo *)&n.k, k);
+	sso1_set(&n.k, k);
 	ins_ok = st_insert((srt_tree **)s, (const srt_tnode *)&n);
 	if (!ins_ok)
-		sso_free((srt_stringo *)&n.k);
+		sso1_free(&n.k);
 	return ins_ok;
 #else
 	/* TODO: rw_add_SMS_S */

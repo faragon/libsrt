@@ -16,6 +16,7 @@ extern "C" {
  * - This is intended for debugging.
  */
 
+#include "../shmap.h"
 #include "../smap.h"
 #include "../sstring.h"
 #include "../svector.h"
@@ -27,6 +28,7 @@ const char *sv_type_to_label(const enum eSV_Type t);
 void sv_log_obj(srt_string **log, const srt_vector *v);
 void st_log_obj(srt_string **log, const srt_tree *t, ss_cat_stn f);
 void sm_log_obj(srt_string **log, const srt_map *m);
+void shm_log_obj(srt_string **log, const srt_hmap *h);
 void s_hex_dump(srt_string **log, const char *label, const char *buf, const size_t buf_size);
 
 #ifdef __cplusplus

@@ -125,15 +125,23 @@ typedef union OptStr srt_stringo; /* one or two strings sharing space */
 
 #ifdef S_ENABLE_SM_STRING_OPTIMIZATION
 
+S_INLINE const srt_string *sso1_get(const srt_stringo1 *s)
+{
+	RETURN_IF(!s, ss_void);
+	RETURN_IF(s->t == OptStr_D, (const srt_string *)s->d.s_raw);
+	RETURN_IF(s->t == OptStr_I, s->i.s);
+	return ss_void;
+}
+
 S_INLINE const srt_string *sso_get(const srt_stringo *s)
 {
 	RETURN_IF(!s || (s->k.t & OptStr_Null) != 0, ss_void);
-	RETURN_IF(s->t == OptStr_D, (const srt_string *)s->k.d.s_raw);
+	RETURN_IF((s->t & OptStr_2) == 0, sso1_get((const srt_stringo1 *)s));
 	RETURN_IF(s->t == OptStr_DD, (const srt_string *)s->kv.d.s_raw);
 	RETURN_IF(s->t == OptStr_DI, (const srt_string *)s->kv.di.s_raw);
-	RETURN_IF(s->t == OptStr_I, s->k.i.s);
 	RETURN_IF(s->t == OptStr_ID, (const srt_string *)s->kv.di.si);
-	return s->kv.ii.s1; /* OptStr_II */
+	RETURN_IF(s->t == OptStr_II, (const srt_string *)s->kv.ii.s1);
+	return ss_void;
 }
 
 S_INLINE const uint8_t *sso_dd_get_s2_raw(const srt_stringo *s)
@@ -157,7 +165,7 @@ S_INLINE const srt_string *sso_get_s2(const srt_stringo *s)
 	return sso_dd_get_s2(s); /* OptStr_DD */
 }
 
-S_INLINE void sso_set0(srt_stringo *so, const srt_string *s, srt_string *s0)
+S_INLINE void sso1_set0(srt_stringo1 *so, const srt_string *s, srt_string *s0)
 {
 	size_t ss;
 	if (!so)
@@ -166,28 +174,28 @@ S_INLINE void sso_set0(srt_stringo *so, const srt_string *s, srt_string *s0)
 		s = ss_void;
 	ss = ss_size(s);
 	if (ss <= OptStrMaxSize) {
-		srt_string *s_out = (srt_string *)so->k.d.s_raw;
+		srt_string *s_out = (srt_string *)so->d.s_raw;
 		ss_alloc_into_ext_buf(s_out, OptStrMaxSize);
 		so->t = OptStr_D;
 		ss_cpy(&s_out, s);
 	} else {
 		so->t = OptStr_I;
 		if (s0) {
-			so->k.i.s = s0;
+			so->i.s = s0;
 			s0 = NULL;
-			ss_cpy(&so->k.i.s, s);
+			ss_cpy(&so->i.s, s);
 		} else
-			so->k.i.s = ss_dup(s);
+			so->i.s = ss_dup(s);
 	}
 	ss_free(&s0);
 }
 
-S_INLINE void sso_set(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_set(srt_stringo1 *so, const srt_string *s)
 {
-	sso_set0(so, s, NULL);
+	sso1_set0(so, s, NULL);
 }
 
-S_INLINE void sso_set20(srt_stringo *so, const srt_string *s1,
+S_INLINE void sso_set0(srt_stringo *so, const srt_string *s1,
 		       const srt_string *s2, srt_string *sa, srt_string *sb)
 {
 	size_t s1s, s2s;
@@ -259,56 +267,62 @@ S_INLINE void sso_set20(srt_stringo *so, const srt_string *s1,
 	ss_free(&sb);
 }
 
-S_INLINE void sso_set2(srt_stringo *so, const srt_string *s1,
+S_INLINE void sso_set(srt_stringo *so, const srt_string *s1,
 		       const srt_string *s2)
 {
-	sso_set20(so, s1, s2, NULL, NULL);
+	sso_set0(so, s1, s2, NULL, NULL);
 }
 
-S_INLINE void sso_update2(srt_stringo *so, const srt_string *s,
+S_INLINE void sso_update(srt_stringo *so, const srt_string *s,
 			  const srt_string *s2)
 {
 	srt_string *s0, *s20;
 	if (so) {
-		if ((so->t & OptStr_2) != 0) {
-			if ((so->t & OptStr_Ix) != 0) {
-				s0 = so->kv.di.si;
-				s20 = NULL;
+		if ((so->t & OptStr_Ix) != 0) {
+			s0 = so->kv.di.si;
+			s20 = NULL;
+		} else
+			if (so->t == OptStr_II) {
+				s0 = so->kv.ii.s1;
+				s20 = so->kv.ii.s2;
 			} else
-				if (so->t == OptStr_II) {
-					s0 = so->kv.ii.s1;
-					s20 = so->kv.ii.s2;
-				} else
-					s0 = s20 = NULL;
-			sso_set20(so, s, s2, s0, s20);
-		} else {
-			s0 = so->t == OptStr_I ? so->k.i.s : NULL;
-			sso_set0(so, s, s0);
-		}
+				s0 = s20 = NULL;
+		sso_set0(so, s, s2, s0, s20);
 	}
 }
 
-S_INLINE void sso_update(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_update(srt_stringo1 *so, const srt_string *s)
 {
-	sso_update2(so, s, NULL);
+	srt_string *s0;
+	if (so) {
+		s0 = so->t == OptStr_I ? so->i.s : NULL;
+		sso1_set0(so, s, s0);
+	}
 }
 
-S_INLINE void sso_setref(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_setref(srt_stringo1 *so, const srt_string *s)
 {
 	if (so) {
 		so->t = OptStr_I;
-		so->k.i.s = (srt_string *)s; /* CONSTNESS */
+		so->i.s = (srt_string *)s; /* CONSTNESS */
 	}
 }
 
-
-S_INLINE void sso_setref2(srt_stringo *so, const srt_string *s1,
-			  const srt_string *s2)
+S_INLINE void sso_setref(srt_stringo *so, const srt_string *s1,
+			 const srt_string *s2)
 {
 	if (so) {
 		so->t = OptStr_II;
 		so->kv.ii.s1 = (srt_string *)s1; /* CONSTNESS */
 		so->kv.ii.s2 = (srt_string *)s2; /* CONSTNESS */
+	}
+}
+
+S_INLINE void sso1_free(srt_stringo1 *so)
+{
+	if (so && so->i.t == OptStr_I) {
+		ss_free(&so->i.s);
+		so->i.t |= OptStr_Null;
 	}
 }
 
@@ -326,12 +340,43 @@ S_INLINE void sso_free(srt_stringo *so)
 	so->k.t |= OptStr_Null;
 }
 
-S_INLINE void sso_free2(srt_stringo *so)
+/* Duplication adjust: adjust sso string copied in bulk -e.g. with memcpy-,
+ * so if using dynamic memory it duplicates the string references
+ */
+
+S_INLINE void sso_dupa(srt_stringo *s)
 {
-	sso_free(so);
+	switch (s->t) {
+	case OptStr_I:
+		s->k.i.s = ss_dup(s->k.i.s);
+		break;
+	case OptStr_DI:
+	case OptStr_ID:
+		s->kv.di.si = ss_dup(s->kv.di.si);
+		break;
+	case OptStr_II:
+		s->kv.ii.s1 = ss_dup(s->kv.ii.s1);
+		s->kv.ii.s2 = ss_dup(s->kv.ii.s2);
+		break;
+	default:
+		/* cases not using dynamic memory */
+		break;
+	}
+}
+
+S_INLINE void sso_dupa1(srt_stringo1 *s)
+{
+	if (s->t == OptStr_I)
+		s->i.s = ss_dup(s->i.s);
+
 }
 
 #else
+
+S_INLINE const srt_string *sso1_get(const srt_stringo1 *s)
+{
+	return s ? s->s : ss_void;
+}
 
 S_INLINE const srt_string *sso_get(const srt_stringo *s)
 {
@@ -343,14 +388,14 @@ S_INLINE const srt_string *sso_get_s2(const srt_stringo *s)
 	return s ? s->kv.s2 : ss_void;
 }
 
-S_INLINE void sso_set(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_set(srt_stringo1 *so, const srt_string *s)
 {
 	if (so)
-		so->k.s = ss_dup(s);
+		so->s = ss_dup(s);
 }
 
-S_INLINE void sso_set2(srt_stringo *so, const srt_string *s1,
-		       const srt_string *s2)
+S_INLINE void sso_set(srt_stringo *so, const srt_string *s1,
+		      const srt_string *s2)
 {
 	if (so) {
 		so->kv.s1 = ss_dup(s1);
@@ -358,14 +403,14 @@ S_INLINE void sso_set2(srt_stringo *so, const srt_string *s1,
 	}
 }
 
-S_INLINE void sso_update(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_update(srt_stringo1 *so, const srt_string *s)
 {
 	if (so)
-		ss_cpy(&so->k.s, s);
+		ss_cpy(&so->s, s);
 }
 
-S_INLINE void sso_update2(srt_stringo *so, const srt_string *s1,
-			  const srt_string *s2)
+S_INLINE void sso_update(srt_stringo *so, const srt_string *s1,
+			 const srt_string *s2)
 {
 	if (so) {
 		ss_cpy(&so->kv.s1, s1);
@@ -373,14 +418,14 @@ S_INLINE void sso_update2(srt_stringo *so, const srt_string *s1,
 	}
 }
 
-S_INLINE void sso_setref(srt_stringo *so, const srt_string *s)
+S_INLINE void sso1_setref(srt_stringo1 *so, const srt_string *s)
 {
 	if (so)
-		so->k.s = (srt_string *)s; /* CONSTNESS */
+		so->s = (srt_string *)s; /* CONSTNESS */
 }
 
-S_INLINE void sso_setref2(srt_stringo *so, const srt_string *s1,
-			  const srt_string *s2)
+S_INLINE void sso_setref(srt_stringo *so, const srt_string *s1,
+			 const srt_string *s2)
 {
 	if (so) {
 		so->kv.s1 = (srt_string *)s1; /* CONSTNESS */
@@ -388,13 +433,13 @@ S_INLINE void sso_setref2(srt_stringo *so, const srt_string *s1,
 	}
 }
 
-S_INLINE void sso_free(srt_stringo *so)
+S_INLINE void sso1_free(srt_stringo1 *so)
 {
 	if (so)
-		ss_free(&so->k.s);
+		ss_free(&so->s);
 }
 
-S_INLINE void sso_free2(srt_stringo *so)
+S_INLINE void sso_free(srt_stringo *so)
 {
 	if (so) {
 		ss_free(&so->kv.s1);
@@ -402,10 +447,30 @@ S_INLINE void sso_free2(srt_stringo *so)
 	}
 }
 
+S_INLINE void sso_dupa1(srt_stringo1 *s)
+{
+	s->s = ss_dup(s->s);
+}
+
+S_INLINE void sso_dupa(srt_stringo *s)
+{
+	s->kv.s1 = ss_dup(s->kv.s1);
+	s->kv.s2 = ss_dup(s->kv.s2);
+}
+
 #endif /* #ifdef S_ENABLE_SM_STRING_OPTIMIZATION */
+
+S_INLINE srt_bool sso1_eq(const srt_string *s, const srt_stringo1 *sso1)
+{
+	return !ss_cmp(s, sso1_get(sso1));
+}
+
+S_INLINE srt_bool sso_eq(const srt_string *s, const srt_stringo *sso)
+{
+	return !ss_cmp(s, sso_get(sso));
+}
 
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
 #endif /* #ifndef SSTRINGO_H */
-

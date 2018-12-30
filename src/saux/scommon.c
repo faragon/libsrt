@@ -174,6 +174,40 @@ unsigned slog2_64(uint64_t i)
 	return o;
 }
 
+#define SLOG2_CEIL(lf, i)                                                      \
+	unsigned a, b;                                                         \
+	RETURN_IF(!i, 0);                                                      \
+	a = slog2_32(i - 1);                                                   \
+	b = slog2_32(i);                                                       \
+	return a == b ? b + 1 : b
+
+/* log2, rounding-up */
+unsigned slog2_ceil_32(uint32_t i)
+{
+	SLOG2_CEIL(slog2_32, i);
+}
+
+unsigned slog2_ceil(uint64_t i)
+{
+	SLOG2_CEIL(slog2_64, i);
+}
+
+uint64_t snextpow2(uint64_t i)
+{
+#if 1
+	i--;
+	i |= i >> 1;
+	i |= i >> 2;
+	i |= i >> 4;
+	i |= i >> 8;
+	i |= i >> 16;
+	i |= i >> 32;
+	return i + 1;
+#else
+	return i <= 2 ? i : (uint64_t)1 << slog2_ceil_64(i);
+#endif
+}
+
 #undef SLOG2STEP
 
 /*

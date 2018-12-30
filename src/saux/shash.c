@@ -14,6 +14,9 @@
  */
 
 #define S_CRC32_POLY 0xedb88320
+#define S_FNV_PRIME ((uint32_t)0x01000193)
+#define MH3_32_C1 0xcc9e2d51
+#define MH3_32_C2 0x1b873593
 
 /*
  * CRC-32 implementations
@@ -186,6 +189,70 @@ uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 			;
 	}
 	return (s2 << 16) | s1;
+}
+
+uint32_t sh_fnv1(uint32_t fnv, const void *buf0, size_t buf_size)
+{
+	size_t i;
+	uint8_t *buf = (uint8_t *)buf0;
+	for (i = 0; i < buf_size; i++) {
+		fnv *= S_FNV_PRIME;
+		fnv ^= buf[i];
+	}
+	return fnv;
+}
+
+uint32_t sh_fnv1a(uint32_t fnv, const void *buf0, size_t buf_size)
+{
+	size_t i;
+	uint8_t *buf = (uint8_t *)buf0;
+	for (i = 0; i < buf_size; i++) {
+		fnv ^= buf[i];
+		fnv *= S_FNV_PRIME;
+	}
+	return fnv;
+}
+
+S_INLINE uint32_t rotl32(uint32_t x, int r)
+{
+	return (x << r) | (x >> (32 - r));
+}
+
+uint32_t sh_mh3_32(uint32_t acc, const void *buf, size_t buf_size)
+{
+	uint32_t h = acc, k;
+	size_t i, l4 = (buf_size / 4) * 4;
+	const uint8_t *data = (const uint8_t *)buf;
+	/* body: 4 bytes per loop */
+	for (i = 0; i < l4; i += 4) {
+		k = S_LD_LE_U32(data + i) * MH3_32_C1;
+		k = rotl32(k, 15) * MH3_32_C2;
+		h = (rotl32(h ^ k, 13) * 5) + 0xe6546b64;
+	}
+	/* tail */
+	k = 0;
+	switch (buf_size & 3) {
+	case 3:
+		k ^= data[i + 2] << 16;
+		/* fallthrough */
+	case 2:
+		k ^= data[i + 1] << 8;
+		/* fallthrough */
+	case 1:
+		k ^= data[i];
+		k *= MH3_32_C1;
+		k = rotl32(k, 15) * MH3_32_C2;
+		h ^= k;
+		break;
+	}
+	/* avalanche */
+	h ^= buf_size;
+	h ^= h >> 16;
+	h *= 0x85ebca6b;
+	h ^= h >> 13;
+	h *= 0xc2b2ae35;
+	h ^= h >> 16;
+	return h;
 }
 
 #else

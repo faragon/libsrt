@@ -282,8 +282,6 @@ union s_u64 {
 #define S_NULL_WC L"(null)"
 #define S_TRUE 1
 #define S_FALSE 0
-#define S_CRC32_INIT 0
-#define S_ADLER32_INIT 1
 
 /*
  * Variable argument helpers
@@ -577,6 +575,9 @@ S_INLINE size_t s_size_t_sub(size_t a, size_t b)
 
 unsigned slog2_32(uint32_t i);
 unsigned slog2_64(uint64_t i);
+unsigned slog2_ceil_32(uint32_t i);
+unsigned slog2_ceil(uint64_t i);
+uint64_t snextpow2(uint64_t i); /* round to next power of 2 */
 
 S_INLINE unsigned slog2(uint64_t i)
 {

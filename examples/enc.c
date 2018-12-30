@@ -25,7 +25,7 @@ static int syntax_error(const char **argv, const int exit_code)
 	fprintf(stderr,
 		"Buffer encoding/decoding (libsrt example)\n\n"
 		"Syntax: %s [-eb|-db|-eh|-eH|-dh|-ex|-dx|-ej|-dj|"
-		"-eu|-du|-ez|-dz|-crc32|-adler32]\n\nExamples:\n"
+		"-eu|-du|-ez|-dz|-crc32|-adler32|-fnv|-fnv1a]\n\nExamples:\n"
 		"%s -eb <in >out.b64\n%s -db <in.b64 >out\n"
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
@@ -35,9 +35,12 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s -ez <in >in.lz\n%s -dz <in.lz >out\n"
 		"%s -ezh <in >in.lz\n%s -dz <in.lz >out\n"
 		"%s -crc32 <in\n%s -crc32 <in >out\n"
-		"%s -adler32 <in\n%s -adler32 <in >out\n",
+		"%s -adler32 <in\n%s -adler32 <in >out\n"
+		"%s -fnv1 <in\n%s -fnv1 <in >out\n"
+		"%s -fnv1a <in\n%s -fnv1a <in >out\n"
+		"%s -mh3_32 <in\n%s -mh3_32 <in >out\n",
 		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0,
-		v0, v0, v0, v0, v0);
+		v0, v0, v0, v0, v0, v0, v0, v0, v0, v0, v0);
 	return exit_code;
 }
 
@@ -68,6 +71,15 @@ int main(int argc, const char **argv)
 	} else if (!strncmp(argv[1], "-adler32", 8)) {
 		acc = S_ADLER32_INIT;
 		f32 = ss_adler32r;
+	} else if (!strncmp(argv[1], "-fnv1", 6)) {
+		acc = S_FNV1_INIT;
+		f32 = ss_fnv1r;
+	} else if (!strncmp(argv[1], "-fnv1a", 7)) {
+		acc = S_FNV1_INIT;
+		f32 = ss_fnv1ar;
+	} else if (!strncmp(argv[1], "-mh3_32", 8)) {
+		acc = S_MH3_32_INIT;
+		f32 = ss_mh3_32r;
 	}
 	if (f32) {
 		in = ss_alloca(IBUF_SIZE);

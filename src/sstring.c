@@ -2261,3 +2261,48 @@ uint32_t ss_adler32r(const srt_string *s, uint32_t adler, size_t off1,
 	offx = off2 == S_NPOS ? ss : off2;
 	return sh_adler32(adler, ss_get_buffer_r(s) + off1, offx - off1);
 }
+
+uint32_t ss_fnv1(const srt_string *s)
+{
+	return ss_fnv1r(s, S_FNV1_INIT, 0, S_NPOS);
+}
+
+uint32_t ss_fnv1r(const srt_string *s, uint32_t fnv, size_t off1, size_t off2)
+{
+	size_t ss, offx;
+	RETURN_IF(!s || off1 >= off2, 0);
+	ss = ss_size(s);
+	RETURN_IF(off1 >= ss, 0);
+	offx = off2 == S_NPOS ? ss : off2;
+	return sh_fnv1(fnv, ss_get_buffer_r(s) + off1, offx - off1);
+}
+
+uint32_t ss_fnv1a(const srt_string *s)
+{
+	return ss_fnv1ar(s, S_FNV1_INIT, 0, S_NPOS);
+}
+
+uint32_t ss_fnv1ar(const srt_string *s, uint32_t fnv, size_t off1, size_t off2)
+{
+	size_t ss, offx;
+	RETURN_IF(!s || off1 >= off2, 0);
+	ss = ss_size(s);
+	RETURN_IF(off1 >= ss, 0);
+	offx = off2 == S_NPOS ? ss : off2;
+	return sh_fnv1a(fnv, ss_get_buffer_r(s) + off1, offx - off1);
+}
+
+uint32_t ss_mh3_32(const srt_string *s)
+{
+	return ss_mh3_32r(s, S_MH3_32_INIT, 0, S_NPOS);
+}
+
+uint32_t ss_mh3_32r(const srt_string *s, uint32_t acc, size_t off1, size_t off2)
+{
+	size_t ss, offx;
+	RETURN_IF(!s || off1 >= off2, 0);
+	ss = ss_size(s);
+	RETURN_IF(off1 >= ss, 0);
+	offx = off2 == S_NPOS ? ss : off2;
+	return sh_mh3_32(acc, ss_get_buffer_r(s) + off1, offx - off1);
+}

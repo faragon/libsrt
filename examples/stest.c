@@ -13,6 +13,14 @@
 #include "utf8_examples.h"
 #include <locale.h>
 
+#ifdef S_ENABLE_BRK
+#define S_BRK __asm__("int3")
+#else
+#define S_BRK                                                                  \
+	do {                                                                   \
+	} while (0)
+#endif
+
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(S_MINIMAL)
 #define GOOD_LOCALE_SUPPORT
 #endif
@@ -120,9 +128,9 @@ static int cmp_pp(const void *a, const void *b)
 						 | (!ss_cmp(sa, b) ? 0 : 4)    \
 						 | (!ss_cmp(sb, b) ? 0 : 8)    \
 						 | (!ss_cmp(sc, b) ? 0 : 16);  \
-		ss_free(&sa);   	                                       \
-		ss_free(&sb);  		                                       \
-		ss_free(&sc);		                                       \
+		ss_free(&sa);                                                  \
+		ss_free(&sb);                                                  \
+		ss_free(&sc);                                                  \
 		return res;                                                    \
 	}
 
@@ -140,9 +148,9 @@ static int cmp_pp(const void *a, const void *b)
 					     | (!ss_cmp(sa, b) ? 0 : 4)        \
 					     | (!ss_cmp(sb, b) ? 0 : 8)        \
 					     | (!ss_cmp(sc, b) ? 0 : 16);      \
-		ss_free(&sa);   	                                       \
-		ss_free(&sb);  		                                       \
-		ss_free(&sc);		                                       \
+		ss_free(&sa);                                                  \
+		ss_free(&sb);                                                  \
+		ss_free(&sc);                                                  \
 		return res;                                                    \
 	}
 
@@ -159,9 +167,9 @@ static int cmp_pp(const void *a, const void *b)
 			      ? 1                                              \
 			      : (!ss_cmp(sa, expected) ? 0 : 2)                \
 					| (!ss_cmp(sc, expected) ? 0 : 4);     \
-		ss_free(&sa);   	                                       \
-		ss_free(&sb);  		                                       \
-		ss_free(&sc);		                                       \
+		ss_free(&sa);                                                  \
+		ss_free(&sb);                                                  \
+		ss_free(&sc);                                                  \
 		return res;                                                    \
 	}
 
@@ -1256,9 +1264,9 @@ static int test_ss_cat(const char *a, const char *b)
 		   : (sprintf(btmp, "%s%s%s%s", ss_to_c(sa), ss_to_c(sa),
 			      ss_to_c(sa), ss_to_c(sa))
 #ifdef S_USE_VA_ARGS
-		     && ss_cat(&sa, sa, sa, sa)
+				      && ss_cat(&sa, sa, sa, sa)
 #else
-		     && ss_cat(&sa, sa) && ss_cat(&sa, sa)
+				      && ss_cat(&sa, sa) && ss_cat(&sa, sa)
 #endif
 			      ? 0
 			      : 8);
@@ -1273,7 +1281,9 @@ static int test_ss_cat(const char *a, const char *b)
 #else
 		      && ss_cat(&sc, sd) && ss_cat(&sc, se) && ss_cat(&sc, sf)
 #endif
-		     ) ? 0 : 32;
+			      )
+			       ? 0
+			       : 32;
 #if defined(S_USE_VA_ARGS) && defined(S_DEBUG)
 	/* Check that multiple append uses just one -or zero- allocation: */
 	alloc_calls_after = dbg_cnt_alloc_calls;
@@ -1287,7 +1297,7 @@ static int test_ss_cat(const char *a, const char *b)
 #else
 		   : ss_cat(&sf, se) && ss_cat(&sf, sf) && ss_cat_c(&sf, "fe")
 #endif
-		     && !strcmp(ss_to_c(sf), "fefefe")
+				       && !strcmp(ss_to_c(sf), "fefefe")
 			       ? 0
 			       : 64;
 	res |= res ? 0 : (!strcmp(ss_to_c(sc), "cdef")) ? 0 : 256;
@@ -1375,10 +1385,11 @@ static int test_ss_cat_c(const char *a, const char *b)
 		   : ss_cat_c(&sb, "c", "b", "c", "b", "c")
 #else
 		   : ss_cat_c(&sb, "c") && ss_cat_c(&sb, "b")
-		     && ss_cat_c(&sb, "c") && ss_cat_c(&sb, "b")
-		     && ss_cat_c(&sb, "c")
+				       && ss_cat_c(&sb, "c")
+				       && ss_cat_c(&sb, "b")
+				       && ss_cat_c(&sb, "c")
 #endif
-		     && !strcmp(ss_to_c(sb), "bcbcbc")
+				       && !strcmp(ss_to_c(sb), "bcbcbc")
 			       ? 0
 			       : 8;
 #ifdef S_USE_VA_ARGS
@@ -1414,8 +1425,9 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 #ifdef S_USE_VA_ARGS
 		   : (ss_cat_w(&sa, b, b, b) ? 0 : 2)
 #else
-		   : (ss_cat_w(&sa, b) && ss_cat_w(&sa, b)
-		     && ss_cat_w(&sa, b) ? 0 : 2)
+		   : (ss_cat_w(&sa, b) && ss_cat_w(&sa, b) && ss_cat_w(&sa, b)
+			      ? 0
+			      : 2)
 #endif
 			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
 	/* Concatenate multiple literal inputs */
@@ -1424,10 +1436,11 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 		   : ss_cat_w(&sb, L"c", L"b", L"c", L"b", L"c")
 #else
 		   : ss_cat_w(&sb, L"c") && ss_cat_w(&sb, L"b")
-		     && ss_cat_w(&sb, L"c") && ss_cat_w(&sb, L"b")
-		     && ss_cat_w(&sb, L"c")
+				       && ss_cat_w(&sb, L"c")
+				       && ss_cat_w(&sb, L"b")
+				       && ss_cat_w(&sb, L"c")
 #endif
-		     && !strcmp(ss_to_c(sb), "bcbcbc")
+				       && !strcmp(ss_to_c(sb), "bcbcbc")
 			       ? 0
 			       : 8;
 #ifdef S_USE_VA_ARGS
@@ -2415,7 +2428,7 @@ static int test_sv_elem_size()
 	v##2 = sv_dup(v);                                                      \
 	res |= !v ? 1 << (ntest * 3)                                           \
 		  : ((check) && (check2)) ? 0 : 2 << (ntest * 3);              \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_dup()
@@ -2479,7 +2492,7 @@ static int test_sv_dup()
 	push(&v, b);                                                           \
 	v##2 = sv_dup_erase(v, 1, 5);                                          \
 	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_dup_erase()
@@ -2548,7 +2561,7 @@ static int test_sv_dup_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2);
 
 static int test_sv_dup_resize()
@@ -2598,7 +2611,7 @@ static int test_sv_dup_resize()
 			       | (!sv_ncmp(v, 0, v##2, 0, sv_size(v))          \
 					  ? 0                                  \
 					  : 4 << (nt * 3));                    \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cpy()
@@ -2673,7 +2686,7 @@ static int test_sv_cpy()
 	v##2 = NULL;                                                           \
 	sv_cpy_erase(&v##2, v, 1, 5);                                          \
 	res |= !v ? 1 << (ntest * 3) : (check) ? 0 : 2 << (ntest * 3);         \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cpy_erase()
@@ -2742,7 +2755,7 @@ static int test_sv_cpy_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cpy_resize()
@@ -2782,7 +2795,7 @@ static int test_sv_cpy_resize()
 		     && (check) && (check2))                                   \
 			       ? 0                                             \
 			       : 2 << (ntest * 3);                             \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cat()
@@ -2850,7 +2863,7 @@ static int test_sv_cat()
 	res |= !v ? 1 << (ntest * 3)                                           \
 		  : ((check) ? 0 : 2 << (ntest * 3))                           \
 			       | (sv_size(v##2) == 6 ? 0 : 4 << (ntest * 3));  \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cat_erase()
@@ -2919,7 +2932,7 @@ static int test_sv_cat_erase()
 			       | (sv_ncmp(v##2, 0, v, 0, sv_size(v)) < 0       \
 					  ? 0                                  \
 					  : 16 << (ntest * 3));                \
-	sv_free(&v);							       \
+	sv_free(&v);                                                           \
 	sv_free(&v##2)
 
 static int test_sv_cat_resize()
@@ -3095,8 +3108,9 @@ static int test_sv_resize()
 #define BUILD_CMPF(FN, T)                                                      \
 	static int FN(const void *a, const void *b)                            \
 	{                                                                      \
-		return *(const T *)(a) < *(const T *)(b) ? -1                  \
-		     : *(const T *)(a) == *(const T *)(b) ? 0 : 1;	       \
+		return *(const T *)(a) < *(const T *)(b)                       \
+			       ? -1                                            \
+			       : *(const T *)(a) == *(const T *)(b) ? 0 : 1;   \
 	}
 
 BUILD_CMPF(cmp8i, int8_t)
@@ -3310,8 +3324,9 @@ static int test_sv_push_pop_set()
 #ifdef S_USE_VA_ARGS
 		res |= (sv_push(&a, &a2, &a2, &a1) ? 0 : 4);
 #else
-		res |= (sv_push(&a, &a2) && sv_push(&a, &a2)
-		       && sv_push(&a, &a1) ? 0 : 4);
+		res |= (sv_push(&a, &a2) && sv_push(&a, &a2) && sv_push(&a, &a1)
+				? 0
+				: 4);
 #endif
 		res |= (sv_len(a) == 3 ? 0 : 8);
 		res |= (((t = (const struct AA *)sv_pop(a)) && t->a == a1.a
@@ -3806,9 +3821,9 @@ static int test_sm_shrink()
 			}                                                      \
 		}                                                              \
 	}                                                                      \
-	sm_free(&m);							       \
-	sm_free(&m##2);							       \
-	sm_free(&m##b);							       \
+	sm_free(&m);                                                           \
+	sm_free(&m##2);                                                        \
+	sm_free(&m##b);                                                        \
 	sm_free(&m##2b)
 
 /*
@@ -4304,10 +4319,6 @@ static int test_sm_itr()
 			       ? 0x40000
 			       : 0;
 	}
-
-	/*
-	 * TODO: add sm_itr_i32, sm_itr_u32, sm_itr_i, sm_itr_s
-	 */
 #ifdef S_USE_VA_ARGS
 	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
 #else
@@ -4613,6 +4624,1013 @@ static int test_sms()
 	return res;
 }
 
+static int test_shs()
+{
+	int i, res = 0, tcount = 3;
+	size_t cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0, cnt_s2 = 0;
+	size_t processed_i32, processed_u32, processed_i, processed_s,
+		processed_s2;
+	const srt_string *k[] = {ss_crefa("k000"), ss_crefa("k001"),
+				 ss_crefa("k002")};
+	/*
+	 * Allocation: heap, stack with 3 elements, and stack with 10 elements
+	 */
+	srt_hset *s_i32 = shs_alloc(SHS_I32, 0), *s_u32 = shs_alloc(SHS_U32, 0),
+		 *s_i = shs_alloc(SHS_I, 0), *s_s = shs_alloc(SHS_S, 0),
+		 *s_s2 = NULL, *s_a3 = shs_alloca(SHS_I32, 3),
+		 *s_a10 = shs_alloca(SHS_I32, 10);
+	res |= (shs_empty(s_i32) && shs_empty(s_u32) && shs_empty(s_i)
+				&& shs_empty(s_s) && shs_empty(s_a3)
+				&& shs_empty(s_a10)
+			? 0
+			: 1 << 0);
+	/*
+	 * Insert elements
+	 */
+	for (i = 0; i < tcount; i++) {
+		shs_insert_i32(&s_i32, i + 10);
+		shs_insert_u32(&s_u32, (uint32_t)i + 20);
+		shs_insert_i(&s_i, i);
+		shs_insert_s(&s_s, k[i]);
+	}
+	res |= (!shs_empty(s_i32) && !shs_empty(s_u32) && !shs_empty(s_i)
+				&& !shs_empty(s_s) && shs_empty(s_a3)
+				&& shs_empty(s_a10)
+			? 0
+			: 1 << 1);
+	res |= (shs_count_i(s_i32, 10) && shs_count_i(s_i32, 11)
+				&& shs_count_i(s_i32, 12)
+				&& shs_count_u(s_u32, 20)
+				&& shs_count_u(s_u32, 21)
+				&& shs_count_u(s_u32, 22) && shs_count_i(s_i, 0)
+				&& shs_count_i(s_i, 1) && shs_count_i(s_i, 2)
+				&& shs_count_s(s_s, k[0])
+				&& shs_count_s(s_s, k[1])
+				&& shs_count_s(s_s, k[2])
+			? 0
+			: 1 << 2);
+	/*
+	 * Enumeration
+	 */
+	s_s2 = shs_dup(s_s);
+	processed_i32 = shs_itp_i32(s_i32, 0, S_NPOS, cback_i32, &cnt_i32);
+	processed_u32 = shs_itp_u32(s_u32, 0, S_NPOS, cback_u32, &cnt_u32);
+	processed_i = shs_itp_i(s_i, 0, S_NPOS, cback_i, &cnt_i);
+	processed_s = shs_itp_s(s_s, 0, S_NPOS, cback_s, &cnt_s);
+	processed_s2 = shs_itp_s(s_s2, 0, S_NPOS, cback_s, &cnt_s2);
+	res |= (processed_i32 == cnt_i32 && cnt_i32 == tcount ? 0 : 1 << 3);
+	res |= (processed_u32 == cnt_u32 && cnt_u32 == tcount ? 0 : 1 << 4);
+	res |= (processed_i == cnt_i && cnt_i == tcount ? 0 : 1 << 5);
+	res |= (processed_s == cnt_s && cnt_s == tcount ? 0 : 1 << 6);
+	res |= (processed_s2 == cnt_s2 && cnt_s2 == tcount ? 0 : 1 << 7);
+	/*
+	 * shs_cpy() to stack with small stack allocation size
+	 */
+	shs_cpy(&s_a3, s_i32);
+	res |= (shs_size(s_a3) == 3 ? 0 : 1 << 8);
+	shs_cpy(&s_a3, s_u32);
+	res |= (shs_size(s_a3) == 3 ? 0 : 1 << 9);
+	shs_cpy(&s_a3, s_i);
+	res |= (shs_size(s_a3) == 0 ? 0 : 1 << 10);
+	shs_cpy(&s_a3, s_s);
+	res |= (shs_size(s_a3) == 0 ? 0 : 1 << 11);
+	/*
+	 * shs_cpy() to stack with enough stack allocation size
+	 */
+	shs_cpy(&s_a10, s_i32);
+	res |= (shs_size(s_a10) == 3 ? 0 : 1 << 12);
+	shs_cpy(&s_a10, s_u32);
+	res |= (shs_size(s_a10) == 3 ? 0 : 1 << 13);
+	shs_cpy(&s_a10, s_i);
+	res |= (shs_size(s_a10) == 3 ? 0 : 1 << 14);
+	shs_cpy(&s_a10, s_s);
+	res |= (shs_size(s_a10) == 3 ? 0 : 1 << 15);
+	shs_clear(s_a10);
+	res |= (shs_size(s_a10) == 0 ? 0 : 1 << 16);
+	/*
+	 * Reserve/grow
+	 */
+	shs_reserve(&s_i32, 1000);
+	shs_grow(&s_u32, 1000 - shs_max_size(s_u32));
+	res |= (shs_capacity(s_i32) >= 1000 && shs_capacity(s_u32) >= 1000
+				&& shs_capacity_left(s_i32) >= 997
+				&& shs_capacity_left(s_u32) >= 997
+			? 0
+			: 1 << 17);
+	/*
+	 * Shrink memory
+	 */
+	shs_shrink(&s_i32);
+	shs_shrink(&s_u32);
+	res |= (shs_capacity(s_i32) == 3 && shs_capacity(s_u32) == 3
+				&& shs_capacity_left(s_i32) == 0
+				&& shs_capacity_left(s_u32) == 0
+			? 0
+			: 1 << 18);
+	/*
+	 * Random access
+	 */
+	res |= (shs_it_i32(s_i32, 0) == 10 && shs_it_i32(s_i32, 1) == 11
+				&& shs_it_i32(s_i32, 2) == 12
+			? 0
+			: 1 << 19);
+	res |= (shs_it_u32(s_u32, 0) == 20 && shs_it_u32(s_u32, 1) == 21
+				&& shs_it_u32(s_u32, 2) == 22
+			? 0
+			: 1 << 20);
+	res |= (shs_it_i(s_i, 0) == 0 && shs_it_i(s_i, 1) == 1
+				&& shs_it_i(s_i, 2) == 2
+			? 0
+			: 1 << 21);
+	res |= (!ss_cmp(shs_it_s(s_s, 0), k[0])
+				&& !ss_cmp(shs_it_s(s_s, 1), k[1])
+				&& !ss_cmp(shs_it_s(s_s, 2), k[2])
+			? 0
+			: 1 << 22);
+	/*
+	 * Delete
+	 */
+	shs_delete_i(s_i32, 10);
+	shs_delete_i(s_u32, 20);
+	shs_delete_i(s_i, 0);
+	shs_delete_s(s_s, k[1]);
+	res |= (!shs_count_i(s_i32, 10) && !shs_count_i(s_u32, 20)
+				&& !shs_count_i(s_i, 0)
+				&& !shs_count_s(s_s, k[1])
+			? 0
+			: 1 << 23);
+	/*
+	 * Release memory
+	 */
+#ifdef S_USE_VA_ARGS
+	shs_free(&s_i32, &s_u32, &s_i, &s_s, &s_s2, &s_a3, &s_a10);
+#else
+	shs_free(&s_i32);
+	shs_free(&s_u32);
+	shs_free(&s_i);
+	shs_free(&s_s);
+	shs_free(&s_s2);
+	shs_free(&s_a3);
+	shs_free(&s_a10);
+#endif
+	return res;
+}
+
+#define TEST_SHM_ALLOC_DONOTHING(a)
+#define TEST_SHM_ALLOC_X(fn, shm_alloc_X, type, insert, at, shm_free_X)        \
+	static int fn()                                                        \
+	{                                                                      \
+		size_t n = 1000;                                               \
+		srt_hmap *m = shm_alloc_X(type, n);                            \
+		int res = 0;                                                   \
+		for (;;) {                                                     \
+			if (!m) {                                              \
+				res = 1;                                       \
+				break;                                         \
+			}                                                      \
+			if (!shm_empty(m) || shm_capacity(m) != n              \
+			    || shm_capacity_left(m) != n) {                    \
+				res = 2;                                       \
+				break;                                         \
+			}                                                      \
+			insert(&m, 1, 1001);                                   \
+			if (shm_size(m) != 1) {                                \
+				res = 3;                                       \
+				break;                                         \
+			}                                                      \
+			insert(&m, 2, 1002);                                   \
+			insert(&m, 3, 1003);                                   \
+			if (shm_empty(m) || shm_capacity(m) != n               \
+			    || shm_capacity_left(m) != n - 3) {                \
+				res = 4;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 1) != 1001) {                                \
+				res = 5;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 2) != 1002) {                                \
+				res = 6;                                       \
+				break;                                         \
+			}                                                      \
+			if (at(m, 3) != 1003) {                                \
+				res = 7;                                       \
+				break;                                         \
+			}                                                      \
+			break;                                                 \
+		}                                                              \
+		if (!res) {                                                    \
+			shm_clear(m);                                          \
+			res = !shm_size(m) ? 0 : 8;                            \
+		}                                                              \
+		shm_free_X(&m);                                                \
+		return res;                                                    \
+	}
+
+TEST_SHM_ALLOC_X(test_shm_alloc_ii32, shm_alloc, SHM_II32, shm_insert_ii32,
+		 shm_at_ii32, shm_free)
+TEST_SHM_ALLOC_X(test_shm_alloca_ii32, shm_alloca, SHM_II32, shm_insert_ii32,
+		 shm_at_ii32, TEST_SHM_ALLOC_DONOTHING)
+TEST_SHM_ALLOC_X(test_shm_alloc_uu32, shm_alloc, SHM_UU32, shm_insert_uu32,
+		 shm_at_uu32, shm_free)
+TEST_SHM_ALLOC_X(test_shm_alloca_uu32, shm_alloca, SHM_UU32, shm_insert_uu32,
+		 shm_at_uu32, TEST_SHM_ALLOC_DONOTHING)
+TEST_SHM_ALLOC_X(test_shm_alloc_ii, shm_alloc, SHM_II, shm_insert_ii, shm_at_ii,
+		 shm_free)
+TEST_SHM_ALLOC_X(test_shm_alloca_ii, shm_alloca, SHM_II, shm_insert_ii,
+		 shm_at_ii, TEST_SHM_ALLOC_DONOTHING)
+
+#define TEST_SHM_SHRINK_TO_FIT_VARS(m, atype, r)                               \
+	srt_hmap *m = shm_alloc(atype, r), *m##2 = shm_alloca(atype, r)
+
+#define TEST_SHM_SHRINK_TO_FIT(m, ntest, atype, r)                             \
+	res |= !m ? 1 << (ntest * 4)                                           \
+		  : !m##2 ? 2 << (ntest * 4)                                   \
+			  : (shm_max_size(m) == r ? 0 : 3 << (ntest * 4))      \
+				       | (shm_max_size(m##2) == r              \
+						  ? 0                          \
+						  : 4 << (ntest * 4))          \
+				       | (shm_shrink(                          \
+						  &m) && shm_max_size(m) == 0  \
+						  ? 0                          \
+						  : 5 << (ntest * 4))          \
+				       | (shm_shrink(&m##2)                    \
+							  && shm_max_size(     \
+								     m##2)     \
+								     == r      \
+						  ? 0                          \
+						  : 6 << (ntest * 4));         \
+	shm_free(&m)
+
+static int test_shm_shrink()
+{
+	TEST_SHM_SHRINK_TO_FIT_VARS(aa, SHM_II32, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(bb, SHM_UU32, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(cc, SHM_II, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(dd, SHM_IS, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(ee, SHM_IP, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(ff, SHM_SI, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(gg, SHM_SS, 10);
+	TEST_SHM_SHRINK_TO_FIT_VARS(hh, SHM_SP, 10);
+	int res = 0;
+	TEST_SHM_SHRINK_TO_FIT(aa, 0, SHM_II32, 10);
+	TEST_SHM_SHRINK_TO_FIT(bb, 1, SHM_UU32, 10);
+	TEST_SHM_SHRINK_TO_FIT(cc, 2, SHM_II, 10);
+	TEST_SHM_SHRINK_TO_FIT(dd, 3, SHM_IS, 10);
+	TEST_SHM_SHRINK_TO_FIT(ee, 4, SHM_IP, 10);
+	TEST_SHM_SHRINK_TO_FIT(ff, 5, SHM_SI, 10);
+	TEST_SHM_SHRINK_TO_FIT(gg, 6, SHM_SS, 10);
+	TEST_SHM_SHRINK_TO_FIT(hh, 7, SHM_SP, 10);
+	return res;
+}
+
+#define TEST_SHM_DUP_VARS(m, atype, r)                                         \
+	srt_hmap *m = shm_alloc(atype, r), *m##2 = shm_alloca(atype, r),       \
+		 *m##b = NULL, *m##2b = NULL
+
+#define TEST_SHM_DUP(m, ntest, atype, insf, kv, vv, atf, cmpf, r)              \
+	res |= !m || !m##2 ? 1 << (ntest * 2) : 0;                             \
+	if (!res) {                                                            \
+		int j = 0;                                                     \
+		for (; j < r; j++) {                                           \
+			srt_bool b1 = insf(&m, kv[j], vv[j]);                  \
+			srt_bool b2 = insf(&m##2, kv[j], vv[j]);               \
+			if (!b1 || !b2) {                                      \
+				res |= 2 << (ntest * 2);                       \
+				break;                                         \
+			}                                                      \
+		}                                                              \
+	}                                                                      \
+	if (!res) {                                                            \
+		m##b = shm_dup(m);                                             \
+		m##2b = shm_dup(m##2);                                         \
+		res = (!m##b || !m##2b)                                        \
+			      ? 4 << (ntest * 2)                               \
+			      : (shm_size(m) != r || shm_size(m##2) != r       \
+				 || shm_size(m##b) != r                        \
+				 || shm_size(m##2b) != r)                      \
+					? 2 << (ntest * 2)                     \
+					: 0;                                   \
+	}                                                                      \
+	if (!res) {                                                            \
+		int j = 0;                                                     \
+		for (; j < r; j++) {                                           \
+			if (cmpf(atf(m, kv[j]), atf(m##2, kv[j]))              \
+			    || cmpf(atf(m, kv[j]), atf(m##b, kv[j]))           \
+			    || cmpf(atf(m##b, kv[j]), atf(m##2b, kv[j]))) {    \
+				res |= 3 << (ntest * 2);                       \
+				break;                                         \
+			}                                                      \
+		}                                                              \
+	}                                                                      \
+	shm_free(&m);                                                          \
+	shm_free(&m##2);                                                       \
+	shm_free(&m##b);                                                       \
+	shm_free(&m##2b)
+
+/*
+ * Covers: shm_dup, shm_insert_ii32, shm_insert_uu32, shm_insert_ii,
+ * shm_insert_is, shm_insert_ip, shm_insert_si, shm_insert_ss, shm_insert_sp,
+ * shm_at_ii32, shm_at_uu32, shm_at_ii, shm_at_is, shm_at_ip, shm_at_si,
+ * shm_at_ss, shm_at_sp
+ */
+static int test_shm_dup()
+{
+	TEST_SHM_DUP_VARS(aa, SHM_II32, 10);
+	TEST_SHM_DUP_VARS(bb, SHM_UU32, 10);
+	TEST_SHM_DUP_VARS(cc, SHM_II, 10);
+	TEST_SHM_DUP_VARS(dd, SHM_IS, 10);
+	TEST_SHM_DUP_VARS(ee, SHM_IP, 10);
+	TEST_SHM_DUP_VARS(ff, SHM_SI, 10);
+	TEST_SHM_DUP_VARS(gg, SHM_SS, 10);
+	TEST_SHM_DUP_VARS(hh, SHM_SP, 10);
+	int i = 0, res = 0;
+	srt_string *s = ss_dup_c("hola1"), *s2 = ss_alloca(100);
+	srt_string *ssk[10], *ssv[10];
+	ss_cpy_c(&s2, "hola2");
+	for (; i < 10; i++) {
+		ssk[i] = ss_alloca(100);
+		ssv[i] = ss_alloca(100);
+		ss_printf(&ssk[i], 50, "key_%i", i);
+		ss_printf(&ssv[i], 50, "val_%i", i);
+	}
+	TEST_SHM_DUP(aa, 0, SHM_II32, shm_insert_ii32, i32k, i32v, shm_at_ii32,
+		     scmp_int32, 10);
+	TEST_SHM_DUP(bb, 1, SHM_UU32, shm_insert_uu32, u32k, u32v, shm_at_uu32,
+		     scmp_uint32, 10);
+	TEST_SHM_DUP(cc, 2, SHM_II, shm_insert_ii, sik, i64v, shm_at_ii,
+		     scmp_int64, 10);
+	TEST_SHM_DUP(dd, 3, SHM_IS, shm_insert_is, sik, ssv, shm_at_is, ss_cmp,
+		     10);
+	TEST_SHM_DUP(ee, 4, SHM_IP, shm_insert_ip, sik, spv, shm_at_ip,
+		     scmp_ptr, 10);
+	TEST_SHM_DUP(ff, 5, SHM_SI, shm_insert_si, ssk, i64v, shm_at_si,
+		     scmp_int64, 10);
+	TEST_SHM_DUP(gg, 6, SHM_SS, shm_insert_ss, ssk, ssv, shm_at_ss, ss_cmp,
+		     10);
+	TEST_SHM_DUP(hh, 7, SHM_SP, shm_insert_sp, ssk, spv, shm_at_sp,
+		     scmp_ptr, 10);
+	ss_free(&s);
+	return res;
+}
+
+static int test_shm_cpy()
+{
+	int res = 0;
+	srt_hmap *m1 = shm_alloc(SHM_II32, 0), *m2 = shm_alloc(SHM_SS, 0),
+		 *m1a3 = shm_alloca(SHM_II32, 3),
+		 *m1a10 = shm_alloca(SHM_II32, 10);
+	shm_insert_ii32(&m1, 1, 1);
+	shm_insert_ii32(&m1, 2, 2);
+	shm_insert_ii32(&m1, 3, 3);
+	shm_insert_ss(&m2, ss_crefa("k1"), ss_crefa("v1"));
+	shm_insert_ss(&m2, ss_crefa("k2"), ss_crefa("v2"));
+	shm_insert_ss(&m2, ss_crefa("k3"), ss_crefa("v3"));
+	shm_cpy(&m1, m2);
+	shm_cpy(&m1a3, m2);
+	shm_cpy(&m1a10, m2);
+	res |= (shm_size(m1) == 3 ? 0 : 1);
+#ifdef S_ENABLE_SM_STRING_OPTIMIZATION
+	/*
+	 * TODO: adjust test to the node size of the string optimized map mode
+	 */
+#else
+	if (sizeof(uint32_t) == sizeof(void *))
+		res |= (shm_size(m1a3) == 3 ? 0 : 2);
+	else
+		res |= (shm_size(m1a3) < 3 ? 0 : 4);
+	res |= (shm_size(m1a10) == 3 ? 0 : 8);
+	res |= (!ss_cmp(shm_it_s_k(m1, 0), shm_it_s_k(m2, 0)) ? 0 : 16);
+	res |= (!ss_cmp(shm_it_s_k(m1, 1), shm_it_s_k(m2, 1)) ? 0 : 32);
+	res |= (!ss_cmp(shm_it_s_k(m1, 2), shm_it_s_k(m2, 2)) ? 0 : 64);
+	res |= (!ss_cmp(shm_it_s_k(m1, 0), shm_it_s_k(m1a10, 0)) ? 0 : 128);
+	res |= (!ss_cmp(shm_it_s_k(m1, 1), shm_it_s_k(m1a10, 1)) ? 0 : 256);
+	res |= (!ss_cmp(shm_it_s_k(m1, 2), shm_it_s_k(m1a10, 2)) ? 0 : 512);
+#endif
+#ifdef S_USE_VA_ARGS
+	shm_free(&m1, &m2, &m1a3, &m1a10);
+#else
+	shm_free(&m1);
+	shm_free(&m2);
+	shm_free(&m1a3);
+	shm_free(&m1a10);
+#endif
+	return res;
+}
+
+#define TEST_SHM_X_COUNT(T, insf, cntf, v)                                     \
+	int res = 0;                                                           \
+	uint32_t i, tcount = 100;                                              \
+	srt_hmap *m = shm_alloc(T, tcount);                                    \
+	for (i = 0; i < tcount; i++)                                           \
+		insf(&m, (unsigned)i, v);                                      \
+	for (i = 0; i < tcount; i++)                                           \
+		if (!cntf(m, i)) {                                             \
+			res = 1 + (int)i;                                      \
+			break;                                                 \
+		}                                                              \
+	shm_free(&m);                                                          \
+	return res;
+
+static int test_shm_count_u()
+{
+	TEST_SHM_X_COUNT(SHM_UU32, shm_insert_uu32, shm_count_u, 1);
+}
+
+static int test_shm_count_i()
+{
+	TEST_SHM_X_COUNT(SHM_II32, shm_insert_ii32, shm_count_i, 1);
+}
+
+static int test_shm_count_s()
+{
+	int res;
+	srt_string *s = ss_dup_c("a_1"), *t = ss_dup_c("a_2"),
+		   *u = ss_dup_c("a_3");
+	srt_hmap *m = shm_alloc(SHM_SI, 3);
+	shm_insert_si(&m, s, 1);
+	shm_insert_si(&m, t, 2);
+	shm_insert_si(&m, u, 3);
+	res = shm_count_s(m, s) && shm_count_s(m, t) && shm_count_s(m, u) ? 0
+									  : 1;
+#ifdef S_USE_VA_ARGS
+	ss_free(&s, &t, &u);
+#else
+	ss_free(&s);
+	ss_free(&t);
+	ss_free(&u);
+#endif
+	shm_free(&m);
+	return res;
+}
+
+static int test_shm_inc_ii32()
+{
+	int res;
+	srt_hmap *m = shm_alloc(SHM_II32, 0);
+	shm_inc_ii32(&m, 123, -10);
+	shm_inc_ii32(&m, 123, -20);
+	shm_inc_ii32(&m, 123, -30);
+	res = !m ? 1 : (shm_at_ii32(m, 123) == -60 ? 0 : 2);
+	shm_free(&m);
+	return res;
+}
+
+static int test_shm_inc_uu32()
+{
+	int res;
+	srt_hmap *m = shm_alloc(SHM_UU32, 0);
+	shm_inc_uu32(&m, 123, 10);
+	shm_inc_uu32(&m, 123, 20);
+	shm_inc_uu32(&m, 123, 30);
+	res = !m ? 1 : (shm_at_uu32(m, 123) == 60 ? 0 : 2);
+	shm_free(&m);
+	return res;
+}
+
+static int test_shm_inc_ii()
+{
+	int res;
+	srt_hmap *m = shm_alloc(SHM_II, 0);
+	shm_inc_ii(&m, 123, -7);
+	shm_inc_ii(&m, 123, S_MAX_I64);
+	shm_inc_ii(&m, 123, 3);
+	res = !m ? 1 : (shm_at_ii(m, 123) == S_MAX_I64 - 4 ? 0 : 2);
+	shm_free(&m);
+	return res;
+}
+
+static int test_shm_inc_si()
+{
+	int res;
+	srt_hmap *m = shm_alloc(SHM_SI, 0);
+	const srt_string *k = ss_crefa("hello");
+	shm_inc_si(&m, k, -7);
+	shm_inc_si(&m, k, S_MAX_I64);
+	shm_inc_si(&m, k, 3);
+	res = !m ? 1 : (shm_at_si(m, k) == S_MAX_I64 - 4 ? 0 : 2);
+	shm_free(&m);
+	return res;
+}
+
+static int test_shm_delete_i()
+{
+	int res;
+	srt_hmap *m_ii32 = shm_alloc(SHM_II32, 0),
+		 *m_uu32 = shm_alloc(SHM_UU32, 0), *m_ii = shm_alloc(SHM_II, 0);
+	/*
+	 * Insert elements
+	 */
+	shm_insert_ii32(&m_ii32, -1, -1);
+	shm_insert_ii32(&m_ii32, -2, -2);
+	shm_insert_ii32(&m_ii32, -3, -3);
+	shm_insert_uu32(&m_uu32, 1, 1);
+	shm_insert_uu32(&m_uu32, 2, 2);
+	shm_insert_uu32(&m_uu32, 3, 3);
+	shm_insert_ii(&m_ii, S_MAX_I64, S_MAX_I64);
+	shm_insert_ii(&m_ii, S_MAX_I64 - 1, S_MAX_I64 - 1);
+	shm_insert_ii(&m_ii, S_MAX_I64 - 2, S_MAX_I64 - 2);
+	/*
+	 * Check elements were properly inserted
+	 */
+	res = m_ii32 && m_uu32 && m_ii ? 0 : 1;
+	res |= (shm_at_ii32(m_ii32, -2) == -2 ? 0 : 2);
+	res |= (shm_at_uu32(m_uu32, 2) == 2 ? 0 : 4);
+	res |= (shm_at_ii(m_ii, S_MAX_I64 - 1) == S_MAX_I64 - 1 ? 0 : 8);
+	/*
+	 * Delete elements, checking that second deletion of same
+	 * element gives error
+	 */
+	res |= shm_delete_i(m_ii32, -2) ? 0 : 16;
+	res |= !shm_delete_i(m_ii32, -2) ? 0 : 32;
+	res |= shm_delete_i(m_uu32, 2) ? 0 : 64;
+	res |= !shm_delete_i(m_uu32, 2) ? 0 : 128;
+	res |= shm_delete_i(m_ii, S_MAX_I64 - 1) ? 0 : 256;
+	res |= !shm_delete_i(m_ii, S_MAX_I64 - 1) ? 0 : 512;
+	/*
+	 * Check that querying for deleted elements gives default value
+	 */
+	res |= (shm_at_ii32(m_ii32, -2) == 0 ? 0 : 1024);
+	res |= (shm_at_uu32(m_uu32, 2) == 0 ? 0 : 2048);
+	res |= (shm_at_ii(m_ii, S_MAX_I64 - 1) == 0 ? 0 : 4096);
+#ifdef S_USE_VA_ARGS
+	shm_free(&m_ii32, &m_uu32, &m_ii);
+#else
+	shm_free(&m_ii32);
+	shm_free(&m_uu32);
+	shm_free(&m_ii);
+#endif
+	return res;
+}
+
+static int test_shm_delete_s()
+{
+	int res;
+	srt_hmap *m_si = shm_alloc(SHM_SI, 0), *m_sp = shm_alloc(SHM_SP, 0),
+		 *m_ss = shm_alloc(SHM_SS, 0);
+	/*
+	 * Insert elements
+	 */
+	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
+	shm_insert_si(&m_si, k1, -1);
+	shm_insert_si(&m_si, k2, S_MAX_I64);
+	shm_insert_si(&m_si, k3, -3);
+	shm_insert_sp(&m_sp, k1, (void *)-1);
+	shm_insert_sp(&m_sp, k2, (void *)-2);
+	shm_insert_sp(&m_sp, k3, (void *)-3);
+	shm_insert_ss(&m_ss, k1, v1);
+	shm_insert_ss(&m_ss, k2, v2);
+	shm_insert_ss(&m_ss, k3, v3);
+	/*
+	 * Check elements were properly inserted
+	 */
+	res = m_si && m_sp && m_ss ? 0 : 1;
+	res |= (shm_at_si(m_si, k2) == S_MAX_I64 ? 0 : 2);
+	res |= (shm_at_sp(m_sp, k2) == (void *)-2 ? 0 : 4);
+	res |= (!ss_cmp(shm_at_ss(m_ss, k2), v2) ? 0 : 8);
+	/*
+	 * Delete elements, checking that second deletion of same
+	 * element gives error
+	 */
+	res |= shm_delete_s(m_si, k2) ? 0 : 16;
+	res |= !shm_delete_s(m_si, k2) ? 0 : 32;
+	res |= shm_delete_s(m_sp, k2) ? 0 : 64;
+	res |= !shm_delete_s(m_sp, k2) ? 0 : 128;
+	res |= shm_delete_s(m_ss, k2) ? 0 : 256;
+	res |= !shm_delete_s(m_ss, k2) ? 0 : 512;
+	/*
+	 * Check that querying for deleted elements gives default value
+	 */
+	res |= (shm_at_si(m_si, k2) == 0 ? 0 : 1024);
+	res |= (shm_at_sp(m_sp, k2) == 0 ? 0 : 2048);
+	res |= (!ss_cmp(shm_at_ss(m_ss, k2), ss_void) ? 0 : 4096);
+#ifdef S_USE_VA_ARGS
+	shm_free(&m_si, &m_sp, &m_ss);
+#else
+	shm_free(&m_si);
+	shm_free(&m_sp);
+	shm_free(&m_ss);
+#endif
+	return res;
+}
+
+#define TEST_SHM_IT_X_VARS(id, et)                                             \
+	srt_hmap *m_##id = shm_alloc(et, 0), *m_a##id = shm_alloca(et, 3)
+
+#define TEST_SHM_IT_X(n, id, et, itk, itv, cmpkf, cmpvf, k1, v1, k2, v2, k3,   \
+		      v3, res)                                                 \
+	shm_insert_##id(&m_##id, k1, v1);                                      \
+	shm_insert_##id(&m_a##id, k1, v1);                                     \
+	res |= (!cmpkf(itk(m_##id, 0), k1) && !cmpvf(itv(m_##id, 0), v1)) ? 0  \
+									  : n; \
+	shm_insert_##id(&m_##id, k2, v2);                                      \
+	shm_insert_##id(&m_##id, k3, v3);                                      \
+	shm_insert_##id(&m_a##id, k2, v2);                                     \
+	shm_insert_##id(&m_a##id, k3, v3);                                     \
+	res |= (!cmpvf(shm_at_##id(m_##id, k1), v1)                            \
+		&& !cmpvf(shm_at_##id(m_##id, k2), v2)                         \
+		&& !cmpvf(shm_at_##id(m_##id, k3), v3)                         \
+		&& !cmpvf(shm_at_##id(m_a##id, k1), v1)                        \
+		&& !cmpvf(shm_at_##id(m_a##id, k2), v2)                        \
+		&& !cmpvf(shm_at_##id(m_a##id, k3), v3)                        \
+		&& !cmpkf(itk(m_##id, 0), itk(m_a##id, 0))                     \
+		&& !cmpkf(itk(m_##id, 1), itk(m_a##id, 1))                     \
+		&& !cmpkf(itk(m_##id, 2), itk(m_a##id, 2))                     \
+		&& !cmpvf(itv(m_##id, 0), itv(m_a##id, 0))                     \
+		&& !cmpvf(itv(m_##id, 1), itv(m_a##id, 1))                     \
+		&& !cmpvf(itv(m_##id, 2), itv(m_a##id, 2))                     \
+		&& cmpkf(itk(m_##id, 0), 0) && cmpkf(itk(m_a##id, 0), 0)       \
+		&& cmpkf(itk(m_##id, 1), 0) && cmpkf(itk(m_a##id, 1), 0)       \
+		&& cmpkf(itk(m_##id, 2), 0) && cmpkf(itk(m_a##id, 2), 0)       \
+		&& cmpvf(itv(m_##id, 0), 0) && cmpvf(itv(m_a##id, 0), 0)       \
+		&& cmpvf(itv(m_##id, 1), 0) && cmpvf(itv(m_a##id, 1), 0)       \
+		&& cmpvf(itv(m_##id, 2), 0) && cmpvf(itv(m_a##id, 2), 0))      \
+		       ? 0                                                     \
+		       : n;                                                    \
+	shm_free(&m_##id);                                                     \
+	shm_free(&m_a##id);
+
+static int test_shm_it()
+{
+	TEST_SHM_IT_X_VARS(ii32, SHM_II32);
+	TEST_SHM_IT_X_VARS(uu32, SHM_UU32);
+	TEST_SHM_IT_X_VARS(ii, SHM_II);
+	TEST_SHM_IT_X_VARS(is, SHM_IS);
+	TEST_SHM_IT_X_VARS(ip, SHM_IP);
+	TEST_SHM_IT_X_VARS(si, SHM_SI);
+	TEST_SHM_IT_X_VARS(ss, SHM_SS);
+	TEST_SHM_IT_X_VARS(sp, SHM_SP);
+	int res = 0;
+	TEST_SHM_IT_X(1, ii32, SHM_II32, shm_it_i32_k, shm_it_ii32_v, cmp_ii,
+		      cmp_ii, -1, -1, -2, -2, -3, -3, res);
+	TEST_SHM_IT_X(2, uu32, SHM_UU32, shm_it_u32_k, shm_it_uu32_v, cmp_ii,
+		      cmp_ii, 1, 1, 2, 2, 3, 3, res);
+	TEST_SHM_IT_X(4, ii, SHM_II, shm_it_i_k, shm_it_ii_v, cmp_ii, cmp_ii,
+		      S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
+		      S_MIN_I64 + 1, res);
+	TEST_SHM_IT_X(8, is, SHM_IS, shm_it_i_k, shm_it_is_v, cmp_ii, ss_cmp, 1,
+		      ss_crefa("v1"), 2, ss_crefa("v2"), 3, ss_crefa("v3"),
+		      res);
+	TEST_SHM_IT_X(16, ip, SHM_IP, shm_it_i_k, shm_it_ip_v, cmp_ii, cmp_pp,
+		      1, (void *)1, 2, (void *)2, 3, (void *)3, res);
+	TEST_SHM_IT_X(32, si, SHM_SI, shm_it_s_k, shm_it_si_v, ss_cmp, cmp_ii,
+		      ss_crefa("v1"), 1, ss_crefa("v2"), 2, ss_crefa("v3"), 3,
+		      res);
+	TEST_SHM_IT_X(64, ss, SHM_SS, shm_it_s_k, shm_it_ss_v, ss_cmp, ss_cmp,
+		      ss_crefa("k1"), ss_crefa("v1"), ss_crefa("k2"),
+		      ss_crefa("v2"), ss_crefa("k3"), ss_crefa("v3"), res);
+	TEST_SHM_IT_X(128, sp, SHM_SP, shm_it_s_k, shm_it_sp_v, ss_cmp, cmp_pp,
+		      ss_crefa("k1"), (void *)1, ss_crefa("k2"), (void *)2,
+		      ss_crefa("k3"), (void *)3, res);
+	return res;
+}
+
+static int test_shm_itp()
+{
+	int i, res = 1;
+	size_t nelems = 100, processed_ii321, processed_ii322, processed_uu32,
+	       processed_ii, processed_is, processed_ip, processed_si,
+	       processed_ss1, processed_ss2, processed_sp, cnt1, cnt2;
+	srt_string *ktmp = ss_alloca(1000), *vtmp = ss_alloca(1000);
+	srt_hmap *hm_ii32 = shm_alloc(SHM_II32, nelems),
+		 *hm_uu32 = shm_alloc(SHM_UU32, nelems),
+		 *hm_ii = shm_alloc(SHM_II, nelems),
+		 *hm_is = shm_alloc(SHM_IS, nelems),
+		 *hm_ip = shm_alloc(SHM_IP, nelems),
+		 *hm_si = shm_alloc(SHM_SI, nelems),
+		 *hm_ss = shm_alloc(SHM_SS, nelems),
+		 *hm_sp = shm_alloc(SHM_SP, nelems);
+	if (hm_ii32 && hm_uu32 && hm_ii && hm_is && hm_ip && hm_si && hm_ss
+	    && hm_sp) {
+		for (i = 0; i < (int)nelems; i++) {
+			shm_insert_ii32(&hm_ii32, -i, -i);
+			shm_insert_uu32(&hm_uu32, (uint32_t)i, (uint32_t)i);
+			shm_insert_ii(&hm_ii, -i, -i);
+			ss_printf(&ktmp, 200, "k%04i", i);
+			ss_printf(&vtmp, 200, "v%04i", i);
+			shm_insert_is(&hm_is, -i, vtmp);
+			shm_insert_ip(&hm_ip, -i, (char *)0 + i);
+			shm_insert_si(&hm_si, ktmp, i);
+			shm_insert_ss(&hm_ss, ktmp, vtmp);
+			shm_insert_sp(&hm_sp, ktmp, (char *)0 + i);
+		}
+		cnt1 = cnt2 = 0;
+		processed_ii321 =
+			shm_itp_ii32(hm_ii32, 0, S_NPOS, cback_i32i32, &cnt1);
+		processed_ii322 = shm_itp_ii32(hm_ii32, 0, S_NPOS, NULL, NULL);
+		processed_uu32 = shm_itp_uu32(hm_uu32, 0, S_NPOS, NULL, NULL);
+		processed_ii = shm_itp_ii(hm_ii, 0, S_NPOS, NULL, NULL);
+		processed_is = shm_itp_is(hm_is, 0, S_NPOS, NULL, NULL);
+		processed_ip = shm_itp_ip(hm_ip, 0, S_NPOS, NULL, NULL);
+		processed_si = shm_itp_si(hm_si, 0, S_NPOS, NULL, NULL);
+		processed_ss1 = shm_itp_ss(hm_ss, 0, S_NPOS, cback_ss, &cnt2);
+		processed_ss2 = shm_itp_ss(hm_ss, 0, S_NPOS, NULL, NULL);
+		processed_sp = shm_itp_sp(hm_sp, 0, S_NPOS, NULL, NULL);
+		res = processed_ii321 == nelems ? 0 : 2;
+		res |= processed_ii321 == processed_ii322 ? 0 : 4;
+		res |= processed_ii322 == cnt1 ? 0 : 8;
+		res |= processed_uu32 == cnt1 ? 0 : 0x10;
+		res |= processed_ii == cnt1 ? 0 : 0x20;
+		res |= processed_is == cnt1 ? 0 : 0x40;
+		res |= processed_ip == cnt1 ? 0 : 0x80;
+		res |= processed_si == nelems ? 0 : 0x100;
+		res |= processed_ss1 == nelems ? 0 : 0x200;
+		res |= processed_ss1 == processed_ss2 ? 0 : 0x400;
+		res |= processed_ss2 == cnt2 ? 0 : 0x800;
+		res |= processed_sp == nelems ? 0 : 0x1000;
+		/*
+		 * Wrong type checks
+		 */
+		res |= shm_itp_uu32(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x2000
+									: 0;
+		res |= shm_itp_ii(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x4000
+								      : 0;
+		res |= shm_itp_is(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x8000
+								      : 0;
+		res |= shm_itp_ip(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x10000
+								      : 0;
+		res |= shm_itp_si(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x20000
+								      : 0;
+		res |= shm_itp_sp(hm_ii32, 0, S_NPOS, NULL, NULL) > 0 ? 0x40000
+								      : 0;
+	}
+#ifdef S_USE_VA_ARGS
+	shm_free(&hm_ii32, &hm_uu32, &hm_ii, &hm_is, &hm_ip, &hm_si, &hm_ss,
+		 &hm_sp);
+#else
+	shm_free(&hm_ii32);
+	shm_free(&hm_uu32);
+	shm_free(&hm_ii);
+	shm_free(&hm_is);
+	shm_free(&hm_ip);
+	shm_free(&hm_si);
+	shm_free(&hm_ss);
+	shm_free(&hm_sp);
+#endif
+	return res;
+}
+
+static int test_tree_vs_hash()
+{
+	int i, count_stack = 150, count = 5000, res = 0;
+	srt_set *s_i32 = sms_alloc(SMS_I32, 0), *s_u32 = sms_alloc(SMS_U32, 0),
+		*s_i = sms_alloc(SMS_I, 0), *s_s = sms_alloc(SMS_S, 0),
+		*sa_i32 = sms_alloca(SMS_I32, count_stack),
+		*sa_u32 = sms_alloca(SMS_U32, count_stack),
+		*sa_i = sms_alloca(SMS_I, count_stack),
+		*sa_s = sms_alloca(SMS_S, count_stack);
+	srt_hset *hs_i32 = shs_alloc(SHS_I32, 0),
+		 *hs_u32 = shs_alloc(SHS_U32, 0), *hs_i = shs_alloc(SHS_I, 0),
+		 *hs_s = shs_alloc(SHS_S, 0),
+		 *hsa_i32 = shs_alloca(SHS_I32, count_stack),
+		 *hsa_u32 = shs_alloca(SHS_U32, count_stack),
+		 *hsa_i = shs_alloca(SHS_I, count_stack),
+		 *hsa_s = shs_alloca(SHS_S, count_stack);
+	srt_map *m_ii32 = sm_alloc(SM_II32, 0), *m_uu32 = sm_alloc(SM_UU32, 0),
+		*m_ii = sm_alloc(SM_II, 0), *m_is = sm_alloc(SM_IS, 0),
+		*m_ip = sm_alloc(SM_IP, 0), *m_si = sm_alloc(SM_SI, 0),
+		*m_ss = sm_alloc(SM_SS, 0), *m_sp = sm_alloc(SM_SP, 0),
+		*ma_ii32 = sm_alloca(SM_II32, count_stack),
+		*ma_uu32 = sm_alloca(SM_UU32, count_stack),
+		*ma_ii = sm_alloca(SM_II, count_stack),
+		*ma_is = sm_alloca(SM_IS, count_stack),
+		*ma_ip = sm_alloca(SM_IP, count_stack),
+		*ma_si = sm_alloca(SM_SI, count_stack),
+		*ma_ss = sm_alloca(SM_SS, count_stack),
+		*ma_sp = sm_alloca(SM_SP, count_stack);
+	srt_hmap *hm_ii32 = shm_alloc(SHM_II32, 0),
+		 *hm_uu32 = shm_alloc(SHM_UU32, 0),
+		 *hm_ii = shm_alloc(SHM_II, 0), *hm_is = shm_alloc(SHM_IS, 0),
+		 *hm_ip = shm_alloc(SHM_IP, 0), *hm_si = shm_alloc(SHM_SI, 0),
+		 *hm_ss = shm_alloc(SHM_SS, 0), *hm_sp = shm_alloc(SHM_SP, 0),
+		 *hma_ii32 = shm_alloca(SHM_II32, count_stack),
+		 *hma_uu32 = shm_alloca(SHM_UU32, count_stack),
+		 *hma_ii = shm_alloca(SHM_II, count_stack),
+		 *hma_is = shm_alloca(SHM_IS, count_stack),
+		 *hma_ip = shm_alloca(SHM_IP, count_stack),
+		 *hma_si = shm_alloca(SHM_SI, count_stack),
+		 *hma_ss = shm_alloca(SHM_SS, count_stack),
+		 *hma_sp = shm_alloca(SHM_SP, count_stack);
+	srt_string *ktmp = ss_alloca(1000), *vtmp = ss_alloca(1000);
+	/*
+	 * Insert data
+	 */
+	for (i = 0; i < count; i++) {
+		ss_printf(&ktmp, 200, "k%04i", i);
+		ss_printf(&vtmp, 200, "v%04i", i);
+		/* sets */
+		sms_insert_i32(&s_i32, -i);
+		sms_insert_u32(&s_u32, (uint32_t)i);
+		sms_insert_i(&s_i, -i);
+		sms_insert_s(&s_s, ktmp);
+		/* hash sets */
+		shs_insert_i32(&hs_i32, -i);
+		shs_insert_u32(&hs_u32, (uint32_t)i);
+		shs_insert_i(&hs_i, -i);
+		shs_insert_s(&hs_s, ktmp);
+		/* maps */
+		sm_insert_ii32(&m_ii32, -i, -i);
+		sm_insert_uu32(&m_uu32, (uint32_t)i, (uint32_t)i);
+		sm_insert_ii(&m_ii, -i, -i);
+		sm_insert_is(&m_is, -i, vtmp);
+		sm_insert_ip(&m_ip, -i, (char *)0 + i);
+		sm_insert_si(&m_si, ktmp, i);
+		sm_insert_ss(&m_ss, ktmp, vtmp);
+		sm_insert_sp(&m_sp, ktmp, (char *)0 + i);
+		/* hash maps */
+		shm_insert_ii32(&hm_ii32, -i, -i);
+		shm_insert_uu32(&hm_uu32, (uint32_t)i, (uint32_t)i);
+		shm_insert_ii(&hm_ii, -i, -i);
+		shm_insert_is(&hm_is, -i, vtmp);
+		shm_insert_ip(&hm_ip, -i, (char *)0 + i);
+		shm_insert_si(&hm_si, ktmp, i);
+		shm_insert_ss(&hm_ss, ktmp, vtmp);
+		shm_insert_sp(&hm_sp, ktmp, (char *)0 + i);
+	}
+	for (i = 0; i < count_stack; i++) {
+		ss_printf(&ktmp, 200, "k%04i", i);
+		ss_printf(&vtmp, 200, "v%04i", i);
+		/* sets */
+		sms_insert_i32(&sa_i32, -i);
+		sms_insert_u32(&sa_u32, (uint32_t)i);
+		sms_insert_i(&sa_i, -i);
+		sms_insert_s(&sa_s, ktmp);
+		/* hash sets */
+		shs_insert_i32(&hsa_i32, -i);
+		shs_insert_u32(&hsa_u32, (uint32_t)i);
+		shs_insert_i(&hsa_i, -i);
+		shs_insert_s(&hsa_s, ktmp);
+		/* maps */
+		sm_insert_ii32(&ma_ii32, -i, -i);
+		sm_insert_uu32(&ma_uu32, (uint32_t)i, (uint32_t)i);
+		sm_insert_ii(&ma_ii, -i, -i);
+		sm_insert_is(&ma_is, -i, vtmp);
+		sm_insert_ip(&ma_ip, -i, (char *)0 + i);
+		sm_insert_si(&ma_si, ktmp, i);
+		sm_insert_ss(&ma_ss, ktmp, vtmp);
+		sm_insert_sp(&ma_sp, ktmp, (char *)0 + i);
+		/* hash maps */
+		shm_insert_ii32(&hma_ii32, -i, -i);
+		shm_insert_uu32(&hma_uu32, (uint32_t)i, (uint32_t)i);
+		shm_insert_ii(&hma_ii, -i, -i);
+		shm_insert_is(&hma_is, -i, vtmp);
+		shm_insert_ip(&hma_ip, -i, (char *)0 + i);
+		shm_insert_si(&hma_si, ktmp, i);
+		shm_insert_ss(&hma_ss, ktmp, vtmp);
+		shm_insert_sp(&hma_sp, ktmp, (char *)0 + i);
+	}
+	/*
+	 * Compare map vs hash map
+	 */
+	for (i = 0; i < count; i++) {
+		ss_printf(&ktmp, 200, "k%04i", i);
+		ss_printf(&vtmp, 200, "v%04i", i);
+		/* sets vs hash sets */
+		if (sms_count_i(s_i32, -i) != shs_count_i(hs_i32, -i))
+			res |= 0x08000000;
+		if (sms_count_u(s_u32, i) != shs_count_u(hs_u32, i))
+			res |= 0x04000000;
+		if (sms_count_i(s_i, -i) != shs_count_i(hs_i, -i))
+			res |= 0x02000000;
+		if (sms_count_s(s_s, ktmp) != shs_count_s(hs_s, ktmp))
+			res |= 0x01000000;
+		/* maps vs hash maps: count check */
+		if (sm_count_i(m_ii32, -i) != shm_count_i(hm_ii32, -i))
+			res |= 0x00000001;
+		if (sm_count_u(m_uu32, i) != shm_count_u(hm_uu32, i))
+			res |= 0x00000002;
+		if (sm_count_i(m_ii, -i) != shm_count_i(hm_ii, -i))
+			res |= 0x00000004;
+		if (sm_count_i(m_is, -i) != shm_count_i(hm_is, -i))
+			res |= 0x00000008;
+		if (sm_count_i(m_ip, -i) != shm_count_i(hm_ip, -i))
+			res |= 0x00000010;
+		if (sm_count_s(m_si, ktmp) != shm_count_s(hm_si, ktmp))
+			res |= 0x00000020;
+		if (sm_count_s(m_ss, ktmp) != shm_count_s(hm_ss, ktmp))
+			res |= 0x00000040;
+		if (sm_count_s(m_sp, ktmp) != shm_count_s(hm_sp, ktmp))
+			res |= 0x00000080;
+		/* maps vs hash maps: value check */
+		if (sm_at_ii32(m_ii32, -i) != shm_at_ii32(hm_ii32, -i))
+			res |= 0x00000100;
+		if (sm_at_uu32(m_uu32, i) != shm_at_uu32(hm_uu32, i))
+			res |= 0x00000200;
+		if (sm_at_ii(m_ii, -i) != shm_at_ii(hm_ii, -i))
+			res |= 0x00000400;
+		if (ss_cmp(sm_at_is(m_is, -i), shm_at_is(hm_is, -i)))
+			res |= 0x00000800;
+		if (sm_at_ip(m_ip, -i) != shm_at_ip(hm_ip, -i))
+			res |= 0x00001000;
+		if (sm_at_si(m_si, ktmp) != shm_at_si(hm_si, ktmp))
+			res |= 0x00002000;
+		if (ss_cmp(sm_at_ss(m_ss, ktmp), shm_at_ss(hm_ss, ktmp)))
+			res |= 0x00004000;
+		if (sm_at_sp(m_sp, ktmp) != shm_at_sp(hm_sp, ktmp))
+			res |= 0x00008000;
+	}
+	for (i = 0; i < count_stack; i++) {
+		ss_printf(&ktmp, 200, "k%04i", i);
+		ss_printf(&vtmp, 200, "v%04i", i);
+		/* sets vs hash sets */
+		if (sms_count_i(sa_i32, -i) != shs_count_i(hsa_i32, -i))
+			res |= 0x88000000;
+		if (sms_count_u(sa_u32, i) != shs_count_u(hsa_u32, i))
+			res |= 0x84000000;
+		if (sms_count_i(sa_i, -i) != shs_count_i(hsa_i, -i))
+			res |= 0x82000000;
+		if (sms_count_s(sa_s, ktmp) != shs_count_s(hsa_s, ktmp))
+			res |= 0x81000000;
+		/* maps vs hash maps: count check */
+		if (sm_count_i(ma_ii32, -i) != shm_count_i(hma_ii32, -i))
+			res |= 0x40000001;
+		if (sm_count_u(ma_uu32, i) != shm_count_u(hma_uu32, i))
+			res |= 0x40000002;
+		if (sm_count_i(ma_ii, -i) != shm_count_i(hma_ii, -i))
+			res |= 0x40000004;
+		if (sm_count_i(ma_is, -i) != shm_count_i(hma_is, -i))
+			res |= 0x40000008;
+		if (sm_count_i(ma_ip, -i) != shm_count_i(hma_ip, -i))
+			res |= 0x40000010;
+		if (sm_count_s(ma_si, ktmp) != shm_count_s(hma_si, ktmp))
+			res |= 0x40000020;
+		if (sm_count_s(ma_ss, ktmp) != shm_count_s(hma_ss, ktmp))
+			res |= 0x40000040;
+		if (sm_count_s(ma_sp, ktmp) != shm_count_s(hma_sp, ktmp))
+			res |= 0x40000080;
+		/* maps vs hash maps: value check */
+		if (sm_at_ii32(ma_ii32, -i) != shm_at_ii32(hma_ii32, -i))
+			res |= 0x20000100;
+		if (sm_at_uu32(ma_uu32, i) != shm_at_uu32(hma_uu32, i))
+			res |= 0x20000200;
+		if (sm_at_ii(ma_ii, -i) != shm_at_ii(hma_ii, -i))
+			res |= 0x20000400;
+		if (ss_cmp(sm_at_is(ma_is, -i), shm_at_is(hma_is, -i)))
+			res |= 0x20000800;
+		if (sm_at_ip(ma_ip, -i) != shm_at_ip(hma_ip, -i))
+			res |= 0x20001000;
+		if (sm_at_si(ma_si, ktmp) != shm_at_si(hma_si, ktmp))
+			res |= 0x20002000;
+		if (ss_cmp(sm_at_ss(ma_ss, ktmp), shm_at_ss(hma_ss, ktmp)))
+			res |= 0x20004000;
+		if (sm_at_sp(ma_sp, ktmp) != shm_at_sp(hma_sp, ktmp))
+			res |= 0x20008000;
+	}
+#ifdef S_USE_VA_ARGS
+	sms_free(&s_i32, &s_u32, &s_i, &s_s);
+	shs_free(&hs_i32, &hs_u32, &hs_i, &hs_s);
+	sm_free(&m_ii32, &m_uu32, &m_ii, &m_is, &m_ip, &m_si, &m_ss, &m_sp);
+	shm_free(&hm_ii32, &hm_uu32, &hm_ii, &hm_is, &hm_ip, &hm_si, &hm_ss,
+		 &hm_sp);
+	/*
+	 * Stack-allocated sets/maps only require to be freed when using strings
+	 * Note: if you're sure the strings used are below the threshold for
+	 * small string optimizations, it could be also avoided.
+	 */
+	sms_free(&sa_s);
+	shs_free(&hsa_s);
+	sm_free(&ma_is, &ma_si, &ma_ss, &ma_sp);
+	shm_free(&hma_is, &hma_si, &hma_ss, &hma_sp);
+#else
+	sms_free(&s_i32);
+	sms_free(&s_u32);
+	sms_free(&s_i);
+	sms_free(&s_s);
+	shs_free(&hs_i32);
+	shs_free(&hs_u32);
+	shs_free(&hs_i);
+	shs_free(&hs_s);
+	sm_free(&m_ii32);
+	sm_free(&m_uu32);
+	sm_free(&m_ii);
+	sm_free(&m_is);
+	sm_free(&m_ip);
+	sm_free(&m_si);
+	sm_free(&m_ss);
+	sm_free(&m_sp);
+	shm_free(&hm_ii32);
+	shm_free(&hm_uu32);
+	shm_free(&hm_ii);
+	shm_free(&hm_is);
+	shm_free(&hm_ip);
+	shm_free(&hm_si);
+	shm_free(&hm_ss);
+	shm_free(&hm_sp);
+	sms_free(&sa_s);
+	shs_free(&hsa_s);
+	sm_free(&ma_is);
+	sm_free(&ma_ss);
+	sm_free(&ma_sp);
+	shm_free(&hma_is);
+	shm_free(&hma_si);
+	shm_free(&hma_ss);
+	shm_free(&hma_sp);
+#endif
+	return res;
+}
+
 static int test_endianess()
 {
 	int res = 0;
@@ -4839,6 +5857,7 @@ int main()
 	size_t test_tolower, test_toupper;
 	int32_t l0, l, u0, u;
 #endif
+
 #ifndef S_MINIMAL
 	/* setlocale: required for this test, not for using ss_* calls */
 #ifdef S_POSIX_LOCALE_SUPPORT
@@ -5261,9 +6280,38 @@ int main()
 	 */
 	STEST_ASSERT(test_sms());
 	/*
+	 * Hash map
+	 */
+	STEST_ASSERT(test_shm_alloc_ii32());
+	STEST_ASSERT(test_shm_alloca_ii32());
+	STEST_ASSERT(test_shm_alloc_uu32());
+	STEST_ASSERT(test_shm_alloca_uu32());
+	STEST_ASSERT(test_shm_alloc_ii());
+	STEST_ASSERT(test_shm_alloca_ii());
+	STEST_ASSERT(test_shm_shrink());
+	STEST_ASSERT(test_shm_dup());
+	STEST_ASSERT(test_shm_cpy());
+	STEST_ASSERT(test_shm_count_u());
+	STEST_ASSERT(test_shm_count_i());
+	STEST_ASSERT(test_shm_count_s());
+	STEST_ASSERT(test_shm_inc_ii32());
+	STEST_ASSERT(test_shm_inc_uu32());
+	STEST_ASSERT(test_shm_inc_ii());
+	STEST_ASSERT(test_shm_inc_si());
+	STEST_ASSERT(test_shm_delete_i());
+	STEST_ASSERT(test_shm_delete_s());
+	STEST_ASSERT(test_shm_it());
+	STEST_ASSERT(test_shm_itp());
+	/*
+	 * Hash set
+	 */
+
+	STEST_ASSERT(test_shs());
+	/*
 	 * Low level stuff
 	 */
 	STEST_ASSERT(test_endianess());
+	STEST_ASSERT(test_tree_vs_hash());
 	STEST_ASSERT(test_alignment());
 	STEST_ASSERT(test_lsb_msb());
 	STEST_ASSERT(test_pk_u64());
@@ -5273,21 +6321,23 @@ int main()
 	 * Report
 	 */
 #ifdef S_DEBUG
-	#define S_LOGSZ(t)	\
-		fprintf(stderr, "\tsizeof(" #t "): %u\n", (unsigned)sizeof(t));
+#define S_LOGSZ(t)                                                             \
+	fprintf(stderr, "\tsizeof(" #t "): %u\n", (unsigned)sizeof(t));
 	fprintf(stderr, "Internal data structures:\n");
-	S_LOGSZ(srt_tree);
 	S_LOGSZ(srt_data);
 	S_LOGSZ(srt_tnode);
+	S_LOGSZ(srt_tree);
 	S_LOGSZ(srt_string_ref);
 	S_LOGSZ(srt_stringo);
 	S_LOGSZ(srt_stringo1);
+#ifdef S_ENABLE_SM_STRING_OPTIMIZATION
 	fprintf(stderr, "\tsrt_stringo1 max in-place length: %u\n",
 		(unsigned)OptStrMaxSize);
 	fprintf(stderr, "\tsrt_stringo max in-place length DD: %u\n",
 		(unsigned)OptStr_MaxSize_DD);
 	fprintf(stderr, "\tsrt_stringo max in-place length DI/ID: %u\n",
 		(unsigned)OptStr_MaxSize_DI);
+#endif
 	S_LOGSZ(struct SMapi);
 	S_LOGSZ(struct SMapu);
 	S_LOGSZ(struct SMapI);
@@ -5300,17 +6350,31 @@ int main()
 	S_LOGSZ(struct SMapSI);
 	S_LOGSZ(struct SMapSS);
 	S_LOGSZ(struct SMapSP);
+	S_LOGSZ(struct SHMBucket);
+	S_LOGSZ(struct SHMapi);
+	S_LOGSZ(struct SHMapu);
+	S_LOGSZ(struct SHMapI);
+	S_LOGSZ(struct SHMapS);
+	S_LOGSZ(struct SHMapii);
+	S_LOGSZ(struct SHMapuu);
+	S_LOGSZ(struct SHMapII);
+	S_LOGSZ(struct SHMapIS);
+	S_LOGSZ(struct SHMapIP);
+	S_LOGSZ(struct SHMapSI);
+	S_LOGSZ(struct SHMapSS);
+	S_LOGSZ(struct SHMapSP);
 	fprintf(stderr, "Data structures exposed via API:\n");
 	fprintf(stderr, "\tsizeof(srt_string): %u (small mode)\n",
 		(unsigned)sizeof(struct SDataSmall));
 	fprintf(stderr, "\tsizeof(srt_string): %u (full mode)\n",
 		(unsigned)sizeof(srt_string));
-	fprintf(stderr, "\tmax srt_string string length: " FMT_ZU "\n", SS_RANGE);
+	fprintf(stderr, "\tmax srt_string length: " FMT_ZU "\n", SS_RANGE);
 	S_LOGSZ(srt_bitset);
-	S_LOGSZ(srt_vector);
+	S_LOGSZ(srt_bool);
+	S_LOGSZ(srt_hmap);
 	S_LOGSZ(srt_map);
 	S_LOGSZ(srt_set);
-	S_LOGSZ(srt_bool);
+	S_LOGSZ(srt_vector);
 	fprintf(stderr, "Errors: %i\n", ss_errors);
 #endif
 	return STEST_END;

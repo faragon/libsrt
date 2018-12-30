@@ -65,11 +65,9 @@ static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
 	struct SMapSP *n = (struct SMapSP *)node;
 	const struct SMapSP *m = (const struct SMapSP *)new_data;
 	if (!existing)
-		sso_set((srt_stringo *)&n->x.k,
-			sso_get((srt_stringo *)&m->x.k));
+		sso1_set(&n->x.k, sso_get((srt_stringo *)&m->x.k));
 	else
-		sso_update((srt_stringo *)&n->x.k,
-			   sso_get((srt_stringo *)&m->x.k));
+		sso1_update(&n->x.k, sso_get((srt_stringo *)&m->x.k));
 }
 
 static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
@@ -78,9 +76,9 @@ static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
 	struct SMapSS *n = (struct SMapSS *)node;
 	const struct SMapSS *m = (const struct SMapSS *)new_data;
 	if (!existing) {
-		sso_set2(&n->s, sso_get(&m->s), sso_get_s2(&m->s));
+		sso_set(&n->s, sso_get(&m->s), sso_get_s2(&m->s));
 	} else {
-		sso_update2(&n->s, sso_get(&m->s), sso_get_s2(&m->s));
+		sso_update(&n->s, sso_get(&m->s), sso_get_s2(&m->s));
 	}
 }
 
@@ -90,11 +88,9 @@ static void rw_add_SM_SI(srt_tnode *node, const srt_tnode *new_data,
 	struct SMapSI *n = (struct SMapSI *)node;
 	const struct SMapSI *m = (const struct SMapSI *)new_data;
 	if (!existing)
-		sso_set((srt_stringo *)&n->x.k,
-			sso_get((srt_stringo *)&m->x.k));
+		sso1_set(&n->x.k, sso1_get(&m->x.k));
 	else
-		sso_update((srt_stringo *)&n->x.k,
-			   sso_get((srt_stringo *)&m->x.k));
+		sso1_update(&n->x.k, sso1_get(&m->x.k));
 }
 
 static void rw_inc_SM_SI(srt_tnode *node, const srt_tnode *new_data,
@@ -109,17 +105,17 @@ static void rw_inc_SM_SI(srt_tnode *node, const srt_tnode *new_data,
 
 static void aux_is_delete(void *node)
 {
-	sso_free((srt_stringo *)&((struct SMapIS *)node)->v);
+	sso1_free(&((struct SMapIS *)node)->v);
 }
 
 static void aux_sx_delete(void *node)
 {
-	sso_free((srt_stringo *)&((struct SMapS *)node)->k);
+	sso1_free(&((struct SMapS *)node)->k);
 }
 
 static void aux_ss_delete(void *node)
 {
-	sso_free2(&((struct SMapSS *)node)->s);
+	sso_free(&((struct SMapSS *)node)->s);
 }
 
 struct SV2X {
@@ -426,8 +422,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			const struct SMapIS *ms =
 				(const struct SMapIS *)st_enum_r(src, i);
 			struct SMapIS *mt = (struct SMapIS *)st_enum(*m, i);
-			sso_set((srt_stringo *)&mt->v,
-				sso_get((srt_stringo *)&ms->v));
+			sso1_set(&mt->v, sso1_get(&ms->v));
 		}
 		break;
 	case SM0_S:
@@ -437,8 +432,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			const struct SMapS *ms =
 				(const struct SMapS *)st_enum_r(src, i);
 			struct SMapS *mt = (struct SMapS *)st_enum(*m, i);
-			sso_set((srt_stringo *)&mt->k,
-				sso_get((srt_stringo *)&ms->k));
+			sso1_set(&mt->k, sso1_get(&ms->k));
 		}
 		break;
 	case SM0_SS:
@@ -446,7 +440,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			const struct SMapSS *ms =
 				(const struct SMapSS *)st_enum_r(src, i);
 			struct SMapSS *mt = (struct SMapSS *)st_enum(*m, i);
-			sso_set2(&mt->s, sso_get(&ms->s), sso_get_s2(&ms->s));
+			sso_set(&mt->s, sso_get(&ms->s), sso_get_s2(&ms->s));
 		}
 		break;
 	case SM0_II32:
@@ -521,7 +515,7 @@ int64_t sm_at_si(const srt_map *m, const srt_string *k)
 	struct SMapSI n;
 	const struct SMapSI *nr;
 	RETURN_IF(!sm_chk_t(m, SM_SI), 0);
-	sso_setref((srt_stringo *)&n.x.k, k);
+	sso1_setref(&n.x.k, k);
 	nr = (const struct SMapSI *)st_locate(m, &n.x.n);
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
@@ -531,7 +525,7 @@ const srt_string *sm_at_ss(const srt_map *m, const srt_string *k)
 	struct SMapSS n;
 	const struct SMapSS *nr;
 	RETURN_IF(!sm_chk_t(m, SM_SS), ss_void);
-	sso_setref(&n.s, k);
+	sso_setref(&n.s, k, NULL);
 	nr = (const struct SMapSS *)st_locate(m, &n.n);
 	return nr ? sso_get_s2(&nr->s) : ss_void;
 }
@@ -541,7 +535,7 @@ const void *sm_at_sp(const srt_map *m, const srt_string *k)
 	struct SMapSP n;
 	const struct SMapSP *nr;
 	RETURN_IF(!sm_chk_t(m, SM_SP), NULL);
-	sso_setref((srt_stringo *)&n.x.k, k);
+	sso1_setref(&n.x.k, k);
 	nr = (const struct SMapSP *)st_locate(m, &n.x.n);
 	return nr ? nr->v : NULL;
 }
@@ -581,7 +575,7 @@ srt_bool sm_count_s(const srt_map *m, const srt_string *k)
 {
 	struct SMapS n;
 	RETURN_IF(!sm_chk_sx(m), S_FALSE);
-	sso_setref((srt_stringo *)&n.k, k);
+	sso1_setref(&n.k, k);
 	return st_locate(m, (const srt_tnode *)&n) ? S_TRUE : S_FALSE;
 }
 
@@ -658,10 +652,10 @@ srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_IS), S_FALSE);
 	n.x.k = k;
 #if 1 /* workaround */
-	sso_set((srt_stringo *)&n.v, v);
+	sso1_set(&n.v, v);
 	ins_ok = st_insert((srt_tree **)m, (const srt_tnode *)&n);
 	if (!ins_ok)
-		sso_free((srt_stringo *)&n.v);
+		sso1_free(&n.v);
 	return ins_ok;
 #else
 	/* TODO: rw_add_SM_IS */
@@ -686,7 +680,7 @@ S_INLINE srt_bool sm_insert_si_aux(srt_map **m, const srt_string *k,
 	srt_bool r;
 	struct SMapSI n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_SI), S_FALSE);
-	sso_setref((srt_stringo *)&n.x.k, k);
+	sso1_setref(&n.x.k, k);
 	n.v = v;
 	r = st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
 	return r;
@@ -706,7 +700,7 @@ srt_bool sm_insert_ss(srt_map **m, const srt_string *k, const srt_string *v)
 {
 	struct SMapSS n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_SS), S_FALSE);
-	sso_setref2(&n.s, k, v);
+	sso_setref(&n.s, k, v);
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
 			    rw_add_SM_SS);
 }
@@ -715,7 +709,7 @@ srt_bool sm_insert_sp(srt_map **m, const srt_string *k, const void *v)
 {
 	struct SMapSP n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_SP), S_FALSE);
-	sso_setref((srt_stringo *)&n.x.k, k);
+	sso1_setref(&n.x.k, k);
 	n.v = v;
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n,
 			    rw_add_SM_SP);
@@ -766,7 +760,7 @@ srt_bool sm_delete_s(srt_map *m, const srt_string *k)
 	srt_tree_callback callback = NULL;
 	struct SMapS sx;
 	RETURN_IF(!m, S_FALSE);
-	sso_setref((srt_stringo *)&sx.k, k);
+	sso1_setref(&sx.k, k);
 	switch (m->d.sub_type) {
 	case SM0_SS:
 		callback = aux_ss_delete;

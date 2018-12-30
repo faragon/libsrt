@@ -14,6 +14,8 @@ extern "C" {
  */
 
 #include "sbitset.h"
+#include "shmap.h"
+#include "shset.h"
 #include "smap.h"
 #include "smset.h"
 #include "sstring.h"

@@ -9,14 +9,14 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, bit set, set, and map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It is also suitable for low level and hard real-time applications, because functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
+libsrt is a C library that provides string, vector, bit set, set, map, hash set, and hash map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It is also suitable for low level and hard real-time applications, because functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
 * Easy: write high-level-like C code. Write code faster and safer.
 * Fast: using O(n)/O(log n)/O(1) state of the art algorithms.
-* Useful: strings supporting raw data handling (per-byte), vector, tree, and map structures.
-* Efficient: space optimized, minimum allocation calls (heap and stack support).
+* Useful: strings supporting raw data handling (per-byte), vector, set, map, hash set, and hash map data structures.
+* Efficient: space optimized, minimum allocation calls (heap and stack support for ALL data structures).
 * Compatible: OS-independent (e.g. built-in space-optimized UTF-8 support).
 * Predictable: suitable for microcontrollers and hard real-time compliant code.
 * Unicode: although string internal representation is raw data (bytes), functions for handling Unicode interpretation/generation/transformation are provided, so when Unicode-specific functions are used, the result of these functions is stored internally as UTF-8 (also, caching some operations, like Unicode string length -e.g. ss\_len()/ss\_size() give length in bytes, and ss\_len\_u() the length in Unicode characters-).
@@ -43,6 +43,7 @@ How to build
   * make CC=clang++ CPP11=1			# Build with clang++ using C++11 standard (instead of C)
   * make CC=clang CXX=clang++ C99=1 CPP11=1	# Build with clang using C99 mode and build the benchmark using C++11
   * make CC=tcc DEBUG=1				# Build with TinyCC with debug symbols
+  * make CPP11=1 bench				# Build the benchmark including C++11 support (for comparing libsrt vs C++/STL hash map/set)
   * make CC=powerpc-linux-gnu-gcc		# Build with gcc cross compiler (PPC)
   * make CC=arm-linux-gnueabi-gcc		# Build with gcc cross compiler (ARM)
   * make ADD\_CFLAGS="-DS\_CRC32\_SLC=0"	# Build without CRC32 hash tables, 1 bit/loop (100MB/s on i5@3GHz)
@@ -76,7 +77,7 @@ Generic advantages
 ===
 
 * Ease of use
-  * Use strings, vectors, maps, sets, and bit sets in a similar way to higher level languages.
+  * Use strings, vectors, bit sets, sets, maps, hash sets, and hash maps in a similar way to higher level languages.
 
 * Space-optimized
   * Dynamic one-block linear addressing space.
@@ -91,12 +92,12 @@ Generic advantages
 
 * Predictable (suitable for hard and soft real-time)
   * Predictable execution speed: all API calls have documented time complexity. Also space complexity, when extra space involving dynamic memory is required.
-  * Hard real-time: allocating maximum size (strings, vector, trees, map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
+  * Hard real-time: allocating maximum size (strings, vector, set, map, hash set, hash map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
   * Soft real-time: logarithmic time memory allocation (when not doing preallocation): for 10^n new elements just log(n) calls to the malloc() function. This is not a guarantee for hard real time, but for soft real time (being careful could provide almost same results, except in the case of very poor malloc() implementation in the C library being used -not a problem with modern compilers-).
 
 * RAM, ROM, and disk operation
   * Data structures can be stored in ROM memory.
-  * Data structures are suitable for memory mapped operation, and disk store/restore. This is currently true for strings, vectors, and bit sets. For maps, only when using integer data (as currently strings inside a tree are external references -this will be fixed in the future, adding the possibility of in-map arbitrary fixed data, allowing e.g. fixes size strings inside a map-)
+  * Data structures are suitable for memory mapped operation, and disk store/restore. This is true for strings, vectors, and bit sets, and for sets/maps/hash sets/hash maps when using integer data and when using small strings (<= 19 bytes for S/SI/IS data types, and <= 54 bytes for SS).
 
 * Known edge case behavior
   * Allowing both "carefree code" and per-operation error check. I.e. memory errors and UTF8 format error can be checked after every operation.
@@ -206,26 +207,47 @@ Vector-specific disadvantages/limitations
 
 * No insert function. Rationale: insert is slow (O(n)). Could be added, if someone asks for it.
 
-Map-specific advantages (srt\_map)
+Set and map advantages (srt\_set and srt\_map)
 ===
 
-* Abstraction over Red-Black tree implementation using linear memory pool with just 8 byte per node overhead, allowing up to (2^32)-1 nodes (for both 32 an 64 bit compilers). E.g. one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element \-8 byte metadata, 4 + 4 byte data\-).
+* Abstraction over Red-Black tree implementation using linear memory pool with just 8 byte per node overhead, allowing up to (2^32)-1 nodes (for both 32 an 64 bit compilers). E.g. for a key-value map, one million 32 bit key, 32 bit value map will take just 16MB of memory (16 bytes per element \-8 byte metadata, 4 + 4 byte data\-).
 * Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
 * Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
 * O(1) for allocation
-* O(1) for deleting maps without strings (one or zero calls to 'free' C function)
-* O(n) for deleting maps with strings (n + one or zero calls to 'free' C function)
-* O(n) for map copy (in case of maps without strings, would be as fast as a memcpy())
+* O(1) for deleting without strings (one or zero calls to 'free' C function)
+* O(n) for deleting with strings (n + one or zero calls to 'free' C function)
+* O(n) for copy (in case of without strings, would be as fast as a memcpy())
 * O(log n) insert, search, delete
 * O(n) sorted enumeration (amortized O(n log n))
 * O(n) unsorted enumeration (faster than the sorted case)
-* O(n) copy: tree structure is copied as fast as a memcpy(). For map types involving strings, additional allocation is used for duplicating strings.
+* O(n) copy: tree structure is copied as fast as a memcpy(). For types involving strings, additional allocation is used for duplicating strings.
+* Short string optimization so strings up to 18 bytes can fit in the node for (SI, IS, SP maps, and S sets), and up to 54 bytes combined for string-string maps (SS type). Short strings require no extra allocation/de-allocation calls.
 
-Map-specific disadvantages/limitations
+Set and map disadvantages/limitations (srt\_set and srt\_map)
 ===
 
-* Because of being implemented as a tree, it is slower than a hash-map, on average. However, in total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
+* Because of being implemented as a tree, it can slower than a hash-map on average, specially on integer data. However, total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
 * There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
+
+Hash set and hash map advantages (srt\_hset and srt\_hmap)
+===
+
+* Implemented using open-addressing hash table, using linear memory pool with 12 byte per bucket overhead, allowing up to (2^32)-1 nodes (for both 32 an 64 bit compilers). E.g. for a key-value hash map, one million 32 bit key, 32 bit value map will take just 20MB of memory (20 bytes per insertion \-12 byte for the hash table bucket, 4 + 4 byte data\-).
+* Keys: integer (8, 16, 32, 64 bits) and string (ss\_t)
+* Values: integer (8, 16, 32, 64 bits), string (ss\_t), and pointer
+* O(1) for allocation
+* O(1) for deleting without strings (one or zero calls to 'free' C function)
+* O(n) for deleting with strings (n + one or zero calls to 'free' C function)
+* O(n) for map copy (in case of maps without strings, would be as fast as a memcpy())
+* O(n) -O(1) amortized- insert, search, delete
+* O(n) unsorted enumeration
+* O(n) copy: hash table structure and data elements are copied as fast as a memcpy(). For map types involving strings, additional allocation is used for duplicating strings.
+* Short string optimization so strings up to 18 bytes can fit in the node for (SI, IS, SP maps, and S sets), and up to 54 bytes combined for string-string maps (SS type). Short strings require no extra allocation/de-allocation calls.
+
+Hash set and hash map disadvantages/limitations (srt\_hset and srt\_hmap)
+===
+
+* Because of being implemented as a hash table, if not pre-reserved, rehash adds latency.
 
 Test-covered platforms
 ===
@@ -246,7 +268,7 @@ Test-covered platforms
 | MIPS, MIPS64 (Octeon) | 32, 64 | big | yes | EdgeOS v1.6.0 (Linux Vyatta-based using Debian 7 "Wheezy" packages) | gcc, g++, clang, clang++ | Valgrind, clang | manual |
 | MIPS (EE R5900) | 32 | little | no | Playstation 2 Linux (Red Hat based) | gcc, g++ 2.95.2 | none | manual |
 | PowerPC (G4) | 32 | big | yes | Linux Ubuntu 12.04 | gcc, g++ | none | manual |
-| PowerPC, PPC64 (Cell) | 32, 64 | big | yes | Yellow Dog Linux 6.2 (Red Hat based) | gcc, g++ 4.1.2 | none | manual |
+| PowerPC, PPC64 (Cell) | 32, 64 | big | yes | Yellow Dog Linux 6.2 for Playstation 3 (Red Hat based) | gcc, g++ 4.1.2 | none | manual |
 
 License
 ===
@@ -266,12 +288,6 @@ Status
 ---
 
 Beta. API still can change: suggestions are welcome.
-
-"to do" list
----
-
-Check [doc/todo.md](https://github.com/faragon/libsrt/blob/master/doc/todo.md)
-
 
 Acknowledgements and references
 ---
