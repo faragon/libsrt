@@ -3,13 +3,13 @@
  *
  * Histogram example using libsrt
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "../src/libsrt.h"
 
-static int syntax_error(const char **argv, const int exit_code)
+static int syntax_error(const char **argv, int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,

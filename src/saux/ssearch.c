@@ -3,7 +3,7 @@
  *
  * Real-time string search using the Rabin-Karp algorithm.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -117,8 +117,8 @@
 		}                                                              \
 	}
 
-size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss,
-			 const char *t, const size_t ts)
+size_t ss_find_csum_slow(const char *s0, size_t off, size_t ss, const char *t,
+			 size_t ts)
 {
 	S_FIND_CSUM_PIPELINE1(FCSUM_SLOW);
 	S_FIND_CSUM_PIPELINE2(FCSUM_SLOW);
@@ -128,8 +128,8 @@ size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss,
 	return S_NPOS;
 }
 
-size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
-			 const char *t, const size_t ts)
+size_t ss_find_csum_fast(const char *s0, size_t off, size_t ss, const char *t,
+			 size_t ts)
 {
 	S_FIND_CSUM_ALG_SWITCH_SETUP;
 	S_FIND_CSUM_PIPELINE1(FCSUM_FAST);
@@ -139,25 +139,3 @@ size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss,
 	S_FIND_CSUM_SEARCH2(FCSUM_FAST, S_FIND_CSUM_ALG_SWITCH);
 	return S_NPOS;
 }
-
-#undef S_ENABLE_FIND_CSUM_FIRST_CHAR_LOCATION_OPTIMIZATION
-#undef S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
-#undef S_ENABLE_FIND_CSUM_FAST_TO_SLOW_ALGORITHM_SWITCH
-#undef FCSUM_FAST
-#undef FCSUM_SLOW
-#undef S_FPREPARECSUM
-#undef S_FWINDOW_MOVE
-#undef S_FSEARCH
-#undef S_FCSUM_RETURN_CHECK
-#undef S_FCSUM_RETURN_CHECK_W_ALGORITHM_SWITCH
-#undef S_FIND_CSUM_ALG_SWITCH_SETUP
-#undef S_FIND_CSUM_ALG_SWITCH
-#undef S_FIND_CSUM_ALG_SWITCH_SETUP
-#undef S_FIND_CSUM_ALG_SWITCH
-#undef S_FIND_CSUM_PIPELINE1
-#undef S_FIND_CSUM_PIPELINE2
-#undef S_FIND_CSUM_PIPELINE2
-#undef S_FIND_CSUM_PIPELINE3
-#undef S_FIND_CSUM_SEARCH1
-#undef S_FIND_CSUM_SEARCH1
-#undef S_FIND_CSUM_SEARCH2

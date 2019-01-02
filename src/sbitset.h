@@ -14,7 +14,7 @@ extern "C" {
  * #DOC it takes O(1) for the computation, as a record of bit set/clear is
  * #DOC kept.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Features:
@@ -50,17 +50,16 @@ typedef srt_vector srt_bitset; /* Opaque structure (accessors are provided) */
 
 /*
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(1)|1;2|
-srt_bitset *sb_alloca(const size_t initial_num_elems_reserve)
+srt_bitset *sb_alloca(size_t initial_num_elems_reserve)
 
 #API: |Allocate bitset (heap)|space preallocated to store n elements|bitset|O(1)|1;2|
-srt_bitset *sb_alloc(const size_t initial_num_elems_reserve)
+srt_bitset *sb_alloc(size_t initial_num_elems_reserve)
 
 #API: |Free one or more bitsets (heap)|bitset; more bitsets (optional)|bitset|O(1)|1;2|
 srt_bitset *sb_free(srt_bitset **b, ...)
 
 #API: |Duplicate bitset|bitset|output bitset|O(n)|1;2|
 srt_bitset *sb_dup(const srt_bitset *src)
-
 */
 
 /*
@@ -89,26 +88,26 @@ S_INLINE size_t sb_popcount(const srt_bitset *b)
 
 /* #API: |Access to nth bit|bitset; bit offset|1 or 0|O(1)|1;2| */
 
-S_INLINE int sb_test(const srt_bitset *b, const size_t nth)
+S_INLINE int sb_test(const srt_bitset *b, size_t nth)
 {
 	size_t pos, mask;
-	const unsigned char *buf;
+	const uint8_t *buf;
 	RETURN_IF(!b, 0);
 	pos = nth / 8;
 	mask = (size_t)1 << (nth % 8);
 	RETURN_IF(pos >= sv_size(b), 0);
-	buf = (const unsigned char *)sv_get_buffer_r(b);
+	buf = (const uint8_t *)sv_get_buffer_r(b);
 	return (buf[pos] & mask) ? 1 : 0;
 }
 
 /* #API: |Set nth bit to 1|bitset; bit offset||O(n) -O(1) amortized-|1;2| */
 
-S_INLINE void sb_set(srt_bitset **b, const size_t nth)
+S_INLINE void sb_set(srt_bitset **b, size_t nth)
 {
 	size_t ss;
 	if (b) {
-		unsigned char *buf;
-		const size_t pos = nth / 8, mask = (size_t)1 << (nth % 8),
+		uint8_t *buf;
+		size_t pos = nth / 8, mask = (size_t)1 << (nth % 8),
 			     pinc = pos + 1;
 		if (!(*b)) { /* BEHAVIOR: if NULL, assume heap allocation */
 			*b = sb_alloc(nth);
@@ -123,11 +122,11 @@ S_INLINE void sb_set(srt_bitset **b, const size_t nth)
 				return;
 			}
 			ss = sv_size(*b);
-			buf = (unsigned char *)sv_get_buffer(*b);
+			buf = (uint8_t *)sv_get_buffer(*b);
 			memset(buf + ss, 0, pinc - ss);
 			sv_set_size(*b, pinc);
 		} else {
-			buf = (unsigned char *)sv_get_buffer(*b);
+			buf = (uint8_t *)sv_get_buffer(*b);
 		}
 		if ((buf[pos] & mask) == 0) {
 			buf[pos] |= mask;
@@ -138,12 +137,12 @@ S_INLINE void sb_set(srt_bitset **b, const size_t nth)
 
 /* #API: |Set nth bit to 0|bitset; bit offset||O(1)|1;2| */
 
-S_INLINE void sb_reset(srt_bitset **b, const size_t nth)
+S_INLINE void sb_reset(srt_bitset **b, size_t nth)
 {
 	if (b && *b) {
-		const size_t pos = nth / 8;
+		size_t pos = nth / 8;
 		if (pos < sv_size(*b)) {
-			unsigned char *buf = (unsigned char *)sv_get_buffer(*b);
+			uint8_t *buf = (uint8_t *)sv_get_buffer(*b);
 			size_t mask = (size_t)1 << (nth % 8);
 			if ((buf[pos] & mask) != 0) {
 				buf[pos] &= ~mask;
@@ -157,7 +156,7 @@ S_INLINE void sb_reset(srt_bitset **b, const size_t nth)
 
 /* #API: |Force evaluation of first N bits -equivalent to set to 0 all not previously referenced bits-|bitset; bit offset|-|O(n)|1;2| */
 
-S_INLINE void sb_eval(srt_bitset **b, const size_t nth)
+S_INLINE void sb_eval(srt_bitset **b, size_t nth)
 {
 	if (b) {
 		int prev = sb_test(*b, nth);
@@ -174,7 +173,7 @@ S_INLINE size_t sb_capacity(const srt_bitset *b)
 }
 
 /* #API: |Ensure space for N 1-bit elements|bitset;absolute element reserve (unit: bits)|reserved elements|O(1)|1;2| */
-S_INLINE size_t sb_reserve(srt_bitset **b, const size_t max_elems)
+S_INLINE size_t sb_reserve(srt_bitset **b, size_t max_elems)
 {
 	return sv_reserve(b, 1 + max_elems / 8) * 8;
 }

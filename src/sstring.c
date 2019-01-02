@@ -3,7 +3,7 @@
  *
  * String handling.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -125,8 +125,8 @@ static srt_string *ss_reset(srt_string *s);
  * (equivalent to work with Turkish locale when doing case conversions)
  */
 
-static int32_t (*fsc_tolower)(const int32_t c) = sc_tolower;
-static int32_t (*fsc_toupper)(const int32_t c) = sc_toupper;
+static int32_t (*fsc_tolower)(int32_t c) = sc_tolower;
+static int32_t (*fsc_toupper)(int32_t c) = sc_toupper;
 
 /*
  * Internal functions
@@ -142,20 +142,20 @@ static unsigned has_encoding_errors(const srt_string *s)
 	return s ? s->d.f.flag2 : 0;
 }
 
-static void set_unicode_size_cached(srt_string *s, const srt_bool is_cached)
+static void set_unicode_size_cached(srt_string *s, srt_bool is_cached)
 {
 	if (s)
 		s->d.f.flag1 = is_cached;
 }
 
-static void set_encoding_errors(srt_string *s, const srt_bool has_errors)
+static void set_encoding_errors(srt_string *s, srt_bool has_errors)
 {
 	if (s)
 		s->d.f.flag2 = has_errors;
 }
 
-static void set_reference_mode(srt_string *s, const srt_bool is_reference,
-			       const srt_bool has_C_terminator)
+static void set_reference_mode(srt_string *s, srt_bool is_reference,
+			       srt_bool has_C_terminator)
 {
 	if (s) {
 		s->d.f.flag3 = is_reference;
@@ -176,12 +176,12 @@ S_INLINE size_t get_str_off(const srt_string *s)
 	return (size_t)(ss_get_buffer_r(s) - (const char *)s);
 }
 
-S_INLINE void inc_size(srt_string *s, const size_t inc_size)
+S_INLINE void inc_size(srt_string *s, size_t inc_size)
 {
 	ss_set_size(s, s_size_t_add(ss_size(s), inc_size, S_NPOS));
 }
 
-static void set_unicode_size(srt_string *s, const size_t unicode_size)
+static void set_unicode_size(srt_string *s, size_t unicode_size)
 {
 	if (s) {
 		if (!is_unicode_size_cached(s))
@@ -194,15 +194,15 @@ static void set_unicode_size(srt_string *s, const size_t unicode_size)
 	}
 }
 
-static void inc_unicode_size(srt_string *s, const size_t incr_size)
+static void inc_unicode_size(srt_string *s, size_t incr_size)
 {
 	set_unicode_size(s,
 			 s_size_t_add(get_unicode_size(s), incr_size, S_NPOS));
 }
 
-static void dec_unicode_size(srt_string *s, const size_t dec_size)
+static void dec_unicode_size(srt_string *s, size_t dec_size)
 {
-	const size_t ss = get_unicode_size(s);
+	size_t ss = get_unicode_size(s);
 	S_ASSERT(ss >= dec_size || !is_unicode_size_cached(s));
 	if (ss >= dec_size) {
 		set_unicode_size(s, ss - dec_size);
@@ -223,7 +223,7 @@ static srt_string *ss_reset(srt_string *s)
 	return s;
 }
 
-size_t ss_reserve(srt_string **s, const size_t max_size)
+size_t ss_reserve(srt_string **s, size_t max_size)
 {
 	size_t ss, unicode_size, r;
 	srt_bool full_st;
@@ -246,7 +246,7 @@ size_t ss_reserve(srt_string **s, const size_t max_size)
 	return r;
 }
 
-size_t ss_grow(srt_string **s, const size_t extra_size)
+size_t ss_grow(srt_string **s, size_t extra_size)
 {
 	size_t size, unicode_size, new_size;
 	srt_bool full_st;
@@ -272,8 +272,8 @@ size_t ss_grow(srt_string **s, const size_t extra_size)
 
 /* BEHAVIOR: aliasing is supported, e.g. append(&a, a) */
 static srt_string *ss_cat_cn_raw(srt_string **s, const char *src,
-				 const size_t src_off, const size_t src_size,
-				 const size_t src_usize)
+				 size_t src_off, size_t src_size,
+				 size_t src_usize)
 {
 	size_t off;
 	ASSERT_RETURN_IF(!s, ss_void);
@@ -295,8 +295,7 @@ static srt_string *ss_cat_cn_raw(srt_string **s, const char *src,
 }
 
 static srt_string *ss_cat_aliasing(srt_string **s, const srt_string *s0,
-				   const size_t s0_size,
-				   const size_t s0_unicode_size,
+				   size_t s0_size, size_t s0_unicode_size,
 				   const srt_string *src)
 {
 	return src == s0 ? ss_cat_cn_raw(s, ss_get_buffer(*s), 0, s0_size,
@@ -315,12 +314,12 @@ static size_t get_cmp_size(const srt_string *s1, const srt_string *s2)
 	return S_MAX(s1_size, s2_size);
 }
 
-static size_t ss_utf8_to_wc(const char *s, const size_t off,
-			    const size_t max_off, int32_t *unicode_out,
+static size_t ss_utf8_to_wc(const char *s, size_t off, size_t max_off,
+			    int32_t *unicode_out,
 			    srt_string *s_unicode_error_out)
 {
 	int encoding_errors = 0;
-	const size_t csize =
+	size_t csize =
 		sc_utf8_to_wc(s, off, max_off, unicode_out, &encoding_errors);
 	if (encoding_errors && s_unicode_error_out) {
 		S_ERROR("broken UTF8");
@@ -329,8 +328,7 @@ static size_t ss_utf8_to_wc(const char *s, const size_t off,
 	return csize;
 }
 
-static srt_string *aux_toint(srt_string **s, const srt_bool cat,
-			     const int64_t num)
+static srt_string *aux_toint(srt_string **s, srt_bool cat, int64_t num)
 {
 	int64_t n;
 	char *p, btmp[128];
@@ -357,7 +355,7 @@ static srt_string *aux_toint(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static srt_string *aux_toXcase(srt_string **s, const srt_bool cat,
+static srt_string *aux_toXcase(srt_string **s, srt_bool cat,
 			       const srt_string *src, int32_t (*towX)(int32_t))
 {
 	int c, c2;
@@ -472,7 +470,7 @@ static srt_string *aux_toXcase(srt_string **s, const srt_bool cat,
  * aliasing case without extra memory allocation nor shift.
  */
 
-static srt_string *aux_toenc(srt_string **s, const srt_bool cat,
+static srt_string *aux_toenc(srt_string **s, srt_bool cat,
 			     const srt_string *src, srt_enc_f f, srt_enc_f2 f2)
 {
 	srt_bool aliasing;
@@ -529,13 +527,12 @@ static srt_string *aux_toenc(srt_string **s, const srt_bool cat,
 	return ss_check(s);
 }
 
-static srt_string *aux_erase(srt_string **s, const srt_bool cat,
-			     const srt_string *src, const size_t off,
-			     const size_t n)
+static srt_string *aux_erase(srt_string **s, srt_bool cat,
+			     const srt_string *src, size_t off, size_t n)
 {
-	size_t ss0, at, src_size, copy_size, out_size;
-	srt_bool overflow;
 	char *po;
+	srt_bool overflow;
+	size_t ss0, at, src_size, copy_size, out_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -567,9 +564,8 @@ static srt_string *aux_erase(srt_string **s, const srt_bool cat,
 	return ss_check(s);
 }
 
-static srt_string *aux_erase_u(srt_string **s, const srt_bool cat,
-			       const srt_string *src, const size_t char_off,
-			       const size_t n)
+static srt_string *aux_erase_u(srt_string **s, srt_bool cat,
+			       const srt_string *src, size_t char_off, size_t n)
 {
 	char *po;
 	const char *ps;
@@ -619,8 +615,8 @@ static srt_string *aux_erase_u(srt_string **s, const srt_bool cat,
 	return ss_check(s);
 }
 
-static srt_string *aux_replace(srt_string **s, const srt_bool cat,
-			       const srt_string *src, const size_t off,
+static srt_string *aux_replace(srt_string **s, srt_bool cat,
+			       const srt_string *src, size_t off,
 			       const srt_string *s1, const srt_string *s2)
 {
 	ssize_t size_delta;
@@ -720,12 +716,11 @@ static srt_string *aux_replace(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static srt_string *aux_resize(srt_string **s, const srt_bool cat,
-			      const srt_string *src, const size_t n,
-			      char fill_byte)
+static srt_string *aux_resize(srt_string **s, srt_bool cat,
+			      const srt_string *src, size_t n, char fill_byte)
 {
-	size_t src_size, at, out_size;
 	srt_bool aliasing;
+	size_t src_size, at, out_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -758,9 +753,8 @@ static srt_string *aux_resize(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static srt_string *aux_resize_u(srt_string **s, const srt_bool cat,
-				srt_string *src, const size_t u_chars,
-				int fill_char)
+static srt_string *aux_resize_u(srt_string **s, srt_bool cat, srt_string *src,
+				size_t u_chars, int fill_char)
 {
 	const char *ps;
 	srt_bool aliasing;
@@ -817,13 +811,13 @@ static srt_string *aux_resize_u(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static srt_string *aux_ltrim(srt_string **s, const srt_bool cat,
+static srt_string *aux_ltrim(srt_string **s, srt_bool cat,
 			     const srt_string *src)
 {
-	size_t ss, at, cat_usize, i, out_size, src_usize;
-	srt_bool aliasing;
-	const char *ps;
 	char *pt;
+	const char *ps;
+	srt_bool aliasing;
+	size_t ss, at, cat_usize, i, out_size, src_usize;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -863,7 +857,7 @@ static srt_string *aux_ltrim(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static srt_string *aux_rtrim(srt_string **s, const srt_bool cat,
+static srt_string *aux_rtrim(srt_string **s, srt_bool cat,
 			     const srt_string *src)
 {
 	const char *ps;
@@ -903,12 +897,11 @@ static srt_string *aux_rtrim(srt_string **s, const srt_bool cat,
 	return *s;
 }
 
-static ssize_t aux_read(srt_string **s, const srt_bool cat, FILE *h,
-			const size_t max_bytes)
+static ssize_t aux_read(srt_string **s, srt_bool cat, FILE *h, size_t max_bytes)
 {
+	char *sc;
 	ssize_t l = 0;
 	size_t ss, off, max_off, def_buf, buf_size, cap, l0;
-	char *sc;
 	if (h && max_bytes > 0) {
 		ss = ss_size(*s);
 		off = cat ? ss : 0;
@@ -1016,7 +1009,7 @@ MK_SS_DUP_CPY_CAT(dec_esc_squote, sdec_esc_squote, NULL)
  * Allocation
  */
 
-srt_string *ss_alloc(const size_t initial_reserve)
+srt_string *ss_alloc(size_t initial_reserve)
 {
 	srt_string *s = ss_reset((srt_string *)sd_alloc(
 		sizeof(srt_string), 1, initial_reserve, S_TRUE, 1));
@@ -1025,7 +1018,7 @@ srt_string *ss_alloc(const size_t initial_reserve)
 	return s;
 }
 
-srt_string *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
+srt_string *ss_alloc_into_ext_buf(void *buf, size_t max_size)
 {
 	srt_string *s = (srt_string *)sd_alloc_into_ext_buf(
 		buf, max_size, sizeof(srt_string), 1, S_TRUE);
@@ -1036,8 +1029,8 @@ srt_string *ss_alloc_into_ext_buf(void *buf, const size_t max_size)
 }
 
 static const srt_string *aux_ss_ref_raw(srt_string_ref *s_ref, const char *buf,
-					const size_t buf_size,
-					const srt_bool has_C_terminator)
+					size_t buf_size,
+					srt_bool has_C_terminator)
 {
 	RETURN_IF(!s_ref || !buf, ss_void); /* BEHAVIOR */
 	memset(s_ref, 0, sizeof(*s_ref));
@@ -1056,7 +1049,7 @@ const srt_string *ss_cref(srt_string_ref *s_ref, const char *c_str)
 }
 
 const srt_string *ss_ref_buf(srt_string_ref *s_ref, const char *buf,
-			     const size_t buf_size)
+			     size_t buf_size)
 {
 	return aux_ss_ref_raw(s_ref, buf, buf_size, S_FALSE);
 }
@@ -1112,7 +1105,7 @@ size_t ss_max(const srt_string *s)
 	return !s ? 0 : s->d.f.ext_buffer ? ss_max_size(s) : SS_RANGE;
 }
 
-S_INLINE size_t ss_real_off(const srt_string *s, const size_t off)
+S_INLINE size_t ss_real_off(const srt_string *s, size_t off)
 {
 	return off == S_NPOS ? ss_size(s) : off;
 }
@@ -1141,21 +1134,19 @@ srt_string *ss_dup(const srt_string *src)
 	return ss_cpy(&s, src);
 }
 
-srt_string *ss_dup_substr(const srt_string *src, const size_t off,
-			  const size_t n)
+srt_string *ss_dup_substr(const srt_string *src, size_t off, size_t n)
 {
 	srt_string *s = NULL;
 	return ss_cpy_substr(&s, src, off, n);
 }
 
-srt_string *ss_dup_substr_u(const srt_string *src, const size_t char_off,
-			    const size_t n)
+srt_string *ss_dup_substr_u(const srt_string *src, size_t char_off, size_t n)
 {
 	srt_string *s = NULL;
 	return ss_cpy_substr_u(&s, src, char_off, n);
 }
 
-srt_string *ss_dup_cn(const char *src, const size_t src_size)
+srt_string *ss_dup_cn(const char *src, size_t src_size)
 {
 	srt_string *s = NULL;
 	return ss_cpy_cn(&s, src, src_size);
@@ -1167,13 +1158,13 @@ srt_string *ss_dup_c(const char *src)
 	return ss_cpy_c(&s, src);
 }
 
-srt_string *ss_dup_wn(const wchar_t *src, const size_t src_size)
+srt_string *ss_dup_wn(const wchar_t *src, size_t src_size)
 {
 	srt_string *s = NULL;
 	return ss_cpy_wn(&s, src, src_size);
 }
 
-srt_string *ss_dup_int(const int64_t num)
+srt_string *ss_dup_int(int64_t num)
 {
 	srt_string *s = NULL;
 	return ss_cpy_int(&s, num);
@@ -1191,34 +1182,32 @@ srt_string *ss_dup_toupper(const srt_string *src)
 	return ss_cpy_toupper(&s, src);
 }
 
-srt_string *ss_dup_erase(const srt_string *src, const size_t off,
-			 const size_t n)
+srt_string *ss_dup_erase(const srt_string *src, size_t off, size_t n)
 {
 	srt_string *s = NULL;
 	return aux_erase(&s, S_FALSE, src, off, n);
 }
 
-srt_string *ss_dup_erase_u(const srt_string *src, const size_t char_off,
-			   const size_t n)
+srt_string *ss_dup_erase_u(const srt_string *src, size_t char_off, size_t n)
 {
 	srt_string *s = NULL;
 	return aux_erase_u(&s, S_FALSE, src, char_off, n);
 }
 
-srt_string *ss_dup_replace(const srt_string *src, const size_t off,
+srt_string *ss_dup_replace(const srt_string *src, size_t off,
 			   const srt_string *s1, const srt_string *s2)
 {
 	srt_string *s = NULL;
 	return aux_replace(&s, S_FALSE, src, off, s1, s2);
 }
 
-srt_string *ss_dup_resize(const srt_string *src, const size_t n, char fill_byte)
+srt_string *ss_dup_resize(const srt_string *src, size_t n, char fill_byte)
 {
 	srt_string *s = NULL;
 	return aux_resize(&s, S_FALSE, src, n, fill_byte);
 }
 
-srt_string *ss_dup_resize_u(srt_string *src, const size_t n, int fill_char)
+srt_string *ss_dup_resize_u(srt_string *src, size_t n, int fill_char)
 {
 	srt_string *s = NULL;
 	return aux_resize_u(&s, S_FALSE, src, n, fill_char);
@@ -1248,7 +1237,7 @@ srt_string *ss_dup_w(const wchar_t *src)
 	return ss_cpy_w(&s, src);
 }
 
-srt_string *ss_dup_printf(const size_t size, const char *fmt, ...)
+srt_string *ss_dup_printf(size_t size, const char *fmt, ...)
 {
 	srt_string *s = NULL;
 	va_list ap;
@@ -1258,19 +1247,19 @@ srt_string *ss_dup_printf(const size_t size, const char *fmt, ...)
 	return s;
 }
 
-srt_string *ss_dup_printf_va(const size_t size, const char *fmt, va_list ap)
+srt_string *ss_dup_printf_va(size_t size, const char *fmt, va_list ap)
 {
 	srt_string *s = NULL;
 	return ss_cpy_printf_va(&s, size, fmt, ap);
 }
 
-srt_string *ss_dup_char(const int c)
+srt_string *ss_dup_char(int c)
 {
 	srt_string *s = NULL;
 	return ss_cpy_char(&s, c);
 }
 
-srt_string *ss_dup_read(FILE *handle, const size_t max_bytes)
+srt_string *ss_dup_read(FILE *handle, size_t max_bytes)
 {
 	srt_string *s = NULL;
 	return ss_cpy_read(&s, handle, max_bytes);
@@ -1289,8 +1278,8 @@ srt_string *ss_cpy(srt_string **s, const srt_string *src)
 	return ss_cat(s, src);
 }
 
-srt_string *ss_cpy_substr(srt_string **s, const srt_string *src,
-			  const size_t off, const size_t n)
+srt_string *ss_cpy_substr(srt_string **s, const srt_string *src, size_t off,
+			  size_t n)
 {
 	char *ps;
 	size_t ss, copy_size;
@@ -1313,7 +1302,7 @@ srt_string *ss_cpy_substr(srt_string **s, const srt_string *src,
 }
 
 srt_string *ss_cpy_substr_u(srt_string **s, const srt_string *src,
-			    const size_t char_off, const size_t n)
+			    size_t char_off, size_t n)
 {
 	char *ps;
 	size_t actual_unicode_count, ss, off, n_size, copy_size;
@@ -1344,7 +1333,7 @@ srt_string *ss_cpy_substr_u(srt_string **s, const srt_string *src,
 	return ss_check(s);
 }
 
-srt_string *ss_cpy_cn(srt_string **s, const char *src, const size_t src_size)
+srt_string *ss_cpy_cn(srt_string **s, const char *src, size_t src_size)
 {
 	RETURN_IF(!s, ss_void);
 	ss_clear(*s);
@@ -1361,7 +1350,7 @@ srt_string *ss_cpy_c_aux(srt_string **s, const char *s1, ...)
 	return ss_check(s);
 }
 
-srt_string *ss_cpy_wn(srt_string **s, const wchar_t *src, const size_t src_size)
+srt_string *ss_cpy_wn(srt_string **s, const wchar_t *src, size_t src_size)
 {
 	ASSERT_RETURN_IF(!s, ss_void);
 	ss_clear(*s);
@@ -1376,7 +1365,7 @@ srt_string *ss_cpy_w_aux(srt_string **s, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-srt_string *ss_cpy_int(srt_string **s, const int64_t num)
+srt_string *ss_cpy_int(srt_string **s, int64_t num)
 {
 	return aux_toint(s, S_FALSE, num);
 }
@@ -1391,32 +1380,31 @@ srt_string *ss_cpy_toupper(srt_string **s, const srt_string *src)
 	return aux_toXcase(s, S_FALSE, src, fsc_toupper);
 }
 
-srt_string *ss_cpy_erase(srt_string **s, const srt_string *src,
-			 const size_t off, const size_t n)
+srt_string *ss_cpy_erase(srt_string **s, const srt_string *src, size_t off,
+			 size_t n)
 {
 	return aux_erase(s, S_FALSE, src, off, n);
 }
 
 srt_string *ss_cpy_erase_u(srt_string **s, const srt_string *src,
-			   const size_t char_off, const size_t n)
+			   size_t char_off, size_t n)
 {
 	return aux_erase_u(s, S_FALSE, src, char_off, n);
 }
 
-srt_string *ss_cpy_replace(srt_string **s, const srt_string *src,
-			   const size_t off, const srt_string *s1,
-			   const srt_string *s2)
+srt_string *ss_cpy_replace(srt_string **s, const srt_string *src, size_t off,
+			   const srt_string *s1, const srt_string *s2)
 {
 	return aux_replace(s, S_FALSE, src, off, s1, s2);
 }
 
-srt_string *ss_cpy_resize(srt_string **s, const srt_string *src, const size_t n,
+srt_string *ss_cpy_resize(srt_string **s, const srt_string *src, size_t n,
 			  char fill_byte)
 {
 	return aux_resize(s, S_FALSE, src, n, fill_byte);
 }
 
-srt_string *ss_cpy_resize_u(srt_string **s, srt_string *src, const size_t n,
+srt_string *ss_cpy_resize_u(srt_string **s, srt_string *src, size_t n,
 			    int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, src, n, fill_char);
@@ -1439,8 +1427,7 @@ srt_string *ss_cpy_rtrim(srt_string **s, const srt_string *src)
 	return aux_rtrim(s, S_FALSE, src);
 }
 
-srt_string *ss_cpy_printf(srt_string **s, const size_t size, const char *fmt,
-			  ...)
+srt_string *ss_cpy_printf(srt_string **s, size_t size, const char *fmt, ...)
 {
 	va_list ap;
 	RETURN_IF(!s, ss_void);
@@ -1455,7 +1442,7 @@ srt_string *ss_cpy_printf(srt_string **s, const size_t size, const char *fmt,
 	return *s;
 }
 
-srt_string *ss_cpy_printf_va(srt_string **s, const size_t size, const char *fmt,
+srt_string *ss_cpy_printf_va(srt_string **s, size_t size, const char *fmt,
 			     va_list ap)
 {
 	RETURN_IF(!s, ss_void);
@@ -1467,7 +1454,7 @@ srt_string *ss_cpy_printf_va(srt_string **s, const size_t size, const char *fmt,
 	return ss_cat_printf_va(s, size, fmt, ap);
 }
 
-srt_string *ss_cpy_char(srt_string **s, const int c)
+srt_string *ss_cpy_char(srt_string **s, int c)
 {
 	RETURN_IF(!s, ss_void);
 	ss_clear(*s);
@@ -1476,7 +1463,7 @@ srt_string *ss_cpy_char(srt_string **s, const int c)
 	return *s;
 }
 
-srt_string *ss_cpy_read(srt_string **s, FILE *handle, const size_t max_bytes)
+srt_string *ss_cpy_read(srt_string **s, FILE *handle, size_t max_bytes)
 {
 	aux_read(s, S_FALSE, handle, max_bytes);
 	return *s;
@@ -1523,8 +1510,8 @@ srt_string *ss_cat_aux(srt_string **s, const srt_string *s1, ...)
 	return ss_check(s);
 }
 
-srt_string *ss_cat_substr(srt_string **s, const srt_string *src,
-			  const size_t sub_off, const size_t sub_size0)
+srt_string *ss_cat_substr(srt_string **s, const srt_string *src, size_t sub_off,
+			  size_t sub_size0)
 {
 	const char *src_str, *src_aux;
 	size_t src_unicode_size, srcs, sub_size, src_off;
@@ -1552,7 +1539,7 @@ srt_string *ss_cat_substr(srt_string **s, const srt_string *src,
 }
 
 srt_string *ss_cat_substr_u(srt_string **s, const srt_string *src,
-			    const size_t char_off, const size_t n)
+			    size_t char_off, size_t n)
 {
 	const char *psrc;
 	size_t ssrc, off_size, actual_n, copy_size;
@@ -1573,7 +1560,7 @@ srt_string *ss_cat_substr_u(srt_string **s, const srt_string *src,
 	return ss_check(s);
 }
 
-srt_string *ss_cat_cn(srt_string **s, const char *src, const size_t src_size)
+srt_string *ss_cat_cn(srt_string **s, const char *src, size_t src_size)
 {
 	return ss_cat_cn_raw(s, src, 0, src_size, 0);
 }
@@ -1586,12 +1573,12 @@ srt_string *ss_cat_c_aux(srt_string **s, const char *s1, ...)
 	return ss_check(s);
 }
 
-srt_string *ss_cat_wn(srt_string **s, const wchar_t *src, const size_t src_size)
+srt_string *ss_cat_wn(srt_string **s, const wchar_t *src, size_t src_size)
 {
 	int32_t uc32;
-	char utf8[SSU8_MAX_SIZE];
-	size_t i, char_count, l;
 	wchar_t h, cl;
+	size_t i, char_count, l;
+	char utf8[SSU8_MAX_SIZE];
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (src && ss_grow(s, src_size * SSU8_MAX_SIZE) && *s) {
 		i = 0;
@@ -1644,7 +1631,7 @@ srt_string *ss_cat_w_aux(srt_string **s, const wchar_t *s1, ...)
 	return ss_check(s);
 }
 
-srt_string *ss_cat_int(srt_string **s, const int64_t num)
+srt_string *ss_cat_int(srt_string **s, int64_t num)
 {
 	return aux_toint(s, S_TRUE, num);
 }
@@ -1659,32 +1646,31 @@ srt_string *ss_cat_toupper(srt_string **s, const srt_string *src)
 	return aux_toXcase(s, S_TRUE, src, fsc_toupper);
 }
 
-srt_string *ss_cat_erase(srt_string **s, const srt_string *src,
-			 const size_t off, const size_t n)
+srt_string *ss_cat_erase(srt_string **s, const srt_string *src, size_t off,
+			 size_t n)
 {
 	return aux_erase(s, S_TRUE, src, off, n);
 }
 
 srt_string *ss_cat_erase_u(srt_string **s, const srt_string *src,
-			   const size_t char_off, const size_t n)
+			   size_t char_off, size_t n)
 {
 	return aux_erase_u(s, S_TRUE, src, char_off, n);
 }
 
-srt_string *ss_cat_replace(srt_string **s, const srt_string *src,
-			   const size_t off, const srt_string *s1,
-			   const srt_string *s2)
+srt_string *ss_cat_replace(srt_string **s, const srt_string *src, size_t off,
+			   const srt_string *s1, const srt_string *s2)
 {
 	return aux_replace(s, S_TRUE, src, off, s1, s2);
 }
 
-srt_string *ss_cat_resize(srt_string **s, const srt_string *src, const size_t n,
+srt_string *ss_cat_resize(srt_string **s, const srt_string *src, size_t n,
 			  char fill_byte)
 {
 	return aux_resize(s, S_TRUE, src, n, fill_byte);
 }
 
-srt_string *ss_cat_resize_u(srt_string **s, srt_string *src, const size_t n,
+srt_string *ss_cat_resize_u(srt_string **s, srt_string *src, size_t n,
 			    int fill_char)
 {
 	return aux_resize_u(s, S_TRUE, src, n, fill_char);
@@ -1707,8 +1693,7 @@ srt_string *ss_cat_rtrim(srt_string **s, const srt_string *src)
 	return aux_rtrim(s, S_TRUE, src);
 }
 
-srt_string *ss_cat_printf(srt_string **s, const size_t size, const char *fmt,
-			  ...)
+srt_string *ss_cat_printf(srt_string **s, size_t size, const char *fmt, ...)
 {
 	va_list ap;
 	ASSERT_RETURN_IF(!s, ss_void);
@@ -1718,12 +1703,12 @@ srt_string *ss_cat_printf(srt_string **s, const size_t size, const char *fmt,
 	return *s;
 }
 
-srt_string *ss_cat_printf_va(srt_string **s, const size_t size, const char *fmt,
+srt_string *ss_cat_printf_va(srt_string **s, size_t size, const char *fmt,
 			     va_list ap)
 {
+	int sz;
 	char *p;
 	size_t off;
-	int sz;
 	ASSERT_RETURN_IF(!s, ss_void);
 	S_ASSERT(s && size > 0 && fmt);
 	if (size > 0 && fmt) {
@@ -1743,14 +1728,14 @@ srt_string *ss_cat_printf_va(srt_string **s, const size_t size, const char *fmt,
 	return ss_check(s);
 }
 
-srt_string *ss_cat_char(srt_string **s, const int c)
+srt_string *ss_cat_char(srt_string **s, int c)
 {
 	char tmp[6];
 	RETURN_IF(!s, ss_void);
 	return ss_cat_cn(s, tmp, sc_wc_to_utf8(c, tmp, 0, sizeof(tmp)));
 }
 
-srt_string *ss_cat_read(srt_string **s, FILE *handle, const size_t max_bytes)
+srt_string *ss_cat_read(srt_string **s, FILE *handle, size_t max_bytes)
 {
 	aux_read(s, S_TRUE, handle, max_bytes);
 	return *s;
@@ -1770,7 +1755,7 @@ srt_string *ss_toupper(srt_string **s)
 	return aux_toXcase(s, S_FALSE, *s, fsc_toupper);
 }
 
-srt_bool ss_set_turkish_mode(const srt_bool enable_turkish_mode)
+srt_bool ss_set_turkish_mode(srt_bool enable_turkish_mode)
 {
 	if (enable_turkish_mode) {
 		fsc_tolower = sc_tolower_tr;
@@ -1805,28 +1790,28 @@ srt_string *ss_check(srt_string **s)
 	return *s;
 }
 
-srt_string *ss_erase(srt_string **s, const size_t off, const size_t n)
+srt_string *ss_erase(srt_string **s, size_t off, size_t n)
 {
 	return aux_erase(s, S_FALSE, *s, off, n);
 }
 
-srt_string *ss_erase_u(srt_string **s, const size_t char_off, const size_t n)
+srt_string *ss_erase_u(srt_string **s, size_t char_off, size_t n)
 {
 	return aux_erase_u(s, S_FALSE, *s, char_off, n);
 }
 
-srt_string *ss_replace(srt_string **s, const size_t off, const srt_string *s1,
+srt_string *ss_replace(srt_string **s, size_t off, const srt_string *s1,
 		       const srt_string *s2)
 {
 	return aux_replace(s, S_FALSE, *s, off, s1, s2);
 }
 
-srt_string *ss_resize(srt_string **s, const size_t n, char fill_byte)
+srt_string *ss_resize(srt_string **s, size_t n, char fill_byte)
 {
 	return aux_resize(s, S_FALSE, *s, n, fill_byte);
 }
 
-srt_string *ss_resize_u(srt_string **s, const size_t u_chars, int fill_char)
+srt_string *ss_resize_u(srt_string **s, size_t u_chars, int fill_char)
 {
 	return aux_resize_u(s, S_FALSE, *s, u_chars, fill_char);
 }
@@ -1881,13 +1866,12 @@ const char *ss_to_c(const srt_string *s)
 	return buf;
 }
 
-const wchar_t *ss_to_w(const srt_string *s, wchar_t *o, const size_t nmax,
-		       size_t *n)
+const wchar_t *ss_to_w(const srt_string *s, wchar_t *o, size_t nmax, size_t *n)
 {
-	wchar_t *o_aux = NULL;
-	size_t o_s, i, ss, l;
-	const char *p;
 	int32_t c;
+	const char *p;
+	size_t o_s, i, ss, l;
+	wchar_t *o_aux = NULL;
 	S_ASSERT(s && o && nmax > 0);
 	if (s && o && nmax > 0) {
 		o_s = 0;
@@ -1925,44 +1909,42 @@ const wchar_t *ss_to_w(const srt_string *s, wchar_t *o, const size_t nmax,
  * Search
  */
 
-size_t ss_find(const srt_string *s, const size_t off, const srt_string *tgt)
+size_t ss_find(const srt_string *s, size_t off, const srt_string *tgt)
 {
 	return ss_findr(s, off, S_NPOS, tgt);
 }
 
-size_t ss_findb(const srt_string *s, const size_t off)
+size_t ss_findb(const srt_string *s, size_t off)
 {
 	return ss_findrb(s, off, S_NPOS);
 }
 
-size_t ss_findc(const srt_string *s, const size_t off, const char c)
+size_t ss_findc(const srt_string *s, size_t off, char c)
 {
 	return ss_findrc(s, off, S_NPOS, c);
 }
 
-size_t ss_findcx(const srt_string *s, const size_t off,
-		 const unsigned char c_min, const unsigned char c_max)
+size_t ss_findcx(const srt_string *s, size_t off, uint8_t c_min, uint8_t c_max)
 {
 	return ss_findrcx(s, off, S_NPOS, c_min, c_max);
 }
 
-size_t ss_findu(const srt_string *s, const size_t off, const int c)
+size_t ss_findu(const srt_string *s, size_t off, int c)
 {
 	return ss_findru(s, off, S_NPOS, c);
 }
 
-size_t ss_findnb(const srt_string *s, const size_t off)
+size_t ss_findnb(const srt_string *s, size_t off)
 {
 	return ss_findrnb(s, off, S_NPOS);
 }
 
-size_t ss_find_cn(const srt_string *s, const size_t off, const char *t,
-		  const size_t ts)
+size_t ss_find_cn(const srt_string *s, size_t off, const char *t, size_t ts)
 {
 	return ss_findr_cn(s, off, S_NPOS, t, ts);
 }
 
-size_t ss_findr(const srt_string *s, const size_t off, const size_t max_off,
+size_t ss_findr(const srt_string *s, size_t off, size_t max_off,
 		const srt_string *tgt)
 {
 	size_t ss, ts;
@@ -1989,28 +1971,26 @@ size_t ss_findr(const srt_string *s, const size_t off, const size_t max_off,
 		return p >= p0 ? (size_t)(p - p0) : S_NPOS;                    \
 	}
 
-size_t ss_findrb(const srt_string *s, const size_t off, const size_t max_off)
+size_t ss_findrb(const srt_string *s, size_t off, size_t max_off)
 {
 	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p == 9 || *p == 10 || *p == 13 || *p == 32);
 }
 
-size_t ss_findrc(const srt_string *s, const size_t off, const size_t max_off,
-		 const char c)
+size_t ss_findrc(const srt_string *s, size_t off, size_t max_off, char c)
 {
 	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p == c);
 }
 
-size_t ss_findrcx(const srt_string *s, const size_t off, const size_t max_off,
-		  const unsigned char c_min, const unsigned char c_max)
+size_t ss_findrcx(const srt_string *s, size_t off, size_t max_off,
+		  uint8_t c_min, uint8_t c_max)
 {
 	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p >= c_min && *p <= c_max);
 }
 
-size_t ss_findru(const srt_string *s, const size_t off, const size_t max_off,
-		 const int c)
+size_t ss_findru(const srt_string *s, size_t off, size_t max_off, int c)
 {
 	srt_string *tmps;
 	SS_FINDRX_AUX_VARS;
@@ -2024,14 +2004,14 @@ size_t ss_findru(const srt_string *s, const size_t off, const size_t max_off,
 	return ss_findr(s, off, max_off, tmps);
 }
 
-size_t ss_findrnb(const srt_string *s, const size_t off, const size_t max_off)
+size_t ss_findrnb(const srt_string *s, size_t off, size_t max_off)
 {
 	SS_FINDRX_AUX_VARS;
 	SS_FINDRX_AUX(*p != 9 && *p != 10 && *p != 13 && *p != 32);
 }
 
-size_t ss_findr_cn(const srt_string *s, const size_t off, const size_t max_off,
-		   const char *t, const size_t ts)
+size_t ss_findr_cn(const srt_string *s, size_t off, size_t max_off,
+		   const char *t, size_t ts)
 {
 	size_t ss;
 	RETURN_IF(!s || !t, S_NPOS);
@@ -2040,14 +2020,12 @@ size_t ss_findr_cn(const srt_string *s, const size_t off, const size_t max_off,
 	return ss_find_csum_fast(ss_get_buffer_r(s), off, ss, t, ts);
 }
 
-#undef SS_FINDRX_AUX
-
 size_t ss_split(const srt_string *src, const srt_string *separator,
-		srt_string_ref out_substrings[], const size_t max_refs)
+		srt_string_ref out_substrings[], size_t max_refs)
 {
-	size_t i, nelems = 0, off, sz;
-	const size_t src_size = ss_size(src), sep_size = ss_size(separator);
 	const char *p;
+	size_t i, nelems = 0, off, sz;
+	size_t src_size = ss_size(src), sep_size = ss_size(separator);
 	if (src_size > 0 && sep_size > 0) {
 		p = ss_get_buffer_r(src);
 		for (i = 0; i < src_size;) {
@@ -2101,8 +2079,7 @@ int ss_cmpi(const srt_string *s1, const srt_string *s2)
 	return ss_ncmpi(s1, 0, s2, get_cmp_size(s1, s2));
 }
 
-int ss_ncmp(const srt_string *s1, const size_t s1off, const srt_string *s2,
-	    const size_t n)
+int ss_ncmp(const srt_string *s1, size_t s1off, const srt_string *s2, size_t n)
 {
 	int res = 0;
 	size_t s1_size, s2_size, s1_n, s2_n;
@@ -2122,12 +2099,11 @@ int ss_ncmp(const srt_string *s1, const size_t s1off, const srt_string *s2,
 	return res;
 }
 
-int ss_ncmpi(const srt_string *s1, const size_t s1off, const srt_string *s2,
-	     const size_t n)
+int ss_ncmpi(const srt_string *s1, size_t s1off, const srt_string *s2, size_t n)
 {
+	const char *s1_str, *s2_str;
 	int res = 0, u1, u2, utf8_cut;
 	size_t s1_size, s2_size, s1_max, s2_max, i, j, chs1, chs2;
-	const char *s1_str, *s2_str;
 	S_ASSERT(s1 && s2);
 	if (s1 && s2) {
 		s1_size = ss_size(s1);
@@ -2171,8 +2147,8 @@ int ss_ncmpi(const srt_string *s1, const size_t s1off, const srt_string *s2,
 
 int ss_getchar(const srt_string *s, size_t *autoinc_off)
 {
-	size_t ss;
 	int c;
+	size_t ss;
 	const char *p;
 	RETURN_IF(!s || !autoinc_off, EOF);
 	ss = ss_size(s);
@@ -2183,7 +2159,7 @@ int ss_getchar(const srt_string *s, size_t *autoinc_off)
 	return c;
 }
 
-int ss_putchar(srt_string **s, const int c)
+int ss_putchar(srt_string **s, int c)
 {
 	return (s && ss_cat_char(s, c) && ss_size(*s) > 0) ? c : EOF;
 }
@@ -2211,13 +2187,12 @@ int ss_popchar(srt_string **s)
  * I/O
  */
 
-ssize_t ss_read(srt_string **s, FILE *handle, const size_t max_bytes)
+ssize_t ss_read(srt_string **s, FILE *handle, size_t max_bytes)
 {
 	return aux_read(s, S_FALSE, handle, max_bytes);
 }
 
-ssize_t ss_write(FILE *handle, const srt_string *s, const size_t offset,
-		 const size_t bytes)
+ssize_t ss_write(FILE *handle, const srt_string *s, size_t offset, size_t bytes)
 {
 	size_t ss, wr_size, ws;
 	RETURN_IF(!handle, -1);

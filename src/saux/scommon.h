@@ -9,7 +9,7 @@ extern "C" {
  *
  * Common stuff
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -508,8 +508,8 @@ S_INLINE void S_ST_LE_U64(void *a, uint64_t v)
  * that can take from 1 to 9 bytes, depending on the value.
  */
 #define S_PK_U64_MAX_BYTES 9
-void s_st_pk_u64(uint8_t **buf, const uint64_t v);
-uint64_t s_ld_pk_u64(const uint8_t **buf, const size_t bs);
+void s_st_pk_u64(uint8_t **buf, uint64_t v);
+uint64_t s_ld_pk_u64(const uint8_t **buf, size_t bs);
 size_t s_pk_u64_size(const uint8_t *buf);
 
 /*
@@ -547,12 +547,12 @@ extern size_t dbg_cnt_alloc_calls; /* alloc or realloc calls */
  * Helper functions intended to be inlined
  */
 
-S_INLINE srt_bool s_size_t_overflow(const size_t off, const size_t inc)
+S_INLINE srt_bool s_size_t_overflow(size_t off, size_t inc)
 {
 	return inc > (S_SIZET_MAX - off) ? S_TRUE : S_FALSE;
 }
 
-S_INLINE size_t s_size_t_pct(const size_t q, const size_t pct)
+S_INLINE size_t s_size_t_pct(size_t q, size_t pct)
 {
 	return q > 10000 ? (q / 100) * pct : (q * pct) / 100;
 }
@@ -584,18 +584,16 @@ S_INLINE unsigned slog2(uint64_t i)
 	return i > 0xffffffff ? slog2_64(i) : slog2_32((uint32_t)i);
 }
 
-S_INLINE void s_move_elems(void *t, const size_t t_off, const void *s,
-			   const size_t s_off, const size_t n,
-			   const size_t e_size)
+S_INLINE void s_move_elems(void *t, size_t t_off, const void *s, size_t s_off,
+			   size_t n, size_t e_size)
 {
 	if (t && s)
 		memmove((char *)t + t_off * e_size,
 			(const char *)s + s_off * e_size, n * e_size);
 }
 
-S_INLINE void s_copy_elems(void *t, const size_t t_off, const void *s,
-			   const size_t s_off, const size_t n,
-			   const size_t e_size)
+S_INLINE void s_copy_elems(void *t, size_t t_off, const void *s, size_t s_off,
+			   size_t n, size_t e_size)
 {
 	if (t && s)
 		memcpy((char *)t + t_off * e_size,

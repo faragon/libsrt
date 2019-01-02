@@ -3,7 +3,7 @@
  *
  * Hash map handling
  *
- * Copyright (c) 2015-2018, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
@@ -342,8 +342,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 		   uint32_t *tl)
 {
 	const uint8_t *data, *eloc;
-	const size_t bid = h2bid(h, hm->hbits);
-	size_t e_off, es, hbits, hcnt, hmask, hmax, l;
+	size_t bid = h2bid(h, hm->hbits), eoff, es, hbits, hcnt, hmask, hmax, l;
 	const struct SHMBucket *b = shm_get_buckets_r(hm);
 	RETURN_IF(!b[bid].cnt, NULL); /* Hash not in the HT */
 	hmax = b[bid].cnt;
@@ -357,8 +356,8 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 		/* Possible match */
 		hcnt++;
 		if (b[l].hash == h) {
-			e_off = b[l].loc - 1;
-			eloc = data + e_off * es;
+			eoff = b[l].loc - 1;
+			eloc = data + eoff * es;
 			if (hm->eqf(key, eloc)) {
 				if (tl)
 					*tl = l;
@@ -405,6 +404,7 @@ static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 					ht = hm->hashf(tail);
 					tloc = (uint8_t *)shm_at(
 						hm, ht, hm->n2kf(tail), &tl);
+					(void)tloc;
 #if 0
 					/*
 					 * This should never happen. Otherwise
@@ -472,9 +472,8 @@ S_INLINE void shm_tsetup(srt_hmap *h, int t)
  * Public functions
  */
 
-srt_hmap *shm_alloc_raw(int t, const srt_bool ext_buf, void *buffer,
-			const size_t hdr_size, const size_t elem_size,
-			const size_t max_size, const size_t hbits)
+srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,
+			size_t elem_size, size_t max_size, size_t hbits)
 {
 	srt_hmap *h;
 	RETURN_IF(!elem_size || !buffer, shm_void);
@@ -491,9 +490,9 @@ srt_hmap *shm_alloc_raw(int t, const srt_bool ext_buf, void *buffer,
 
 srt_hmap *shm_alloc_aux(int t, size_t init_size)
 {
-	const size_t elem_size = shm_elem_size(t), hbits = shm_s2hb(init_size),
-		     hs = sh_hdr_size(t, 1 << hbits),
-		     as = sd_alloc_size_raw(hs, elem_size, init_size, S_FALSE);
+	size_t elem_size = shm_elem_size(t), hbits = shm_s2hb(init_size),
+	       hs = sh_hdr_size(t, 1 << hbits),
+	       as = sd_alloc_size_raw(hs, elem_size, init_size, S_FALSE);
 	void *buf = s_malloc(as);
 	srt_hmap *h =
 		shm_alloc_raw(t, S_FALSE, buf, hs, elem_size, init_size, hbits);

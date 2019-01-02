@@ -9,7 +9,7 @@ extern "C" {
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Designed to be used by libraries or wrapped by some abstraction (e.g.
@@ -71,28 +71,24 @@ enum SSUTF16 {
 #define SSU16_VALID_LS(c) (((c)&SSU16_SM) == SSU16_LS0)
 #define SSU16_TO_U32(hs, ls) ((((hs)&SSU16_SMI) << 10) | ((ls)&SSU16_SMI))
 
-size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
+size_t sc_utf8_char_size(const char *s, size_t off, size_t max_off,
 			 size_t *enc_errors);
-size_t sc_utf8_count_chars(const char *s, const size_t s_size,
-			   size_t *enc_errors);
-size_t sc_wc_to_utf8_size(const int32_t c);
-size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
-		     const size_t max_off);
-size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
+size_t sc_utf8_count_chars(const char *s, size_t s_size, size_t *enc_errors);
+size_t sc_wc_to_utf8_size(int32_t c);
+size_t sc_wc_to_utf8(int32_t c, char *s, size_t off, size_t max_off);
+size_t sc_utf8_to_wc(const char *s, size_t off, size_t max_off,
 		     int *unicode_out, int32_t *encoding_errors);
-size_t sc_unicode_count_to_utf8_size(const char *, const size_t off,
-				     const size_t max_off,
-				     const size_t unicode_count,
+size_t sc_unicode_count_to_utf8_size(const char *, size_t off, size_t max_off,
+				     size_t unicode_count,
 				     size_t *actual_unicode_count);
-ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
-				     const size_t s_size,
-				     int32_t (*ssc_toX)(const int32_t));
-int32_t sc_tolower(const int32_t c);
-int32_t sc_toupper(const int32_t c);
-int32_t sc_tolower_tr(const int32_t c);
-int32_t sc_toupper_tr(const int32_t c);
-size_t sc_parallel_toX(const char *s, size_t off, const size_t max, char *o,
-		       int32_t (*ssc_toX)(const int32_t));
+ssize_t sc_utf8_calc_case_extra_size(const char *s, size_t off, size_t s_size,
+				     int32_t (*ssc_toX)(int32_t));
+int32_t sc_tolower(int32_t c);
+int32_t sc_toupper(int32_t c);
+int32_t sc_tolower_tr(int32_t c);
+int32_t sc_toupper_tr(int32_t c);
+size_t sc_parallel_toX(const char *s, size_t off, size_t max, char *o,
+		       int32_t (*ssc_toX)(int32_t));
 
 #ifdef __cplusplus
 } /* extern "C" { */

@@ -3,7 +3,7 @@
  *
  * Dynamic size data handling. Helper functions, not part of the API.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -32,9 +32,8 @@ srt_data *sd_void = &sd_void0;
  * Allocation
  */
 
-srt_data *sd_alloc(const size_t header_size, const size_t elem_size,
-		   const size_t initial_reserve, const srt_bool dyn_st,
-		   const size_t extra_tail_bytes)
+srt_data *sd_alloc(size_t header_size, size_t elem_size, size_t initial_reserve,
+		   srt_bool dyn_st, size_t extra_tail_bytes)
 {
 	size_t alloc_size = sd_alloc_size_raw(header_size, elem_size,
 					      initial_reserve, dyn_st);
@@ -50,9 +49,9 @@ srt_data *sd_alloc(const size_t header_size, const size_t elem_size,
 	return d;
 }
 
-srt_data *sd_alloc_into_ext_buf(void *buffer, const size_t max_size,
-				const size_t header_size,
-				const size_t elem_size, const srt_bool dyn_st)
+srt_data *sd_alloc_into_ext_buf(void *buffer, size_t max_size,
+				size_t header_size, size_t elem_size,
+				srt_bool dyn_st)
 {
 	srt_data *d;
 	RETURN_IF(!buffer || !max_size, NULL); /* not enough memory */
@@ -86,9 +85,8 @@ void sd_free_va(srt_data **first, va_list ap)
 	}
 }
 
-void sd_reset(srt_data *d, const size_t header_size, const size_t elem_size,
-	      const size_t max_size, const srt_bool ext_buf,
-	      const srt_bool dyn_st)
+void sd_reset(srt_data *d, size_t header_size, size_t elem_size,
+	      size_t max_size, srt_bool ext_buf, srt_bool dyn_st)
 {
 	if (d) {
 		d->f.ext_buffer = ext_buf;
@@ -110,8 +108,7 @@ void sd_reset(srt_data *d, const size_t header_size, const size_t elem_size,
 }
 
 /* Acknowledgements: similar to git's strbuf_grow */
-size_t sd_grow(srt_data **d, const size_t extra_size,
-	       const size_t extra_tail_bytes)
+size_t sd_grow(srt_data **d, size_t extra_size, size_t extra_tail_bytes)
 {
 	size_t size, new_size;
 	RETURN_IF(!d, 0);
@@ -122,8 +119,7 @@ size_t sd_grow(srt_data **d, const size_t extra_size,
 }
 
 S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
-			       size_t full_header_size,
-			       const size_t extra_tail_bytes)
+			       size_t full_header_size, size_t extra_tail_bytes)
 {
 #ifdef SD_ENABLE_HEURISTIC_GROWTH
 	size_t inc;
@@ -179,20 +175,20 @@ S_INLINE size_t sd_reserve_aux(srt_data **d, size_t max_size,
 	return sdx_max_size(*d);
 }
 
-size_t sd_reserve(srt_data **d, size_t max_size, const size_t extra_tail_bytes)
+size_t sd_reserve(srt_data **d, size_t max_size, size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);
 	return sd_reserve_aux(d, max_size, (*d)->header_size, extra_tail_bytes);
 }
 
 size_t sdx_reserve(srt_data **d, size_t max_size, size_t full_header_size,
-		   const size_t extra_tail_bytes)
+		   size_t extra_tail_bytes)
 {
 	RETURN_IF(!d || !*d, 0);
 	return sd_reserve_aux(d, max_size, full_header_size, extra_tail_bytes);
 }
 
-srt_data *sd_shrink(srt_data **d, const size_t extra_tail_bytes)
+srt_data *sd_shrink(srt_data **d, size_t extra_tail_bytes)
 {
 	size_t max_size, new_max_size, as;
 	srt_data *d_next;

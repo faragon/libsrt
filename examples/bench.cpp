@@ -3,7 +3,7 @@
  *
  * Benchmarks of libsrt vs C++ STL
  *
- * Copyright (c) 2015-2018, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
@@ -767,7 +767,7 @@ bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
 		for (size_t i = 0; i < count; i++)
 			(void)sv_pop_i(v);
 	if (TIdTest(tid, TId_Sort10Times) || TIdTest(tid, TId_Sort10000Times)) {
-		const size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
+		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
 		for (size_t i = 0; i < cnt; i++)
 			sv_sort(v);
 	}
@@ -837,7 +837,7 @@ bool cxx_vector(size_t count, int tid)
 		for (size_t i = 0; i < count; i++)
 			(void)v.pop_back();
 	if (TIdTest(tid, TId_Sort10Times) || TIdTest(tid, TId_Sort10000Times)) {
-		const size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
+		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
 		for (size_t i = 0; i < cnt; i++)
 			std::sort(v.begin(), v.end());
 	}
@@ -922,7 +922,7 @@ bool libsrt_vector_gen(size_t count, int tid)
 		for (size_t i = 0; i < count; i++)
 			(void)sv_pop(v);
 	if (TIdTest(tid, TId_Sort10Times) || TIdTest(tid, TId_Sort10000Times)) {
-		const size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
+		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
 		for (size_t i = 0; i < cnt; i++)
 			sv_sort(v);
 	}
@@ -949,7 +949,7 @@ bool cxx_vector_gen(size_t count, int tid)
 		for (size_t i = 0; i < count; i++)
 			(void)v.pop_back();
 	if (TIdTest(tid, TId_Sort10Times) || TIdTest(tid, TId_Sort10000Times)) {
-		const size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
+		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
 		for (size_t i = 0; i < cnt; i++)
 			std::sort(v.begin(), v.end());
 	}

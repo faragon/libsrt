@@ -9,7 +9,7 @@ extern "C" {
  *
  * In-place string optimizations.
  *
- * Copyright (c) 2015-2018, F. Aragon. All rights reserved. Released under
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
  * the BSD 3-Clause License (see the doc/LICENSE file included).
  */
 
@@ -368,7 +368,6 @@ S_INLINE void sso_dupa1(srt_stringo1 *s)
 {
 	if (s->t == OptStr_I)
 		s->i.s = ss_dup(s->i.s);
-
 }
 
 #else

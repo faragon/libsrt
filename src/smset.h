@@ -36,7 +36,7 @@ extern "C" {
  * #DOC
  * #DOC	typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -68,7 +68,7 @@ typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
 
 /*
 #API: |Allocate set (stack)|set type; initial reserve|set|O(1)|1;2|
-srt_set *sms_alloca(const enum eSMS_Type t, const size_t n);
+srt_set *sms_alloca(enum eSMS_Type t, size_t n);
 */
 #define sms_alloca(type, max_size)                                             \
 	sms_alloc_raw(type, S_TRUE,                                            \
@@ -77,16 +77,15 @@ srt_set *sms_alloca(const enum eSMS_Type t, const size_t n);
 						 S_FALSE)),                    \
 		      sm_elem_size(type), max_size)
 
-S_INLINE srt_set *sms_alloc_raw(const enum eSMS_Type t, const srt_bool ext_buf,
-				void *buffer, const size_t elem_size,
-				const size_t max_size)
+S_INLINE srt_set *sms_alloc_raw(enum eSMS_Type t, srt_bool ext_buf,
+				void *buffer, size_t elem_size, size_t max_size)
 {
 	return sm_alloc_raw0((enum eSM_Type0)t, ext_buf, buffer, elem_size,
 			     max_size);
 }
 
 /* #API: |Allocate set (heap)|set type; initial reserve|set|O(1)|1;2| */
-S_INLINE srt_set *sms_alloc(const enum eSMS_Type t, const size_t initial_num_elems_reserve)
+S_INLINE srt_set *sms_alloc(enum eSMS_Type t, size_t initial_num_elems_reserve)
 {
 	return sm_alloc0((enum eSM_Type0)t, initial_num_elems_reserve);
 }
@@ -117,10 +116,10 @@ SD_BUILDFUNCS_FULL_ST(sms, srt_set, 0)
 
 /*
 #API: |Ensure space for extra elements|set;number of extra elements|extra size allocated|O(1)|1;2|
-size_t sms_grow(srt_set **s, const size_t extra_elems)
+size_t sms_grow(srt_set **s, size_t extra_elems)
 
 #API: |Ensure space for elements|set;absolute element reserve|reserved elements|O(1)|1;2|
-size_t sms_reserve(srt_set **s, const size_t max_elems)
+size_t sms_reserve(srt_set **s, size_t max_elems)
 
 #API: |Make the set use the minimum possible memory|set|set reference (optional usage)|O(1) for allocators using memory reset; O(n) for naive allocators|1;2|
 srt_set *sms_shrink(srt_set **s);
@@ -157,13 +156,13 @@ S_INLINE srt_set *sms_cpy(srt_set **s, const srt_set *src)
  */
 
 /* #API: |Set element count/check|set; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
-S_INLINE srt_bool sms_count_u(const srt_set *s, const uint32_t k)
+S_INLINE srt_bool sms_count_u(const srt_set *s, uint32_t k)
 {
 	return sm_count_u(s, k);
 }
 
 /* #API: |Set element count/check|set; integer key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
-S_INLINE srt_bool sms_count_i(const srt_set *s, const int64_t k)
+S_INLINE srt_bool sms_count_i(const srt_set *s, int64_t k)
 {
 	return sm_count_i(s, k);
 }
@@ -179,7 +178,7 @@ S_INLINE srt_bool sms_count_s(const srt_set *s, const srt_string *k)
  */
 
 /* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-S_INLINE srt_bool sms_insert_i32(srt_set **s, const int32_t k)
+S_INLINE srt_bool sms_insert_i32(srt_set **s, int32_t k)
 {
 	struct SMapi n;
 	RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
@@ -188,7 +187,7 @@ S_INLINE srt_bool sms_insert_i32(srt_set **s, const int32_t k)
 }
 
 /* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-S_INLINE srt_bool sms_insert_u32(srt_set **s, const uint32_t k)
+S_INLINE srt_bool sms_insert_u32(srt_set **s, uint32_t k)
 {
 	struct SMapu n;
 	RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
@@ -197,7 +196,7 @@ S_INLINE srt_bool sms_insert_u32(srt_set **s, const uint32_t k)
 }
 
 /* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-S_INLINE srt_bool sms_insert_i(srt_set **s, const int64_t k)
+S_INLINE srt_bool sms_insert_i(srt_set **s, int64_t k)
 {
 	struct SMapI n;
 	RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
@@ -230,7 +229,7 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
  */
 
 /* #API: |Delete set element|set; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
-S_INLINE srt_bool sms_delete_i(srt_set *s, const int64_t k)
+S_INLINE srt_bool sms_delete_i(srt_set *s, int64_t k)
 {
 	return sm_delete_i(s, k);
 }

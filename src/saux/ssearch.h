@@ -16,7 +16,7 @@ extern "C" {
  * - Search in raw data.
  * - Over 1 GB/s sustained speed on 3-way 3GHz OooE CPU (single thread).
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * O(n) string search using a rolling hash. Two hashes are used, one more
@@ -103,8 +103,8 @@ extern "C" {
 #undef S_ENABLE_FIND_CSUM_INNER_LOOP_UNROLLING
 #endif
 
-size_t ss_find_csum_slow(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
-size_t ss_find_csum_fast(const char *s0, const size_t off, const size_t ss, const char *t, const size_t ts);
+size_t ss_find_csum_slow(const char *s0, size_t off, size_t ss, const char *t, size_t ts);
+size_t ss_find_csum_fast(const char *s0, size_t off, size_t ss, const char *t, size_t ts);
 
 #ifdef __cplusplus
 } /* extern "C" { */

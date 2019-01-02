@@ -3,7 +3,7 @@
  *
  * Buffer encoding/decoding
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -86,12 +86,12 @@ static const uint8_t h2n[64] = {
  * Internal functions
  */
 
-S_INLINE uint8_t hex2nibble(const int h)
+S_INLINE uint8_t hex2nibble(int h)
 {
 	return h2n[(h - 48) & 0x3f];
 }
 
-static size_t senc_hex_aux(const uint8_t *s, const size_t ss, uint8_t *o,
+static size_t senc_hex_aux(const uint8_t *s, size_t ss, uint8_t *o,
 			   const uint8_t *t)
 {
 	size_t out_size, i, j;
@@ -102,7 +102,7 @@ static size_t senc_hex_aux(const uint8_t *s, const size_t ss, uint8_t *o,
 	j = out_size;
 #define ENCHEX_LOOP(ox, ix)                                                    \
 	{                                                                      \
-		const int next = s[ix - 1];                                    \
+		int next = s[ix - 1];                                          \
 		o[ox - 2] = t[next >> 4];                                      \
 		o[ox - 1] = t[next & 0x0f];                                    \
 	}
@@ -115,7 +115,6 @@ static size_t senc_hex_aux(const uint8_t *s, const size_t ss, uint8_t *o,
 		ENCHEX_LOOP(j, i);
 		ENCHEX_LOOP(j - 2, i - 1);
 	}
-#undef ENCHEX_LOOP
 	return out_size;
 }
 
@@ -123,7 +122,7 @@ static size_t senc_hex_aux(const uint8_t *s, const size_t ss, uint8_t *o,
  * Base64 encoding/decoding
  */
 
-size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t senc_b64(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	unsigned si0, si1, si2;
 	size_t ssod4, ssd3, tail, i, j, out_size;
@@ -165,7 +164,7 @@ size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o)
 	return out_size;
 }
 
-size_t sdec_b64(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_b64(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	size_t i, j, ssd4, tail;
 	RETURN_IF(!o, (ss / 4) * 3);
@@ -175,17 +174,17 @@ size_t sdec_b64(const uint8_t *s, const size_t ss, uint8_t *o)
 	ssd4 = ss - (ss % 4);
 	tail = s[ss - 2] == '=' || s[ss - 1] == '=' ? 4 : 0;
 	for (; i < ssd4 - tail; i += 4, j += 3) {
-		const int a = b64d[s[i]], b = b64d[s[i + 1]],
-			  c = b64d[s[i + 2]], d = b64d[s[i + 3]];
+		int a = b64d[s[i]], b = b64d[s[i + 1]],
+		    c = b64d[s[i + 2]], d = b64d[s[i + 3]];
 		o[j] = DB64C1(a, b);
 		o[j + 1] = DB64C2(b, c);
 		o[j + 2] = DB64C3(c, d);
 	}
 	if (tail) {
-		const int a = b64d[s[i] & 0x7f], b = b64d[s[i + 1] & 0x7f];
+		int a = b64d[s[i] & 0x7f], b = b64d[s[i + 1] & 0x7f];
 		o[j++] = DB64C1(a, b);
 		if (s[i + 2] != '=') {
-			const int c = b64d[s[i + 2] & 0x7f];
+			int c = b64d[s[i + 2] & 0x7f];
 			o[j++] = DB64C2(b, c);
 		}
 	}
@@ -196,17 +195,17 @@ size_t sdec_b64(const uint8_t *s, const size_t ss, uint8_t *o)
  * Hexadecimal encoding/decoding
  */
 
-size_t senc_hex(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t senc_hex(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	return senc_hex_aux(s, ss, o, n2h_l);
 }
 
-size_t senc_HEX(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t senc_HEX(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	return senc_hex_aux(s, ss, o, n2h_u);
 }
 
-size_t sdec_hex(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_hex(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	size_t ssd2, ssd4, i, j;
 	RETURN_IF(!o, ss / 2);
@@ -224,11 +223,10 @@ size_t sdec_hex(const uint8_t *s, const size_t ss, uint8_t *o)
 	}
 	for (; i < ssd2; i += 2, j += 1)
 		SDEC_HEX_L(0, 0);
-#undef SDEC_HEX_L
 	return j;
 }
 
-S_INLINE size_t senc_esc_xml_req_size(const uint8_t *s, const size_t ss)
+S_INLINE size_t senc_esc_xml_req_size(const uint8_t *s, size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -250,8 +248,7 @@ S_INLINE size_t senc_esc_xml_req_size(const uint8_t *s, const size_t ss)
 	return sso;
 }
 
-size_t senc_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o,
-		    const size_t known_sso)
+size_t senc_esc_xml(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso)
 {
 	size_t sso, i, j;
 	RETURN_IF(!s, 0);
@@ -290,7 +287,7 @@ size_t senc_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o,
 	return sso;
 }
 
-size_t sdec_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_esc_xml(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	size_t i, j;
 	RETURN_IF(!o, ss);
@@ -351,7 +348,7 @@ size_t sdec_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o)
 	return j;
 }
 
-S_INLINE size_t senc_esc_json_req_size(const uint8_t *s, const size_t ss)
+S_INLINE size_t senc_esc_json_req_size(const uint8_t *s, size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -372,8 +369,7 @@ S_INLINE size_t senc_esc_json_req_size(const uint8_t *s, const size_t ss)
 }
 
 /* BEHAVIOR: slash ('/') is not escaped (intentional) */
-size_t senc_esc_json(const uint8_t *s, const size_t ss, uint8_t *o,
-		     const size_t known_sso)
+size_t senc_esc_json(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso)
 {
 	size_t i, j, sso;
 	RETURN_IF(!s, 0);
@@ -420,7 +416,7 @@ size_t senc_esc_json(const uint8_t *s, const size_t ss, uint8_t *o,
 	return sso;
 }
 
-size_t sdec_esc_json(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_esc_json(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	size_t i, j;
 	RETURN_IF(!o, ss);
@@ -466,7 +462,7 @@ size_t sdec_esc_json(const uint8_t *s, const size_t ss, uint8_t *o)
 	return j;
 }
 
-S_INLINE size_t senc_esc_url_req_size(const uint8_t *s, const size_t ss)
+S_INLINE size_t senc_esc_url_req_size(const uint8_t *s, size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++) {
@@ -487,8 +483,7 @@ S_INLINE size_t senc_esc_url_req_size(const uint8_t *s, const size_t ss)
 	return sso;
 }
 
-size_t senc_esc_url(const uint8_t *s, const size_t ss, uint8_t *o,
-		    const size_t known_sso)
+size_t senc_esc_url(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso)
 {
 	size_t i, j, sso;
 	RETURN_IF(!s, 0);
@@ -521,7 +516,7 @@ size_t senc_esc_url(const uint8_t *s, const size_t ss, uint8_t *o,
 	return sso;
 }
 
-size_t sdec_esc_url(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_esc_url(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	size_t i, j;
 	RETURN_IF(!o, ss);
@@ -538,8 +533,7 @@ size_t sdec_esc_url(const uint8_t *s, const size_t ss, uint8_t *o)
 	return j;
 }
 
-S_INLINE size_t senc_esc_byte_req_size(const uint8_t *s, uint8_t tgt,
-				       const size_t ss)
+S_INLINE size_t senc_esc_byte_req_size(const uint8_t *s, uint8_t tgt, size_t ss)
 {
 	size_t i = 0, sso = ss;
 	for (; i < ss; i++)
@@ -548,8 +542,8 @@ S_INLINE size_t senc_esc_byte_req_size(const uint8_t *s, uint8_t tgt,
 	return sso;
 }
 
-static size_t senc_esc_byte(const uint8_t *s, const size_t ss, uint8_t tgt,
-			    uint8_t *o, const size_t known_sso)
+static size_t senc_esc_byte(const uint8_t *s, size_t ss, uint8_t tgt,
+			    uint8_t *o, size_t known_sso)
 {
 	size_t i, j, sso;
 	RETURN_IF(!s, 0);
@@ -566,7 +560,7 @@ static size_t senc_esc_byte(const uint8_t *s, const size_t ss, uint8_t tgt,
 	return sso;
 }
 
-static size_t sdec_esc_byte(const uint8_t *s, const size_t ss, uint8_t tgt,
+static size_t sdec_esc_byte(const uint8_t *s, size_t ss, uint8_t tgt,
 			    uint8_t *o)
 {
 	size_t i, j, ssm1;
@@ -585,24 +579,24 @@ static size_t sdec_esc_byte(const uint8_t *s, const size_t ss, uint8_t tgt,
 	return j;
 }
 
-size_t senc_esc_dquote(const uint8_t *s, const size_t ss, uint8_t *o,
-		       const size_t known_sso)
+size_t senc_esc_dquote(const uint8_t *s, size_t ss, uint8_t *o,
+		       size_t known_sso)
 {
 	return senc_esc_byte(s, ss, '\"', o, known_sso);
 }
 
-size_t sdec_esc_dquote(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_esc_dquote(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	return sdec_esc_byte(s, ss, '\"', o);
 }
 
-size_t senc_esc_squote(const uint8_t *s, const size_t ss, uint8_t *o,
-		       const size_t known_sso)
+size_t senc_esc_squote(const uint8_t *s, size_t ss, uint8_t *o,
+		       size_t known_sso)
 {
 	return senc_esc_byte(s, ss, '\'', o, known_sso);
 }
 
-size_t sdec_esc_squote(const uint8_t *s, const size_t ss, uint8_t *o)
+size_t sdec_esc_squote(const uint8_t *s, size_t ss, uint8_t *o)
 {
 	return sdec_esc_byte(s, ss, '\'', o);
 }
@@ -758,7 +752,7 @@ size_t lz_st_ref[9] = {0}, lz_st_ref_bytes = 0;
 
 S_INLINE void senc_lz_store_lit(uint8_t **o, const uint8_t *in, size_t size)
 {
-	const size_t sm1 = size - 1;
+	size_t sm1 = size - 1;
 	if (sm1 < LZOPL_8_RANGE) {
 		*((*o)++) = (uint8_t)((sm1 << LZOPL_HDR_8_BITS) | LZOPL_8_ID);
 		DBG_INC_LZLIT(0, 1 + size);
@@ -957,7 +951,7 @@ S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
 			      size_t max_size)
 {
 	size_t off = 0;
-	const size_t szc = UINTPTR_MAX <= 0xffffffff ? 4 : 8;
+	size_t szc = UINTPTR_MAX <= 0xffffffff ? 4 : 8;
 	size_t msc = (max_size / szc) * szc;
 	for (; off < msc && !memcmp(a + off, b + off, szc); off += szc)
 		;
@@ -972,8 +966,8 @@ S_INLINE uint32_t senc_lz_hash(uint32_t a, size_t hash_size)
 	       & S_NBITMASK(hash_size);
 }
 
-static size_t senc_lz_aux(const uint8_t *s, const size_t ss, uint8_t *o0,
-			  const size_t hash_max_bits)
+static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
+			  size_t hash_max_bits)
 {
 	uint8_t *o;
 	size_t *refs, *refsx;
@@ -1058,24 +1052,24 @@ static size_t senc_lz_aux(const uint8_t *s, const size_t ss, uint8_t *o0,
 	return (size_t)(o - o0);
 }
 
-size_t senc_lz(const uint8_t *s, const size_t ss, uint8_t *o0)
+size_t senc_lz(const uint8_t *s, size_t ss, uint8_t *o0)
 {
 	return senc_lz_aux(s, ss, o0, LZ_MAX_HASH_BITS_STACK);
 }
 
-size_t senc_lzh(const uint8_t *s, const size_t ss, uint8_t *o0)
+size_t senc_lzh(const uint8_t *s, size_t ss, uint8_t *o0)
 {
 	return senc_lz_aux(s, ss, o0, LZ_MAX_HASH_BITS);
 }
 
-S_INLINE void s_reccpy1(uint8_t *o, const size_t dist, size_t n)
+S_INLINE void s_reccpy1(uint8_t *o, size_t dist, size_t n)
 {
 	size_t j = 0;
 	for (; j < n; j++)
 		o[j] = o[j - dist];
 }
 
-S_INLINE void s_reccpy(uint8_t *o, const size_t dist, size_t n)
+S_INLINE void s_reccpy(uint8_t *o, size_t dist, size_t n)
 {
 	size_t i, n2, chunk;
 	const uint8_t *s = o - dist;
@@ -1149,7 +1143,7 @@ S_INLINE void sdec_lz_load_lit(const uint8_t **s, uint8_t **o, size_t cnt)
 		continue;                                                      \
 	}
 
-size_t sdec_lz(const uint8_t *s0, const size_t ss, uint8_t *o0)
+size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 {
 	uint8_t *o;
 	uint64_t mix64;

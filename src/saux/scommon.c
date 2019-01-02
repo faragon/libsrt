@@ -3,7 +3,7 @@
  *
  * Common stuff
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -47,7 +47,7 @@ enum SPK64SHIFT {
 	D56_LE_SHIFT
 };
 
-void s_st_pk_u64(uint8_t **buf0, const uint64_t v)
+void s_st_pk_u64(uint8_t **buf0, uint64_t v)
 {
 	uint8_t *buf;
 	if (!buf0 || !*buf0)
@@ -101,7 +101,7 @@ void s_st_pk_u64(uint8_t **buf0, const uint64_t v)
 	(*buf0) += D72_LE_SZ;
 }
 
-uint64_t s_ld_pk_u64(const uint8_t **buf0, const size_t bs)
+uint64_t s_ld_pk_u64(const uint8_t **buf0, size_t bs)
 {
 	size_t hdr_bytes;
 	const uint8_t *buf;
@@ -207,8 +207,6 @@ uint64_t snextpow2(uint64_t i)
 	return i <= 2 ? i : (uint64_t)1 << slog2_ceil_64(i);
 #endif
 }
-
-#undef SLOG2STEP
 
 /*
  * Custom "memset" functions

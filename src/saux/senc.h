@@ -9,7 +9,7 @@ extern "C" {
  *
  * Buffer encoding/decoding
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Features (base64 and hex encoding/decoding):
@@ -42,27 +42,27 @@ extern "C" {
 
 #define SDEBUG_LZ_STATS 0
 
-typedef size_t (*srt_enc_f)(const uint8_t *s, const size_t ss, uint8_t *o);
-typedef size_t (*srt_enc_f2)(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
+typedef size_t (*srt_enc_f)(const uint8_t *s, size_t ss, uint8_t *o);
+typedef size_t (*srt_enc_f2)(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
 
-size_t senc_b64(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t sdec_b64(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_hex(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_HEX(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t sdec_hex(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
-size_t sdec_esc_xml(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_esc_json(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
-size_t sdec_esc_json(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_esc_url(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
-size_t sdec_esc_url(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_esc_dquote(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
-size_t sdec_esc_dquote(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_esc_squote(const uint8_t *s, const size_t ss, uint8_t *o, const size_t known_sso);
-size_t sdec_esc_squote(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_lz(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t senc_lzh(const uint8_t *s, const size_t ss, uint8_t *o);
-size_t sdec_lz(const uint8_t *s, const size_t ss, uint8_t *o);
+size_t senc_b64(const uint8_t *s, size_t ss, uint8_t *o);
+size_t sdec_b64(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_hex(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_HEX(const uint8_t *s, size_t ss, uint8_t *o);
+size_t sdec_hex(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_esc_xml(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
+size_t sdec_esc_xml(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_esc_json(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
+size_t sdec_esc_json(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_esc_url(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
+size_t sdec_esc_url(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_esc_dquote(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
+size_t sdec_esc_dquote(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_esc_squote(const uint8_t *s, size_t ss, uint8_t *o, size_t known_sso);
+size_t sdec_esc_squote(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_lz(const uint8_t *s, size_t ss, uint8_t *o);
+size_t senc_lzh(const uint8_t *s, size_t ss, uint8_t *o);
+size_t sdec_lz(const uint8_t *s, size_t ss, uint8_t *o);
 
 #define senc_b16 senc_HEX
 #define sdec_b16 sdec_hex

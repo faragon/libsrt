@@ -3,7 +3,7 @@
  *
  * Image processing example using libsrt
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Observations:
@@ -80,7 +80,7 @@ enum Filters {
 size_t any2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *in,
 	       enum ImgTypes in_type);
 size_t rgb2type(srt_string **out, enum ImgTypes out_type, const srt_string *rgb,
-		const struct RGB_Info *ri, const int filter);
+		const struct RGB_Info *ri, int filter);
 enum ImgTypes file_type(const char *file_name);
 int rgbdiff(srt_string **out, const srt_string *rgb0,
 	    const struct RGB_Info *ri0, const srt_string *rgb1,

@@ -8,7 +8,7 @@
 #
 # Tag syntax example from src/smap.h:
 #	/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
-#	srt_sbool sm_uu32_insert(srt_map **m, const uint32_t k, const uint32_t v);
+#	srt_sbool sm_uu32_insert(srt_map **m, uint32_t k, uint32_t v);
 #
 #	/* #API: |a|b|c|d|e| */
 #	return_type function_name(param1, ..., paramN);
@@ -30,7 +30,7 @@
 #			3 reviewed: clean, secure (security risk checked)
 #			4 reviewed: clean, secure, state of the art (speed and space)
 #
-# Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2019 F. Aragon. All rights reserved.
 # Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 

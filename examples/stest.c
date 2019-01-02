@@ -3,7 +3,7 @@
  *
  * libsrt API tests
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -254,7 +254,7 @@ static int test_sb(size_t nelems)
 	return res;
 }
 
-static int test_ss_alloc(const size_t max_size)
+static int test_ss_alloc(size_t max_size)
 {
 	srt_string *a = ss_alloc(max_size);
 	int res = !a ? 1
@@ -263,7 +263,7 @@ static int test_ss_alloc(const size_t max_size)
 	return res;
 }
 
-static int test_ss_alloca(const size_t max_size)
+static int test_ss_alloca(size_t max_size)
 {
 	srt_string *a = ss_alloca(max_size);
 	int res = !a ? 1
@@ -282,7 +282,7 @@ static int test_ss_shrink()
 	return res;
 }
 
-static int test_ss_grow(const size_t init_size, const size_t extra_size)
+static int test_ss_grow(size_t init_size, size_t extra_size)
 {
 	srt_string *a = ss_alloc(init_size);
 	int res = a ? 0 : 1;
@@ -291,7 +291,7 @@ static int test_ss_grow(const size_t init_size, const size_t extra_size)
 	return res;
 }
 
-static int test_ss_reserve(const size_t max_size)
+static int test_ss_reserve(size_t max_size)
 {
 	srt_string *a = ss_alloc(max_size / 2);
 	int res = a ? 0 : 1;
@@ -365,8 +365,8 @@ static int test_ss_rtrim(const char *in, const char *expected)
 	return res;
 }
 
-static int test_ss_erase(const char *in, const size_t byte_off,
-			 const size_t num_bytes, const char *expected)
+static int test_ss_erase(const char *in, size_t byte_off, size_t num_bytes,
+			 const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
@@ -377,8 +377,8 @@ static int test_ss_erase(const char *in, const size_t byte_off,
 	return res;
 }
 
-static int test_ss_erase_u(const char *in, const size_t char_off,
-			   const size_t num_chars, const char *expected)
+static int test_ss_erase_u(const char *in, size_t char_off, size_t num_chars,
+			   const char *expected)
 {
 	srt_string *a = ss_dup_c(in);
 	int res = a ? 0 : 1;
@@ -396,7 +396,7 @@ static int test_ss_erase_u(const char *in, const size_t char_off,
 	return res;
 }
 
-static int test_ss_free(const size_t max_size)
+static int test_ss_free(size_t max_size)
 {
 	srt_string *a = ss_alloc(max_size);
 	int res = a ? 0 : 1;
@@ -405,7 +405,7 @@ static int test_ss_free(const size_t max_size)
 	return res;
 }
 
-static int test_ss_len(const char *a, const size_t expected_size)
+static int test_ss_len(const char *a, size_t expected_size)
 {
 	srt_string *sa = ss_dup_c(a);
 	const srt_string *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
@@ -417,7 +417,7 @@ static int test_ss_len(const char *a, const size_t expected_size)
 	return res;
 }
 
-static int test_ss_len_u(const char *a, const size_t expected_size)
+static int test_ss_len_u(const char *a, size_t expected_size)
 {
 	srt_string *sa = ss_dup_c(a);
 	const srt_string *sb = ss_crefa(a), *sc = ss_refa_buf(a, strlen(a));
@@ -432,7 +432,7 @@ static int test_ss_len_u(const char *a, const size_t expected_size)
 /* clang-format off */
 static int test_ss_capacity()
 {
-	const size_t test_max_size = 100;
+	size_t test_max_size = 100;
 	srt_string *a = ss_alloc(test_max_size);
 	const srt_string *b = ss_crefa("123");
 	int res = !a ? 1 :
@@ -565,7 +565,7 @@ static int test_ss_dup_w()
 	return res;
 }
 
-static int test_ss_dup_int(const int64_t num, const char *expected)
+static int test_ss_dup_int(int64_t num, const char *expected)
 {
 	srt_string *a = ss_dup_int(num);
 	int res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
@@ -611,8 +611,8 @@ static int test_ss_dup_toupper(const srt_string *a, const srt_string *b)
 	return res;
 }
 
-static int test_ss_dup_erase(const char *in, const size_t off,
-			     const size_t size, const char *expected)
+static int test_ss_dup_erase(const char *in, size_t off, size_t size,
+			     const char *expected)
 {
 	srt_string *a = ss_dup_c(in), *b = ss_dup_erase(a, off, size);
 	int res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
@@ -764,7 +764,7 @@ static int test_ss_dup_printf()
 	return res;
 }
 
-static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
+static int test_ss_dup_printf_va(const char *expected, size_t max_size,
 				 const char *fmt, ...)
 {
 	int res;
@@ -778,7 +778,7 @@ static int test_ss_dup_printf_va(const char *expected, const size_t max_size,
 	return res;
 }
 
-static int test_ss_dup_char(const int32_t in, const char *expected)
+static int test_ss_dup_char(int32_t in, const char *expected)
 {
 	srt_string *a = ss_dup_char(in);
 	int res = !a ? 1 : !strcmp(ss_to_c(a), expected) ? 0 : 2;
@@ -789,7 +789,7 @@ static int test_ss_dup_char(const int32_t in, const char *expected)
 static int test_ss_dup_read(const char *pattern)
 {
 	int res = 1;
-	const size_t pattern_size = strlen(pattern);
+	size_t pattern_size = strlen(pattern);
 	srt_string *s = NULL;
 	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
 	if (f) {
@@ -987,7 +987,7 @@ static int test_ss_cpy_wn()
 	return res;
 }
 
-static int test_ss_cpy_int(const int64_t num, const char *expected)
+static int test_ss_cpy_int(int64_t num, const char *expected)
 {
 	int res;
 	srt_string *a = NULL;
@@ -1033,8 +1033,8 @@ static int test_ss_cpy_toupper(const srt_string *a, const srt_string *b)
 	return res;
 }
 
-static int test_ss_cpy_erase(const char *in, const size_t off,
-			     const size_t size, const char *expected)
+static int test_ss_cpy_erase(const char *in, size_t off, size_t size,
+			     const char *expected)
 {
 	int res;
 	srt_string *a = ss_dup_c(in), *b = ss_dup_c("garbage i!&/()=");
@@ -1186,7 +1186,7 @@ static int test_ss_cpy_printf()
 	return res;
 }
 
-static int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
+static int test_ss_cpy_printf_va(const char *expected, size_t max_size,
 				 const char *fmt, ...)
 {
 	int res;
@@ -1200,7 +1200,7 @@ static int test_ss_cpy_printf_va(const char *expected, const size_t max_size,
 	return res;
 }
 
-static int test_ss_cpy_char(const int32_t in, const char *expected)
+static int test_ss_cpy_char(int32_t in, const char *expected)
 {
 	int res;
 	srt_string *a = ss_dup_c("zz");
@@ -1214,12 +1214,12 @@ static int test_ss_cpy_char(const int32_t in, const char *expected)
 static int test_ss_cpy_read()
 {
 	int res = 1;
-	const size_t max_buf = 512;
+	size_t max_buf = 512;
 	srt_string *ah = NULL;
 	srt_string *as = ss_alloca(max_buf);
 	size_t write_size;
 	const char *pattern = "hello world";
-	const size_t pattern_size = strlen(pattern);
+	size_t pattern_size = strlen(pattern);
 	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
 	ss_cpy(&as, ah);
 	if (f) {
@@ -1452,8 +1452,7 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 	return res;
 }
 
-static int test_ss_cat_int(const char *in, const int64_t num,
-			   const char *expected)
+static int test_ss_cat_int(const char *in, int64_t num, const char *expected)
 {
 	int res;
 	srt_string *a = ss_dup_c(in);
@@ -1495,9 +1494,8 @@ static int test_ss_cat_toupper(const srt_string *a, const srt_string *b,
 	return res;
 }
 
-static int test_ss_cat_erase(const char *prefix, const char *in,
-			     const size_t off, const size_t size,
-			     const char *expected)
+static int test_ss_cat_erase(const char *prefix, const char *in, size_t off,
+			     size_t size, const char *expected)
 {
 	int res;
 	srt_string *a = ss_dup_c(in), *b = ss_dup_c(prefix);
@@ -1673,10 +1671,10 @@ static int test_ss_cat_char()
 static int test_ss_cat_read()
 {
 	int res = 1;
-	const size_t max_buf = 512;
+	size_t max_buf = 512;
 	srt_string *ah = ss_dup_c("hello "), *as = ss_alloca(max_buf);
 	const char *pattern = "hello world", *suffix = "world";
-	const size_t suffix_size = strlen(suffix);
+	size_t suffix_size = strlen(suffix);
 	FILE *f = fopen(STEST_FILE, S_FOPEN_BINARY_RW_TRUNC);
 	ss_cpy(&as, ah);
 	if (f) {
@@ -1738,7 +1736,7 @@ static int test_ss_check()
 	return res;
 }
 
-static int test_ss_replace(const char *s, const size_t off, const char *s1,
+static int test_ss_replace(const char *s, size_t off, const char *s1,
 			   const char *s2, const char *expected)
 {
 	srt_string *a = ss_dup_c(s), *b = ss_dup_c(s1), *c = ss_dup_c(s2);
@@ -1768,7 +1766,7 @@ static int test_ss_to_w(const char *in)
 	/* wchar_t == 2 -> UTF16, it could require twice the length
 	 * wchar_t > 2 -> UTF32
 	 */
-	const size_t ssa = ss_len(a) * (sizeof(wchar_t) == 2 ? 2 : 1);
+	size_t ssa = ss_len(a) * (sizeof(wchar_t) == 2 ? 2 : 1);
 	wchar_t *out =
 		a ? (wchar_t *)s_malloc(sizeof(wchar_t) * (ssa + 1)) : NULL;
 	size_t out_size = 0;
@@ -1787,7 +1785,7 @@ static int test_ss_to_w(const char *in)
 	return res;
 }
 
-static int test_ss_find(const char *a, const char *b, const size_t expected_loc)
+static int test_ss_find(const char *a, const char *b, size_t expected_loc)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	int res =
@@ -1899,8 +1897,8 @@ static int test_ss_cmpi(const char *a, const char *b, int expected_cmp)
 	return res;
 }
 
-static int test_ss_ncmp(const char *a, const size_t a_off, const char *b,
-			const size_t n, int expected_cmp)
+static int test_ss_ncmp(const char *a, size_t a_off, const char *b, size_t n,
+			int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	int res =
@@ -1918,8 +1916,8 @@ static int test_ss_ncmp(const char *a, const size_t a_off, const char *b,
 	return res;
 }
 
-static int test_ss_ncmpi(const char *a, const size_t a_off, const char *b,
-			 const size_t n, int expected_cmp)
+static int test_ss_ncmpi(const char *a, size_t a_off, const char *b, size_t n,
+			 int expected_cmp)
 {
 	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
 	int res = (!sa || !sb) ? 1
@@ -2026,16 +2024,14 @@ static int test_ss_csum32()
 	return res;
 }
 
-static int test_sc_utf8_to_wc(const char *utf8_char,
-			      const int unicode32_expected)
+static int test_sc_utf8_to_wc(const char *utf8_char, int unicode32_expected)
 {
 	int uc_out = 0;
-	const size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6, &uc_out, NULL);
+	size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6, &uc_out, NULL);
 	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
 }
 
-static int test_sc_wc_to_utf8(const int unicode32,
-			      const char *utf8_char_expected)
+static int test_sc_wc_to_utf8(int unicode32, const char *utf8_char_expected)
 {
 	char utf8[6];
 	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);
@@ -2349,7 +2345,7 @@ static int test_sv_capacity()
 
 static int test_sv_capacity_left()
 {
-	const size_t init_alloc = 10;
+	size_t init_alloc = 10;
 	srt_vector *a = sv_alloc_t(SV_I8, init_alloc);
 	int res = !a ? 1
 		     : (sv_capacity(a) - sv_len(a) == init_alloc ? 0 : 2)
@@ -2443,7 +2439,7 @@ static int test_sv_dup()
 	TEST_SV_DUP_VARS(h);
 	TEST_SV_DUP_VARS(i);
 	int res = 0;
-	const int val = 123;
+	int val = 123;
 	TEST_SV_DUP(z, 0, sv_alloc, sv_push,
 		    ((const struct AA *)sv_at(z, 0))->a == a1.a,
 		    ((const struct AA *)sv_pop(z))->a
@@ -2507,7 +2503,7 @@ static int test_sv_dup_erase()
 	TEST_SV_DUP_ERASE_VARS(h);
 	TEST_SV_DUP_ERASE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_DUP_ERASE(z, 0, sv_alloc, sv_push,
 			  ((const struct AA *)sv_at(z2, 0))->a
 				  == ((const struct AA *)sv_at(z2, 1))->a,
@@ -2576,7 +2572,7 @@ static int test_sv_dup_resize()
 	TEST_SV_DUP_RESIZE_VARS(h);
 	TEST_SV_DUP_RESIZE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_DUP_RESIZE(z, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF,
 			   &a1, &a2);
 	TEST_SV_DUP_RESIZE(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s);
@@ -2626,7 +2622,7 @@ static int test_sv_cpy()
 	TEST_SV_CPY_VARS(h);
 	TEST_SV_CPY_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	srt_vector *v1 = sv_alloc_t(SV_I8, 0), *v2 = sv_alloc_t(SV_I64, 0),
 		   *v1a3 = sv_alloca_t(SV_I8, 3),
 		   *v1a24 = sv_alloca_t(SV_I8, 24);
@@ -2701,7 +2697,7 @@ static int test_sv_cpy_erase()
 	TEST_SV_CPY_ERASE_VARS(h);
 	TEST_SV_CPY_ERASE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_CPY_ERASE(z, 0, sv_alloc, sv_push,
 			  ((const struct AA *)sv_at(z2, 0))->a
 				  == ((const struct AA *)sv_at(z2, 1))->a,
@@ -2770,7 +2766,7 @@ static int test_sv_cpy_resize()
 	TEST_SV_CPY_RESIZE_VARS(h);
 	TEST_SV_CPY_RESIZE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_CPY_RESIZE(z, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF,
 			   &a1, &a2);
 	TEST_SV_CPY_RESIZE(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s);
@@ -2810,7 +2806,7 @@ static int test_sv_cat()
 	TEST_SV_CAT_VARS(h);
 	TEST_SV_CAT_VARS(i);
 	int res = 0;
-	const int w = 123;
+	int w = 123;
 	TEST_SV_CAT(z, 0, sv_alloc, sv_push,
 		    ((const struct AA *)sv_at(z, 3))->a == a1.a,
 		    ((const struct AA *)sv_pop(z))->a
@@ -2878,7 +2874,7 @@ static int test_sv_cat_erase()
 	TEST_SV_CAT_ERASE_VARS(h);
 	TEST_SV_CAT_ERASE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_CAT_ERASE(z, 0, sv_alloc, sv_push,
 			  ((const struct AA *)sv_at(z2, 0))->a
 				  == ((const struct AA *)sv_at(z2, 2))->a,
@@ -2947,7 +2943,7 @@ static int test_sv_cat_resize()
 	TEST_SV_CAT_RESIZE_VARS(h);
 	TEST_SV_CAT_RESIZE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_CAT_RESIZE(z, 0, sv_alloc, sv_push, sizeof(struct AA), NO_CMPF,
 			   &a1, &a2);
 	TEST_SV_CAT_RESIZE(b, 1, sv_alloc_t, sv_push_i, SV_I8, X_CMPF, r, s);
@@ -2993,7 +2989,7 @@ static int test_sv_erase()
 	TEST_SV_ERASE_VARS(h);
 	TEST_SV_ERASE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_ERASE(z, 0, sv_alloc, sv_push,
 		      ((const struct AA *)sv_at(z, 0))->a
 			      == ((const struct AA *)sv_at(z, 1))->a,
@@ -3055,7 +3051,7 @@ static int test_sv_resize()
 	TEST_SV_RESIZE_VARS(h);
 	TEST_SV_RESIZE_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_RESIZE(z, 0, sv_alloc, sv_push,
 		       ((const struct AA *)sv_at(z, 0))->a
 			       == ((const struct AA *)sv_at(z, 1))->a,
@@ -3134,8 +3130,8 @@ static int test_sv_sort()
 	TEST_SV_SORT_VARS(h);
 	TEST_SV_SORT_VARS(j);
 	int res = 0;
-	const int r = 12, s = 34, t = -1;
-	const unsigned tu = 11;
+	int r = 12, s = 34, t = -1;
+	unsigned tu = 11;
 	srt_vector *v8i = sv_alloc_t(SV_I8, 0), *v8u = sv_alloc_t(SV_U8, 0),
 		   *v16i = sv_alloc_t(SV_I16, 0), *v16u = sv_alloc_t(SV_U16, 0),
 		   *v32i = sv_alloc_t(SV_I32, 0), *v32u = sv_alloc_t(SV_U32, 0),
@@ -3287,7 +3283,7 @@ static int test_sv_find()
 	TEST_SV_FIND_VARS(h);
 	TEST_SV_FIND_VARS(i);
 	int res = 0;
-	const int r = 12, s = 34;
+	int r = 12, s = 34;
 	TEST_SV_FIND(z, 0, sv_alloc, sv_push, sv_find(z, 0, &a2) == 6,
 		     sizeof(struct AA), NO_CMPF, &a1, &a2);
 #define SVIAT(v) sv_find_i(v, 0, s) == 6
@@ -3479,7 +3475,7 @@ static int cmp1(const struct MyNode1 *a, const struct MyNode1 *b)
 }
 
 #ifdef S_EXTRA_TREE_TEST_DEBUG
-static void ndx2s(char *out, const size_t out_max, const srt_tndx id)
+static void ndx2s(char *out, size_t out_max, const srt_tndx id)
 {
 	if (id == ST_NIL)
 		strcpy(out, "nil");
@@ -3559,8 +3555,8 @@ static int test_st_insert_del()
 	int res = 0;
 	const struct MyNode1 *nr;
 	int i = 0;
-	const int tree_elems = 90;
-	const int cbase = ' ';
+	int tree_elems = 90;
+	int cbase = ' ';
 	ST_ENV_TEST_AUX;
 	for (;;) {
 		/* Case 1: add in order, delete in order */
@@ -4336,7 +4332,7 @@ static int test_sm_itr()
 
 static int test_sm_sort_to_vectors()
 {
-	const size_t test_elems = 100;
+	size_t test_elems = 100;
 	srt_map *m = sm_alloc(SM_II32, test_elems);
 	srt_vector *kv = NULL, *vv = NULL, *kv2 = NULL, *vv2 = NULL;
 	int res = m ? 0 : 1;
@@ -4393,7 +4389,7 @@ static int test_sm_sort_to_vectors()
 
 static int test_sm_double_rotation()
 {
-	const size_t test_elems = 15;
+	size_t test_elems = 15;
 	srt_map *m = sm_alloc(SM_II32, test_elems);
 	srt_vector *kv = NULL, *vv = NULL, *kv2 = NULL, *vv2 = NULL;
 	int res = m ? 0 : 1;
@@ -4626,10 +4622,10 @@ static int test_sms()
 
 static int test_shs()
 {
-	int i, res = 0, tcount = 3;
-	size_t cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0, cnt_s2 = 0;
-	size_t processed_i32, processed_u32, processed_i, processed_s,
-		processed_s2;
+	int res = 0;
+	size_t i, tcount = 3, cnt_i32 = 0, cnt_u32 = 0, cnt_i = 0, cnt_s = 0,
+		  cnt_s2 = 0, processed_i32, processed_u32, processed_i,
+		  processed_s, processed_s2;
 	const srt_string *k[] = {ss_crefa("k000"), ss_crefa("k001"),
 				 ss_crefa("k002")};
 	/*

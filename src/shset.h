@@ -63,7 +63,7 @@ typedef srt_hmap srt_hset;
 #define shs_alloca shm_alloca
 /*
 #API: |Allocate hash set (stack)|set type; initial reserve|map|O(n)|1;2|
-srt_hset *shs_alloca(const enum eSHS_Type t, const size_t n);
+srt_hset *shs_alloca(enum eSHS_Type t, size_t n);
 */
 
 /* #API: |Allocate hash set (heap)|set type; initial reserve|hash set|O(n)|1;2| */
@@ -73,13 +73,13 @@ S_INLINE srt_hset *shs_alloc(enum eSHS_Type t, size_t init_size)
 }
 
 /* #API: |Ensure space for extra elements|hash set;number of extra elements|extra size allocated|O(1)|1;2| */
-S_INLINE size_t shs_grow(srt_hset **hs, const size_t extra_elems)
+S_INLINE size_t shs_grow(srt_hset **hs, size_t extra_elems)
 {
 	return shm_grow(hs, extra_elems);
 }
 
 /* #API: |Ensure space for elements|hash set;absolute element reserve|reserved elements|O(1)|1;2| */
-S_INLINE size_t shs_reserve(srt_hset **hs, const size_t max_elems)
+S_INLINE size_t shs_reserve(srt_hset **hs, size_t max_elems)
 {
 	return shm_reserve(hs, max_elems);
 }

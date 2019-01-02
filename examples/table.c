@@ -3,7 +3,7 @@
  *
  * Table import/export between CSV/HTML/JSON formats example using libsrt
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * CSV (partial): http://tools.ietf.org/html/rfc4180
@@ -30,20 +30,20 @@
 
 enum EncStep { SENC_begin, SENC_field, SENC_end };
 
-typedef void (*f_enc)(enum EncStep em, const size_t nrow, const size_t nfield,
+typedef void (*f_enc)(enum EncStep em, size_t nrow, size_t nfield,
 		      const srt_string *field, srt_string **out);
 typedef ssize_t (*f_dec)(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 
-static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_csv(enum EncStep em, size_t nrow, size_t nfield,
 		    const srt_string *field, srt_string **out);
-static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_html(enum EncStep em, size_t nrow, size_t nfield,
 		     const srt_string *field, srt_string **out);
-static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_json(enum EncStep em, size_t nrow, size_t nfield,
 		     const srt_string *field, srt_string **out);
 static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 static ssize_t html2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
 static ssize_t json2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f);
-static int exit_msg(const char **argv, const char *msg, const int code);
+static int exit_msg(const char **argv, const char *msg, int code);
 
 int main(int argc, const char **argv)
 {
@@ -64,7 +64,7 @@ int main(int argc, const char **argv)
 	return 0;
 }
 
-static int exit_msg(const char **argv, const char *msg, const int code)
+static int exit_msg(const char **argv, const char *msg, int code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
@@ -83,7 +83,7 @@ static int exit_msg(const char **argv, const char *msg, const int code)
 	return code;
 }
 
-static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_csv(enum EncStep em, size_t nrow, size_t nfield,
 		    const srt_string *field, srt_string **out)
 {
 	switch (em) {
@@ -114,7 +114,7 @@ static void enc_csv(enum EncStep em, const size_t nrow, const size_t nfield,
 #define HTML_TDX "</td>"
 #define HTML_TDX_S 5
 
-static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_html(enum EncStep em, size_t nrow, size_t nfield,
 		     const srt_string *field, srt_string **out)
 {
 	switch (em) {
@@ -157,7 +157,7 @@ static void enc_html(enum EncStep em, const size_t nrow, const size_t nfield,
 #define JS_QT "\""
 #define JS_QT_S 1
 
-static void enc_json(enum EncStep em, const size_t nrow, const size_t nfield,
+static void enc_json(enum EncStep em, size_t nrow, size_t nfield,
 		     const srt_string *field, srt_string **out)
 {
 	switch (em) {
@@ -275,9 +275,9 @@ static ssize_t csv2x(FILE *in_fd, FILE *out_fd, f_enc out_enc_f)
 	return nrow;
 }
 
-static srt_bool sflush(srt_string *wb, FILE *out_fd, const size_t buf_size)
+static srt_bool sflush(srt_string *wb, FILE *out_fd, size_t buf_size)
 {
-	const size_t wbss = ss_size(wb);
+	size_t wbss = ss_size(wb);
 	return wbss > buf_size && ss_write(out_fd, wb, 0, wbss) < 0
 		       ? S_FALSE
 		       :       /* write error */

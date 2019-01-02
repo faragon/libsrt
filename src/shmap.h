@@ -229,7 +229,7 @@ S_INLINE uint8_t shm_elem_size(int t)
 
 S_INLINE size_t sh_hdr0_size()
 {
-	const size_t as = sizeof(void *);
+	size_t as = sizeof(void *);
 	return (sizeof(srt_hmap) / as) * as + (sizeof(srt_hmap) % as ? as : 0);
 }
 
@@ -259,7 +259,7 @@ S_INLINE unsigned shm_s2hb(size_t max_size)
 
 /*
 #API: |Allocate hash map (stack)|hash map type; initial reserve|hmap|O(n)|1;2|
-srt_hmap *shm_alloca(const enum eSHM_Type t, const size_t n);
+srt_hmap *shm_alloca(enum eSHM_Type t, size_t n);
 */
 #define shm_alloca(type, max_size)					       \
 	shm_alloc_raw(type, S_TRUE,					       \
@@ -269,9 +269,8 @@ srt_hmap *shm_alloca(const enum eSHM_Type t, const size_t n);
 		     sh_hdr_size(type, snextpow2(max_size)),		       \
 		     shm_elem_size(type), max_size, shm_s2hb(max_size))
 
-srt_hmap *shm_alloc_raw(int t, const srt_bool ext_buf, void *buffer,
-			const size_t hdr_size, const size_t elem_size,
-			const size_t max_size, const size_t np2_size);
+srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,
+			size_t elem_size, size_t max_size, size_t np2_size);
 
 srt_hmap *shm_alloc_aux(int t, size_t init_size);
 
@@ -285,10 +284,10 @@ SD_BUILDFUNCS_FULL_ST(shm, srt_hmap, 0)
 
 /*
 #API: |Ensure space for extra elements|hash map;number of extra elements|extra size allocated|O(1)|1;2|
-size_t shm_grow(srt_hmap **hm, const size_t extra_elems)
+size_t shm_grow(srt_hmap **hm, size_t extra_elems)
 
 #API: |Ensure space for elements|hash map;absolute element reserve|reserved elements|O(1)|1;2|
-size_t shm_reserve(srt_hmap **hm, const size_t max_elems)
+size_t shm_reserve(srt_hmap **hm, size_t max_elems)
 
 #API: |Make the hmap use the minimum possible memory|hmap|hmap reference (optional usage)|O(1) for allocators using memory remap; O(n) for naive allocators|1;2|
 srt_hmap *shm_shrink(srt_hmap **hm);

@@ -13,12 +13,12 @@ libsrt is a C library that provides string, vector, bit set, set, map, hash set,
 
 Key points:
 
-* Easy: write high-level-like C code. Write code faster and safer.
+* Safe: write high-level-like C code. Write code faster and safer.
 * Fast: using O(n)/O(log n)/O(1) state of the art algorithms.
-* Useful: strings supporting raw data handling (per-byte), vector, set, map, hash set, and hash map data structures.
+* Rich: strings supporting raw data handling (per-byte), vector, bit set, set, map, hash set, and hash map data structures.
 * Efficient: space optimized, minimum allocation calls (heap and stack support for ALL data structures).
 * Compatible: OS-independent (e.g. built-in space-optimized UTF-8 support).
-* Predictable: suitable for microcontrollers and hard real-time compliant code.
+* Predictable: intended for both general purpose and for hard real-time applications.
 * Unicode: although string internal representation is raw data (bytes), functions for handling Unicode interpretation/generation/transformation are provided, so when Unicode-specific functions are used, the result of these functions is stored internally as UTF-8 (also, caching some operations, like Unicode string length -e.g. ss\_len()/ss\_size() give length in bytes, and ss\_len\_u() the length in Unicode characters-).
 
 How to build
@@ -130,7 +130,6 @@ Generic disadvantages/limitations
 ===
 
 * Double pointer usage: because of using just one allocation, write operations require to address a double pointer, so in the case of reallocation the source pointer could be changed.
-
 * Concurrent read-only operations are safe, but concurrent read/write must be protected by the user (e.g. using mutexes or spinlocks). That can be seen as a disadvantage or as a "feature" (it is faster).
 
 String-specific advantages (srt\_string)
@@ -226,8 +225,8 @@ Set and map advantages (srt\_set and srt\_map)
 Set and map disadvantages/limitations (srt\_set and srt\_map)
 ===
 
-* Because of being implemented as a tree, it can slower than a hash-map on average, specially on integer data. However, total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
-* There is room for node deletion speed up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
+* Because of being implemented as a tree, it can be slower than a hash-map on average, specially on integer data. However, total execution time is not that bad, as because of allocation heuristics a lot of calls to the allocator are avoided.
+* There is room for node deletion speed-up (currently deletion is a bit slower than insertion, because of an additional tree search used for avoiding having memory fragmentation, as implementation guarantees linear/compacted memory usage, it could be optimized with a small LRU for cases of multiple delete/insert operation mix).
 
 Hash set and hash map advantages (srt\_hset and srt\_hmap)
 ===
@@ -273,7 +272,7 @@ Test-covered platforms
 License
 ===
 
-Copyright (c) 2015-2018, F. Aragon. All rights reserved.
+Copyright (c) 2015-2019, F. Aragon. All rights reserved.
 Released under the BSD 3-Clause License (see the LICENSE file included).
 
 Contact
@@ -293,4 +292,3 @@ Acknowledgements and references
 ---
 
 Check [doc/references.md](https://github.com/faragon/libsrt/blob/master/doc/references.md)
-

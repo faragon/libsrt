@@ -12,7 +12,7 @@
  *   suitable for memory-mapped storage when using nodes without references
  *   (e.g. key and value being integers, or constant-size containers).
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -54,7 +54,7 @@ struct NodeContext {
  * Internal functions
  */
 
-S_INLINE void set_lr(srt_tnode *n, const enum STNDir d, const srt_tndx v)
+S_INLINE void set_lr(srt_tnode *n, enum STNDir d, srt_tndx v)
 {
 	if (n) {
 		if (d == ST_Left)
@@ -64,7 +64,7 @@ S_INLINE void set_lr(srt_tnode *n, const enum STNDir d, const srt_tndx v)
 	}
 }
 
-S_INLINE srt_tndx get_lr(const srt_tnode *n, const enum STNDir d)
+S_INLINE srt_tndx get_lr(const srt_tnode *n, enum STNDir d)
 {
 	return d == ST_Left ? n->x.l : n->r;
 }
@@ -88,8 +88,8 @@ S_INLINE srt_tnode *locate_parent(srt_tree *t, const struct NodeContext *son,
 S_INLINE void update_node_data(const srt_tree *t, srt_tnode *tgt,
 			       const srt_tnode *src)
 {
-	const size_t node_header_size = sizeof(srt_tnode);
-	const size_t copy_size = t->d.elem_size - node_header_size;
+	size_t node_header_size = sizeof(srt_tnode),
+	       copy_size = t->d.elem_size - node_header_size;
 	char *tgtp = (char *)tgt + node_header_size;
 	const char *srcp = (const char *)src + node_header_size;
 	memcpy(tgtp, srcp, copy_size);
@@ -114,14 +114,14 @@ S_INLINE srt_bool is_red(const srt_tree *t, srt_tndx node_id)
 	return get_node_r(t, node_id)->x.is_red;
 }
 
-S_INLINE void set_red(srt_tree *t, const srt_tndx node_id, const srt_bool red)
+S_INLINE void set_red(srt_tree *t, srt_tndx node_id, srt_bool red)
 {
 	if (node_id != ST_NIL)
 		get_node(t, node_id)->x.is_red = red;
 }
 
 /* counter-direction */
-S_INLINE enum STNDir cd(const enum STNDir d)
+S_INLINE enum STNDir cd(enum STNDir d)
 {
 	return d == ST_Left ? ST_Right : ST_Left;
 }
@@ -138,33 +138,32 @@ S_INLINE enum STNDir cd(const enum STNDir d)
 	set_red(t, x, S_TRUE);                                                 \
 	set_red(t, y, S_FALSE);
 
-S_INLINE srt_tndx rot1x(srt_tree *t, srt_tnode *xn, const srt_tndx x,
-			const enum STNDir d, const enum STNDir xd)
+S_INLINE srt_tndx rot1x(srt_tree *t, srt_tnode *xn, srt_tndx x, enum STNDir d,
+			enum STNDir xd)
 {
 	F_rotate1X;
 	return y;
 }
 
-S_INLINE void rot1x_p(srt_tree *t, srt_tnode *xn, const srt_tndx x,
-		      const enum STNDir d, const enum STNDir xd, srt_tnode *xpn)
+S_INLINE void rot1x_p(srt_tree *t, srt_tnode *xn, srt_tndx x, enum STNDir d,
+		      enum STNDir xd, srt_tnode *xpn)
 {
 	F_rotate1X;
 	set_lr(xpn, d, y);
 }
 
-S_INLINE srt_tnode *rot1x_y(srt_tree *t, srt_tnode *xn, const srt_tndx x,
-			    const enum STNDir d, const enum STNDir xd,
-			    srt_tndx *y_out)
+S_INLINE srt_tnode *rot1x_y(srt_tree *t, srt_tnode *xn, srt_tndx x,
+			    enum STNDir d, enum STNDir xd, srt_tndx *y_out)
 {
 	F_rotate1X;
 	*y_out = y;
 	return yn;
 }
 
-S_INLINE srt_tndx rot2x(srt_tree *t, srt_tnode *xn, const srt_tndx x,
-			const enum STNDir d, const enum STNDir xd)
+S_INLINE srt_tndx rot2x(srt_tree *t, srt_tnode *xn, srt_tndx x, enum STNDir d,
+			enum STNDir xd)
 {
-	const srt_tndx child = get_lr(xn, xd);
+	srt_tndx child = get_lr(xn, xd);
 	srt_tnode *child_node = get_node(t, child);
 	rot1x_p(t, child_node, child, xd, d, xn);
 	return rot1x(t, xn, x, d, xd);
@@ -187,7 +186,7 @@ S_INLINE void st_checkfix_root(srt_tree *t, srt_tndx pivot, srt_tndx new_pivot)
  * purposes (for tree validation tests).
  * Returns: 0: error, > 0: tree height from a given node
  */
-static size_t st_assert_aux(const srt_tree *t, const srt_tndx ndx)
+static size_t st_assert_aux(const srt_tree *t, srt_tndx ndx)
 {
 	size_t l, r;
 	const srt_tnode *n;
@@ -225,8 +224,8 @@ static size_t st_assert_aux(const srt_tree *t, const srt_tndx ndx)
  * Allocation
  */
 
-srt_tree *st_alloc_raw(srt_cmp cmp_f, const srt_bool ext_buf, void *buffer,
-		       const size_t elem_size, const size_t max_size)
+srt_tree *st_alloc_raw(srt_cmp cmp_f, srt_bool ext_buf, void *buffer,
+		       size_t elem_size, size_t max_size)
 {
 	srt_tree *t;
 	RETURN_IF(!cmp_f || !elem_size || !buffer, st_void);
@@ -238,8 +237,7 @@ srt_tree *st_alloc_raw(srt_cmp cmp_f, const srt_bool ext_buf, void *buffer,
 	return t;
 }
 
-srt_tree *st_alloc(srt_cmp cmp_f, const size_t elem_size,
-		   const size_t init_size)
+srt_tree *st_alloc(srt_cmp cmp_f, size_t elem_size, size_t init_size)
 {
 	size_t alloc_size = sd_alloc_size_raw(sizeof(srt_tree), elem_size,
 					      init_size, S_FALSE);
@@ -269,8 +267,7 @@ srt_bool st_insert(srt_tree **tt, const srt_tnode *n)
 	return st_insert_rw(tt, n, NULL);
 }
 
-srt_bool st_insert_rw(srt_tree **tt, const srt_tnode *n,
-		      const srt_tree_rewrite rw_f)
+srt_bool st_insert_rw(srt_tree **tt, const srt_tnode *n, srt_tree_rewrite rw_f)
 {
 	srt_tree *t;
 	srt_tnode auxn = EMPTY_STN;
@@ -565,8 +562,8 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 
 const srt_tnode *st_locate(const srt_tree *t, const srt_tnode *n)
 {
-	const srt_tnode *cn = get_node_r(t, t->root);
 	int r;
+	const srt_tnode *cn = get_node_r(t, t->root);
 	for (;;)
 		if (!(r = t->cmp_f(cn, n))
 		    || !(cn = get_node_r(
@@ -591,7 +588,7 @@ enum eTMode { TR_Preorder, TR_Inorder, TR_Postorder };
 #define RBT_MAX_DEPTH_LOG2 65
 
 static ssize_t srt_treer_aux(const srt_tree *t, st_traverse f, void *context,
-			     const enum eTMode m)
+			     enum eTMode m)
 {
 	size_t ts;
 	struct STreeScan p[2 * RBT_MAX_DEPTH_LOG2]; /* 2 * (log2(ts_max) + 1) */

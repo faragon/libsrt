@@ -3,7 +3,7 @@
  *
  * Image processing example using libsrt
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Observations:
@@ -56,8 +56,8 @@ static srt_bool valid_tga(const char *h)
 	       && (h[TGA_TYPE] == TGA_RAW_RGB || h[TGA_TYPE] == TGA_RAW_GRAY);
 }
 
-static srt_bool tga_rgb_swap(const size_t bpp, const size_t buf_size,
-			     const char *s, char *t)
+static srt_bool tga_rgb_swap(size_t bpp, size_t buf_size, const char *s,
+			     char *t)
 {
 	size_t i;
 	RETURN_IF(!s || !t, S_FALSE);
@@ -86,8 +86,7 @@ static size_t tga2rgb(srt_string **rgb, struct RGB_Info *ri,
 		      const srt_string *tga)
 {
 	const char *t = ss_get_buffer_r(tga);
-	const size_t ts = ss_size(tga);
-	size_t rgb_bytes;
+	size_t ts = ss_size(tga), rgb_bytes;
 	ssize_t i;
 	RETURN_IF(ts < TGA_RGBHDR || !valid_tga(t), 0);
 	rgbi_set(ri, S_LD_LE_U16(t + TGA_W), S_LD_LE_U16(t + TGA_H),
@@ -628,7 +627,7 @@ static size_t rgb_info(const srt_string *rgb, const struct RGB_Info *ri)
 	size_t off2;
 	unsigned pixels, l, r, c;
 	if (rgb && ri) {
-		const size_t ss = ss_size(rgb);
+		size_t ss = ss_size(rgb);
 		size_t cmax = ri->bpp == 32 ? 0xffffffff
 					    : 0xffffffff & ((1 << ri->bpp) - 1);
 		size_t i, uqp = 0;
@@ -701,7 +700,7 @@ size_t any2rgb(srt_string **rgb, struct RGB_Info *ri, const srt_string *in,
 
 /* clang-format off */
 size_t rgb2type(srt_string **out, enum ImgTypes ot, const srt_string *rgb0,
-		const struct RGB_Info *ri, const int f)
+		const struct RGB_Info *ri, int f)
 {
 	size_t r;
 	srt_string *rgb_aux = NULL;

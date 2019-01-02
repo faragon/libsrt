@@ -3,7 +3,7 @@
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -73,7 +73,7 @@
  */
 
 /* clang-format off */
-size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
+size_t sc_utf8_char_size(const char *s, size_t off, size_t max_off,
 			 size_t *enc_errors)
 {
 	int c;
@@ -93,8 +93,7 @@ size_t sc_utf8_char_size(const char *s, const size_t off, const size_t max_off,
 }
 /* clang-format on */
 
-size_t sc_utf8_count_chars(const char *s, const size_t s_size,
-			   size_t *enc_errors)
+size_t sc_utf8_count_chars(const char *s, size_t s_size, size_t *enc_errors)
 {
 #ifdef S_ENABLE_UTF8_CHAR_COUNT_HEURISTIC_OPTIMIZATION
 	union s_u32 m1;
@@ -124,7 +123,7 @@ size_t sc_utf8_count_chars(const char *s, const size_t s_size,
 }
 
 /* clang-format off */
-size_t sc_wc_to_utf8_size(const int32_t c)
+size_t sc_wc_to_utf8_size(int32_t c)
 {
 	return c <= 0x7f ? 1 : c <= 0x7ff? 2 : c <= 0xffff? 3 :
 		c <= 0x1fffff? 4 : c <= 0x3ffffff? 5 : 6;
@@ -147,10 +146,9 @@ size_t sc_wc_to_utf8_size(const int32_t c)
 	SC_WC2UTF8_3(s, off, len, c)                                           \
 	SC_WC2UTF8_x(s, off, len, c, 6)
 
-size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
-		     const size_t max_off)
+size_t sc_wc_to_utf8(int32_t c, char *s, size_t off, size_t max_off)
 {
-	const size_t len = sc_wc_to_utf8_size(c);
+	size_t len = sc_wc_to_utf8_size(c);
 	if (s && off < max_off) {
 		switch (len) {
 		case 1:
@@ -203,7 +201,7 @@ size_t sc_wc_to_utf8(const int32_t c, char *s, const size_t off,
 
 /* BEHAVIOR: always return a character. For broken UTF-8, return the first
    byte as character. */
-size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
+size_t sc_utf8_to_wc(const char *s, size_t off, size_t max_off,
 		     int32_t *unicode_out, int *encoding_errors)
 {
 	int32_t c;
@@ -253,9 +251,8 @@ size_t sc_utf8_to_wc(const char *s, const size_t off, const size_t max_off,
 	SC_U82WC_RETURN(0, unicode_out, 1);
 }
 
-size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
-				     const size_t max_off,
-				     const size_t unicode_count,
+size_t sc_unicode_count_to_utf8_size(const char *s, size_t off, size_t max_off,
+				     size_t unicode_count,
 				     size_t *actual_unicode_count)
 {
 	size_t i, unicode_size;
@@ -271,9 +268,8 @@ size_t sc_unicode_count_to_utf8_size(const char *s, const size_t off,
 	return i - off;
 }
 
-ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
-				     const size_t s_size,
-				     int32_t (*ssc_toX)(const int32_t))
+ssize_t sc_utf8_calc_case_extra_size(const char *s, size_t off, size_t s_size,
+				     int32_t (*ssc_toX)(int32_t))
 {
 	int uchr = 0;
 	size_t i = off, char_size;
@@ -293,22 +289,22 @@ ssize_t sc_utf8_calc_case_extra_size(const char *s, const size_t off,
 
 #ifdef S_MINIMAL
 
-int32_t sc_tolower(const int32_t c)
+int32_t sc_tolower(int32_t c)
 {
 	return tolower(c);
 }
 
-int32_t sc_toupper(const int32_t c)
+int32_t sc_toupper(int32_t c)
 {
 	return toupper(c);
 }
 
-int32_t sc_tolower_tr(const int32_t c)
+int32_t sc_tolower_tr(int32_t c)
 {
 	return sc_tolower(c);
 }
 
-int32_t sc_toupper_tr(const int32_t c)
+int32_t sc_toupper_tr(int32_t c)
 {
 	return sc_toupper(c);
 }
@@ -326,7 +322,7 @@ int32_t sc_toupper_tr(const int32_t c)
 
 /* clang-format off */
 
-int32_t sc_tolower(const int32_t c)
+int32_t sc_tolower(int32_t c)
 {
 	int j = c < 0x18e ? 0 : c < 0x1a9 ? 1 : c < 0x1e0 ? 2 :
 		c < 0x386 ? 3 : c < 0x460 ? 4 : c < 0x1fb8 ? 5 :
@@ -619,11 +615,11 @@ int32_t sc_tolower(const int32_t c)
 	return c;
 }
 
-int32_t sc_toupper(const int32_t c)
+int32_t sc_toupper(int32_t c)
 {
-	const int j = c < 0x199 ? 0 : c < 0x1dd ? 1 : c < 0x260 ? 2 :
-		      c < 0x377 ? 3 : c < 0x3e1 ? 4 : c < 0x1ea1 ? 5 :
-		      c < 0x1fb0 ? 6 : c < 0x10450 ? 7 : 8;
+	int j = c < 0x199 ? 0 : c < 0x1dd ? 1 : c < 0x260 ? 2 :
+		c < 0x377 ? 3 : c < 0x3e1 ? 4 : c < 0x1ea1 ? 5 :
+		c < 0x1fb0 ? 6 : c < 0x10450 ? 7 : 8;
 	switch (j) {
 	case 0: /* < 0x199 */
 		if (c < 0x101) {
@@ -933,7 +929,7 @@ int32_t sc_toupper(const int32_t c)
 
 /* clang-format on */
 
-int32_t sc_tolower_tr(const int32_t c)
+int32_t sc_tolower_tr(int32_t c)
 {
 	RE(c, 0x49, 0x131);  /* 'I' to dotless 'i' */
 	RE(c, 0x130, 0x69);  /* 'I' with dot to 'i' */
@@ -942,7 +938,7 @@ int32_t sc_tolower_tr(const int32_t c)
 	return sc_tolower(c);
 }
 
-int32_t sc_toupper_tr(const int32_t c)
+int32_t sc_toupper_tr(int32_t c)
 {
 	RE(c, 0x131, 0x49);
 	RE(c, 0x69, 0x130);
@@ -954,15 +950,15 @@ int32_t sc_toupper_tr(const int32_t c)
 /*
  * 7-bit parallel case conversions (using the Paul Hsieh technique)
  */
-size_t sc_parallel_toX(const char *s, size_t off, const size_t max, char *o,
-		       int32_t (*ssc_toX)(const int32_t))
+size_t sc_parallel_toX(const char *s, size_t off, size_t max, char *o,
+		       int32_t (*ssc_toX)(int32_t))
 {
-	const int op_mod = ssc_toX == sc_tolower ? 1 : 0;
-	const uint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
-	const uint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
-	const size_t szm4 = max & (size_t)(~3);
 	uint32_t a, b;
 	union s_u32 m1;
+	int op_mod = ssc_toX == sc_tolower ? 1 : 0;
+	uint32_t msk1 = 0x7f7f7f7f, msk2 = 0x1a1a1a1a, msk3 = 0x20202020;
+	uint32_t msk4 = op_mod ? 0x25252525 : 0x05050505;
+	size_t szm4 = max & (size_t)(~3);
 	m1.b[0] = m1.b[1] = m1.b[2] = m1.b[3] = SSU8_SX;
 	for (; off < szm4; off += 4) {
 		a = S_LD_U32(s + off);

@@ -14,7 +14,7 @@ extern "C" {
  * #DOC tight memory usage, being implemented as a vector, so pinter
  * #DOC usage is avoided.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -60,7 +60,7 @@ struct STraverseParams {
 
 typedef int (*st_traverse)(struct STraverseParams *p);
 typedef void (*srt_tree_rewrite)(srt_tnode *node, const srt_tnode *new_data,
-				 const srt_bool existing);
+				 srt_bool existing);
 
 /*
  * Constants
@@ -74,7 +74,7 @@ typedef void (*srt_tree_rewrite)(srt_tnode *node, const srt_tnode *new_data,
 
 /*
 #NOTAPI: |Allocate tree (stack)|node compare function; node size; space preallocated to store n elements|allocated tree|O(1)|0;2|
-srt_vector *st_alloca(srt_cmp cmp_f, const size_t elem_size, const size_t max_size)
+srt_vector *st_alloca(srt_cmp cmp_f, size_t elem_size, size_t max_size)
 */
 #define st_alloca(cmp_f, elem_size, max_size)				\
 	st_alloc_raw(cmp_f, S_TRUE,					\
@@ -82,11 +82,11 @@ srt_vector *st_alloca(srt_cmp cmp_f, const size_t elem_size, const size_t max_si
 					      max_size)),		\
 		     elem_size, max_size)
 
-srt_tree *st_alloc_raw(srt_cmp cmp_f, const srt_bool ext_buf,
-		   void *buffer, const size_t elem_size, const size_t max_size);
+srt_tree *st_alloc_raw(srt_cmp cmp_f, srt_bool ext_buf,
+		   void *buffer, size_t elem_size, size_t max_size);
 
 /* #NOTAPI: |Allocate tree (heap)|compare function;element size;space preallocated to store n elements|allocated tree|O(1)|1;2| */
-srt_tree *st_alloc(srt_cmp cmp_f, const size_t elem_size, const size_t init_size);
+srt_tree *st_alloc(srt_cmp cmp_f, size_t elem_size, size_t init_size);
 
 SD_BUILDFUNCS_FULL(st, srt_tree, 0)
 
@@ -95,10 +95,10 @@ SD_BUILDFUNCS_FULL(st, srt_tree, 0)
 void st_free(srt_tree **t, ...)
 
 #NOTAPI: |Ensure space for extra elements|tree;number of extra eelements|extra size allocated|O(1)|0;2|
-size_t st_grow(srt_tree **t, const size_t extra_elems)
+size_t st_grow(srt_tree **t, size_t extra_elems)
 
 #NOTAPI: |Ensure space for elements|tree;absolute element reserve|reserved elements|O(1)|0;2|
-size_t st_reserve(srt_tree **t, const size_t max_elems)
+size_t st_reserve(srt_tree **t, size_t max_elems)
 
 #NOTAPI: |Free unused space|tree|same tree (optional usage)|O(1)|0;2|
 srt_tree *st_shrink(srt_tree **t)
@@ -107,7 +107,7 @@ srt_tree *st_shrink(srt_tree **t)
 size_t st_size(const srt_tree *t)
 
 #NOTAPI: |Set tree size (for integer-only trees) |tree;set tree number of elements|-|O(1)|0;2|
-void st_set_size(srt_tree *t, const size_t s)
+void st_set_size(srt_tree *t, size_t s)
 
 #NOTAPI: |Equivalent to st_size|tree|number of tree nodes|O(1)|1;2|
 size_t st_len(const srt_tree *t)
@@ -130,7 +130,7 @@ srt_tree *st_dup(const srt_tree *t);
 srt_bool st_insert(srt_tree **t, const srt_tnode *n);
 
 /* #NOTAPI: |Insert element into tree, with rewrite function (in case of key already written)|tree; element to insert; rewrite function (if NULL it will behave like st_insert()|S_TRUE: OK, S_FALSE: error (not enough memory)|O(log n)|1;2| */
-srt_bool st_insert_rw(srt_tree **t, const srt_tnode *n, const srt_tree_rewrite rw_f);
+srt_bool st_insert_rw(srt_tree **t, const srt_tnode *n, srt_tree_rewrite rw_f);
 
 /* #NOTAPI: |Delete tree element|tree; element to delete; node delete handling callback (optional if e.g. nodes use no extra dynamic memory references)|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback);
@@ -161,27 +161,27 @@ srt_bool st_assert(const srt_tree *t);
  * Inlined functions
  */
 
-S_INLINE srt_tnode *get_node(srt_tree *t, const srt_tndx node_id)
+S_INLINE srt_tnode *get_node(srt_tree *t, srt_tndx node_id)
 {
 	RETURN_IF(node_id == ST_NIL, NULL);
 	return (srt_tnode *)st_elem_addr(t, node_id);
 }
 
-S_INLINE const srt_tnode *get_node_r(const srt_tree *t, const srt_tndx node_id)
+S_INLINE const srt_tnode *get_node_r(const srt_tree *t, srt_tndx node_id)
 {
 	RETURN_IF(node_id == ST_NIL, NULL);
 	return (const srt_tnode *)st_elem_addr_r(t, node_id);
 }
 
 /* #NOTAPI: |Fast unsorted enumeration|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
-S_INLINE srt_tnode *st_enum(srt_tree *t, const srt_tndx index)
+S_INLINE srt_tnode *st_enum(srt_tree *t, srt_tndx index)
 {
 	ASSERT_RETURN_IF(!t, NULL);
 	return get_node(t, index);
 }
 
 /* #NOTAPI: |Fast unsorted enumeration (read-only)|tree; element, 0 to n - 1, being n the number of elements|Reference to the located node; NULL if not found|O(1)|0;2| */
-S_INLINE const srt_tnode *st_enum_r(const srt_tree *t, const srt_tndx index)
+S_INLINE const srt_tnode *st_enum_r(const srt_tree *t, srt_tndx index)
 {
 	ASSERT_RETURN_IF(!t, NULL);
 	return get_node_r(t, index);

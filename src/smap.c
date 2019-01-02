@@ -3,7 +3,7 @@
  *
  * Map handling.
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -36,7 +36,7 @@ static int cmp_s(const struct SMapS *a, const struct SMapS *b)
 }
 
 static void rw_inc_SM_II32(srt_tnode *node, const srt_tnode *new_data,
-			   const srt_bool existing)
+			   srt_bool existing)
 {
 	if (existing)
 		((struct SMapii *)node)->v +=
@@ -44,7 +44,7 @@ static void rw_inc_SM_II32(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_inc_SM_UU32(srt_tnode *node, const srt_tnode *new_data,
-			   const srt_bool existing)
+			   srt_bool existing)
 {
 	if (existing)
 		((struct SMapuu *)node)->v +=
@@ -52,7 +52,7 @@ static void rw_inc_SM_UU32(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_inc_SM_II(srt_tnode *node, const srt_tnode *new_data,
-			 const srt_bool existing)
+			 srt_bool existing)
 {
 	if (existing)
 		((struct SMapII *)node)->v +=
@@ -60,7 +60,7 @@ static void rw_inc_SM_II(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
-			 const srt_bool existing)
+			 srt_bool existing)
 {
 	struct SMapSP *n = (struct SMapSP *)node;
 	const struct SMapSP *m = (const struct SMapSP *)new_data;
@@ -71,7 +71,7 @@ static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
-			 const srt_bool existing)
+			 srt_bool existing)
 {
 	struct SMapSS *n = (struct SMapSS *)node;
 	const struct SMapSS *m = (const struct SMapSS *)new_data;
@@ -83,7 +83,7 @@ static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_add_SM_SI(srt_tnode *node, const srt_tnode *new_data,
-			 const srt_bool existing)
+			 srt_bool existing)
 {
 	struct SMapSI *n = (struct SMapSI *)node;
 	const struct SMapSI *m = (const struct SMapSI *)new_data;
@@ -94,7 +94,7 @@ static void rw_add_SM_SI(srt_tnode *node, const srt_tnode *new_data,
 }
 
 static void rw_inc_SM_SI(srt_tnode *node, const srt_tnode *new_data,
-			 const srt_bool existing)
+			 srt_bool existing)
 {
 	if (!existing)
 		rw_add_SM_SI(node, new_data, existing);
@@ -194,7 +194,7 @@ static int aux_sp_ss_sort(struct STraverseParams *tp)
 	return 0;
 }
 
-static srt_cmp type2cmpf(const enum eSM_Type0 t)
+static srt_cmp type2cmpf(enum eSM_Type0 t)
 {
 	switch (t) {
 	case SM0_U32:
@@ -242,7 +242,7 @@ S_INLINE srt_bool sm_chk_t(const srt_map *m, int t)
 	return m && m->d.sub_type == t ? S_TRUE : S_FALSE;
 }
 
-S_INLINE srt_bool sm_i32_range(const int64_t k)
+S_INLINE srt_bool sm_i32_range(int64_t k)
 {
 	return k >= INT32_MIN && k <= INT32_MAX ? S_TRUE : S_FALSE;
 }
@@ -300,9 +300,8 @@ SM_ENUM_INORDER_XX(sm_itr_sp, srt_map_it_sp, SM_SP, const srt_string *,
  * Allocation
  */
 
-srt_map *sm_alloc_raw0(const enum eSM_Type0 t, const srt_bool ext_buf,
-		       void *buffer, const size_t elem_size,
-		       const size_t max_size)
+srt_map *sm_alloc_raw0(enum eSM_Type0 t, srt_bool ext_buf, void *buffer,
+		       size_t elem_size, size_t max_size)
 {
 	srt_map *m;
 	RETURN_IF(!buffer || !max_size, NULL);
@@ -313,7 +312,7 @@ srt_map *sm_alloc_raw0(const enum eSM_Type0 t, const srt_bool ext_buf,
 	return m;
 }
 
-srt_map *sm_alloc0(const enum eSM_Type0 t, const size_t init_size)
+srt_map *sm_alloc0(enum eSM_Type0 t, size_t init_size)
 {
 	srt_map *m =
 		(srt_map *)st_alloc(type2cmpf(t), sm_elem_size(t), init_size);
@@ -460,7 +459,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
  * Random access
  */
 
-int32_t sm_at_ii32(const srt_map *m, const int32_t k)
+int32_t sm_at_ii32(const srt_map *m, int32_t k)
 {
 	struct SMapii n;
 	const struct SMapii *nr;
@@ -470,7 +469,7 @@ int32_t sm_at_ii32(const srt_map *m, const int32_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-uint32_t sm_at_uu32(const srt_map *m, const uint32_t k)
+uint32_t sm_at_uu32(const srt_map *m, uint32_t k)
 {
 	struct SMapuu n;
 	const struct SMapuu *nr;
@@ -480,7 +479,7 @@ uint32_t sm_at_uu32(const srt_map *m, const uint32_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-int64_t sm_at_ii(const srt_map *m, const int64_t k)
+int64_t sm_at_ii(const srt_map *m, int64_t k)
 {
 	struct SMapII n;
 	const struct SMapII *nr;
@@ -490,7 +489,7 @@ int64_t sm_at_ii(const srt_map *m, const int64_t k)
 	return nr ? nr->v : 0; /* BEHAVIOR */
 }
 
-const srt_string *sm_at_is(const srt_map *m, const int64_t k)
+const srt_string *sm_at_is(const srt_map *m, int64_t k)
 {
 	struct SMapIS n;
 	const struct SMapIS *nr;
@@ -500,7 +499,7 @@ const srt_string *sm_at_is(const srt_map *m, const int64_t k)
 	return nr ? sso_get((srt_stringo *)&nr->v) : 0; /* BEHAVIOR */
 }
 
-const void *sm_at_ip(const srt_map *m, const int64_t k)
+const void *sm_at_ip(const srt_map *m, int64_t k)
 {
 	struct SMapIP n;
 	const struct SMapIP *nr;
@@ -544,7 +543,7 @@ const void *sm_at_sp(const srt_map *m, const srt_string *k)
  * Existence check
  */
 
-srt_bool sm_count_u(const srt_map *m, const uint32_t k)
+srt_bool sm_count_u(const srt_map *m, uint32_t k)
 {
 	struct SMapuu n;
 	RETURN_IF(!sm_chk_t(m, SM0_UU32) && !sm_chk_t(m, SM0_U32), S_FALSE);
@@ -552,7 +551,7 @@ srt_bool sm_count_u(const srt_map *m, const uint32_t k)
 	return st_locate(m, (const srt_tnode *)&n) ? S_TRUE : S_FALSE;
 }
 
-srt_bool sm_count_i(const srt_map *m, const int64_t k)
+srt_bool sm_count_i(const srt_map *m, int64_t k)
 {
 	const srt_tnode *n;
 	struct SMapI n1;
@@ -583,9 +582,8 @@ srt_bool sm_count_s(const srt_map *m, const srt_string *k)
  * Insert
  */
 
-S_INLINE srt_bool sm_insert_ii32_aux(srt_map **m, const int32_t k,
-				     const int32_t v,
-				     const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_ii32_aux(srt_map **m, int32_t k, int32_t v,
+				     srt_tree_rewrite rw_f)
 {
 	struct SMapii n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_II32), S_FALSE);
@@ -594,19 +592,18 @@ S_INLINE srt_bool sm_insert_ii32_aux(srt_map **m, const int32_t k,
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
 }
 
-srt_bool sm_insert_ii32(srt_map **m, const int32_t k, const int32_t v)
+srt_bool sm_insert_ii32(srt_map **m, int32_t k, int32_t v)
 {
 	return sm_insert_ii32_aux(m, k, v, NULL);
 }
 
-srt_bool sm_inc_ii32(srt_map **m, const int32_t k, const int32_t v)
+srt_bool sm_inc_ii32(srt_map **m, int32_t k, int32_t v)
 {
 	return sm_insert_ii32_aux(m, k, v, rw_inc_SM_II32);
 }
 
-S_INLINE srt_bool sm_insert_uu32_aux(srt_map **m, const uint32_t k,
-				     const uint32_t v,
-				     const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_uu32_aux(srt_map **m, uint32_t k, uint32_t v,
+				     srt_tree_rewrite rw_f)
 {
 	struct SMapuu n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_UU32), S_FALSE);
@@ -615,18 +612,18 @@ S_INLINE srt_bool sm_insert_uu32_aux(srt_map **m, const uint32_t k,
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
 }
 
-srt_bool sm_insert_uu32(srt_map **m, const uint32_t k, const uint32_t v)
+srt_bool sm_insert_uu32(srt_map **m, uint32_t k, uint32_t v)
 {
 	return sm_insert_uu32_aux(m, k, v, NULL);
 }
 
-srt_bool sm_inc_uu32(srt_map **m, const uint32_t k, const uint32_t v)
+srt_bool sm_inc_uu32(srt_map **m, uint32_t k, uint32_t v)
 {
 	return sm_insert_uu32_aux(m, k, v, rw_inc_SM_UU32);
 }
 
-S_INLINE srt_bool sm_insert_ii_aux(srt_map **m, const int64_t k,
-				   const int64_t v, const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_ii_aux(srt_map **m, int64_t k, int64_t v,
+				   srt_tree_rewrite rw_f)
 {
 	struct SMapII n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_II), S_FALSE);
@@ -635,17 +632,17 @@ S_INLINE srt_bool sm_insert_ii_aux(srt_map **m, const int64_t k,
 	return st_insert_rw((srt_tree **)m, (const srt_tnode *)&n, rw_f);
 }
 
-srt_bool sm_insert_ii(srt_map **m, const int64_t k, const int64_t v)
+srt_bool sm_insert_ii(srt_map **m, int64_t k, int64_t v)
 {
 	return sm_insert_ii_aux(m, k, v, NULL);
 }
 
-srt_bool sm_inc_ii(srt_map **m, const int64_t k, const int64_t v)
+srt_bool sm_inc_ii(srt_map **m, int64_t k, int64_t v)
 {
 	return sm_insert_ii_aux(m, k, v, rw_inc_SM_II);
 }
 
-srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
+srt_bool sm_insert_is(srt_map **m, int64_t k, const srt_string *v)
 {
 	srt_bool ins_ok;
 	struct SMapIS n;
@@ -665,7 +662,7 @@ srt_bool sm_insert_is(srt_map **m, const int64_t k, const srt_string *v)
 #endif
 }
 
-srt_bool sm_insert_ip(srt_map **m, const int64_t k, const void *v)
+srt_bool sm_insert_ip(srt_map **m, int64_t k, const void *v)
 {
 	struct SMapIP n;
 	RETURN_IF(!m || !sm_chk_t(*m, SM0_IP), S_FALSE);
@@ -674,8 +671,8 @@ srt_bool sm_insert_ip(srt_map **m, const int64_t k, const void *v)
 	return st_insert((srt_tree **)m, (const srt_tnode *)&n);
 }
 
-S_INLINE srt_bool sm_insert_si_aux(srt_map **m, const srt_string *k,
-				   const int64_t v, const srt_tree_rewrite rw_f)
+S_INLINE srt_bool sm_insert_si_aux(srt_map **m, const srt_string *k, int64_t v,
+				   srt_tree_rewrite rw_f)
 {
 	srt_bool r;
 	struct SMapSI n;
@@ -686,12 +683,12 @@ S_INLINE srt_bool sm_insert_si_aux(srt_map **m, const srt_string *k,
 	return r;
 }
 
-srt_bool sm_insert_si(srt_map **m, const srt_string *k, const int64_t v)
+srt_bool sm_insert_si(srt_map **m, const srt_string *k, int64_t v)
 {
 	return sm_insert_si_aux(m, k, v, rw_add_SM_SI);
 }
 
-srt_bool sm_inc_si(srt_map **m, const srt_string *k, const int64_t v)
+srt_bool sm_inc_si(srt_map **m, const srt_string *k, int64_t v)
 {
 	return sm_insert_si_aux(m, k, v, rw_inc_SM_SI);
 }
@@ -719,7 +716,7 @@ srt_bool sm_insert_sp(srt_map **m, const srt_string *k, const void *v)
  * Delete
  */
 
-srt_bool sm_delete_i(srt_map *m, const int64_t k)
+srt_bool sm_delete_i(srt_map *m, int64_t k)
 {
 	struct SMapI n_i64;
 	struct SMapi n_i32;

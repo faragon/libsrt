@@ -3,7 +3,7 @@
  *
  * Image comparison/diff example using libsrt
  *
- * Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Observations:
@@ -12,8 +12,7 @@
 
 #include "imgtools.h"
 
-static int exit_with_error(const char **argv, const char *msg,
-			   const int exit_code);
+static int exit_with_error(const char **argv, const char *msg, int exit_code);
 
 int main(int argc, const char **argv)
 {
@@ -107,8 +106,7 @@ int main(int argc, const char **argv)
 	return exit_code > 1 ? exit_with_error(argv, exit_msg, exit_code) : 0;
 }
 
-static int exit_with_error(const char **argv, const char *msg,
-			   const int exit_code)
+static int exit_with_error(const char **argv, const char *msg, int exit_code)
 {
 	const char *v0 = argv[0];
 	fprintf(stderr,
