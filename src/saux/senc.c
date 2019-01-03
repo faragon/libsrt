@@ -174,8 +174,8 @@ size_t sdec_b64(const uint8_t *s, size_t ss, uint8_t *o)
 	ssd4 = ss - (ss % 4);
 	tail = s[ss - 2] == '=' || s[ss - 1] == '=' ? 4 : 0;
 	for (; i < ssd4 - tail; i += 4, j += 3) {
-		int a = b64d[s[i]], b = b64d[s[i + 1]],
-		    c = b64d[s[i + 2]], d = b64d[s[i + 3]];
+		int a = b64d[s[i]], b = b64d[s[i + 1]], c = b64d[s[i + 2]],
+		    d = b64d[s[i + 3]];
 		o[j] = DB64C1(a, b);
 		o[j + 1] = DB64C2(b, c);
 		o[j + 2] = DB64C3(c, d);

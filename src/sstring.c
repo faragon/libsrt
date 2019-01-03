@@ -225,8 +225,8 @@ static srt_string *ss_reset(srt_string *s)
 
 size_t ss_reserve(srt_string **s, size_t max_size)
 {
-	size_t ss, unicode_size, r;
 	srt_bool full_st;
+	size_t ss, unicode_size, r;
 	RETURN_IF(!s, 0);
 	if (!*s) {
 		*s = ss_alloc(max_size);
@@ -248,8 +248,8 @@ size_t ss_reserve(srt_string **s, size_t max_size)
 
 size_t ss_grow(srt_string **s, size_t extra_size)
 {
-	size_t size, unicode_size, new_size;
 	srt_bool full_st;
+	size_t size, unicode_size, new_size;
 	RETURN_IF(!s, 0);
 	RETURN_IF(!(*s), ss_reserve(s, extra_size));
 	size = ss_size(*s);
@@ -348,6 +348,8 @@ static srt_string *aux_toint(srt_string **s, srt_bool cat, int64_t num)
 	SS_OVERFLOW_CHECK(s, at, digits);
 	out_size = s_size_t_add(at, digits, S_NPOS);
 	if (ss_reserve(s, out_size) >= out_size && *s) {
+		if (!cat)
+			ss_reset(*s);
 		memcpy(ss_get_buffer(*s) + at, btmp + off, digits);
 		ss_set_size(*s, out_size);
 		inc_unicode_size(*s, digits);
@@ -359,16 +361,15 @@ static srt_string *aux_toXcase(srt_string **s, srt_bool cat,
 			       const srt_string *src, int32_t (*towX)(int32_t))
 {
 	int c, c2;
+	ssize_t extra;
+	const char *ps;
+	srt_string *out;
+	srt_bool aliasing, is_cached_usize;
+	char *po0, *po, *pout, u8[SSU8_MAX_SIZE];
 	size_t ss, sso_max, cached_usize, at, at_ss, sso_req, i, csize, csize2;
 #ifdef S_ENABLE_UTF8_7BIT_PARALLEL_CASE_OPTIMIZATIONS
 	size_t i2;
 #endif
-	const char *ps;
-	char *po0, *po, *pout, u8[SSU8_MAX_SIZE];
-	srt_string *out;
-	srt_bool aliasing;
-	unsigned char is_cached_usize;
-	ssize_t extra;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -377,20 +378,24 @@ static srt_string *aux_toXcase(srt_string **s, srt_bool cat,
 	ps = ss_get_buffer_r(src);
 	out = NULL;
 	aliasing = *s == src;
-	is_cached_usize = 0;
+	is_cached_usize = S_FALSE;
 	extra = sc_utf8_calc_case_extra_size(ps, 0, ss, towX);
 	cached_usize = 0;
 	/* If possible, keep Unicode size cached: */
 	if (*s) {
-		if (is_unicode_size_cached(*s) && is_unicode_size_cached(src)) {
-			is_cached_usize = 1;
-			cached_usize =
-				get_unicode_size(src) + get_unicode_size(*s);
+		if (is_unicode_size_cached(src)) {
+			cached_usize = get_unicode_size(src);
+			if (!cat) {
+				is_cached_usize = S_TRUE;
+			} else if (is_unicode_size_cached(*s)) {
+				is_cached_usize = S_TRUE;
+				cached_usize += get_unicode_size(*s);
+			}
 		}
 		at = cat ? ss_size(*s) : 0;
 	} else { /* copy */
 		if (is_unicode_size_cached(src)) {
-			is_cached_usize = 1;
+			is_cached_usize = S_TRUE;
 			cached_usize = get_unicode_size(src);
 		}
 		at = 0;
@@ -474,12 +479,11 @@ static srt_string *aux_toenc(srt_string **s, srt_bool cat,
 			     const srt_string *src, srt_enc_f f, srt_enc_f2 f2)
 {
 	srt_bool aliasing;
-	const unsigned char *src_buf;
-	size_t in_size, at, enc_size, out_size;
 	srt_string *src_aux;
-	const srt_string *src1;
-	const unsigned char *s_in;
 	unsigned char *s_out;
+	const srt_string *src1;
+	const unsigned char *src_buf, *s_in;
+	size_t in_size, at, enc_size, out_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -523,6 +527,7 @@ static srt_string *aux_toenc(srt_string **s, srt_bool cat,
 		ss_set_size(*s, out_size);
 		if (src_aux)
 			ss_free(&src_aux);
+		set_unicode_size_cached(*s, S_FALSE);
 	}
 	return ss_check(s);
 }
@@ -619,12 +624,12 @@ static srt_string *aux_replace(srt_string **s, srt_bool cat,
 			       const srt_string *src, size_t off,
 			       const srt_string *s1, const srt_string *s2)
 {
-	ssize_t size_delta;
-	size_t at, l1, l2, i, l, out_size, nfound, i_next;
-	const char *p0, *p2;
+	char *o, *o0;
 	srt_string *out;
 	srt_bool aliasing;
-	char *o, *o0;
+	ssize_t size_delta;
+	const char *p0, *p2;
+	size_t at, l1, l2, i, l, out_size, nfound, i_next;
 	typedef void (*memcpy_t)(void *, const void *, size_t);
 	memcpy_t f_cpy;
 	ASSERT_RETURN_IF(!s, ss_void);
@@ -713,6 +718,8 @@ static srt_string *aux_replace(srt_string **s, srt_bool cat,
 		ss_free(&s_bck);
 	}
 	ss_set_size(*s, (size_t)(o - o0));
+	/* TODO: optimize cached size */
+	set_unicode_size_cached(*s, S_FALSE);
 	return *s;
 }
 
@@ -817,7 +824,7 @@ static srt_string *aux_ltrim(srt_string **s, srt_bool cat,
 	char *pt;
 	const char *ps;
 	srt_bool aliasing;
-	size_t ss, at, cat_usize, i, out_size, src_usize;
+	size_t ss, at, cat_usize, i, out_size;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -838,7 +845,6 @@ static srt_string *aux_ltrim(srt_string **s, srt_bool cat,
 			at = cat_usize = 0;
 		}
 		out_size = at + ss - i;
-		src_usize = get_unicode_size(src);
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			pt = ss_get_buffer(*s);
 			if (!aliasing) /* copy or cat: shift data */
@@ -846,7 +852,14 @@ static srt_string *aux_ltrim(srt_string **s, srt_bool cat,
 			else if (i > 0) /* copy: shift data */
 				memmove(pt, ps + i, ss - i);
 			ss_set_size(*s, at + ss - i);
-			set_unicode_size(*s, cat_usize + src_usize - i);
+			/* Set Unicode size only if can be computed for free */
+			if (is_unicode_size_cached(*s)
+			    && is_unicode_size_cached(src))
+				set_unicode_size(
+					*s,
+					cat_usize + get_unicode_size(src) - i);
+			else
+				set_unicode_size_cached(*s, S_FALSE);
 		} /* else: BEHAVIOR */
 	} else {
 		if (cat)
@@ -862,7 +875,7 @@ static srt_string *aux_rtrim(srt_string **s, srt_bool cat,
 {
 	const char *ps;
 	srt_bool aliasing;
-	size_t ss, at, i, nspaces, copy_size, out_size, cat_usize, src_usize;
+	size_t ss, at, i, nspaces, copy_size, out_size, cat_usize;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!src)
 		src = ss_void;
@@ -880,13 +893,19 @@ static srt_string *aux_rtrim(srt_string **s, srt_bool cat,
 		copy_size = ss - nspaces;
 		out_size = at + copy_size;
 		cat_usize = cat ? get_unicode_size(*s) : 0;
-		src_usize = *s ? get_unicode_size(*s) : 0;
 		if (ss_reserve(s, out_size) >= out_size && *s) {
 			char *pt = ss_get_buffer(*s);
 			if (!aliasing)
 				memcpy(pt + at, ps, copy_size);
 			ss_set_size(*s, out_size);
-			set_unicode_size(*s, cat_usize + src_usize - nspaces);
+			/* Set Unicode size only if can be computed for free */
+			if (is_unicode_size_cached(*s)
+			    && is_unicode_size_cached(src))
+				set_unicode_size(
+					*s, cat_usize + get_unicode_size(src)
+						    - nspaces);
+			else
+				set_unicode_size_cached(*s, S_FALSE);
 		} /* else: BEHAVIOR */
 	} else {
 		if (cat)
@@ -1068,9 +1087,9 @@ int ss_at(const srt_string *s, size_t off)
 
 size_t ss_len_u(const srt_string *s)
 {
+	const char *p;
 	srt_string *ws;
 	size_t enc_errors, ss, cached_uc_size;
-	const char *p;
 	ASSERT_RETURN_IF(!s, 0);
 	if (is_unicode_size_cached(s))
 		return get_unicode_size(s);
@@ -1476,8 +1495,8 @@ srt_string *ss_cpy_read(srt_string **s, FILE *handle, size_t max_bytes)
 srt_string *ss_cat_aux(srt_string **s, const srt_string *s1, ...)
 {
 	va_list ap;
-	size_t extra_size, nargs, ss0, uss0, i;
 	const srt_string *next, *s0;
+	size_t extra_size, nargs, ss0, uss0, i;
 	RETURN_IF(!s, ss_void);
 	if (s1 && ss_size(s1) > 0) {
 		extra_size = nargs = 0;
@@ -2024,8 +2043,8 @@ size_t ss_split(const srt_string *src, const srt_string *separator,
 		srt_string_ref out_substrings[], size_t max_refs)
 {
 	const char *p;
-	size_t i, nelems = 0, off, sz;
-	size_t src_size = ss_size(src), sep_size = ss_size(separator);
+	size_t i, nelems = 0, off, sz, src_size = ss_size(src),
+		  sep_size = ss_size(separator);
 	if (src_size > 0 && sep_size > 0) {
 		p = ss_get_buffer_r(src);
 		for (i = 0; i < src_size;) {

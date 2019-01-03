@@ -332,49 +332,66 @@ static int test_ss_resize_x()
 	return res;
 }
 
+/*
+ * String operation tests are repeated 4 times, checking all Unicode size
+ * cached input combinations:
+ * - non cached input/output, non-cached src
+ * - non cached input/output, cached src
+ * - cached input/output, non-cached src
+ * - cached input/output, cached src
+ */
+#define TEST_SS_OPCHK_VARS                                                     \
+	int res = 0;                                                           \
+	size_t i = 0, la, lb;                                                  \
+	srt_string *sa = NULL, *sb = NULL, *se
+#define TEST_SS_OPCHK(f, a, b, e)                                              \
+	se = ss_dup_c(e);                                                      \
+	for (i = 0; i < 4 && !res; i++) {                                      \
+		ss_free(&sa);                                                  \
+		ss_free(&sb);                                                  \
+		sa = ss_dup_c(a);                                              \
+		sb = ss_dup_c(b);                                              \
+		if ((i & 1) != 0)                                              \
+			la = ss_len_u(sa);                                     \
+		if ((i & 2) != 0)                                              \
+			lb = ss_len_u(sb);                                     \
+		f;                                                             \
+		res = (!sa || !sb)                                             \
+			      ? 1                                              \
+			      : (!strcmp(ss_to_c(sa), e) ? 0 : (i << 4 | 2))   \
+					| (!ss_cmp(sa, se) ? 0 : (i << 4 | 4)) \
+					| (ss_len_u(sa) == ss_len_u(se)        \
+						   ? 0                         \
+						   : (i << 4 | 8));            \
+	}                                                                      \
+	ss_free(&sa);                                                          \
+	ss_free(&sb);                                                          \
+	ss_free(&se);                                                          \
+	return res
+
 static int test_ss_trim(const char *in, const char *expected)
 {
-	srt_string *a = ss_dup_c(in);
-	int res = a ? 0 : 1;
-	res |= res ? 0
-		   : (ss_trim(&a) ? 0 : 2)
-			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
-	ss_free(&a);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_trim(&sa), in, "", expected);
 }
 
 static int test_ss_ltrim(const char *in, const char *expected)
 {
-	srt_string *a = ss_dup_c(in);
-	int res = a ? 0 : 1;
-	res |= res ? 0
-		   : (ss_ltrim(&a) ? 0 : 2)
-			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
-	ss_free(&a);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_ltrim(&sa), in, "", expected);
 }
 
 static int test_ss_rtrim(const char *in, const char *expected)
 {
-	srt_string *a = ss_dup_c(in);
-	int res = a ? 0 : 1;
-	res |= res ? 0
-		   : (ss_rtrim(&a) ? 0 : 2)
-			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
-	ss_free(&a);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_rtrim(&sa), in, "", expected);
 }
 
 static int test_ss_erase(const char *in, size_t byte_off, size_t num_bytes,
 			 const char *expected)
 {
-	srt_string *a = ss_dup_c(in);
-	int res = a ? 0 : 1;
-	res |= res ? 0
-		   : (ss_erase(&a, byte_off, num_bytes) ? 0 : 2)
-			       | (!strcmp(ss_to_c(a), expected) ? 0 : 4);
-	ss_free(&a);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_erase(&sa, byte_off, num_bytes), in, "", expected);
 }
 
 static int test_ss_erase_u(const char *in, size_t char_off, size_t num_chars,
@@ -1454,96 +1471,47 @@ static int test_ss_cat_w(const wchar_t *a, const wchar_t *b)
 
 static int test_ss_cat_int(const char *in, int64_t num, const char *expected)
 {
-	int res;
-	srt_string *a = ss_dup_c(in);
-	ss_cat_int(&a, num);
-	res = !a ? 1 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
-	ss_free(&a);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_int(&sa, num), in, "", expected);
 }
 
 static int test_ss_cat_tolower(const srt_string *a, const srt_string *b,
 			       const srt_string *expected)
 {
-	int res;
-	srt_string *sa = ss_dup(a), *sb = ss_dup(b);
-	ss_cat_tolower(&sa, sb);
-	res = (!sa || !sb) ? 1 : (!ss_cmp(sa, expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&sa, &sb);
-#else
-	ss_free(&sa);
-	ss_free(&sb);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_tolower(&sa, sb), ss_to_c(a), ss_to_c(b),
+		      ss_to_c(expected));
 }
 
 static int test_ss_cat_toupper(const srt_string *a, const srt_string *b,
 			       const srt_string *expected)
 {
-	int res;
-	srt_string *sa = ss_dup(a), *sb = ss_dup(b);
-	ss_cat_toupper(&sa, sb);
-	res = (!sa || !sb) ? 1 : (!ss_cmp(sa, expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&sa, &sb);
-#else
-	ss_free(&sa);
-	ss_free(&sb);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_toupper(&sa, sb), ss_to_c(a), ss_to_c(b),
+		      ss_to_c(expected));
 }
 
 static int test_ss_cat_erase(const char *prefix, const char *in, size_t off,
 			     size_t size, const char *expected)
 {
-	int res;
-	srt_string *a = ss_dup_c(in), *b = ss_dup_c(prefix);
-	ss_cat_erase(&b, a, off, size);
-	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&a, &b);
-#else
-	ss_free(&a);
-	ss_free(&b);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_erase(&sa, sb, off, size), prefix, in, expected);
 }
 
 static int test_ss_cat_erase_u()
 {
-	int res;
-	srt_string *a = ss_dup_c("hel" U8_S_N_TILDE_F1 "lo"),
-		   *b = ss_dup_c("x");
-	ss_cat_erase_u(&b, a, 2, 3);
-	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(b), "xheo") ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&a, &b);
-#else
-	ss_free(&a);
-	ss_free(&b);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	const char *a = "hel" U8_S_N_TILDE_F1 "lo", *b = "x";
+	TEST_SS_OPCHK(ss_cat_erase_u(&sa, sb, 2, 3), b, a, "xheo");
 }
 
 static int test_ss_cat_replace(const char *prefix, const char *in,
 			       const char *r, const char *s,
 			       const char *expected)
 {
-	int res;
-	srt_string *a = ss_dup_c(in), *b = ss_dup_c(r), *c = ss_dup_c(s),
-		   *d = ss_dup_c(prefix);
-	ss_cat_replace(&d, a, 0, b, c);
-	res = (!a || !b) ? 1 : (!strcmp(ss_to_c(d), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&a, &b, &c, &d);
-#else
-	ss_free(&a);
-	ss_free(&b);
-	ss_free(&c);
-	ss_free(&d);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	const srt_string *sr = ss_crefa(r), *ss = ss_crefa(s);
+	TEST_SS_OPCHK(ss_cat_replace(&sa, sb, 0, sr, ss), prefix, in, expected);
 }
 
 static int test_ss_cat_resize()
@@ -1593,59 +1561,30 @@ static int test_ss_cat_resize_u()
 
 static int test_ss_cat_trim(const char *a, const char *b, const char *expected)
 {
-	int res;
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	ss_cat_trim(&sa, sb);
-	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&sa, &sb);
-#else
-	ss_free(&sa);
-	ss_free(&sb);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_trim(&sa, sb), a, b, expected);
 }
 
 static int test_ss_cat_ltrim(const char *a, const char *b, const char *expected)
 {
-	int res;
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	ss_cat_ltrim(&sa, sb);
-	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&sa, &sb);
-#else
-	ss_free(&sa);
-	ss_free(&sb);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_ltrim(&sa, sb), a, b, expected);
 }
 
 static int test_ss_cat_rtrim(const char *a, const char *b, const char *expected)
 {
-	int res;
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_c(b);
-	ss_cat_rtrim(&sa, sb);
-	res = (!sa || !sb) ? 1 : (!strcmp(ss_to_c(sa), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&sa, &sb);
-#else
-	ss_free(&sa);
-	ss_free(&sb);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_cat_rtrim(&sa, sb), a, b, expected);
 }
 
 static int test_ss_cat_printf()
 {
-	int res;
-	char btmp[512];
-	srt_string *sa = ss_dup_c("abc");
-	sprintf(btmp, "abc%i%s%08X", 1, "hello", -1);
-	ss_cat_printf(&sa, 512, "%i%s%08X", 1, "hello", -1);
-	res = !sa ? 1 : !strcmp(ss_to_c(sa), btmp) ? 0 : 2;
-	ss_free(&sa);
-	return res;
+	char expected[512];
+	const char *b0 = "hello";
+	TEST_SS_OPCHK_VARS;
+	sprintf(expected, "abc%i%s%08X", 1, "hello", -1);
+	TEST_SS_OPCHK(ss_cat_printf(&sa, 512, "%i%s%08X", 1, b0, -1), "abc", b0,
+		      expected);
 }
 
 static int test_ss_cat_printf_va()
@@ -1655,16 +1594,11 @@ static int test_ss_cat_printf_va()
 
 static int test_ss_cat_char()
 {
-	const wchar_t *a = L"12345", *b = L"6";
-	srt_string *sa = ss_dup_w(a);
-	int res = sa ? 0 : 1;
-	char btmp[8192];
-	sprintf(btmp, "%ls%ls", a, b);
-	res |= res ? 0
-		   : (ss_cat_char(&sa, b[0]) ? 0 : 2)
-			       | (!strcmp(ss_to_c(sa), btmp) ? 0 : 4);
-	ss_free(&sa);
-	return res;
+	char expected[512];
+	const char *a = "12345", b0 = '6';
+	TEST_SS_OPCHK_VARS;
+	sprintf(expected, "%s%c", a, b0);
+	TEST_SS_OPCHK(ss_cat_char(&sa, b0), a, "", expected);
 }
 
 /* clang-format off */
@@ -1698,21 +1632,14 @@ static int test_ss_cat_read()
 
 static int test_ss_tolower(const char *a, const char *b)
 {
-	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1
-		      : (ss_tolower(&sa) ? 0 : 2)
-				  | (!strcmp(ss_to_c(sa), b) ? 0 : 4);
-	ss_free(&sa);
-	return res;
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_tolower(&sa), a, "", b);
 }
 
 static int test_ss_toupper(const char *a, const char *b)
 {
-	srt_string *sa = ss_dup_c(a);
-	int res = !sa ? 1
-		      : (ss_toupper(&sa) ? 0 : 2)
-				  | (!strcmp(ss_to_c(sa), b) ? 0 : 4);
-	ss_free(&sa);
+	TEST_SS_OPCHK_VARS;
+	TEST_SS_OPCHK(ss_toupper(&sa), a, "", b);
 	return res;
 }
 
@@ -1739,17 +1666,9 @@ static int test_ss_check()
 static int test_ss_replace(const char *s, size_t off, const char *s1,
 			   const char *s2, const char *expected)
 {
-	srt_string *a = ss_dup_c(s), *b = ss_dup_c(s1), *c = ss_dup_c(s2);
-	int res = a && b && c && ss_replace(&a, off, b, c) ? 0 : 1;
-	res |= res ? 0 : (!strcmp(ss_to_c(a), expected) ? 0 : 2);
-#ifdef S_USE_VA_ARGS
-	ss_free(&a, &b, &c);
-#else
-	ss_free(&a);
-	ss_free(&b);
-	ss_free(&c);
-#endif
-	return res;
+	TEST_SS_OPCHK_VARS;
+	const srt_string *sc = ss_crefa(s2);
+	TEST_SS_OPCHK(ss_replace(&sa, off, sb, sc), s, s1, expected);
 }
 
 static int test_ss_to_c(const char *in)
