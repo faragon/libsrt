@@ -9,7 +9,7 @@ libsrt has been included into Paul Hsieh's [String Library Comparisons](http://b
 libsrt: Safe Real-Time library for the C programming language
 ===
 
-libsrt is a C library that provides string, vector, bit set, set, map, hash set, and hash map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It is also suitable for low level and hard real-time applications, because functions are predictable in both space and time (asuming OS and underlying C library is also real-time suitable).
+libsrt is a C library that provides string, vector, bit set, set, map, hash set, and hash map handling. It's been designed for avoiding explicit memory management when using dynamic-size data structures, allowing safe and expressive code, while keeping high performance. It is also suitable for low level and hard real-time applications, because functions are predictable in both space and time (assuming OS and underlying C library is also real-time suitable).
 
 Key points:
 
@@ -92,7 +92,7 @@ Generic advantages
 
 * Predictable (suitable for hard and soft real-time)
   * Predictable execution speed: all API calls have documented time complexity. Also space complexity, when extra space involving dynamic memory is required.
-  * Hard real-time: allocating maximum size (strings, vector, set, map, hash set, hash map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
+  * Hard real-time: allocating maximum size (strings, vector, bit set, set, map, hash set, hash map) will imply calling 0 or 1 times to the malloc() function (C library). Zero times if using the stack as memory or externally allocated memory pool, and one if using the heap. This is important because malloc() implementation has both memory and time overhead, as internally manages a pool of free memory (which could have O(1), O(log(n)), or even O(n), depending on the compiler provider C library implementation).
   * Soft real-time: logarithmic time memory allocation (when not doing preallocation): for 10^n new elements just log(n) calls to the malloc() function. This is not a guarantee for hard real time, but for soft real time (being careful could provide almost same results, except in the case of very poor malloc() implementation in the C library being used -not a problem with modern compilers-).
 
 * RAM, ROM, and disk operation
@@ -145,7 +145,7 @@ String-specific advantages (srt\_string)
 * Efficient raw and Unicode (UTF-8) handling. Unicode size is tracked, so resulting operations with cached Unicode size, will keep that, keeping the O(1) for getting that information afterwards.
   * Find/search: O(n), one pass.
   * Replace: O(n), one pass. Worst case overhead is limited to a realloc and a copy of the part already processed.
-  * Concatenation: O(n), one pass for multiple concatenation. I.e. Optimal concatenation of multiple elements require just one allocation, which is computed before the concatination. When concatenating ss\_t strings the allocation size compute time is O(1).
+  * Concatenation: O(n), one pass for multiple concatenation. I.e. Optimal concatenation of multiple elements require just one allocation, which is computed before the concatenation. When concatenating ss\_t strings the allocation size compute time is O(1).
   * Resize: O(n) for worst case (when requiring reallocation for extra space. O(n) for resize giving as cut indicator the number of Unicode characters. O(1) for cutting raw data (bytes).
   * Case conversion: O(n), one pass, using the same input if case conversion requires no allocation over current string capacity. If resize is required, in order to keep O(n) complexity, the string is scanned for computing required size. After that, the conversion outputs to the secondary string. Before returning, the output string replaces the input, and the input becomes freed.
   * Avoid double copies for I/O (read access, write reserve)
@@ -168,7 +168,7 @@ String-specific advantages (srt\_string)
   * Aliasing suport, e.g. ss\_cat(&a, a) is valid
 * Misc string/buffer operations:
   * Real-time O(n) data compression (stateless, unlimited buffer size, and hash table resource usage proportional to the input size, i.e. efficient also for small inputs)
-  * State of the art encodings: base64, hexadecimal, etc. (at GB/s speeds)
+  * State of the art encoding: base64, hexadecimal, etc. (at GB/s speeds)
   * State of the art CRC32 and Adler32 hashes on strings (at >2 GB/s speeds)
 * Focus on reducing verbosity:
   * ss\_cat(&t, s1, ..., sN);

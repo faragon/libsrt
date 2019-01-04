@@ -63,7 +63,7 @@ Notes on STL (C++) space and time complexity
   * Time complexity for insert, search, delete: O(n)  -O(1) for in the case ideal hash having 0 collisions-
   * Time for cleanup ("free"/"delete"): O(1) if for hash-maps not having string elements, O(n) when having string elements
 * STL hash-sets (std::unordered\_set)
- * Similar to STL hash maps, but key-only
+  * Similar to STL hash maps, but key-only
 * STL bitsets
   * Require max size on compile time
   * Allows stack allocation
