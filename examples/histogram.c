@@ -3,6 +3,9 @@
  *
  * Histogram example using libsrt
  *
+ * It shows how different data structures (map and hash map) behave in
+ * memory usage and execution speed.
+ *
  * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
@@ -48,17 +51,14 @@ static srt_bool cb64(int64_t k, int64_t v, void *context)
 }
 
 /*
- * Local optimization: instead of calling N times to the
- * map for the case of repeated elements, we keep the
- * count and set the counter for all the repeated
- * elements at once (3x speed-up for non random data).
+ * Local optimization: instead of calling N times to the  map for the case of
+ * repeated elements, we keep the count and set the counter for all the
+ * repeated elements at once (3x speed-up for non random data)
  */
 #define CNTLOOP(m, inc, k, ki, kip, f)                                         \
-	for (;;) {                                                             \
+	do {                                                                   \
 		l = fread(buf, 1, sizeof(buf), stdin);                         \
 		l = (l / (size_t)csize) * (size_t)csize;                       \
-		if (!l)                                                        \
-			break;                                                 \
 		rep_cnt = 0;                                                   \
 		for (i = 0; i < l; i += inc) {                                 \
 			ki = k;                                                \
@@ -75,7 +75,7 @@ static srt_bool cb64(int64_t k, int64_t v, void *context)
 		}                                                              \
 		if (rep_cnt)                                                   \
 			f(&m, kip, rep_cnt);                                   \
-	}
+	} while (l > 0)
 
 enum eHistMode { HM_Map, HM_HashMap };
 

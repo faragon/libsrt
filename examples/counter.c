@@ -3,6 +3,9 @@
  *
  * Code counting example using libsrt
  *
+ * It shows how different data structures (bit set, set, hash set) behave
+ * in memory usage and execution speed.
+ *
  * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
@@ -43,13 +46,19 @@ static int syntax_error(const char **argv, int exit_code)
 #define S_COUNTER_POPCOUNT(s) sms_size(s)
 #define HS_COUNTER_SET(hs, val) shs_insert_u32(&hs, val)
 #define HS_COUNTER_POPCOUNT(hs) shs_size(hs)
-#define CNTLOOP(prefix, i, count, done, climit, s, inc, val)                   \
-	for (i = 0; i < l; i += inc) {                                         \
-		prefix##_COUNTER_SET(s, val);                                  \
-		count++;                                                       \
-		if (prefix##_COUNTER_POPCOUNT(s) >= climit)                    \
-			goto done;                                             \
-	}
+#define CNTLOOP(prefix, i, count, climit, s, inc, val)                         \
+	do {                                                                   \
+		l = fread(buf, 1, sizeof(buf), stdin);                         \
+		l = (l / (size_t)csize) * (size_t)csize;                       \
+		for (i = 0; i < l; i += inc) {                                 \
+			prefix##_COUNTER_SET(s, val);                          \
+			count++;                                               \
+			if (prefix##_COUNTER_POPCOUNT(s) >= climit) {          \
+				l = 0;                                         \
+				break;                                         \
+			}                                                      \
+		}                                                              \
+	} while (l > 0)
 
 enum eCntMode { CM_BitSet, CM_Set, CM_HashSet };
 
@@ -58,9 +67,9 @@ int main(int argc, const char **argv)
 	srt_set *s = NULL;
 	srt_hset *hs = NULL;
 	srt_bitset *bs = NULL;
-	int csize, exit_code, climit0;
+	int csize, exit_code = 0, climit0;
 	enum eCntMode mode = CM_BitSet;
-	size_t count, cmax, climit, i, l;
+	size_t count = 0, cmax, climit, i, l;
 	unsigned char buf[3 * 4 * 128];
 	if (argc < 3)
 		return syntax_error(argv, 5);
@@ -76,8 +85,6 @@ int main(int argc, const char **argv)
 		else if (!strcmp(argv[3], "-hs"))
 			mode = CM_HashSet;
 	}
-	exit_code = 0;
-	count = 0;
 	cmax = csize == 4 ? 0xffffffff : 0xffffffff & ((1 << (csize * 8)) - 1);
 	climit = climit0 ? S_MIN((size_t)climit0, cmax) : cmax;
 	switch (mode) {
@@ -92,90 +99,71 @@ int main(int argc, const char **argv)
 		hs = shs_alloc(SHS_U32, 0);
 		break;
 	}
-	for (;;) {
-		l = fread(buf, 1, sizeof(buf), stdin);
-		l = (l / (size_t)csize) * (size_t)csize;
-		if (!l)
-			break;
-		switch (csize << 4 | mode) {
-		case 1 << 4 | CM_BitSet:
-			CNTLOOP(BS, i, count, done, climit, bs, 1, buf[i]);
-			break;
-		case 2 << 4 | CM_BitSet:
-			CNTLOOP(BS, i, count, done, climit, bs, 2,
-				(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
-			break;
-		case 3 << 4 | CM_BitSet:
-			CNTLOOP(BS, i, count, done, climit, bs, 3,
-				(uint32_t)buf[i] << 16
-					| (uint32_t)buf[i + 1] << 8
-					| (uint32_t)buf[i + 2]);
-			break;
-		case 4 << 4 | CM_BitSet:
-			CNTLOOP(BS, i, count, done, climit, bs, 4,
-				(uint32_t)buf[i] << 24
-					| (uint32_t)buf[i + 1] << 16
-					| (uint32_t)buf[i + 2] << 8
-					| (uint32_t)buf[i + 3]);
-			break;
-		case 1 << 4 | CM_Set:
-			CNTLOOP(S, i, count, done, climit, s, 1, buf[i]);
-			break;
-		case 2 << 4 | CM_Set:
-			CNTLOOP(S, i, count, done, climit, s, 2,
-				(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
-			break;
-		case 3 << 4 | CM_Set:
-			CNTLOOP(S, i, count, done, climit, s, 3,
-				(uint32_t)buf[i] << 16
-					| (uint32_t)buf[i + 1] << 8
-					| (uint32_t)buf[i + 2]);
-			break;
-		case 4 << 4 | CM_Set:
-			CNTLOOP(S, i, count, done, climit, s, 4,
-				(uint32_t)buf[i] << 24
-					| (uint32_t)buf[i + 1] << 16
-					| (uint32_t)buf[i + 2] << 8
-					| (uint32_t)buf[i + 3]);
-			break;
-		case 1 << 4 | CM_HashSet:
-			CNTLOOP(HS, i, count, done, climit, hs, 1, buf[i]);
-			break;
-		case 2 << 4 | CM_HashSet:
-			CNTLOOP(HS, i, count, done, climit, hs, 2,
-				(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
-			break;
-		case 3 << 4 | CM_HashSet:
-			CNTLOOP(HS, i, count, done, climit, hs, 3,
-				(uint32_t)(buf[i] << 16
-					   | (uint32_t)buf[i + 1] << 8
-					   | (uint32_t)buf[i + 2]));
-			break;
-		case 4 << 4 | CM_HashSet:
-			CNTLOOP(HS, i, count, done, climit, hs, 4,
-				(uint32_t)buf[i] << 24
-					| (uint32_t)buf[i + 1] << 16
-					| (uint32_t)buf[i + 2] << 8
-					| (uint32_t)buf[i + 3]);
-			break;
-		default:
-			goto done;
-		}
+	switch (csize << 4 | mode) {
+	case 1 << 4 | CM_BitSet:
+		CNTLOOP(BS, i, count, climit, bs, 1, buf[i]);
+		break;
+	case 2 << 4 | CM_BitSet:
+		CNTLOOP(BS, i, count, climit, bs, 2,
+			(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
+		break;
+	case 3 << 4 | CM_BitSet:
+		CNTLOOP(BS, i, count, climit, bs, 3,
+			(uint32_t)buf[i] << 16 | (uint32_t)buf[i + 1] << 8
+				| (uint32_t)buf[i + 2]);
+		break;
+	case 4 << 4 | CM_BitSet:
+		CNTLOOP(BS, i, count, climit, bs, 4,
+			(uint32_t)buf[i] << 24 | (uint32_t)buf[i + 1] << 16
+				| (uint32_t)buf[i + 2] << 8
+				| (uint32_t)buf[i + 3]);
+		break;
+	case 1 << 4 | CM_Set:
+		CNTLOOP(S, i, count, climit, s, 1, buf[i]);
+		break;
+	case 2 << 4 | CM_Set:
+		CNTLOOP(S, i, count, climit, s, 2,
+			(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
+		break;
+	case 3 << 4 | CM_Set:
+		CNTLOOP(S, i, count, climit, s, 3,
+			(uint32_t)buf[i] << 16 | (uint32_t)buf[i + 1] << 8
+				| (uint32_t)buf[i + 2]);
+		break;
+	case 4 << 4 | CM_Set:
+		CNTLOOP(S, i, count, climit, s, 4,
+			(uint32_t)buf[i] << 24 | (uint32_t)buf[i + 1] << 16
+				| (uint32_t)buf[i + 2] << 8
+				| (uint32_t)buf[i + 3]);
+		break;
+	case 1 << 4 | CM_HashSet:
+		CNTLOOP(HS, i, count, climit, hs, 1, buf[i]);
+		break;
+	case 2 << 4 | CM_HashSet:
+		CNTLOOP(HS, i, count, climit, hs, 2,
+			(uint32_t)buf[i] << 8 | (uint32_t)buf[i + 1]);
+		break;
+	case 3 << 4 | CM_HashSet:
+		CNTLOOP(HS, i, count, climit, hs, 3,
+			(uint32_t)(buf[i] << 16 | (uint32_t)buf[i + 1] << 8
+				   | (uint32_t)buf[i + 2]));
+		break;
+	case 4 << 4 | CM_HashSet:
+		CNTLOOP(HS, i, count, climit, hs, 4,
+			(uint32_t)buf[i] << 24 | (uint32_t)buf[i + 1] << 16
+				| (uint32_t)buf[i + 2] << 8
+				| (uint32_t)buf[i + 3]);
+		break;
 	}
-done:
-	switch (mode) {
-	case CM_BitSet:
+	if (bs) {
 		printf(FMT_ZU ", " FMT_ZU, count, BS_COUNTER_POPCOUNT(bs));
 		sb_free(&bs);
-		break;
-	case CM_Set:
+	} else if (s) {
 		printf(FMT_ZU ", " FMT_ZU, count, S_COUNTER_POPCOUNT(s));
 		sm_free(&s);
-		break;
-	case CM_HashSet:
+	} else {
 		printf(FMT_ZU ", " FMT_ZU, count, HS_COUNTER_POPCOUNT(hs));
 		shs_free(&hs);
-		break;
 	}
 	return exit_code;
 }
