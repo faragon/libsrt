@@ -318,7 +318,11 @@ void shm_clear(srt_hmap *hm);
 #API: |Free one or more hash maps|hash map; more hash maps (optional)|-|O(1) for simple dmaps, O(n) for dmaps having nodes with strings|1;2|
 void shm_free(srt_hmap **hm, ...)
 */
+#ifdef S_USE_VA_ARGS
 #define shm_free(...) shm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#else
+#define shm_free(m) shm_free_aux(m, S_INVALID_PTR_VARG_TAIL)
+#endif
 void shm_free_aux(srt_hmap **s, ...);
 
 /*

@@ -136,7 +136,11 @@ S_INLINE void shs_clear(srt_hset *hs)
 #API: |Free one or more hash sets|hash set; more hash sets (optional)|-|O(1) for simple dmaps, O(n) for dmaps having nodes with strings|1;2|
 void shs_free(srt_hset **hs, ...)
 */
+#ifdef S_USE_VA_ARGS
 #define shs_free(...) shm_free_aux(__VA_ARGS__, S_INVALID_PTR_VARG_TAIL)
+#else
+#define shs_free(hs) shm_free_aux(hs, S_INVALID_PTR_VARG_TAIL)
+#endif
 
 /*
  * Copy
