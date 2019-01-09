@@ -526,8 +526,8 @@ void shm_clear(srt_hmap *hm)
 void shm_free_aux(srt_hmap **hm, ...)
 {
 	va_list ap;
-	va_start(ap, hm);
 	srt_hmap **next = hm;
+	va_start(ap, hm);
 	while (!s_varg_tail_ptr_tag(next)) { /* last element tag */
 		shm_clear(*next); /* release associated dyn. memory */
 		sd_free((srt_data **)next);

@@ -539,10 +539,13 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 		S_ASSERT(ts - 1 < ST_NIL);
 		sz = ts - 1; /* BEHAVIOR */
 		if (w[c].x != sz) {
-			const struct NodeContext ct = {sz, get_node(t, sz)};
+			srt_tnode *fpn;
+			struct NodeContext ct;
 			enum STNDir dl = ST_Left;
+			ct.x = sz;
+			ct.n = get_node(t, sz);
 			/* TODO: cache this (!) */
-			srt_tnode *fpn = locate_parent(t, &ct, &dl);
+			fpn = locate_parent(t, &ct, &dl);
 			if (fpn) {
 				copy_node(t, w[c].n, ct.n);
 				set_lr(fpn, dl, w[c].x);

@@ -45,8 +45,8 @@ static srt_bool cb32(uint32_t k, uint32_t v, void *context)
 static srt_bool cb64(int64_t k, int64_t v, void *context)
 {
 	S_UNUSED(context);
-	printf("%08x%08x " FMT_U "\n", (unsigned)(k >> 32), (unsigned)k,
-	       (uint64_t)v);
+	printf("%08x%08x %u%u\n", (unsigned)(k >> 32), (unsigned)k,
+	       (unsigned)(v / 1000000000), (unsigned)(v % 1000000000));
 	return S_TRUE;
 }
 

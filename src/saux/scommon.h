@@ -85,8 +85,16 @@ extern "C" {
 #ifndef WCHAR_MAX
 #define WCHAR_MAX ((wchar_t)-1)
 #endif
-#if defined(__CYGWIN__) && !defined(UINTPTR_MAX)
+#ifndef UINTPTR_MAX
+#if defined(__LP64__) || defined(__64BIT__) || defined(__arch64__) || \
+    defined(_LP64) || defined(__ia64__) || defined(__ia64) || \
+    defined(__sparc_v9__) || defined(__sparcv9) || defined(_WIN64) || \
+    defined(__x86_64__) || defined(__WORDSIZE) && __WORDSIZE == 64 || \
+    defined(__ppc64__)
+#define UINTPTR_MAX 0xffffffffffffffffULL
+#else
 #define UINTPTR_MAX 0xffffffff
+#endif
 #endif
 #ifndef UINT32_MAX
 #define UINT32_MAX ((uint32_t)-1)
@@ -218,6 +226,8 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #define FMT_ZU "%zu"
 #define FMT_I "%" PRId64
 #define FMT_U "%" PRIu64
+#define FMT_I32 "%" PRId32
+#define FMT_U32 "%" PRIu32
 #else
 #define FMT_ZI "%li"
 #define FMT_ZU "%lu"
@@ -226,6 +236,11 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #endif
 #define FMTSZ_T ssize_t
 #define FMTSSZ_T size_t
+#endif
+
+#ifndef FMT_I32
+#define FMT_I32 "%i"
+#define FMT_U32 "%u"
 #endif
 
 #if defined(_MSC_VER)
@@ -240,7 +255,7 @@ typedef long int32_t;
 #endif
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
-typedef unsigned long uint32_t;
+typedef unsigned int uint32_t;
 #ifdef _MSC_VER
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
