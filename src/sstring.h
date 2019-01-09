@@ -58,7 +58,9 @@ struct SStringRefRW {
 	char *str;
 };
 
-#define SS_RANGE (sizeof(size_t) - sizeof(srt_string))
+#define SS_RANGE \
+	(((size_t)-1) - S_MAX(sizeof(struct SString),	\
+			      sizeof(struct SStringRef)))
 #define EMPTY_SS                                                               \
 	{                                                                      \
 		EMPTY_SDataFull, 0                                             \
