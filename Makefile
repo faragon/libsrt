@@ -31,7 +31,7 @@
 # - On FreeSD use gmake instead of make (as in that system "make" is "pmake",
 #   and not GNU make). If not installed, use: pkg install gmake
 #
-# Copyright (c) 2015-2018 F. Aragon. All rights reserved.
+# Copyright (c) 2015-2019 F. Aragon. All rights reserved.
 # Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
@@ -81,4 +81,5 @@ clean:
 		*\.gcov *\.out callgrind* out\.txt clang_analysis.txt \
 		*\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
+	@rm -rf out_doc
 .PHONY: clean all run_tests
