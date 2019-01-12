@@ -233,10 +233,10 @@ uint32_t sh_mh3_32(uint32_t acc, const void *buf, size_t buf_size)
 	k = 0;
 	switch (buf_size & 3) {
 	case 3:
-		k ^= data[i + 2] << 16;
+		k ^= (uint32_t)(data[i + 2] << 16);
 		/* fallthrough */
 	case 2:
-		k ^= data[i + 1] << 8;
+		k ^= (uint32_t)(data[i + 1] << 8);
 		/* fallthrough */
 	case 1:
 		k ^= data[i];

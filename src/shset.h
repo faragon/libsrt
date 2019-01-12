@@ -69,7 +69,7 @@ srt_hset *shs_alloca(enum eSHS_Type t, size_t n);
 /* #API: |Allocate hash set (heap)|set type; initial reserve|hash set|O(n)|1;2| */
 S_INLINE srt_hset *shs_alloc(enum eSHS_Type t, size_t init_size)
 {
-	return shm_alloc_aux(t, init_size);
+	return shm_alloc_aux((int)t, init_size);
 }
 
 /* #API: |Ensure space for extra elements|hash set;number of extra elements|extra size allocated|O(1)|1;2| */

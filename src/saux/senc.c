@@ -1198,7 +1198,7 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S3_ID:
-			mix = (*s | (S_LD_LE_U16(s + 1) << 8))
+			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
 			      >> LZOPR_HDR_24S3_BITS;
 			dist = (mix & S_NBITMASK(LZOPR_D24S3_BITS));
 			len = mix >> LZOPR_D24S3_BITS;
@@ -1211,7 +1211,7 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S2_ID:
-			mix = (*s | (S_LD_LE_U16(s + 1) << 8))
+			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
 			      >> LZOPR_HDR_24S2_BITS;
 			dist = (mix & S_NBITMASK(LZOPR_D24S2_BITS));
 			len = mix >> LZOPR_D24S2_BITS;
@@ -1224,7 +1224,7 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24S_ID:
-			mix = (*s | (S_LD_LE_U16(s + 1) << 8))
+			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
 			      >> LZOPR_HDR_24S_BITS;
 			dist = (mix & S_NBITMASK(LZOPR_D24S_BITS));
 			len = mix >> LZOPR_D24S_BITS;
@@ -1237,7 +1237,7 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 			sdec_lz_load_ref(&o, dist, len);
 			continue;
 		case LZOPR_24_ID:
-			mix = (*s | (S_LD_LE_U16(s + 1) << 8))
+			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
 			      >> LZOPR_HDR_24_BITS;
 			dist = (mix & S_NBITMASK(LZOPR_D24_BITS));
 			len = mix >> LZOPR_D24_BITS;
@@ -1324,5 +1324,5 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 			continue;
 		}
 	}
-	return o - o0;
+	return (size_t)(o - o0);
 }

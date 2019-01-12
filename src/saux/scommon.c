@@ -55,19 +55,19 @@ void s_st_pk_u64(uint8_t **buf0, uint64_t v)
 	buf = *buf0;
 	/* 7-bit (8-bit container) */
 	if (v <= D8_LE_MASK) {
-		buf[0] = D8_LE_ID | ((uint8_t)v << D8_LE_SHIFT);
+		buf[0] = D8_LE_ID | (uint8_t)(v << D8_LE_SHIFT);
 		(*buf0) += D8_LE_SZ;
 		return;
 	}
 	/* 14-bit (16-bit container) */
 	if (v <= D16_LE_MASK) {
-		S_ST_LE_U16(buf, D16_LE_ID | ((uint16_t)v << D16_LE_SHIFT));
+		S_ST_LE_U16(buf, D16_LE_ID | (uint16_t)(v << D16_LE_SHIFT));
 		(*buf0) += D16_LE_SZ;
 		return;
 	}
 	/* 21-bit (24-bit container) */
 	if (v <= D24_LE_MASK) {
-		S_ST_LE_U32(buf, D24_LE_ID | ((uint32_t)v << D24_LE_SHIFT));
+		S_ST_LE_U32(buf, D24_LE_ID | (uint32_t)(v << D24_LE_SHIFT));
 		(*buf0) += D24_LE_SZ;
 		return;
 	}

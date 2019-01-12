@@ -91,7 +91,7 @@ extern "C" {
     defined(__sparc_v9__) || defined(__sparcv9) || defined(_WIN64) || \
     defined(__x86_64__) || defined(__WORDSIZE) && __WORDSIZE == 64 || \
     defined(__ppc64__)
-#define UINTPTR_MAX 0xffffffffffffffffULL
+#define UINTPTR_MAX 0xffffffffffffffffU
 #else
 #define UINTPTR_MAX 0xffffffff
 #endif
@@ -106,10 +106,10 @@ extern "C" {
 #define INT32_MIN ((int32_t)0x80000000)
 #endif
 #ifndef INT64_MAX
-#define INT64_MAX ((int64_t)0x7fffffffffffffffLL)
+#define INT64_MAX ((int64_t)0x7fffffffffffffff)
 #endif
 #ifndef INT64_MIN
-#define INT64_MIN ((int64_t)0x8000000000000000LL)
+#define INT64_MIN ((int64_t)0x8000000000000000)
 #endif
 
 #ifndef S_OLD_C_PREPROCESSOR

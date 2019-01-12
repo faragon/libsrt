@@ -13,14 +13,6 @@
 #include "utf8_examples.h"
 #include <locale.h>
 
-#ifdef S_ENABLE_BRK
-#define S_BRK __asm__("int3")
-#else
-#define S_BRK                                                                  \
-	do {                                                                   \
-	} while (0)
-#endif
-
 #if !defined(_MSC_VER) && !defined(__CYGWIN__) && !defined(S_MINIMAL)
 #define GOOD_LOCALE_SUPPORT
 #endif
@@ -342,7 +334,7 @@ static int test_ss_resize_x()
  */
 #define TEST_SS_OPCHK_VARS                                                     \
 	int res = 0;                                                           \
-	size_t i = 0, la, lb;                                                  \
+	size_t i = 0;                                                          \
 	srt_string *sa = NULL, *sb = NULL, *se
 #define TEST_SS_OPCHK(f, a, b, e)                                              \
 	se = ss_dup_c(e);                                                      \
@@ -352,9 +344,9 @@ static int test_ss_resize_x()
 		sa = ss_dup_c(a);                                              \
 		sb = ss_dup_c(b);                                              \
 		if ((i & 1) != 0)                                              \
-			la = ss_len_u(sa);                                     \
+			(void)ss_len_u(sa);                                    \
 		if ((i & 2) != 0)                                              \
-			lb = ss_len_u(sb);                                     \
+			(void)ss_len_u(sb);                                    \
 		f;                                                             \
 		res = (!sa || !sb)                                             \
 			      ? 1                                              \
@@ -1640,7 +1632,6 @@ static int test_ss_toupper(const char *a, const char *b)
 {
 	TEST_SS_OPCHK_VARS;
 	TEST_SS_OPCHK(ss_toupper(&sa), a, "", b);
-	return res;
 }
 
 static int test_ss_clear(const char *in)

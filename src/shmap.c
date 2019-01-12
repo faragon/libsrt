@@ -48,86 +48,86 @@ static srt_bool eq_sso1(const void *key, const void *node)
 	return sso1_eq((const srt_string *)key, (const srt_stringo1 *)node);
 }
 
-void shmcb_set_ii32(void *loc, const void *key, const void *value)
+static void shmcb_set_ii32(void *loc, const void *key, const void *value)
 {
 	struct SHMapii *e = (struct SHMapii *)loc;
 	memcpy(&e->x.k, key, sizeof(e->x.k));
 	memcpy(&e->v, value, sizeof(e->v));
 }
 
-void shmcb_set_uu32(void *loc, const void *key, const void *value)
+static void shmcb_set_uu32(void *loc, const void *key, const void *value)
 {
 	struct SHMapuu *e = (struct SHMapuu *)loc;
 	memcpy(&e->x.k, key, sizeof(e->x.k));
 	memcpy(&e->v, value, sizeof(e->v));
 }
 
-void shmcb_set_ii64(void *loc, const void *key, const void *value)
+static void shmcb_set_ii64(void *loc, const void *key, const void *value)
 {
 	struct SHMapII *e = (struct SHMapII *)loc;
 	memcpy(&e->x.k, key, sizeof(e->x.k));
 	memcpy(&e->v, value, sizeof(e->v));
 }
 
-void shmcb_set_is(void *loc, const void *key, const void *value)
+static void shmcb_set_is(void *loc, const void *key, const void *value)
 {
 	struct SHMapIS *e = (struct SHMapIS *)loc;
 	memcpy(&e->x.k, key, sizeof(e->x.k));
 	sso1_set(&e->v, (const srt_string *)value);
 }
 
-void shmcb_set_ip(void *loc, const void *key, const void *value)
+static void shmcb_set_ip(void *loc, const void *key, const void *value)
 {
 	struct SHMapIP *e = (struct SHMapIP *)loc;
 	memcpy(&e->x.k, key, sizeof(e->x.k));
 	e->v = value;
 }
 
-void shmcb_set_si(void *loc, const void *key, const void *value)
+static void shmcb_set_si(void *loc, const void *key, const void *value)
 {
 	struct SHMapSI *e = (struct SHMapSI *)loc;
 	sso1_set(&e->x.k, (const srt_string *)key);
 	memcpy(&e->v, value, sizeof(e->v));
 }
 
-void shmcb_set_ss(void *loc, const void *key, const void *value)
+static void shmcb_set_ss(void *loc, const void *key, const void *value)
 {
 	struct SHMapSS *e = (struct SHMapSS *)loc;
 	sso_set(&e->kv, (const srt_string *)key, (const srt_string *)value);
 }
 
-void shmcb_set_sp(void *loc, const void *key, const void *value)
+static void shmcb_set_sp(void *loc, const void *key, const void *value)
 {
 	struct SHMapSP *e = (struct SHMapSP *)loc;
 	sso1_set(&e->x.k, (const srt_string *)key);
 	e->v = value;
 }
 
-void shmcb_set_i32(void *loc, const void *key)
+static void shmcb_set_i32(void *loc, const void *key)
 {
 	struct SHMapi *e = (struct SHMapi *)loc;
 	memcpy(&e->k, key, sizeof(e->k));
 }
 
-void shmcb_set_u32(void *loc, const void *key)
+static void shmcb_set_u32(void *loc, const void *key)
 {
 	struct SHMapu *e = (struct SHMapu *)loc;
 	memcpy(&e->k, key, sizeof(e->k));
 }
 
-void shmcb_set_i64(void *loc, const void *key)
+static void shmcb_set_i64(void *loc, const void *key)
 {
 	struct SHMapI *e = (struct SHMapI *)loc;
 	memcpy(&e->k, key, sizeof(e->k));
 }
 
-void shmcb_set_s(void *loc, const void *key)
+static void shmcb_set_s(void *loc, const void *key)
 {
 	struct SHMapS *e = (struct SHMapS *)loc;
 	sso1_set(&e->k, (const srt_string *)key);
 }
 
-void shmcb_inc_ii32(void *loc, const void *value)
+static void shmcb_inc_ii32(void *loc, const void *value)
 {
 	int32_t vi;
 	struct SHMapii *e = (struct SHMapii *)loc;
@@ -135,7 +135,7 @@ void shmcb_inc_ii32(void *loc, const void *value)
 	e->v += vi;
 }
 
-void shmcb_inc_uu32(void *loc, const void *value)
+static void shmcb_inc_uu32(void *loc, const void *value)
 {
 	uint32_t vi;
 	struct SHMapuu *e = (struct SHMapuu *)loc;
@@ -143,7 +143,7 @@ void shmcb_inc_uu32(void *loc, const void *value)
 	e->v += vi;
 }
 
-void shmcb_inc_ii64(void *loc, const void *value)
+static void shmcb_inc_ii64(void *loc, const void *value)
 {
 	int64_t vi;
 	struct SHMapII *e = (struct SHMapII *)loc;
@@ -151,7 +151,7 @@ void shmcb_inc_ii64(void *loc, const void *value)
 	e->v += vi;
 }
 
-void shmcb_inc_si(void *loc, const void *value)
+static void shmcb_inc_si(void *loc, const void *value)
 {
 	int64_t vi;
 	struct SHMapSI *e = (struct SHMapSI *)loc;
@@ -243,7 +243,7 @@ static void aux_rehash(srt_hmap *hm)
 	struct SHMBucket *b = shm_get_buckets(hm);
 	size_t nbuckets, elem_size = hm->d.elem_size, nelems = shm_size(hm);
 	nbuckets = 1 << hm->hbits;
-	hm->hmask = nbuckets - 1;
+	hm->hmask = hm->hbits == 32 ? (uint32_t)-1 : (uint32_t)(nbuckets - 1);
 	hm->rh_threshold = s_size_t_pct(nbuckets, hm->rh_threshold_pct);
 	/*
 	 * Reset the hash table buckets, and rehash all elements
@@ -273,7 +273,7 @@ static void aux_rehash(srt_hmap *hm)
 static srt_bool aux_insert_check(srt_hmap **hm)
 {
 	srt_hmap *h2;
-	size_t hs1, hs2, hsd, h2bits, sxz, sxzm, sz;
+	size_t h2bits, hs1, hs2, hsd, sxz, sxzm, sz;
 	RETURN_IF(!shm_grow(hm, 1), S_FALSE);
 	sz = shm_size(*hm);
 	/* Check if rehash is not required */
@@ -324,7 +324,7 @@ static srt_bool aux_insert_check(srt_hmap **hm)
 #endif
 	/* Reconfigure the data structure */
 	h2->d.header_size = hs2;
-	h2->hbits = h2bits;
+	h2->hbits = (uint32_t)h2bits;
 	/* Rehash elements */
 	aux_rehash(h2);
 	return S_TRUE;
@@ -351,7 +351,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 	hmask = hm->hmask;
 	hbits = hm->hbits;
 	for (hcnt = 0, l = bid; hcnt < hmax; l = (l + 1) & hmask) {
-		if (!b[l].loc || h2bid(b[l].hash, hbits) != bid)
+		if (b[l].loc == SHM_LOC_EMPTY || h2bid(b[l].hash, hbits) != bid)
 			continue;
 		/* Possible match */
 		hcnt++;
@@ -360,7 +360,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 			eloc = data + eoff * es;
 			if (hm->eqf(key, eloc)) {
 				if (tl)
-					*tl = l;
+					*tl = (uint32_t)l;
 				return eloc;
 			}
 		}
@@ -371,7 +371,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 {
 	struct SHMBucket *b;
-	uint32_t ht, l0, tl;
+	uint32_t ht, l0, tl = 0;
 	size_t bid, e_off, es, hcnt, hmax, l, ss, hbits, hmask;
 	uint8_t *data, *dloc, *hole, *tail, *tloc;
 	RETURN_IF(!hm, S_FALSE);
@@ -384,7 +384,7 @@ static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 	es = hm->d.elem_size;
 	hmask = hm->hmask;
 	for (hcnt = 0, l = bid; hcnt < hmax; l = (l + 1) & hmask) {
-		if (!b[l].loc || h2bid(b[l].hash, hbits) != bid)
+		if (b[l].loc == SHM_LOC_EMPTY || h2bid(b[l].hash, hbits) != bid)
 			continue;
 		/* Possible match */
 		hcnt++;
@@ -480,10 +480,10 @@ srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,
 	h = (srt_hmap *)buffer;
 	sd_reset((srt_data *)h, hdr_size, elem_size, max_size, ext_buf,
 		 S_FALSE);
-	h->d.sub_type = t;
+	h->d.sub_type = (uint8_t)t;
 	shm_tsetup(h, t);
 	h->rh_threshold_pct = SHM_REHASH_DEFAULT_THRESHOLD_PCT;
-	h->hbits = hbits;
+	h->hbits = (uint32_t)hbits;
 	aux_rehash(h);
 	return h;
 }
@@ -550,7 +550,7 @@ S_INLINE size_t shm_current_alloc_size(const srt_hmap *h)
 static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 {
 	srt_hmap *hra;
-	enum eSHM_Type0 t = (enum eSHM_Type0)src->d.sub_type;
+	uint8_t t = src->d.sub_type;
 	size_t tgt0_cas = shm_current_alloc_size(*hm),
 	       src0_cas = shm_current_alloc_size(src),
 	       np2 = snextpow2(shm_size(src)), hbits = slog2(np2),
@@ -580,7 +580,7 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 		(*hm)->d.elem_size = src->d.elem_size;
 	}
 	(*hm)->d.header_size = hdr_size;
-	(*hm)->hbits = hbits;
+	(*hm)->hbits = (uint32_t)hbits;
 	(*hm)->eqf = src->eqf;
 	(*hm)->delf = src->delf;
 	(*hm)->n2kf = src->n2kf;
@@ -590,7 +590,7 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 
 srt_hmap *shm_cpy(srt_hmap **hm, const srt_hmap *src)
 {
-	int t;
+	uint8_t t;
 	uint8_t *data_tgt;
 	const uint8_t *data_src;
 	size_t i, hs, hdr0_size, es, ss;
@@ -601,7 +601,7 @@ srt_hmap *shm_cpy(srt_hmap **hm, const srt_hmap *src)
 	struct SHMapSS *h_ss;
 	RETURN_IF(!hm || !src, NULL); /* BEHAVIOR */
 	RETURN_IF(*hm == src, *hm);
-	t = (enum eSHM_Type0)src->d.sub_type;
+	t = src->d.sub_type;
 	hs = shm_size(src);
 	es = src->d.elem_size;
 	ss = shm_size(src);
@@ -673,13 +673,13 @@ static srt_bool shm_insert1(srt_hmap **hm, int t, const void *k, uint32_t h32,
 			    shm_set1_f setf)
 {
 	void *l;
-	uint32_t i;
+	size_t i;
 	RETURN_IF(!hm || !*hm || !shm_chk_t(*hm, t), S_FALSE);
 	RETURN_IF(!aux_insert_check(hm), S_FALSE);
 	l = (void *)shm_at(*hm, h32, k, NULL);
 	if (!l) {
 		i = shm_size(*hm);
-		aux_reg_hash(*hm, k, h32, i);
+		aux_reg_hash(*hm, k, h32, (shm_eloc_t_)i);
 		shm_set_size(*hm, i + 1);
 		l = shm_get_buffer(*hm) + i * (*hm)->d.elem_size;
 	}
@@ -693,13 +693,13 @@ static srt_bool shm_insert(srt_hmap **hm, int t, const void *k, uint32_t h32,
 			   const void *v, shm_set_f setf)
 {
 	void *l;
-	uint32_t i;
+	size_t i;
 	RETURN_IF(!hm || !*hm || !shm_chk_t(*hm, t), S_FALSE);
 	RETURN_IF(!aux_insert_check(hm), S_FALSE);
 	l = (void *)shm_at(*hm, h32, k, NULL);
 	if (!l) {
 		i = shm_size(*hm);
-		aux_reg_hash(*hm, k, h32, i);
+		aux_reg_hash(*hm, k, h32, (shm_eloc_t_)i);
 		shm_set_size(*hm, i + 1);
 		l = shm_get_buffer(*hm) + i * (*hm)->d.elem_size;
 	}
@@ -836,7 +836,7 @@ srt_bool shm_delete_i(srt_hmap *hm, int64_t k)
 		k32 = (uint32_t)k;
 		return del(hm, sh_hash32(k32), &k32);
 	}
-	return del(hm, sh_hash64(k), &k);
+	return del(hm, sh_hash64((uint64_t)k), &k);
 }
 
 srt_bool shm_delete_s(srt_hmap *hm, const srt_string *k)

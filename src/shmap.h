@@ -277,7 +277,7 @@ srt_hmap *shm_alloc_aux(int t, size_t init_size);
 /* #api: |allocate hash map (heap)|hash map type; initial reserve|hmap|O(n)|1;2| */
 S_INLINE srt_hmap *shm_alloc(enum eSHM_Type t, size_t init_size)
 {
-	return shm_alloc_aux(t, init_size);
+	return shm_alloc_aux((int)t, init_size);
 }
 
 SD_BUILDFUNCS_FULL_ST(shm, srt_hmap, 0)

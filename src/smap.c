@@ -308,16 +308,16 @@ srt_map *sm_alloc_raw0(enum eSM_Type0 t, srt_bool ext_buf, void *buffer,
 	m = (srt_map *)st_alloc_raw(type2cmpf(t), ext_buf, buffer, elem_size,
 				    max_size);
 	if (m)
-		m->d.sub_type = t;
+		m->d.sub_type = (uint8_t)t;
 	return m;
 }
 
 srt_map *sm_alloc0(enum eSM_Type0 t, size_t init_size)
 {
-	srt_map *m =
-		(srt_map *)st_alloc(type2cmpf(t), sm_elem_size(t), init_size);
+	srt_map *m = (srt_map *)st_alloc(type2cmpf(t), sm_elem_size((int)t),
+					 init_size);
 	if (m)
-		m->d.sub_type = t;
+		m->d.sub_type = (uint8_t)t;
 	return m;
 }
 
@@ -387,7 +387,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 	RETURN_IF(ss > ST_NDX_MAX, NULL); /* BEHAVIOR */
 	if (*m) {
 		sm_clear(*m);
-		if (!sm_chk_t(*m, t)) {
+		if (!sm_chk_t(*m, (int)t)) {
 			/*
 			 * Case of changing map type, reusing allocated memory,
 			 * but changing container configuration.

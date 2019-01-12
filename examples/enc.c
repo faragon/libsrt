@@ -8,13 +8,14 @@
  */
 
 #include "../src/libsrt.h"
+#include "../src/saux/senc.h" /* for debug stats */
 
 #define LZHBUF_SIZE S_NPOS /* -ezh high compression: infinite buffer size */
 #define LZBUF_SIZE 1000000 /* -ez fast compression: 1 MB buffer size */
 #define IBUF_SIZE (3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
 #define ESC_MAX_SIZE 16 /* maximum size for an escape sequence: 16 bytes */
 
-#if SZ_DEBUG_STATS
+#if SDEBUG_LZ_STATS
 extern size_t lz_st_lit[9], lz_st_lit_bytes;
 extern size_t lz_st_ref[9], lz_st_ref_bytes;
 #endif
@@ -46,16 +47,14 @@ static int syntax_error(const char **argv, const int exit_code)
 
 int main(int argc, const char **argv)
 {
-	int exit_code = 0;
-	uint8_t esc, dle[S_PK_U64_MAX_BYTES], *dlep;
-	const uint8_t *dlepc;
-	srt_string_ref ref;
-	size_t lmax = 0;
-	size_t li = 0, lo = 0, j, l, l2, ss0, off;
-	const char *b;
-	int cf;
 	srt_bool done;
-	uint32_t acc;
+	const char *b;
+	srt_string_ref ref;
+	const uint8_t *dlepc;
+	int exit_code = 0, cf;
+	uint8_t esc, dle[S_PK_U64_MAX_BYTES], *dlep;
+	size_t lmax = 0, li = 0, lo = 0, j, l, l2, ss0, off;
+	uint32_t acc = 0;
 	uint32_t (*f32)(const srt_string *, uint32_t, size_t, size_t) = NULL;
 	srt_string *in = NULL, *out = NULL;
 	srt_string *(*ss_codec1_f)(srt_string **, const srt_string *) = NULL;
@@ -237,7 +236,7 @@ int main(int argc, const char **argv)
 		ss_clear(out);
 	}
 	fprintf(stderr, "in: %zu bytes, out: %zu bytes\n", li, lo);
-#if SZ_DEBUG_STATS
+#if SDEBUG_LZ_STATS
 	fprintf(stderr,
 		"lzlit: [8: %zu] [16: %zu] [24: %zu] [32: %zu] [bytes: %zu]\n",
 		lz_st_lit[0], lz_st_lit[1], lz_st_lit[2], lz_st_lit[3],

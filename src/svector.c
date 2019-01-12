@@ -338,7 +338,7 @@ srt_vector *sv_alloc_raw(enum eSV_Type t, srt_bool ext_buf, void *buffer,
 	v = (srt_vector *)buffer;
 	sd_reset((srt_data *)v, sizeof(srt_vector), elem_size, max_size,
 		 ext_buf, S_FALSE);
-	v->d.sub_type = t;
+	v->d.sub_type = (uint8_t)t;
 	v->vx.cmpf = t <= SV_LAST_INT ? svt_cmpf[t] : f;
 	return v;
 }
@@ -585,7 +585,8 @@ int sv_ncmp(const srt_vector *v1, size_t v1off, const srt_vector *v2,
 	ASSERT_RETURN_IF(!v1 && !v2, 0);
 	ASSERT_RETURN_IF(!v1, -1);
 	ASSERT_RETURN_IF(!v2, 1);
-	sv1 = sv_size(v1), sv2 = sv_size(v2);
+	sv1 = sv_size(v1);
+	sv2 = sv_size(v2);
 	sv1_left = v1off < sv1 ? sv1 - v1off : 0;
 	sv2_left = v2off < sv2 ? sv2 - v2off : 0;
 	cmp_len = S_MIN3(n, sv1_left, sv2_left);
