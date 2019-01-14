@@ -221,8 +221,10 @@ if (($TMUX & 4)) && type scan-build >/dev/null 2>&1 ; then
 fi
 
 if (($TMUX & 8)) ; then
+	make clean
+	OUT_DOC=out_doc
+	mkdir $OUT_DOC 2>/dev/null
 	if type python3 >/dev/null 2>&1 ; then
-		OUT_DOC=out_doc
 		echo "Documentation generation test..."
 		if ! utl/mk_doc.sh src $OUT_DOC ; then
 			ERRORS=$((ERRORS + 1))
@@ -233,10 +235,10 @@ if (($TMUX & 8)) ; then
 	if type gcov >/dev/null 2>&1 ; then
 		echo "Coverage report generation..."
 		COVERAGE_OUT=$OUT_DOC/coverage.txt
-		make clean
 		make -j $MJOBS CC=gcc PROFILING=1 2>/dev/null >/dev/null
 		for f in schar scommon sdata senc shash smap smset shmap \
-			 ssearch ssort sstring stree svector stest ; do
+			 shset ssearch ssort sstring sstringo stree svector \
+			 stest ; do
 			gcov $f.c >/dev/null 2>/dev/null
 		done
 		rm -f $COVERAGE_OUT 2>/dev/null

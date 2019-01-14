@@ -156,6 +156,7 @@
     <ClCompile Include="..\..\src\saux\shash.c" />
     <ClCompile Include="..\..\src\saux\ssearch.c" />
     <ClCompile Include="..\..\src\saux\ssort.c" />
+    <ClCompile Include="..\..\src\saux\sstringo.c" />
     <ClCompile Include="..\..\src\saux\stree.c" />
     <ClCompile Include="..\..\src\shmap.c" />
     <ClCompile Include="..\..\src\shset.c" />
@@ -174,6 +175,7 @@
     <ClInclude Include="..\..\src\saux\shash.h" />
     <ClInclude Include="..\..\src\saux\ssearch.h" />
     <ClInclude Include="..\..\src\saux\ssort.h" />
+    <ClCompile Include="..\..\src\saux\sstringo.h" />
     <ClInclude Include="..\..\src\saux\stree.h" />
     <ClInclude Include="..\..\src\sbitset.h" />
     <ClInclude Include="..\..\src\shmap.h" />
