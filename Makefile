@@ -59,7 +59,7 @@ ifeq ($(UNAME_M), mips)
 	endif
 endif
 ifeq ($(EN_BENCH), 1)
-	EXAMPLES += bench
+	EXAMPLES += bench counter++
 endif
 
 EXES	= $(TEST) $(EXAMPLES)
