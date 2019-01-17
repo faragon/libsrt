@@ -164,7 +164,7 @@
     <ClCompile Include="..\..\src\smset.c" />
     <ClCompile Include="..\..\src\sstring.c" />
     <ClCompile Include="..\..\src\svector.c" />
-    <ClCompile Include="..\..\examples\stest.c" />
+    <ClCompile Include="..\..\test\stest.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\saux\schar.h" />

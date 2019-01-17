@@ -1,5 +1,5 @@
 /*
- * bench.cpp
+ * bench.cc
  *
  * Benchmarks of libsrt vs C++ STL
  *
@@ -8,7 +8,7 @@
  */
 
 #include "../src/libsrt.h"
-#include "utf8_examples.h"
+#include "../test/utf8_examples.h"
 #include <algorithm>
 #include <bitset>
 #include <map>
@@ -895,7 +895,6 @@ int sv_cmp_StrGenTest(const void *a, const void *b)
 	return memcmp(a, b, 32);
 }
 
-
 struct StrGenTestCpp
 {
 	uint8_t raw[32];
@@ -912,7 +911,8 @@ bool libsrt_vector_gen(size_t count, int tid)
 		  !TIdTest(tid, TId_Sort10000Times), false);
 	struct StrGenTest aux;
 	memset(&aux, 0, sizeof(aux));
-	srt_vector *v = sv_alloc(sizeof(struct StrGenTest), 0, sv_cmp_StrGenTest);
+	srt_vector *v = sv_alloc(sizeof(struct StrGenTest), 0,
+				 sv_cmp_StrGenTest);
 	for (size_t i = 0; i < count; i++)
 		sv_push(&v, &aux);
 	for (size_t j = 0; j < TId2Count(tid); j++)
@@ -979,7 +979,8 @@ const char
 	"bcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdabcdab"
 	"cdabcdabcdabcdabcdabcdabcdabcddcbadcbadcbadcba",
 	*haystack_hardmatch3_long =
-	U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES "1234567890",
+	U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES U8_MANY_UNDERSCORES
+								"1234567890",
 	*needle_easymatch1a = " a ",
 	*needle_easymatch1b = "conversations?",
 	*needle_easymatch2a = U8_HAN_611B,
@@ -1544,34 +1545,46 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_vector_u64, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_gen, count[i], tid[i]);
 		BENCH_FN(cxx_vector_gen, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_easymatch_long_1a, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_easymatch_long_1a, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_easymatch_long_1a, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_easymatch_long_1a, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_easymatch_long_1b, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_easymatch_long_1b, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_easymatch_long_1b, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_easymatch_long_1b, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_easymatch_long_2a, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_easymatch_long_2a, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_easymatch_long_2a, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_easymatch_long_2a, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_easymatch_long_2b, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_easymatch_long_2b, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_easymatch_long_2b, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_easymatch_long_2b, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_long_1a, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_long_1a, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_long_1a, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_hardmatch_long_1a, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_long_1b, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_long_1b, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_long_1b, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_hardmatch_long_1b, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_short_1a, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_short_1a, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_short_1a, count[i], tid[i]);
-		BENCH_FN(cxx_string_search_hardmatch_short_1a, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_short_1b, count[i], tid[i]);
+		BENCH_FN(cxx_string_search_hardmatch_short_1a, count[i],
+			 tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_short_1b, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_short_1b, count[i], tid[i]);
-		BENCH_FN(cxx_string_search_hardmatch_short_1b, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_long_2, count[i], tid[i]);
+		BENCH_FN(cxx_string_search_hardmatch_short_1b, count[i],
+			 tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_long_2, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_long_2, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_hardmatch_long_2, count[i], tid[i]);
-		BENCH_FN(libsrt_string_search_hardmatch_long_3, count[i], tid[i]);
+		BENCH_FN(libsrt_string_search_hardmatch_long_3, count[i],
+			 tid[i]);
 		BENCH_FN(c_string_search_hardmatch_long_3, count[i], tid[i]);
 		BENCH_FN(cxx_string_search_hardmatch_long_3, count[i], tid[i]);
 		BENCH_FN(libsrt_string_loweruppercase_ascii, count[i], tid[i]);

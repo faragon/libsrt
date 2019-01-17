@@ -1,5 +1,5 @@
 /*
- * histogram.c
+ * histogrampp.cc
  *
  * Histogram example using C++
  *

@@ -25,6 +25,8 @@ imgc
 imgd
 stest
 table
+counterpp
+histogrampp
 # Profiling
 *.gcda
 *.gcno
@@ -39,3 +41,22 @@ win/vs2013/stest_Release/
 win/vs2013/x64/
 private/
 out_doc/
+# Auto-tools
+Makefile.in
+Makefile
+.deps
+.libs
+autom4te.cache
+config.*
+configure
+install-sh
+ltmain.sh
+missing
+depcomp
+libtool
+compile
+aclocal.m4
+utl/tmp
+.dirstamp
+*.log
+*.trs

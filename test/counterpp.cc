@@ -1,5 +1,5 @@
 /*
- * counter++.c
+ * counterpp.c
  *
  * Code counting example using C++
  *

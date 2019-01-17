@@ -154,10 +154,12 @@ echo "make_test.sh running..."
 # Locate GNU Make
 if [ "$MAKE" == "" ] ; then
 	if type gmake >/dev/null 2>&1 ; then
-		MAKE=gmake
+		MAKE="gmake -f Makefile.posix"
 	else
-		MAKE=make
+		MAKE="make -f Makefile.posix"
 	fi
+else
+	MAKE="$MAKE -f Makefile.posix"
 fi
 
 if (($TMUX & 1)) ; then
@@ -221,7 +223,7 @@ if (($TMUX & 4)) && type scan-build >/dev/null 2>&1 ; then
 fi
 
 if (($TMUX & 8)) ; then
-	make clean
+	$MAKE clean
 	OUT_DOC=out_doc
 	mkdir $OUT_DOC 2>/dev/null
 	if type python3 >/dev/null 2>&1 ; then
@@ -235,7 +237,7 @@ if (($TMUX & 8)) ; then
 	if type gcov >/dev/null 2>&1 ; then
 		echo "Coverage report generation..."
 		COVERAGE_OUT=$OUT_DOC/coverage.txt
-		make -j $MJOBS CC=gcc PROFILING=1 2>/dev/null >/dev/null
+		$MAKE -j $MJOBS CC=gcc PROFILING=1 2>/dev/null >/dev/null
 		for f in schar scommon sdata senc shash smap smset shmap \
 			 shset ssearch ssort sstring sstringo stree svector \
 			 stest ; do
@@ -256,16 +258,18 @@ fi
 
 if (($TMUX & 16)) ; then
 	echo "Checking style..."
-	ls -1  src/*c src/saux/*c examples/*c examples/*h Makefile \
-		*\.sh utl/*\.sh | while read line ; do
+	ls -1  src/*c src/saux/*c examples/*c examples/*h Makefile.posix \
+		Makefile.inc Makefile.am *\.sh utl/*\.sh | while read line ; do
 		if ! utl/check_style.sh "$line" ; then
 			echo "$line... ERROR: style"
 			ERRORS=$((ERRORS + 1))
 		fi
 	done
 	if type egrep >/dev/null 2>&1 ; then
-		find doc examples src utl Makefile* LICENSE README.md \
-				make_test.sh -type f | while read line ; do
+		find doc examples/*c examples/*h src/*c src/*h src/saux/*c \
+		     src/saux/*h Makefile.posix Makefile.inc Makefile.am \
+		     LICENSE README.md make_test.sh -type f | \
+		while read line ; do
 			if (($(sed -n '/ \+$/p' <$line | wc -l) > 0)) ; then
 				echo "$line... ERROR, trailing spaces:"
 				sed -n '/ \+$/p' <$line | while read l2 ; do
@@ -277,7 +281,7 @@ if (($TMUX & 16)) ; then
 	fi
 fi
 
-make clean
+$MAKE clean
 
 exit $((ERRORS > 0 ? 1 : 0))
 

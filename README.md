@@ -24,7 +24,7 @@ Key points:
 How to build
 ===
 
-* In most POSIX systems "make" will be enough, as the Makefile includes platform detection for corner cases. However, you can use multiple flags for tuning the build (you can also mix them):
+* In most POSIX systems (e.g. Linux, Unix, and other Unix-like) "make -f Makefile.posix" will be enough, as the Makefile.posix includes platform detection for corner cases. However, you can use multiple flags for tuning the build (you can also mix them):
   * make					# Defaults (equivalent to make ADD\_CFLAGS="-DS\_CRC32\_SLC=12")
   * make -j 8					# Make, spawning up to 8 concurrent jobs (faster on multiprocessor systems)
   * make DEBUG=1				# Disable optimizations (-O0 -ggdb)
@@ -72,6 +72,14 @@ How to build
   * ./make\_test.sh 8	# Generate documentation
   * ./make\_test.sh 16	# Check coding style
   * ./make\_test.sh 24	# Like 8 plus 16 (3 would be like 1 plus 2, etc.)
+
+* A preliminary Autoconf/Automake build is also provided:
+  * ./bootstrap.sh
+  * ./configure
+  * make
+  * make check
+
+* A Visual Studio project is provided in win/vs2013/ for running the test through AppVeyor's CI.
 
 Generic advantages
 ===
