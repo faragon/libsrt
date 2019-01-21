@@ -112,14 +112,8 @@ COMMON_FLAGS = -pipe
 CPP_MODE = 0
 GNUC = 0
 CLANG = 0
-USE_LRT = 0
-
-ifeq (,$(findstring mingw,$(CC)))
-	ifeq (,$(findstring Darwin,$(UNAME)))
-		# Add librt for all but for mingw and Darwin cases
-		USE_LRT = 1
-	endif
-endif
+EN_BENCH = 1
+USE_LRT = 1
 
 ifeq ($(CC), gcc)
 	GNUC = 1
@@ -131,11 +125,28 @@ ifeq ($(shell expr $(GCCLOC) == 1), 1)
 endif
 
 ifeq ($(GNUC), 1)
-	GCCV = $(shell gcc --version | head -c 3)
-	ifeq ($(shell expr $(GCCV) \<= 2.7), 1)
+	GCC_MAJOR = $(shell gcc -dM -E - < /dev/null | grep __GNUC__ | awk '{print $3}')
+	GCC_MINOR = $(shell gcc -dM -E - < /dev/null | grep __GNUC_MINOR__ | awk '{print $3}')
+	GCCV = $(shell printf "%i%02i" $(GCC_MAJOR) $(GCC_MINOR) \>kk)
+	ifeq ($(shell expr $(GCCV) \< 208), 1)
 		OLD_GCC = 1
+		EN_BENCH = 0
 		USE_LRT = 0
 	endif
+else
+	USE_LRT = 0
+	# Add CPP targets only if not using TCC
+	ifeq (,$(findstring tcc,$(CC)))
+		ifeq (,$(findstring mingw,$(CC)))
+			ifeq (,$(findstring Darwin,$(UNAME)))
+				# Add librt for all but for mingw and Darwin cases
+				USE_LRT = 1
+			endif
+		endif
+	else
+		EN_BENCH = 0
+	endif
+
 endif
 
 ifeq ($(CC), g++)
@@ -255,9 +266,6 @@ else
 	endif
 endif
 
-ifeq ($(USE_LRT), 1)
-	LDLIBS = -lrt
-endif
 
 # ARM v6 little endian (e.g. ARM11 on Raspberr Pi I): the flag will enable
 # HW unaligned access
@@ -329,10 +337,6 @@ LIBSRT	= libsrt.a
 ELIBSRT = elibsrt.a
 TEST	= stest
 EXAMPLES = counter enc histogram imgc imgd table
-ifeq (,$(findstring tcc,$(CC)))
-	# Add CPP targets only if not using TCC
-	EN_BENCH = 1
-endif
 ifeq ($(UNAME_M), mips)
 	# Disable CPP targets on MIPS with unknown processor (e.g. PS2)
 	ifeq ($(UNAME_P), unknown)
@@ -341,6 +345,10 @@ ifeq ($(UNAME_M), mips)
 endif
 ifeq ($(EN_BENCH), 1)
 	EXAMPLES += bench counterpp histogrampp
+endif
+
+ifeq ($(USE_LRT), 1)
+	LDLIBS = -lrt
 endif
 
 EXES	= $(TEST) $(EXAMPLES)

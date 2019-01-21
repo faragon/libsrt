@@ -106,10 +106,10 @@ extern "C" {
 #define INT32_MIN ((int32_t)0x80000000)
 #endif
 #ifndef INT64_MAX
-#define INT64_MAX ((int64_t)0x7fffffffffffffff)
+#define INT64_MAX ((int64_t)0x7fffffffffffffffLL)
 #endif
 #ifndef INT64_MIN
-#define INT64_MIN ((int64_t)0x8000000000000000)
+#define INT64_MIN ((int64_t)0x8000000000000000LL)
 #endif
 
 #ifndef S_OLD_C_PREPROCESSOR

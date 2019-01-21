@@ -14,10 +14,7 @@
 #ifndef COUNTER_H
 #define COUNTER_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../src/libsrt.h"
 #ifdef __cplusplus
 #include <bitset>
 #include <set>

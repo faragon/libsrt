@@ -27,7 +27,7 @@ extern "C" {
 
 /* Linux hashing algorithm for 32 and 64-bit values */
 #define S_GR32 0x61C88647
-#define S_GR64 0x61C8864680B583EB
+#define S_GR64 ((uint64_t)0x61C8864680B583EBULL)
 
 #define S_CRC32_INIT 0
 #define S_ADLER32_INIT 1

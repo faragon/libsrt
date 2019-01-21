@@ -15,7 +15,6 @@
 #define HISTOGRAM_H
 
 #include "../src/libsrt.h"
-#include <string.h>
 #ifdef __cplusplus
 #include <map>
 #define S_M64 m64
@@ -68,9 +67,9 @@ static srt_bool cb32(uint32_t k, uint32_t v, void *context)
 
 static srt_bool cb64(int64_t k, int64_t v, void *context)
 {
-	S_UNUSED(context);
 	unsigned vh = (unsigned)(v / 1000000000),
 		 vl = (unsigned)(v % 1000000000);
+	S_UNUSED(context);
 	if (vh)
 		printf("%08x%08x %u%u\n", (unsigned)(k >> 32), (unsigned)k, vh,
 		       vl);
