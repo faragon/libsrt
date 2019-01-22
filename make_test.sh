@@ -258,17 +258,16 @@ fi
 
 if (($TMUX & 16)) ; then
 	echo "Checking style..."
-	ls -1  src/*c src/saux/*c examples/*c examples/*h Makefile.posix \
-		Makefile.inc Makefile.am *\.sh utl/*\.sh | while read line ; do
+	SRCS="src/*c src/saux/*c test/*c test/*h Makefile.posix Makefile.am"
+	ls -1  $SRCS *\.sh utl/*\.sh | while read line ; do
 		if ! utl/check_style.sh "$line" ; then
 			echo "$line... ERROR: style"
 			ERRORS=$((ERRORS + 1))
 		fi
 	done
 	if type egrep >/dev/null 2>&1 ; then
-		find doc examples/*c examples/*h src/*c src/*h src/saux/*c \
-		     src/saux/*h Makefile.posix Makefile.inc Makefile.am \
-		     LICENSE README.md make_test.sh -type f | \
+		find $SRCS src/*h src/saux/*h LICENSE README.md doc \
+		     make_test.sh -type f | \
 		while read line ; do
 			if (($(sed -n '/ \+$/p' <$line | wc -l) > 0)) ; then
 				echo "$line... ERROR, trailing spaces:"
