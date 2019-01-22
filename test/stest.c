@@ -502,8 +502,9 @@ static int test_ss_dup()
 
 static int test_ss_dup_substr()
 {
+	const srt_string *crefa_hello = ss_crefa("hello");
 	srt_string *a = ss_dup_c("hello"), *b = ss_dup_substr(a, 0, 5),
-		   *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
+		   *c = ss_dup_substr(crefa_hello, 0, 5);
 	int res = (!a || !b)
 			  ? 1
 			  : (ss_len(a) == ss_len(b) ? 0 : 2)
@@ -522,8 +523,9 @@ static int test_ss_dup_substr()
 
 static int test_ss_dup_substr_u()
 {
+	const srt_string *crefa_hello = ss_crefa("hello");
 	srt_string *b = ss_dup_c("hello"), *a = ss_dup_substr(b, 0, 5),
-		   *c = ss_dup_substr(ss_crefa("hello"), 0, 5);
+		   *c = ss_dup_substr(crefa_hello, 0, 5);
 	int res = !a ? 1
 		     : (ss_len(a) == ss_len(b) ? 0 : 2)
 				  | (!strcmp("hello", ss_to_c(a)) ? 0 : 4)
@@ -713,8 +715,9 @@ static int test_ss_dup_resize_u()
 
 static int test_ss_dup_trim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_trim(sa),
-		   *sc = ss_dup_trim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_trim(sa);
+	const srt_string *crefa_a = ss_crefa(a);
+	srt_string *sc = ss_dup_trim(crefa_a);
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
@@ -730,8 +733,9 @@ static int test_ss_dup_trim(const char *a, const char *expected)
 
 static int test_ss_dup_ltrim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa),
-		   *sc = ss_dup_ltrim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_ltrim(sa);
+	const srt_string *crefa_a = ss_crefa(a);
+	srt_string *sc = ss_dup_ltrim(crefa_a);
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
@@ -747,8 +751,9 @@ static int test_ss_dup_ltrim(const char *a, const char *expected)
 
 static int test_ss_dup_rtrim(const char *a, const char *expected)
 {
-	srt_string *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa),
-		   *sc = ss_dup_rtrim(ss_crefa(a));
+	srt_string *sa = ss_dup_c(a), *sb = ss_dup_rtrim(sa);
+	const srt_string *crefa_a = ss_crefa(a);
+	srt_string *sc = ss_dup_rtrim(crefa_a);
 	int res = (!sa || !sb) ? 1
 			       : (!strcmp(ss_to_c(sb), expected) ? 0 : 2)
 					 | (!ss_cmp(sb, sc) ? 0 : 4);
@@ -1714,7 +1719,9 @@ static int test_ss_find_misc()
 	int res = 0;
 	/*                    01234 56 7 8901234  5             6 */
 	const char *sample = "abc \t \n\r 123zyx" U8_HAN_24B62 "s";
-	const srt_string *a = ss_crefa(sample);
+	const srt_string *a = ss_crefa(sample),
+			 *han = ss_crefa(U8_HAN_24B62 "s"),
+			 *yx = ss_crefa("yx");
 	res |= ss_findb(a, 0) == 3 ? 0 : 1;
 	res |= ss_findrb(a, 0, S_NPOS) == 3 ? 0 : 2;
 	res |= ss_findc(a, 0, 'z') == 12 ? 0 : 4;
@@ -1725,8 +1732,8 @@ static int test_ss_find_misc()
 	res |= ss_findrcx(a, 0, S_NPOS, '0', '9') == 9 ? 0 : 128;
 	res |= ss_findnb(a, 3) == 9 ? 0 : 256;
 	res |= ss_findrnb(a, 3, S_NPOS) == 9 ? 0 : 512;
-	res |= ss_find(a, 0, ss_crefa(U8_HAN_24B62 "s")) == 15 ? 0 : 1024;
-	res |= ss_findr(a, 0, S_NPOS, ss_crefa("yx")) == 13 ? 0 : 2048;
+	res |= ss_find(a, 0, han) == 15 ? 0 : 1024;
+	res |= ss_findr(a, 0, S_NPOS, yx) == 13 ? 0 : 2048;
 	res |= ss_find_cn(a, 0, "yx", 2) == 13 ? 0 : 4096;
 	res |= ss_findr_cn(a, 0, S_NPOS, "yx", 2) == 13 ? 0 : 8192;
 	return res;
@@ -1736,7 +1743,9 @@ static int test_ss_split()
 {
 	const char *howareyou = "how are you";
 	srt_string *a = ss_dup_c(howareyou), *sep1 = ss_dup_c(" ");
-	const srt_string *c = ss_crefa(howareyou), *sep2 = ss_crefa(" ");
+	const srt_string *c = ss_crefa(howareyou), *sep2 = ss_crefa(" "),
+			 *how = ss_crefa("how"), *are = ss_crefa("are"),
+			 *you = ss_crefa("you");
 #define TSS_SPLIT_MAX_SUBS 16
 	srt_string_ref subs[TSS_SPLIT_MAX_SUBS];
 	size_t elems1 = ss_split(a, sep1, subs, TSS_SPLIT_MAX_SUBS), elems2;
@@ -1744,16 +1753,15 @@ static int test_ss_split()
 	if (!a || !sep1) {
 		res |= 1;
 	} else {
-		if (elems1 != 3 || ss_cmp(ss_ref(&subs[0]), ss_crefa("how"))
-		    || ss_cmp(ss_ref(&subs[1]), ss_crefa("are"))
-		    || ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
+		if (elems1 != 3 || ss_cmp(ss_ref(&subs[0]), how)
+		    || ss_cmp(ss_ref(&subs[1]), are)
+		    || ss_cmp(ss_ref(&subs[2]), you)) {
 			res |= 2;
 		} else {
 			elems2 = ss_split(c, sep2, subs, TSS_SPLIT_MAX_SUBS);
-			if (elems2 != 3
-			    || ss_cmp(ss_ref(&subs[0]), ss_crefa("how"))
-			    || ss_cmp(ss_ref(&subs[1]), ss_crefa("are"))
-			    || ss_cmp(ss_ref(&subs[2]), ss_crefa("you"))) {
+			if (elems2 != 3 || ss_cmp(ss_ref(&subs[0]), how)
+			    || ss_cmp(ss_ref(&subs[1]), are)
+			    || ss_cmp(ss_ref(&subs[2]), you)) {
 				res |= 4;
 			}
 		}
@@ -3781,12 +3789,15 @@ static int test_sm_cpy()
 	int res = 0;
 	srt_map *m1 = sm_alloc(SM_II32, 0), *m2 = sm_alloc(SM_SS, 0),
 		*m1a3 = sm_alloca(SM_II32, 3), *m1a10 = sm_alloca(SM_II32, 10);
+	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	sm_insert_ii32(&m1, 1, 1);
 	sm_insert_ii32(&m1, 2, 2);
 	sm_insert_ii32(&m1, 3, 3);
-	sm_insert_ss(&m2, ss_crefa("k1"), ss_crefa("v1"));
-	sm_insert_ss(&m2, ss_crefa("k2"), ss_crefa("v2"));
-	sm_insert_ss(&m2, ss_crefa("k3"), ss_crefa("v3"));
+	sm_insert_ss(&m2, k1, v1);
+	sm_insert_ss(&m2, k2, v2);
+	sm_insert_ss(&m2, k3, v3);
 	sm_cpy(&m1, m2);
 	sm_cpy(&m1a3, m2);
 	sm_cpy(&m1a10, m2);
@@ -4114,6 +4125,9 @@ static int test_sm_it()
 	TEST_SM_IT_X_VARS(ss, SM_SS);
 	TEST_SM_IT_X_VARS(sp, SM_SP);
 	int res = 0;
+	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	TEST_SM_IT_X(1, ii32, SM_II32, sm_it_i32_k, sm_it_ii32_v, cmp_ii,
 		     cmp_ii, -1, -1, -2, -2, -3, -3, res);
 	TEST_SM_IT_X(2, uu32, SM_UU32, sm_it_u32_k, sm_it_uu32_v, cmp_ii,
@@ -4121,19 +4135,16 @@ static int test_sm_it()
 	TEST_SM_IT_X(4, ii, SM_II, sm_it_i_k, sm_it_ii_v, cmp_ii, cmp_ii,
 		     S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
 		     S_MIN_I64 + 1, res);
-	TEST_SM_IT_X(8, is, SM_IS, sm_it_i_k, sm_it_is_v, cmp_ii, ss_cmp, 1,
-		     ss_crefa("v1"), 2, ss_crefa("v2"), 3, ss_crefa("v3"), res);
+	TEST_SM_IT_X(8, is, SM_IS, sm_it_i_k, sm_it_is_v, cmp_ii, ss_cmp, 1, v1,
+		     2, v2, 3, v3, res);
 	TEST_SM_IT_X(16, ip, SM_IP, sm_it_i_k, sm_it_ip_v, cmp_ii, cmp_pp, 1,
 		     (void *)1, 2, (void *)2, 3, (void *)3, res);
-	TEST_SM_IT_X(32, si, SM_SI, sm_it_s_k, sm_it_si_v, ss_cmp, cmp_ii,
-		     ss_crefa("v1"), 1, ss_crefa("v2"), 2, ss_crefa("v3"), 3,
-		     res);
-	TEST_SM_IT_X(64, ss, SM_SS, sm_it_s_k, sm_it_ss_v, ss_cmp, ss_cmp,
-		     ss_crefa("k1"), ss_crefa("v1"), ss_crefa("k2"),
-		     ss_crefa("v2"), ss_crefa("k3"), ss_crefa("v3"), res);
-	TEST_SM_IT_X(128, sp, SM_SP, sm_it_s_k, sm_it_sp_v, ss_cmp, cmp_pp,
-		     ss_crefa("k1"), (void *)1, ss_crefa("k2"), (void *)2,
-		     ss_crefa("k3"), (void *)3, res);
+	TEST_SM_IT_X(32, si, SM_SI, sm_it_s_k, sm_it_si_v, ss_cmp, cmp_ii, v1,
+		     1, v2, 2, v3, 3, res);
+	TEST_SM_IT_X(64, ss, SM_SS, sm_it_s_k, sm_it_ss_v, ss_cmp, ss_cmp, k1,
+		     v1, k2, v2, k3, v3, res);
+	TEST_SM_IT_X(128, sp, SM_SP, sm_it_s_k, sm_it_sp_v, ss_cmp, cmp_pp, k1,
+		     (void *)1, k2, (void *)2, k3, (void *)3, res);
 	return res;
 }
 
@@ -4156,6 +4167,7 @@ static int test_sm_itr()
 	uint32_t lower_u32, upper_u32;
 	int64_t lower_i, upper_i;
 	srt_string *lower_s, *upper_s, *ktmp, *vtmp;
+	const srt_string *crefa_10 = ss_crefa("10"), *crefa_20 = ss_crefa("20");
 	int i;
 	if (m_ii32 && m_uu32 && m_ii && m_is && m_ip && m_si && m_ss && m_sp) {
 		ktmp = ss_alloca(1000);
@@ -4216,12 +4228,10 @@ static int test_sm_itr()
 		res |= sm_itr_ii(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x4000 : 0;
 		res |= sm_itr_is(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x8000 : 0;
 		res |= sm_itr_ip(m_ii32, 10, 20, NULL, NULL) > 0 ? 0x10000 : 0;
-		res |= sm_itr_si(m_ii32, ss_crefa("10"), ss_crefa("20"), NULL,
-				 NULL) > 0
+		res |= sm_itr_si(m_ii32, crefa_10, crefa_20, NULL, NULL) > 0
 			       ? 0x20000
 			       : 0;
-		res |= sm_itr_sp(m_ii32, ss_crefa("10"), ss_crefa("20"), NULL,
-				 NULL) > 0
+		res |= sm_itr_sp(m_ii32, crefa_10, crefa_20, NULL, NULL) > 0
 			       ? 0x40000
 			       : 0;
 	}
@@ -4886,12 +4896,15 @@ static int test_shm_cpy()
 	srt_hmap *m1 = shm_alloc(SHM_II32, 0), *m2 = shm_alloc(SHM_SS, 0),
 		 *m1a3 = shm_alloca(SHM_II32, 3),
 		 *m1a10 = shm_alloca(SHM_II32, 10);
+	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	shm_insert_ii32(&m1, 1, 1);
 	shm_insert_ii32(&m1, 2, 2);
 	shm_insert_ii32(&m1, 3, 3);
-	shm_insert_ss(&m2, ss_crefa("k1"), ss_crefa("v1"));
-	shm_insert_ss(&m2, ss_crefa("k2"), ss_crefa("v2"));
-	shm_insert_ss(&m2, ss_crefa("k3"), ss_crefa("v3"));
+	shm_insert_ss(&m2, k1, v1);
+	shm_insert_ss(&m2, k2, v2);
+	shm_insert_ss(&m2, k3, v3);
 	shm_cpy(&m1, m2);
 	shm_cpy(&m1a3, m2);
 	shm_cpy(&m1a10, m2);
@@ -5169,6 +5182,9 @@ static int test_shm_it()
 	TEST_SHM_IT_X_VARS(ss, SHM_SS);
 	TEST_SHM_IT_X_VARS(sp, SHM_SP);
 	int res = 0;
+	const srt_string *k1 = ss_crefa("key1"), *k2 = ss_crefa("key2"),
+			 *k3 = ss_crefa("key3"), *v1 = ss_crefa("val1"),
+			 *v2 = ss_crefa("val2"), *v3 = ss_crefa("val3");
 	TEST_SHM_IT_X(1, ii32, SHM_II32, shm_it_i32_k, shm_it_ii32_v, cmp_ii,
 		      cmp_ii, -1, -1, -2, -2, -3, -3, res);
 	TEST_SHM_IT_X(2, uu32, SHM_UU32, shm_it_u32_k, shm_it_uu32_v, cmp_ii,
@@ -5177,19 +5193,15 @@ static int test_shm_it()
 		      S_MAX_I64, S_MIN_I64, S_MIN_I64, S_MAX_I64, S_MAX_I64 - 1,
 		      S_MIN_I64 + 1, res);
 	TEST_SHM_IT_X(8, is, SHM_IS, shm_it_i_k, shm_it_is_v, cmp_ii, ss_cmp, 1,
-		      ss_crefa("v1"), 2, ss_crefa("v2"), 3, ss_crefa("v3"),
-		      res);
+		      v1, 2, v2, 3, v3, res);
 	TEST_SHM_IT_X(16, ip, SHM_IP, shm_it_i_k, shm_it_ip_v, cmp_ii, cmp_pp,
 		      1, (void *)1, 2, (void *)2, 3, (void *)3, res);
 	TEST_SHM_IT_X(32, si, SHM_SI, shm_it_s_k, shm_it_si_v, ss_cmp, cmp_ii,
-		      ss_crefa("v1"), 1, ss_crefa("v2"), 2, ss_crefa("v3"), 3,
-		      res);
+		      v1, 1, v2, 2, v3, 3, res);
 	TEST_SHM_IT_X(64, ss, SHM_SS, shm_it_s_k, shm_it_ss_v, ss_cmp, ss_cmp,
-		      ss_crefa("k1"), ss_crefa("v1"), ss_crefa("k2"),
-		      ss_crefa("v2"), ss_crefa("k3"), ss_crefa("v3"), res);
+		      k1, v1, k2, v2, k3, v3, res);
 	TEST_SHM_IT_X(128, sp, SHM_SP, shm_it_s_k, shm_it_sp_v, ss_cmp, cmp_pp,
-		      ss_crefa("k1"), (void *)1, ss_crefa("k2"), (void *)2,
-		      ss_crefa("k3"), (void *)3, res);
+		      k1, (void *)1, k2, (void *)2, k3, (void *)3, res);
 	return res;
 }
 
@@ -5763,6 +5775,41 @@ int main()
 	size_t test_tolower, test_toupper;
 	int32_t l0, l, u0, u;
 #endif
+	const srt_string *crefa_HELLO = ss_crefa("HELLO"),
+			 *crefa_hello = ss_crefa("hello"),
+			 *crefa_0123_DEF = ss_crefa("0123456789ABCDEF"),
+			 *crefa_0123_DEF_hex =
+				 ss_crefa("30313233343536373839414243444546"),
+			 *crefa_0123_DEF_b64 =
+				 ss_crefa("MDEyMzQ1Njc4OUFCQ0RFRg=="),
+			 *crefa_01 = ss_crefa("01"),
+			 *crefa_01_b64 = ss_crefa("MDE="),
+			 *crefa_0xf8 = ss_crefa("\xf8"),
+			 *crefa_0xf8_hex = ss_crefa("f8"),
+			 *crefa_0xf8_HEX = ss_crefa("F8"),
+			 *crefa_0xffff = ss_crefa("\xff\xff"),
+			 *crefa_0xffff_hex = ss_crefa("ffff"),
+			 *crefa_0xffff_HEX = ss_crefa("FFFF"),
+			 *crefa_01z = ss_crefa("01z"),
+			 *crefa_01z_hex = ss_crefa("30317a"),
+			 *crefa_01z_HEX = ss_crefa("30317A"),
+			 *crefa_hi_there = ss_crefa("hi\"&'<>there"),
+			 *crefa_hi_there_exml =
+				 ss_crefa("hi&quot;&amp;&apos;&lt;&gt;there"),
+			 *crefa_json1 = ss_crefa("\b\t\f\n\r\"\x5c"),
+			 *crefa_json1_esc =
+				 ss_crefa("\\b\\t\\f\\n\\r\\\"\x5c\x5c"),
+			 *crefa_url1 =
+				 ss_crefa("0189ABCXYZ-_.~abcxyz \\/&!?<>"),
+			 *crefa_url1_esc = ss_crefa(
+				 "0189ABCXYZ-_.~abcxyz%20%5C%2F%26"
+				 "%21%3F%3C%3E"),
+			 *crefa_qhow1 = ss_crefa("\"how\" are you?"),
+			 *crefa_qhow1_quoted = ss_crefa("\"\"how\"\" are you?"),
+			 *crefa_qhow2 = ss_crefa("'how' are you?"),
+			 *crefa_qhow2_quoted = ss_crefa("''how'' are you?"),
+			 *crefa_abc = ss_crefa("abc"),
+			 *crefa_ABC = ss_crefa("ABC");
 
 #ifndef S_MINIMAL
 	/* setlocale: required for this test, not for using ss_* calls */
@@ -5877,57 +5924,44 @@ int main()
 		STEST_ASSERT(test_ss_dup_##encc(a, b));                        \
 		STEST_ASSERT(test_ss_cpy_##encc(a, b));                        \
 		ss_cpy_c(&stmp, "abc");                                        \
-		STEST_ASSERT(test_ss_cat_##encc(ss_crefa("abc"), a,            \
-						ss_cat(&stmp, b)));            \
+		STEST_ASSERT(                                                  \
+			test_ss_cat_##encc(crefa_abc, a, ss_cat(&stmp, b)));   \
 		ss_cpy_c(&stmp, "ABC");                                        \
-		STEST_ASSERT(test_ss_cat_##encc(ss_crefa("ABC"), a,            \
-						ss_cat(&stmp, b)));            \
+		STEST_ASSERT(                                                  \
+			test_ss_cat_##encc(crefa_ABC, a, ss_cat(&stmp, b)));   \
 		STEST_ASSERT(test_ss_dup_##decc(b, a));                        \
 		STEST_ASSERT(test_ss_cpy_##decc(b, a));                        \
 		ss_cpy_c(&stmp, "abc");                                        \
-		STEST_ASSERT(test_ss_cat_##decc(ss_crefa("abc"), b,            \
-						ss_cat(&stmp, a)));            \
+		STEST_ASSERT(                                                  \
+			test_ss_cat_##decc(crefa_abc, b, ss_cat(&stmp, a)));   \
 		ss_cpy_c(&stmp, "ABC");                                        \
-		STEST_ASSERT(test_ss_cat_##decc(ss_crefa("ABC"), b,            \
-						ss_cat(&stmp, a)));            \
+		STEST_ASSERT(                                                  \
+			test_ss_cat_##decc(crefa_ABC, b, ss_cat(&stmp, a)));   \
 	}
-
-	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, ss_crefa("HELLO"),
-			       ss_crefa("hello"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, ss_crefa("0123456789ABCDEF"),
-			       ss_crefa("MDEyMzQ1Njc4OUFCQ0RFRg=="));
-	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, ss_crefa("01"),
-			       ss_crefa("MDE="));
-	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, ss_crefa("\xf8"),
-			       ss_crefa("f8"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, ss_crefa("\xff\xff"),
-			       ss_crefa("ffff"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, ss_crefa("01z"),
-			       ss_crefa("30317a"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, ss_crefa("0123456789ABCDEF"),
-			       ss_crefa("30313233343536373839414243444546"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, ss_crefa("\xf8"),
-			       ss_crefa("F8"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, ss_crefa("\xff\xff"),
-			       ss_crefa("FFFF"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, ss_crefa("01z"),
-			       ss_crefa("30317A"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml,
-			       ss_crefa("hi\"&'<>there"),
-			       ss_crefa("hi&quot;&amp;&apos;&lt;&gt;there"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json,
-			       ss_crefa("\b\t\f\n\r\"\x5c"),
-			       ss_crefa("\\b\\t\\f\\n\\r\\\"\x5c\x5c"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url,
-			       ss_crefa("0189ABCXYZ-_.~abcxyz \\/&!?<>"),
-			       ss_crefa("0189ABCXYZ-_.~abcxyz%20%5C%2F%26"
-					"%21%3F%3C%3E"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_dquote, dec_esc_dquote,
-			       ss_crefa("\"how\" are you?"),
-			       ss_crefa("\"\"how\"\" are you?"));
-	MK_TEST_SS_DUP_CPY_CAT(enc_esc_squote, dec_esc_squote,
-			       ss_crefa("'how' are you?"),
-			       ss_crefa("''how'' are you?"));
+	MK_TEST_SS_DUP_CPY_CAT(tolower, toupper, crefa_HELLO, crefa_hello);
+	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, crefa_0123_DEF,
+			       crefa_0123_DEF_b64);
+	MK_TEST_SS_DUP_CPY_CAT(enc_b64, dec_b64, crefa_01, crefa_01_b64);
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, crefa_0xf8, crefa_0xf8_hex);
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, crefa_0xffff,
+			       crefa_0xffff_hex);
+	MK_TEST_SS_DUP_CPY_CAT(enc_hex, dec_hex, crefa_01z, crefa_01z_hex);
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, crefa_0123_DEF,
+			       crefa_0123_DEF_hex);
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, crefa_0xf8, crefa_0xf8_HEX);
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, crefa_0xffff,
+			       crefa_0xffff_HEX);
+	MK_TEST_SS_DUP_CPY_CAT(enc_HEX, dec_hex, crefa_01z, crefa_01z_HEX);
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_xml, dec_esc_xml, crefa_hi_there,
+			       crefa_hi_there_exml);
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_json, dec_esc_json, crefa_json1,
+			       crefa_json1_esc);
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_url, dec_esc_url, crefa_url1,
+			       crefa_url1_esc);
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_dquote, dec_esc_dquote, crefa_qhow1,
+			       crefa_qhow1_quoted);
+	MK_TEST_SS_DUP_CPY_CAT(enc_esc_squote, dec_esc_squote, crefa_qhow2,
+			       crefa_qhow2_quoted);
 	co = ss_alloca(256);
 	for (j = 0; j < 5; j++) {
 		ss_enc_lz(&co, ci[j]);
@@ -6211,7 +6245,6 @@ int main()
 	/*
 	 * Hash set
 	 */
-
 	STEST_ASSERT(test_shs());
 	/*
 	 * Low level stuff
