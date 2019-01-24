@@ -235,15 +235,19 @@ int main(int argc, const char **argv)
 		lo += ss_size(out);
 		ss_clear(out);
 	}
-	fprintf(stderr, "in: %zu bytes, out: %zu bytes\n", li, lo);
+	fprintf(stderr, "in: " FMT_ZU " bytes, out: " FMT_ZU " bytes\n", li,
+		lo);
 #if SDEBUG_LZ_STATS
 	fprintf(stderr,
-		"lzlit: [8: %zu] [16: %zu] [24: %zu] [32: %zu] [bytes: %zu]\n",
+		"lzlit: [8: " FMT_ZU "] [16: " FMT_ZU "] [24: " FMT_ZU
+		"] [32: " FMT_ZU "] [bytes: " FMT_ZU "]\n",
 		lz_st_lit[0], lz_st_lit[1], lz_st_lit[2], lz_st_lit[3],
 		lz_st_lit_bytes);
 	fprintf(stderr,
-		"lzref: [8: %zu] [16: %zu] [24: %zu] [32: %zu] [40: %zu] "
-		"[48: %zu] [56: %zu] [64: %zu] [72: %zu] [bytes: %zu]\n",
+		"lzref: [8: " FMT_ZU "] [16: " FMT_ZU "] [24: " FMT_ZU
+		"] [32: " FMT_ZU "] [40: " FMT_ZU "] [48: " FMT_ZU
+		"] [56: " FMT_ZU "] [64: " FMT_ZU "] [72: " FMT_ZU
+		"] [bytes: " FMT_ZU "]\n",
 		lz_st_ref[0], lz_st_ref[1], lz_st_ref[2], lz_st_ref[3],
 		lz_st_ref[4], lz_st_ref[5], lz_st_ref[6], lz_st_ref[7],
 		lz_st_ref[8], lz_st_ref_bytes);

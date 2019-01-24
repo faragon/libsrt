@@ -22,7 +22,6 @@
 #define S_COUNTER_CPP_HS
 #include <unordered_set>
 #endif
-#define FMT_ZU "%zu"
 #define S_MIN std::min
 #define CNT_TAG "C++"
 #define BS_COUNTER_SET(bs, val) bs->set(val)
@@ -216,14 +215,14 @@ int main(int argc, const char **argv)
 #endif
 	}
 	if (bs) {
-		printf(FMT_ZU ", " FMT_ZU, count, BS_COUNTER_POPCOUNT(bs));
+		printf(FMT_U ", " FMT_ZU "\n", count, BS_COUNTER_POPCOUNT(bs));
 #ifdef __cplusplus
 		delete bs;
 #else
 		sb_free(&bs);
 #endif
 	} else if (s) {
-		printf(FMT_ZU ", " FMT_ZU, count, S_COUNTER_POPCOUNT(s));
+		printf(FMT_U ", " FMT_ZU "\n", count, S_COUNTER_POPCOUNT(s));
 #ifdef __cplusplus
 		delete s;
 #else
@@ -232,11 +231,11 @@ int main(int argc, const char **argv)
 	} else {
 #ifdef __cplusplus
 #ifdef S_COUNTER_CPP_HS
-		printf(FMT_ZU ", " FMT_ZU, count, HS_COUNTER_POPCOUNT(hs));
+		printf(FMT_U ", " FMT_ZU "\n", count, HS_COUNTER_POPCOUNT(hs));
 		delete hs;
 #endif
 #else
-		printf(FMT_ZU ", " FMT_ZU, count, HS_COUNTER_POPCOUNT(hs));
+		printf(FMT_U ", " FMT_ZU "\n", count, HS_COUNTER_POPCOUNT(hs));
 		shs_free(&hs);
 #endif
 	}

@@ -41,7 +41,7 @@
 	t_res = test_fn(count, tid);				\
 	clock_gettime(CLOCK_REALTIME, &tb);			\
 	if (t_res)						\
-		printf("| %s | %zu | - | %u.%06u |\n",		\
+		printf("| %s | " FMT_ZU " | - | %u.%06u |\n",	\
 		       #test_fn, count, 			\
 		       BENCH_TIME_US_I, BENCH_TIME_US_D);	\
 	fflush(stdout)
@@ -1464,17 +1464,17 @@ int main(int argc, char *argv[])
 			    TId_Sort10Times | TId_ReverseSort,
 			    TId_Sort10000Times };
 	char label[ntests][512];
-	snprintf(label[0], 512, "Insert or process %zu elements, cleanup",
+	snprintf(label[0], 512, "Insert or process " FMT_ZU " elements, cleanup",
 		 count[0]);
-	snprintf(label[1], 512, "Insert %zu elements, read all elements %i "
+	snprintf(label[1], 512, "Insert " FMT_ZU " elements, read all elements %i "
 		 "times, cleanup", count[1], TId2Count(tid[1]));
-	snprintf(label[2], 512, "Insert or process %zu elements, delete all "
+	snprintf(label[2], 512, "Insert or process " FMT_ZU " elements, delete all "
 		 "elements one by one, cleanup", count[2]);
-	snprintf(label[3], 512, "Insert or process %zu elements, sort 10 times,"
+	snprintf(label[3], 512, "Insert or process " FMT_ZU " elements, sort 10 times,"
 		 " cleanup", count[3]);
-	snprintf(label[4], 512, "Insert or process %zu elements (reverse order)"
+	snprintf(label[4], 512, "Insert or process " FMT_ZU " elements (reverse order)"
 		 ", sort 10 times, cleanup", count[4]);
-	snprintf(label[5], 512, "Insert or process %zu elements, sort 10000 "
+	snprintf(label[5], 512, "Insert or process " FMT_ZU " elements, sort 10000 "
 		 "times, cleanup", count[5]);
 	for (size_t i = 0; i < ntests; i++) {
 		printf("\n%s\n| Test | Insert count | Memory (MiB) | Execution "
