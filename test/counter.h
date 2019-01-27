@@ -22,7 +22,6 @@
 #define S_COUNTER_CPP_HS
 #include <unordered_set>
 #endif
-#define S_MIN std::min
 #define CNT_TAG "C++"
 #define BS_COUNTER_SET(bs, val) bs->set(val)
 #define BS_COUNTER_POPCOUNT(bs) bs->count()
