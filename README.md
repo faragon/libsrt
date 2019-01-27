@@ -25,36 +25,36 @@ How to build
 ===
 
 * In most POSIX systems (e.g. Linux, Unix, and other Unix-like) "make -f Makefile.posix" will be enough, as the Makefile.posix includes platform detection for corner cases. However, you can use multiple flags for tuning the build (you can also mix them):
-  * make					# Defaults (equivalent to make ADD\_CFLAGS="-DS\_CRC32\_SLC=12")
-  * make -j 8					# Make, spawning up to 8 concurrent jobs (faster on multiprocessor systems)
-  * make DEBUG=1				# Disable optimizations (-O0 -ggdb)
-  * make PROFILING=1				# Profiling and coverage flags
-  * make CC=gcc PEDANTIC=1 C99=1		# Pedantic build for GCC in C99 mode (this should give no warnings)
-  * make CC=tcc					# Use the Tiny C Compiler
-  * make CC=gcc CXX=g++				# Use gcc for the library and examples and g++ for the benchmark
-  * make CC=clang CXX=clang++			# Use CLang for the library and examples and CLang C++ for the benchmark
-  * make FORCE32=1				# Force 32 bit build on 64 bit system
-  * make MINIMAL=1				# Microcontroller-suitable build (optimize for size and low memory usage)
-  * make CC=gcc PROFILING=1			# Build with gcc and profiling
-  * make CC=gcc C90=1				# Build with gcc using C89/90 standard
-  * make CC=gcc C99=1				# Build with gcc using C99 standard
-  * make CC=gcc C11=1				# Build with gcc using C11 standard
-  * make CC=g++					# Build with g++ (C++ instead of C)
-  * make CC=clang++ CPP11=1			# Build with clang++ using C++11 standard (instead of C)
-  * make CC=clang CXX=clang++ C99=1 CPP11=1	# Build with clang using C99 mode and build the benchmark using C++11
-  * make CC=tcc DEBUG=1				# Build with TinyCC with debug symbols
-  * make CPP11=1 bench				# Build the benchmark including C++11 support (for comparing libsrt vs C++/STL hash map/set)
-  * make CC=powerpc-linux-gnu-gcc		# Build with gcc cross compiler (PPC)
-  * make CC=arm-linux-gnueabi-gcc		# Build with gcc cross compiler (ARM)
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=0"	# Build without CRC32 hash tables, 1 bit/loop (100MB/s on i5@3GHz)
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=1"	# Build with CRC32 1024 byte hash table, 1 byte/loop (400MB/s on i5@3GHz)
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=4"	# Build with CRC32 4096 byte hash table, 4 bytes/loop (1000MB/s on i5@3GHz)
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=8"	# Build with CRC32 8192 byte hash table, 8 bytes/loop (2000MB/s on i5@3GHz)
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=12"	# Build with CRC32 12288 byte hash table, 12 bytes/loop (2500MB/s on i5@3GHz) -this is the default CRC32 mode-
-  * make ADD\_CFLAGS="-DS\_CRC32\_SLC=16"	# Build with CRC32 16384 byte hash table, 16 bytes/loop (2700MB/s on i5@3GHz):
-  * make ADD\_FLAGS=-DSD\_DISABLE\_HEURISTIC\_GROWTH		# Build with growth heuristics disabled (not recommended)
-  * make ADD\_FLAGS=-DS\_DISABLE\_SM\_STRING\_OPTIMIZATION	# Build without map string optimizations (not recommended, except for benchmarking)
-  * make HAS\_PNG=1 HAS\_JPG=1			# Build enabling PNG and JPG usage so the 'imgc' example can convert import/export those formats (libpng and jpeg 6b -e.g. libjpegturbo- compatible dev libs and headers must be installed in the system)
+  * make -f Makefile.posix					# Defaults (equivalent to make ADD\_CFLAGS="-DS\_CRC32\_SLC=12")
+  * make -f Makefile.posix -j 8					# Make, spawning up to 8 concurrent jobs (faster on multiprocessor systems)
+  * make -f Makefile.posix DEBUG=1				# Disable optimizations (-O0 -ggdb)
+  * make -f Makefile.posix PROFILING=1				# Profiling and coverage flags
+  * make -f Makefile.posix CC=gcc PEDANTIC=1 C99=1		# Pedantic build for GCC in C99 mode (this should give no warnings)
+  * make -f Makefile.posix CC=tcc				# Use the Tiny C Compiler
+  * make -f Makefile.posix CC=gcc CXX=g++			# Use gcc for the library and examples and g++ for the benchmark
+  * make -f Makefile.posix CC=clang CXX=clang++			# Use CLang for the library and examples and CLang C++ for the benchmark
+  * make -f Makefile.posix FORCE32=1				# Force 32 bit build on 64 bit system
+  * make -f Makefile.posix MINIMAL=1				# Microcontroller-suitable build (optimize for size and low memory usage)
+  * make -f Makefile.posix CC=gcc PROFILING=1			# Build with gcc and profiling
+  * make -f Makefile.posix CC=gcc C90=1				# Build with gcc using C89/90 standard
+  * make -f Makefile.posix CC=gcc C99=1				# Build with gcc using C99 standard
+  * make -f Makefile.posix CC=gcc C11=1				# Build with gcc using C11 standard
+  * make -f Makefile.posix CC=g++				# Build with g++ (C++ instead of C)
+  * make -f Makefile.posix CC=clang++ CPP11=1			# Build with clang++ using C++11 standard (instead of C)
+  * make -f Makefile.posix CC=clang CXX=clang++ C99=1 CPP11=1	# Build with clang using C99 mode and build the benchmark using C++11
+  * make -f Makefile.posix CC=tcc DEBUG=1			# Build with TinyCC with debug symbols
+  * make -f Makefile.posix CPP11=1 bench			# Build the benchmark including C++11 support (for comparing libsrt vs C++/STL hash map/set)
+  * make -f Makefile.posix CC=powerpc-linux-gnu-gcc		# Build with gcc cross compiler (PPC)
+  * make -f Makefile.posix CC=arm-linux-gnueabi-gcc		# Build with gcc cross compiler (ARM)
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=0"	# Build without CRC32 hash tables, 1 bit/loop (100MB/s on i5@3GHz)
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=1"	# Build with CRC32 1024 byte hash table, 1 byte/loop (400MB/s on i5@3GHz)
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=4"	# Build with CRC32 4096 byte hash table, 4 bytes/loop (1000MB/s on i5@3GHz)
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=8"	# Build with CRC32 8192 byte hash table, 8 bytes/loop (2000MB/s on i5@3GHz)
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=12"	# Build with CRC32 12288 byte hash table, 12 bytes/loop (2500MB/s on i5@3GHz) -this is the default CRC32 mode-
+  * make -f Makefile.posix ADD\_CFLAGS="-DS\_CRC32\_SLC=16"	# Build with CRC32 16384 byte hash table, 16 bytes/loop (2700MB/s on i5@3GHz):
+  * make -f Makefile.posix ADD\_FLAGS=-DSD\_DISABLE\_HEURISTIC\_GROWTH		# Build with growth heuristics disabled (not recommended)
+  * make -f Makefile.posix ADD\_FLAGS=-DS\_DISABLE\_SM\_STRING\_OPTIMIZATION	# Build without map string optimizations (not recommended, except for benchmarking)
+  * make -f Makefile.posix HAS\_PNG=1 HAS\_JPG=1		# Build enabling PNG and JPG usage so the 'imgc' example can convert import/export those formats (libpng and jpeg 6b -e.g. libjpegturbo- compatible dev libs and headers must be installed in the system)
 
 * Observations
   * Every make call, in addition to building the targets, it does a full test for that build (unit tests covering all the API function calls -'stest' executable-)
