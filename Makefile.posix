@@ -157,6 +157,11 @@ ifeq ($(CC), g++)
 endif
 ifeq ($(CC), clang)
 	CLANG = 1
+	CL_MAJOR = $(shell clang -dM -E - < /dev/null | grep __clang_major__ | \
+		      awk '{print $$3}')
+	CL_MINOR = $(shell clang -dM -E - < /dev/null | grep __clang_minor__ | \
+		      awk '{print $$3}')
+	CLV = $(shell printf "%i%02i" $(CL_MAJOR) $(CL_MINOR))
 endif
 ifeq ($(CC), clang++)
 	CLANG = 1
@@ -222,8 +227,10 @@ ifeq ($(DEBUG), 1)
 	endif
 
 	ifeq ($(CLANG), 1)
-		# Clang 3.5 or later
-		COMMON_FLAGS += -fsanitize=address
+		ifeq ($(shell expr $(CLV) \> 599), 1)
+			# Clang 6.0 or later
+			COMMON_FLAGS += -fsanitize=bounds
+		endif
 	else
 		ifeq ($(GNUC), 1)
 			ifeq ($(shell expr $(GCCV) \> 408), 1)
