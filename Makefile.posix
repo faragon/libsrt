@@ -126,9 +126,9 @@ endif
 
 ifeq ($(GNUC), 1)
 	GCC_MAJOR = $(shell gcc -dM -E - < /dev/null | grep __GNUC__ | \
-		      awk '{print $3}')
+		      awk '{print $$3}')
 	GCC_MINOR = $(shell gcc -dM -E - < /dev/null | grep __GNUC_MINOR__ | \
-		      awk '{print $3}')
+		      awk '{print $$3}')
 	GCCV = $(shell printf "%i%02i" $(GCC_MAJOR) $(GCC_MINOR))
 	ifeq ($(shell expr $(GCCV) \< 208), 1)
 		OLD_GCC = 1
