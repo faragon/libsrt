@@ -254,7 +254,11 @@ ifeq ($(PROFILING), 1)
 	# gprof flags:
 	COMMON_FLAGS += -pg
 else
-	COMMON_FLAGS += -fomit-frame-pointer
+	ifeq ($(DEBUG), 1)
+		COMMON_FLAGS += -fno-omit-frame-pointer
+	else
+		COMMON_FLAGS += -fomit-frame-pointer
+	endif
 endif
 
 ifeq ($(FORCE32), 1)
