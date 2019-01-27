@@ -228,7 +228,7 @@ ifeq ($(DEBUG), 1)
 		ifeq ($(GNUC), 1)
 			ifeq ($(shell expr $(GCCV) \> 408), 1)
 				# gcc >= 4.9
-				COMMON_FLAGS +=-fstack-protector-strong
+				COMMON_FLAGS += -fstack-protector-strong
 			else
 				ifeq ($(shell expr $(GCCV) \> 400), 1)
 					# gcc >= 4.1

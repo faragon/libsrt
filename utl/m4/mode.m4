@@ -1,13 +1,13 @@
-##
-## m4/mode.m4
-##
-## libsrt m4 build configuration macros
-##
-## Copyright (c) 2015-2019 F. Aragon. All rights reserved.
-## Released under the BSD 3-Clause License (see the doc/LICENSE)
-##
+#
+# m4/mode.m4
+#
+# libsrt m4 build configuration macros
+#
+# Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+# Released under the BSD 3-Clause License (see the doc/LICENSE)
+#
 
-## Develoment (debug) / release mode switch
+# Develoment (debug) / release mode switch
 
 AC_MSG_CHECKING("Build mode selection")
 
