@@ -224,7 +224,7 @@ fi
 
 if (($TMUX & 8)) ; then
 	$MAKE clean
-	OUT_DOC=out_doc
+	OUT_DOC=doc/out
 	mkdir $OUT_DOC 2>/dev/null
 	if type python3 >/dev/null 2>&1 ; then
 		echo "Documentation generation test..."

@@ -400,5 +400,4 @@ clean:
 		*\.gcov *\.out callgrind* out\.txt clang_analysis.txt \
 		*\.errors*
 	@for X in $(EXES) ; do rm -f $$X $$X.o ; done
-	@rm -rf out_doc
 .PHONY: clean all run_tests

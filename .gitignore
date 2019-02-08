@@ -40,7 +40,7 @@ win/vs2013/stest_Debug/
 win/vs2013/stest_Release/
 win/vs2013/x64/
 private/
-out_doc/
+doc/out/
 # Auto-tools
 Makefile.in
 Makefile
