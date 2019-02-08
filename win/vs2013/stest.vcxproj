@@ -158,6 +158,7 @@
     <ClCompile Include="..\..\src\saux\ssort.c" />
     <ClCompile Include="..\..\src\saux\sstringo.c" />
     <ClCompile Include="..\..\src\saux\stree.c" />
+    <ClCompile Include="..\..\src\sbitset.c" />
     <ClCompile Include="..\..\src\shmap.c" />
     <ClCompile Include="..\..\src\shset.c" />
     <ClCompile Include="..\..\src\smap.c" />

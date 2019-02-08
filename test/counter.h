@@ -129,8 +129,7 @@ int main(int argc, const char **argv)
 #ifdef __cplusplus
 		bs = new std::bitset<(uint32_t)-1>();
 #else
-		bs = sb_alloc(0);
-		sb_eval(&bs, cmax);
+		bs = sb_alloc(cmax);
 #endif
 		break;
 	case CM_Set:

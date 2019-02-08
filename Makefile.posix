@@ -357,7 +357,8 @@ endif
 
 VPATH   = src:src/saux:test
 SOURCES	= sdata.c sdbg.c senc.c sstring.c sstringo.c schar.c ssearch.c ssort.c \
-	  svector.c stree.c smap.c smset.c shmap.c shset.c shash.c scommon.c
+	  svector.c stree.c smap.c smset.c shmap.c shset.c shash.c scommon.c \
+	  sbitset.c
 ESOURCES= imgtools.c
 HEADERS	= scommon.h $(SOURCES:.c=.h) test/*.h
 OBJECTS	= $(SOURCES:.c=.o)

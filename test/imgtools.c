@@ -633,8 +633,7 @@ static size_t rgb_info(const srt_string *rgb, const struct RGB_Info *ri)
 		size_t i, uqp = 0;
 		const char *p0 = ss_get_buffer_r(rgb);
 		const unsigned char *p = (const unsigned char *)p0;
-		srt_bitset *bs = sb_alloc(0);
-		sb_eval(&bs, cmax);
+		srt_bitset *bs = sb_alloc(cmax);
 		switch (ri->Bpp) {
 		case 4:
 			RGB_COUNT_LOOP(i, p, ss, 4, bs, cmax, uqp);
