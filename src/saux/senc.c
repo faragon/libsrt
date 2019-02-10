@@ -18,28 +18,66 @@
 #endif
 
 #ifdef S_MINIMAL
-/* For minimal configuration, using stack-only hash table of 2^10
+/* For minimal configuration, using stack-only LUT of 2^10
  * elements (e.g. for 32-bit, 2^11 * 4 = 8192 bytes of stack memory)
  */
-#define LZ_MAX_HASH_BITS_STACK 11
-#define LZ_MAX_HASH_BITS LZ_MAX_HASH_BITS_STACK
+#define S_LZ_MAX_HASH_BITS_STACK 11
+#define S_LZ_MAX_HASH_BITS S_LZ_MAX_HASH_BITS_STACK
 #else
 #ifndef S_LZ_DONT_ALLOW_HEAP_USAGE
 #define S_LZ_ALLOW_HEAP_USAGE
 #endif
-/* For normal configuration allowing heap, use e.g. 64KiB
+/*
+ * For normal configuration allowing heap, use e.g. 64KiB
  * of stack for 32-bit, and 128KiB for 64-bit mode
  */
-#define LZ_MAX_HASH_BITS_STACK 14
+#define S_LZ_MAX_HASH_BITS_STACK 14
 #ifdef S_LZ_ALLOW_HEAP_USAGE
-/* Allow up to 2^26 hash table elements (64MiB * sizeof(size_t)
- * bytes heap memory)
+/*
+ * Allow up to 2^26 LUT elements (64MiB * sizeof(size_t) bytes of heap memory)
  */
-#define LZ_MAX_HASH_BITS 26
+#define S_LZ_MAX_HASH_BITS 26
 #else
-#define LZ_MAX_HASH_BITS LZ_MAX_HASH_BITS_STACK
+#define S_LZ_MAX_HASH_BITS S_LZ_MAX_HASH_BITS_STACK
 #endif
 #endif
+
+/*
+ * Programmable number of LUTs from the outside. Default is one LUT. Increasing
+ * the number of LUTs over 4 is not recommended (with every LUT added the
+ * compression ratio gains are smaller). The "z" method is limited to 2 LUTs,
+ * and the "zh" to 40.
+ */
+#define S_LZ_LUTS_MAX 40
+#define S_LZ_LUTS_MZ_MAX 2
+#define S_LZ_LUTS_MZH_MAX S_LZ_LUTS_MAX
+#ifndef S_LZ_LUTS
+#define S_LZ_LUTS 1
+#endif
+#if S_LZ_LUTS == 0
+#undef S_LZ_LUTS
+#define S_LZ_LUTS 1
+#elif S_LZ_LUTS > S_LZ_LUTS_MAX
+#undef S_LZ_LUTS
+#define S_LZ_LUTS S_LZ_LUTS_MAX
+#endif
+#if S_LZ_LUTS < S_LZ_LUTS_MZ_MAX
+#define S_LZ_LUTS_MZ S_LZ_LUTS
+#else
+#define S_LZ_LUTS_MZ S_LZ_LUTS_MZ_MAX
+#endif
+#if S_LZ_LUTS < S_LZ_LUTS_MZH_MAX
+#define S_LZ_LUTS_MZH S_LZ_LUTS
+#else
+#define S_LZ_LUTS_MZH S_LZ_LUTS_MZH_MAX
+#endif
+
+#define S_LZ_SHIFT_LUTS(r, h, i, nl)                                           \
+	do {                                                                   \
+		if (nl > 1)                                                    \
+			memmove(&r[h + 1], &r[h], sizeof(*r) * (nl - 1));      \
+		r[h] = i;                                                      \
+	} while (0)
 
 /*
  * Constants
@@ -967,12 +1005,12 @@ S_INLINE uint32_t senc_lz_hash(uint32_t a, size_t hash_size)
 }
 
 static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
-			  size_t hash_max_bits)
+			  size_t hash_max_bits, size_t nluts)
 {
 	uint8_t *o;
-	size_t *refs, *refsx;
-	size_t i, len, dist, w32, plit, h, last, sm4, hash_size0, hash_size,
-		hash_elems;
+	const uint8_t *src, *tgt;
+	size_t dist, h, hash_elems, hash_size, hash_size0, i, j, last, len,
+		lens[S_LZ_LUTS_MAX], plit, *refs, *refsx, sm4, w32, winner, xl;
 	/*
 	 * Max out bytes = (input size) * 1.125 + 32
 	 * (0 in case of edge case size_t overflow)
@@ -1002,14 +1040,19 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	hash_size = S_RANGE(hash_size0, 3, hash_max_bits);
 	hash_elems = (size_t)1 << hash_size;
 	/*
-	 * Hash table allocation and initialization
+	 * LUT allocation and initialization
 	 */
-	refsx = hash_size > LZ_MAX_HASH_BITS_STACK
-			? (size_t *)s_malloc(sizeof(size_t) * hash_elems)
-			: NULL;
-	refs = refsx ? refsx : (size_t *)s_alloca(sizeof(size_t) * hash_elems);
+	/* If using more than 4 LUTs, avoid stack allocation */
+	if (nluts > 4 || hash_size > S_LZ_MAX_HASH_BITS_STACK) {
+		refsx = (size_t *)s_malloc(sizeof(*refs) * hash_elems * nluts);
+		RETURN_IF(!refsx, 0); /* BEHAVIOR: out of memory */
+	} else {
+		refsx = NULL;
+	}
+	refs = refsx ? refsx
+		     : (size_t *)s_alloca(sizeof(*refs) * hash_elems * nluts);
 	RETURN_IF(!refs, 0);
-	memset(refs, 0, hash_elems * sizeof(refs[0]));
+	memset(refs, 0, sizeof(*refs) * hash_elems * nluts);
 	/*
 	 * Compression loop
 	 */
@@ -1017,20 +1060,35 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	sm4 = ss - 4;
 	for (i = 4; i <= sm4;) {
 		/*
-		 * Load 32-bit chunk and locate it into the hash table
+		 * Load 32-bit chunk and locate it into the LUT
 		 */
 		w32 = S_LD_U32(s + i);
-		h = senc_lz_hash((uint32_t)w32, hash_size);
-		last = refs[h];
-		refs[h] = i;
-		if (w32 != S_LD_U32(s + last)) { /* Not found? */
+		h = senc_lz_hash((uint32_t)w32, hash_size) * nluts;
+		/*
+		 * Locate matches in the LUT[s]
+		 */
+		memset(lens, 0, sizeof(*lens) * nluts);
+		src = s + i + 4;
+		tgt = s + 4;
+		xl = ss - i - 4;
+		for (j = winner = 0; j < nluts; j++) {
+			if (w32 != S_LD_U32(s + refs[h + j]))
+				continue;
+			lens[j] = senc_lz_match(src, tgt + refs[h + j], xl) + 4;
+			if (nluts > 1 && lens[j] > lens[winner])
+				winner = j;
+		}
+		if (lens[winner] == 0) { /* Not found? */
+			S_LZ_SHIFT_LUTS(refs, h, i, nluts);
 			i++;
 			continue;
 		}
 		/*
-		 * Once the match is found, scan for more consecutive matches:
+		 * Match found
 		 */
-		len = senc_lz_match(s + i + 4, s + last + 4, ss - i - 4) + 4;
+		last = refs[h + winner];
+		len = lens[winner];
+		S_LZ_SHIFT_LUTS(refs, h, i, nluts);
 		dist = i - last;
 		/*
 		 * Write the reference (and pending literals, if any)
@@ -1054,12 +1112,12 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 
 size_t senc_lz(const uint8_t *s, size_t ss, uint8_t *o0)
 {
-	return senc_lz_aux(s, ss, o0, LZ_MAX_HASH_BITS_STACK);
+	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS_STACK, S_LZ_LUTS_MZ);
 }
 
 size_t senc_lzh(const uint8_t *s, size_t ss, uint8_t *o0)
 {
-	return senc_lz_aux(s, ss, o0, LZ_MAX_HASH_BITS);
+	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS, S_LZ_LUTS_MZH);
 }
 
 S_INLINE void s_reccpy1(uint8_t *o, size_t dist, size_t n)
