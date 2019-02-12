@@ -378,7 +378,7 @@ ifeq ($(EN_BENCH), 1)
 endif
 
 ifeq ($(USE_LRT), 1)
-	LDLIBS = -lrt
+	LDLIBS += -lrt
 endif
 
 EXES	= $(TEST) $(EXAMPLES)
