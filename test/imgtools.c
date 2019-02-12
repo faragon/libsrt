@@ -411,7 +411,7 @@ static void aux_jpege_init(j_compress_ptr jc)
 	struct aux_jpeg *jaux = (struct aux_jpeg *)jc->client_data;
 	if (jaux->out && *jaux->out) {
 		jc->dest->next_output_byte =
-			(png_bytep)ss_get_buffer(*jaux->out);
+			(JOCTET *)ss_get_buffer(*jaux->out);
 		jc->dest->free_in_buffer = jaux->max_out_size;
 	} else {
 		jaux->errors = S_TRUE;
