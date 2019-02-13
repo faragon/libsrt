@@ -9,11 +9,10 @@
 
 #include "sbitset.h"
 
-srt_bitset *sb_alloc_aux(void *raw, size_t n, size_t nb)
+srt_bitset *sb_alloc_aux(srt_bitset *b)
 {
-	srt_bitset *bs = (srt_bitset *)raw;
-	sb_clear(bs);
-	return bs;
+	sb_clear(b);
+	return b;
 }
 
 void sb_clear(srt_bitset *b)

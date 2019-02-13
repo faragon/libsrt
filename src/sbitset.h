@@ -44,13 +44,13 @@ typedef srt_vector srt_bitset; /* Opaque structure (accessors are provided) */
 
 #define SB_BITS2BYTES(n) (1 + n / 8)
 #define sb_alloc(n) \
-	sb_alloc_aux(sv_alloc(1, SB_BITS2BYTES(n), NULL), n, SB_BITS2BYTES(n))
+	sb_alloc_aux((srt_bitset *)sv_alloc(1, SB_BITS2BYTES(n), NULL))
 #define sb_alloca(n) \
-	sb_alloc_aux(sv_alloca(1, SB_BITS2BYTES(n), NULL), n, SB_BITS2BYTES(n))
+	sb_alloc_aux((srt_bitset *)sv_alloca(1, SB_BITS2BYTES(n), NULL))
 #define sb_dup(b) sv_dup(b)
 #define sb_free sv_free
 
-srt_bitset *sb_alloc_aux(void *raw, size_t n, size_t nb);
+srt_bitset *sb_alloc_aux(srt_bitset *b);
 
 /*
 #API: |Allocate bitset (stack)|space preallocated to store n elements|bitset|O(n)|1;2|
