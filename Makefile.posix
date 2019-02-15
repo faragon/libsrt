@@ -353,6 +353,11 @@ ifdef ADD_FLAGS
 	CXXFLAGS += $(ADD_FLAGS)
 endif
 
+ifdef ADD_FLAGS2
+	CFLAGS += $(ADD_FLAGS2)
+	CXXFLAGS += $(ADD_FLAGS2)
+endif
+
 # Build rules
 
 VPATH   = src:src/saux:test

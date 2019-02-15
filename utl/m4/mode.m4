@@ -31,6 +31,10 @@ AC_ARG_ENABLE(stropt,
 	AS_HELP_STRING([--enable-stropt], [map/set/hmap/set string optimization [default=yes]]),
 	 , enable_stropt=yes)
 
+AC_ARG_ENABLE(onsearch,
+	AS_HELP_STRING([--enable-onsearch], [O(n) string search complexity -disabling it you could get minor speed boost in most cases, and slowdowns in corner some corner cases- [default=yes]]),
+	 , enable_onsearch=yes)
+
 AC_ARG_ENABLE(leopt,
 	AS_HELP_STRING([--enable-leopt], [Allow Little Endian optimizations, if available [default=yes]]),
 	 , enable_leopt=yes)
@@ -74,6 +78,11 @@ fi
 if test "$enable_stropt" == "no"; then
 	CFLAGS="$CFLAGS -DS_DISABLE_SM_STRING_OPTIMIZATION"
 	CXXFLAGS="$CXXFLAGS -DS_DISABLE_SM_STRING_OPTIMIZATION"
+fi
+
+if test "$enable_onsearch" == "no"; then
+	CFLAGS="$CFLAGS -DS_DISABLE_SEARCH_GUARANTEE"
+	CXXFLAGS="$CXXFLAGS -DS_DISABLE_SEARCH_GUARANTEE"
 fi
 
 if test "$enable_leopt" == "no"; then

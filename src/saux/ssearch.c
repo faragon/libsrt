@@ -10,6 +10,10 @@
 #include "ssearch.h"
 #include "scommon.h"
 
+#ifndef S_DISABLE_SEARCH_GUARANTEE
+#define S_ENABLE_FIND_CSUM_FAST_TO_SLOW_ALGORITHM_SWITCH
+#endif
+
 /*
  * ss_find_csum_* helpers
  */
