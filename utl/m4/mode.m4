@@ -47,6 +47,16 @@ AC_ARG_ENABLE(slowrealloc,
 	AS_HELP_STRING([--enable-slowrealloc], [force realloc using memory copy [default=no]]),
 	 , enable_slowrealloc=no)
 
+AC_ARG_WITH(libpng,
+	    AS_HELP_STRING([--with-libpng], [enable libpng usage]),
+	    [with_libpng=$withval],
+	    [with_libpng='no'])
+
+AC_ARG_WITH(libjpeg,
+	    AS_HELP_STRING([--with-libjpeg], [enable libjpeg usage]),
+	    [with_libjpeg=$withval],
+	    [with_libjpeg='no'])
+
 if test "$enable_profiling" = "yes"; then
 	CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage -g -pg"
 	CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage -g -pg"
@@ -98,6 +108,58 @@ fi
 if test "$enable_slowrealloc" == "yes"; then
 	CFLAGS="$CFLAGS -DS_FORCE_REALLOC_COPY"
 	CXXFLAGS="$CXXFLAGS -DS_FORCE_REALLOC_COPY"
+fi
+
+have_libpng='no'
+LIBPNG_LIBS=''
+if test "$with_libpng" != 'no'; then
+	AC_MSG_CHECKING(for LIBPNG support )
+	AC_MSG_RESULT()
+	failed=0
+	passed=0
+	AC_CHECK_HEADER([libpng/png.h],[passed=`expr $passed + 1`],[failed=`expr $failed + 1`])
+	AC_CHECK_LIB([png],[png_write_image],[passed=`expr $passed + 1`],[failed=`expr $failed + 1`],)
+	AC_MSG_CHECKING(if libpng png_write_image is available)
+	if test $passed -gt 0; then
+		if test $failed -gt 0; then
+			AC_MSG_RESULT(no -- some components failed test)
+			have_libpng='no (failed tests)'
+		else
+			LIBPNG_LIBS='-lpng'
+			LIBS="$LIBPNG_LIBS $LIBS"
+			AC_DEFINE(HAS_PNG,1,Define if you have libpng)
+			AC_MSG_RESULT(yes)
+			have_libpng='yes'
+		fi
+	else
+		AC_MSG_RESULT(no)
+	fi
+fi
+
+have_libjpeg='no'
+LIBJPEG_LIBS=''
+if test "$with_libjpeg" != 'no'; then
+	AC_MSG_CHECKING(for LIBJPEG support )
+	AC_MSG_RESULT()
+	failed=0
+	passed=0
+	AC_CHECK_HEADER([jpeglib.h],[passed=`expr $passed + 1`],[failed=`expr $failed + 1`])
+	AC_CHECK_LIB([jpeg],[jpeg_write_scanlines],[passed=`expr $passed + 1`],[failed=`expr $failed + 1`],)
+	AC_MSG_CHECKING(if libjpeg jpeg_write_scanlines is available)
+	if test $passed -gt 0; then
+		if test $failed -gt 0; then
+			AC_MSG_RESULT(no -- some components failed test)
+			have_libjpeg='no (failed tests)'
+		else
+			LIBJPEG_LIBS='-ljpeg'
+			LIBS="$LIBJPEG_LIBS $LIBS"
+			AC_DEFINE(HAS_JPG,1,Define if you have libjpeg)
+			AC_MSG_RESULT(yes)
+			have_libjpeg='yes'
+		fi
+	else
+		AC_MSG_RESULT(no)
+	fi
 fi
 
 AM_CONDITIONAL(DEBUG, test "$enable_debug" = yes)
