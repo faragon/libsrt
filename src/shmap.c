@@ -371,9 +371,10 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 {
 	struct SHMBucket *b;
+	const uint8_t *tloc;
 	uint32_t ht, l0, tl = 0;
 	size_t bid, e_off, es, hcnt, hmax, l, ss, hbits, hmask;
-	uint8_t *data, *dloc, *hole, *tail, *tloc;
+	uint8_t *data, *dloc, *hole, *tail;
 	RETURN_IF(!hm, S_FALSE);
 	hbits = hm->hbits;
 	bid = h2bid(h, hbits);
@@ -402,7 +403,7 @@ static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 					hole = data + e_off * es;
 					tail = data + (ss - 1) * es;
 					ht = hm->hashf(tail);
-					tloc = (uint8_t *)shm_at(
+					tloc = (const uint8_t *)shm_at(
 						hm, ht, hm->n2kf(tail), &tl);
 					(void)tloc;
 #if 0
@@ -654,7 +655,8 @@ srt_hmap *shm_cpy(srt_hmap **hm, const srt_hmap *src)
 	if ((*hm)->d.header_size == src->d.header_size) {
 		/* Same header size: hash table buckets bulk copy */
 		hdr0_size = sh_hdr0_size();
-		memcpy((uint8_t *)*hm + hdr0_size, (uint8_t *)src + hdr0_size,
+		memcpy((uint8_t *)*hm + hdr0_size,
+		       (const uint8_t *)src + hdr0_size,
 		       src->d.header_size - hdr0_size);
 	} else {
 		/* Different bucket size, rehash required */

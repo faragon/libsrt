@@ -554,7 +554,7 @@ S_INLINE int64_t shm_it_ii_v(const srt_hmap *hm, size_t i)
 S_INLINE const srt_string *shm_it_is_v(const srt_hmap *hm, size_t i)
 {
 	S_SHM_ENUM_AUX_V(SHM_IS, struct SHMapIS, hm, i,
-			sso_get((srt_stringo *)&n->v), ss_void);
+			sso_get((const srt_stringo *)&n->v), ss_void);
 }
 
 /* #API: |Enumerate integer-pointer map values|hash map; element, 0 to n - 1|pointer|O(1)|1;2| */
@@ -566,8 +566,8 @@ S_INLINE const void *shm_it_ip_v(const srt_hmap *hm, size_t i)
 /* #API: |Enumerate string-* map keys|hash map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *shm_it_s_k(const srt_hmap *hm, size_t i)
 {
-	S_SHM_ENUM_AUX_K(struct SHMapS, hm, i, sso_get((srt_stringo *)&n->k),
-			ss_void);
+	S_SHM_ENUM_AUX_K(struct SHMapS, hm, i,
+			 sso_get((const srt_stringo *)&n->k), ss_void);
 }
 
 /* #API: |Enumerate string-integer map values|hash map; element, 0 to n - 1|int64_t|O(1)|1;2| */
@@ -579,7 +579,8 @@ S_INLINE int64_t shm_it_si_v(const srt_hmap *hm, size_t i)
 /* #API: |Enumerate string-string map values|hash map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *shm_it_ss_v(const srt_hmap *hm, size_t i)
 {
-	S_SHM_ENUM_AUX_V(SHM_SS, struct SHMapSS, hm, i, sso_get_s2(&n->kv), ss_void);
+	S_SHM_ENUM_AUX_V(SHM_SS, struct SHMapSS, hm, i, sso_get_s2(&n->kv),
+			 ss_void);
 }
 
 /* #API: |Enumerate string-pointer map|hash map; element, 0 to n - 1|pointer|O(1)|1;2| */

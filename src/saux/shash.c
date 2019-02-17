@@ -194,7 +194,7 @@ uint32_t sh_adler32(uint32_t adler, const void *buf0, size_t buf_size)
 uint32_t sh_fnv1(uint32_t fnv, const void *buf0, size_t buf_size)
 {
 	size_t i;
-	uint8_t *buf = (uint8_t *)buf0;
+	const uint8_t *buf = (const uint8_t *)buf0;
 	for (i = 0; i < buf_size; i++) {
 		fnv *= S_FNV_PRIME;
 		fnv ^= buf[i];
@@ -205,7 +205,7 @@ uint32_t sh_fnv1(uint32_t fnv, const void *buf0, size_t buf_size)
 uint32_t sh_fnv1a(uint32_t fnv, const void *buf0, size_t buf_size)
 {
 	size_t i;
-	uint8_t *buf = (uint8_t *)buf0;
+	const uint8_t *buf = (const uint8_t *)buf0;
 	for (i = 0; i < buf_size; i++) {
 		fnv ^= buf[i];
 		fnv *= S_FNV_PRIME;

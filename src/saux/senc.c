@@ -989,7 +989,11 @@ S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
 			      size_t max_size)
 {
 	size_t off = 0;
-	size_t szc = UINTPTR_MAX <= 0xffffffff ? 4 : 8;
+#if UINTPTR_MAX <= 0xffffffff
+	size_t szc = 4;
+#else
+	size_t szc = 8;
+#endif
 	size_t msc = (max_size / szc) * szc;
 	for (; off < msc && !memcmp(a + off, b + off, szc); off += szc)
 		;

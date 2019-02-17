@@ -31,8 +31,8 @@ static int cmp_I(const struct SMapI *a, const struct SMapI *b)
 
 static int cmp_s(const struct SMapS *a, const struct SMapS *b)
 {
-	return ss_cmp(sso_get((srt_stringo *)&a->k),
-		      sso_get((srt_stringo *)&b->k));
+	return ss_cmp(sso_get((const srt_stringo *)&a->k),
+		      sso_get((const srt_stringo *)&b->k));
 }
 
 static void rw_inc_SM_II32(srt_tnode *node, const srt_tnode *new_data,
@@ -65,9 +65,9 @@ static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
 	struct SMapSP *n = (struct SMapSP *)node;
 	const struct SMapSP *m = (const struct SMapSP *)new_data;
 	if (!existing)
-		sso1_set(&n->x.k, sso_get((srt_stringo *)&m->x.k));
+		sso1_set(&n->x.k, sso_get((const srt_stringo *)&m->x.k));
 	else
-		sso1_update(&n->x.k, sso_get((srt_stringo *)&m->x.k));
+		sso1_update(&n->x.k, sso_get((const srt_stringo *)&m->x.k));
 }
 
 static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
@@ -265,12 +265,13 @@ SM_ENUM_INORDER_XX(sm_itr_ii, srt_map_it_ii, SM_II, int64_t,
 		   f(((const struct SMapI *)cn)->k,
 		     ((const struct SMapII *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_itr_is, srt_map_it_is, SM_IS, int64_t,
-		   cmp_nI_I((const struct SMapI *)cn, kmin),
-		   cmp_nI_I((const struct SMapI *)cn, kmax),
-		   f(((const struct SMapI *)cn)->k,
-		     sso_get((srt_stringo *)&((const struct SMapIS *)cn)->v),
-		     context))
+SM_ENUM_INORDER_XX(
+	sm_itr_is, srt_map_it_is, SM_IS, int64_t,
+	cmp_nI_I((const struct SMapI *)cn, kmin),
+	cmp_nI_I((const struct SMapI *)cn, kmax),
+	f(((const struct SMapI *)cn)->k,
+	  sso_get((const srt_stringo *)&((const struct SMapIS *)cn)->v),
+	  context))
 
 SM_ENUM_INORDER_XX(sm_itr_ip, srt_map_it_ip, SM_IP, int64_t,
 		   cmp_nI_I((const struct SMapI *)cn, kmin),
@@ -278,11 +279,12 @@ SM_ENUM_INORDER_XX(sm_itr_ip, srt_map_it_ip, SM_IP, int64_t,
 		   f(((const struct SMapI *)cn)->k,
 		     ((const struct SMapIP *)cn)->v, context))
 
-SM_ENUM_INORDER_XX(sm_itr_si, srt_map_it_si, SM_SI, const srt_string *,
-		   cmp_ns_s((const struct SMapS *)cn, kmin),
-		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(sso_get((srt_stringo *)&((const struct SMapS *)cn)->k),
-		     ((const struct SMapSI *)cn)->v, context))
+SM_ENUM_INORDER_XX(
+	sm_itr_si, srt_map_it_si, SM_SI, const srt_string *,
+	cmp_ns_s((const struct SMapS *)cn, kmin),
+	cmp_ns_s((const struct SMapS *)cn, kmax),
+	f(sso_get((const srt_stringo *)&((const struct SMapS *)cn)->k),
+	  ((const struct SMapSI *)cn)->v, context))
 
 SM_ENUM_INORDER_XX(sm_itr_ss, srt_map_it_ss, SM_SS, const srt_string *,
 		   cmp_ns_s((const struct SMapS *)cn, kmin),
@@ -290,11 +292,12 @@ SM_ENUM_INORDER_XX(sm_itr_ss, srt_map_it_ss, SM_SS, const srt_string *,
 		   f(sso_get(&((const struct SMapSS *)cn)->s),
 		     sso_get_s2(&((const struct SMapSS *)cn)->s), context))
 
-SM_ENUM_INORDER_XX(sm_itr_sp, srt_map_it_sp, SM_SP, const srt_string *,
-		   cmp_ns_s((const struct SMapS *)cn, kmin),
-		   cmp_ns_s((const struct SMapS *)cn, kmax),
-		   f(sso_get((srt_stringo *)&((const struct SMapS *)cn)->k),
-		     ((const struct SMapSP *)cn)->v, context))
+SM_ENUM_INORDER_XX(
+	sm_itr_sp, srt_map_it_sp, SM_SP, const srt_string *,
+	cmp_ns_s((const struct SMapS *)cn, kmin),
+	cmp_ns_s((const struct SMapS *)cn, kmax),
+	f(sso_get((const srt_stringo *)&((const struct SMapS *)cn)->k),
+	  ((const struct SMapSP *)cn)->v, context))
 
 /*
  * Allocation
@@ -496,7 +499,7 @@ const srt_string *sm_at_is(const srt_map *m, int64_t k)
 	RETURN_IF(!sm_chk_t(m, SM_IS), ss_void);
 	n.x.k = k;
 	nr = (const struct SMapIS *)st_locate(m, (const srt_tnode *)&n);
-	return nr ? sso_get((srt_stringo *)&nr->v) : 0; /* BEHAVIOR */
+	return nr ? sso_get((const srt_stringo *)&nr->v) : 0; /* BEHAVIOR */
 }
 
 const void *sm_at_ip(const srt_map *m, int64_t k)

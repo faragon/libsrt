@@ -454,7 +454,7 @@ S_INLINE int64_t sm_it_ii_v(const srt_map *m, srt_tndx i)
 S_INLINE const srt_string *sm_it_is_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_IS, struct SMapIS, m, i,
-			sso_get((srt_stringo *)&n->v), ss_void);
+			sso_get((const srt_stringo *)&n->v), ss_void);
 }
 
 /* #API: |Enumerate integer-pointer map values|map; element, 0 to n - 1|pointer|O(1)|1;2| */
@@ -466,7 +466,7 @@ S_INLINE const void *sm_it_ip_v(const srt_map *m, srt_tndx i)
 /* #API: |Enumerate string-* map keys|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *sm_it_s_k(const srt_map *m, srt_tndx i)
 {
-	S_SM_ENUM_AUX_K(struct SMapS, m, i, sso_get((srt_stringo *)&n->k),
+	S_SM_ENUM_AUX_K(struct SMapS, m, i, sso_get((const srt_stringo *)&n->k),
 			ss_void);
 }
 
@@ -598,7 +598,7 @@ S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
 
 S_INLINE int cmp_ns_s(const struct SMapS *a, const srt_string *b)
 {
-	return ss_cmp(sso_get((srt_stringo *)&a->k), b);
+	return ss_cmp(sso_get((const srt_stringo *)&a->k), b);
 }
 
 #ifdef __cplusplus

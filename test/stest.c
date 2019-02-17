@@ -4172,10 +4172,10 @@ static int test_sm_itr()
 			ss_printf(&ktmp, 200, "k%04i", i);
 			ss_printf(&vtmp, 200, "v%04i", i);
 			sm_insert_is(&m_is, -i, vtmp);
-			sm_insert_ip(&m_ip, -i, (char *)0 + i);
+			sm_insert_ip(&m_ip, -i, (void *)(intptr_t)i);
 			sm_insert_si(&m_si, ktmp, i);
 			sm_insert_ss(&m_ss, ktmp, vtmp);
-			sm_insert_sp(&m_sp, ktmp, (char *)0 + i);
+			sm_insert_sp(&m_sp, ktmp, (void *)(intptr_t)i);
 		}
 		cnt1 = cnt2 = 0;
 		lower_i32 = -20;
@@ -5222,10 +5222,10 @@ static int test_shm_itp()
 			ss_printf(&ktmp, 200, "k%04i", i);
 			ss_printf(&vtmp, 200, "v%04i", i);
 			shm_insert_is(&hm_is, -i, vtmp);
-			shm_insert_ip(&hm_ip, -i, (char *)0 + i);
+			shm_insert_ip(&hm_ip, -i, (void *)(intptr_t)i);
 			shm_insert_si(&hm_si, ktmp, i);
 			shm_insert_ss(&hm_ss, ktmp, vtmp);
-			shm_insert_sp(&hm_sp, ktmp, (char *)0 + i);
+			shm_insert_sp(&hm_sp, ktmp, (void *)(intptr_t)i);
 		}
 		cnt1 = cnt2 = 0;
 		processed_ii321 =
@@ -5346,19 +5346,19 @@ static int test_tree_vs_hash()
 		sm_insert_uu32(&m_uu32, (uint32_t)i, (uint32_t)i);
 		sm_insert_ii(&m_ii, -i, -i);
 		sm_insert_is(&m_is, -i, vtmp);
-		sm_insert_ip(&m_ip, -i, (char *)0 + i);
+		sm_insert_ip(&m_ip, -i, (void *)(intptr_t)i);
 		sm_insert_si(&m_si, ktmp, i);
 		sm_insert_ss(&m_ss, ktmp, vtmp);
-		sm_insert_sp(&m_sp, ktmp, (char *)0 + i);
+		sm_insert_sp(&m_sp, ktmp, (void *)(intptr_t)i);
 		/* hash maps */
 		shm_insert_ii32(&hm_ii32, -i, -i);
 		shm_insert_uu32(&hm_uu32, (uint32_t)i, (uint32_t)i);
 		shm_insert_ii(&hm_ii, -i, -i);
 		shm_insert_is(&hm_is, -i, vtmp);
-		shm_insert_ip(&hm_ip, -i, (char *)0 + i);
+		shm_insert_ip(&hm_ip, -i, (void *)(intptr_t)i);
 		shm_insert_si(&hm_si, ktmp, i);
 		shm_insert_ss(&hm_ss, ktmp, vtmp);
-		shm_insert_sp(&hm_sp, ktmp, (char *)0 + i);
+		shm_insert_sp(&hm_sp, ktmp, (void *)(intptr_t)i);
 	}
 	for (i = 0; i < count_stack; i++) {
 		ss_printf(&ktmp, 200, "k%04i", i);
@@ -5378,19 +5378,19 @@ static int test_tree_vs_hash()
 		sm_insert_uu32(&ma_uu32, (uint32_t)i, (uint32_t)i);
 		sm_insert_ii(&ma_ii, -i, -i);
 		sm_insert_is(&ma_is, -i, vtmp);
-		sm_insert_ip(&ma_ip, -i, (char *)0 + i);
+		sm_insert_ip(&ma_ip, -i, (void *)(intptr_t)i);
 		sm_insert_si(&ma_si, ktmp, i);
 		sm_insert_ss(&ma_ss, ktmp, vtmp);
-		sm_insert_sp(&ma_sp, ktmp, (char *)0 + i);
+		sm_insert_sp(&ma_sp, ktmp, (void *)(intptr_t)i);
 		/* hash maps */
 		shm_insert_ii32(&hma_ii32, -i, -i);
 		shm_insert_uu32(&hma_uu32, (uint32_t)i, (uint32_t)i);
 		shm_insert_ii(&hma_ii, -i, -i);
 		shm_insert_is(&hma_is, -i, vtmp);
-		shm_insert_ip(&hma_ip, -i, (char *)0 + i);
+		shm_insert_ip(&hma_ip, -i, (void *)(intptr_t)i);
 		shm_insert_si(&hma_si, ktmp, i);
 		shm_insert_ss(&hma_ss, ktmp, vtmp);
-		shm_insert_sp(&hma_sp, ktmp, (char *)0 + i);
+		shm_insert_sp(&hma_sp, ktmp, (void *)(intptr_t)i);
 	}
 	/*
 	 * Compare map vs hash map
