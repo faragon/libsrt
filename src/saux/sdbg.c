@@ -204,10 +204,6 @@ void shm_log_obj(srt_string **log, const srt_hmap *h)
 		ss_cat_printf(log, 128, "hbits: %u, size: %u, max_size: %u\n",
 			      h->hbits, shm_size(h), shm_max_size(h));
 		for (i = 0; i < h->hmask + 1; i++) {
-#if 0
-			if (b[i].hbits != h->hbits)
-				continue;
-#endif
 			ss_cat_printf(log, 128,
 				      "b[%u] h: %08x "
 				      "l: %u cnt: %u\n",

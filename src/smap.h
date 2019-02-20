@@ -91,51 +91,61 @@ enum eSM_Type {
 	SM_SP = SM0_SP
 };
 
-
 struct SMapI {
 	srt_tnode n;
 	int64_t k;
 };
+
 struct SMapS {
 	srt_tnode n;
 	srt_stringo1 k;
 };
+
 struct SMapi {
 	srt_tnode n;
 	int32_t k;
 };
+
 struct SMapu {
 	srt_tnode n;
 	uint32_t k;
 };
+
 struct SMapii {
 	struct SMapi x;
 	int32_t v;
 };
+
 struct SMapuu {
 	struct SMapu x;
 	uint32_t v;
 };
+
 struct SMapII {
 	struct SMapI x;
 	int64_t v;
 };
+
 struct SMapIS {
 	struct SMapI x;
 	srt_stringo1 v;
 };
+
 struct SMapIP {
 	struct SMapI x;
 	const void *v;
 };
+
 struct SMapSI {
 	struct SMapS x;
 	int64_t v;
 };
+
 struct SMapSS {
 	srt_tnode n;
 	srt_stringo s;
 };
+
 struct SMapSP {
 	struct SMapS x;
 	const void *v;

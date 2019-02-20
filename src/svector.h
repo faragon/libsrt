@@ -291,10 +291,6 @@ int64_t sv_pop_i(srt_vector *v);
 /* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(1)|1;2| */
 uint64_t sv_pop_u(srt_vector *v);
 
-/*
- * Functions intended for helping compiler optimization
- */
-
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif

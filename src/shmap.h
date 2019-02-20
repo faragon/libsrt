@@ -142,7 +142,7 @@ struct SHMBucket {
 	/*
 	 * Location where the bucket associated data is stored
 	 */
-        shm_eloc_t_ loc;
+	shm_eloc_t_ loc;
 	/*
 	 * Hash of the element (the bucket id would be the N highest bits)
 	 */
@@ -153,7 +153,7 @@ struct SHMBucket {
 	 *    element with the hash associated to the bucket has been inserted
 	 * >= 1: Number of elements associated to the bucket.
 	 */
-        uint32_t cnt;
+	uint32_t cnt;
 };
 
 /*

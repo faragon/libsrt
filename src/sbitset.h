@@ -23,10 +23,6 @@ extern "C" {
  * - Safe: bound checked
  * - Supports both stack and heap allocation
  * - Supports dynamic-size bit set (when using heap allocation)
- * - Lazy initialization (and allocation, if using heap): no "memset" to 0
- *   is done until required, and is applied to the affected area. Also bit
- *   set to 0 on non set areas requires doing nothing, as unitialized area
- *   can be both not initialized or even not allocated (when using heap memory)
  */
 
 #include "svector.h"
