@@ -5697,6 +5697,12 @@ static int test_slog2()
 			res |= 0x10;
 			break;
 		}
+		a = slog2_ceil(j2 + 1);
+		if (a != i + 1) {
+			fprintf(stderr, "a: %08x, i: %u\n", a, i);
+			res |= 0x20;
+			break;
+		}
 	}
 	a = slog2_32(0);
 	b = slog2_64(0);

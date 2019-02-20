@@ -177,8 +177,8 @@ unsigned slog2_64(uint64_t i)
 #define SLOG2_CEIL(lf, i)                                                      \
 	unsigned a, b;                                                         \
 	RETURN_IF(!i, 0);                                                      \
-	a = slog2_32(i - 1);                                                   \
-	b = slog2_32(i);                                                       \
+	a = lf(i - 1);                                                         \
+	b = lf(i);                                                             \
 	return a == b ? b + 1 : b
 
 /* log2, rounding-up */
