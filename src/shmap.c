@@ -552,12 +552,13 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 {
 	srt_hmap *hra;
 	uint8_t t = src->d.sub_type;
+	uint64_t hs64 = snextpow2(shm_size(src));
 	size_t tgt0_cas = shm_current_alloc_size(*hm),
-	       src0_cas = shm_current_alloc_size(src),
-	       np2 = snextpow2(shm_size(src)), hbits = slog2(np2),
-	       hdr_size = sh_hdr_size(t, np2), es = src->d.elem_size,
-	       elems = shm_size(src), data_size = es * elems,
-	       min_alloc_size = hdr_size + data_size;
+	       src0_cas = shm_current_alloc_size(src), np2 = (size_t)hs64,
+	       hbits = slog2(np2), hdr_size = sh_hdr_size(t, np2),
+	       es = src->d.elem_size, elems = shm_size(src),
+	       data_size = es * elems, min_alloc_size = hdr_size + data_size;
+	RETURN_IF((uint64_t)np2 != hs64, S_FALSE);
 	/* Target cleanup, before the copy */
 	shm_clear(*hm);
 	/* Make room for the copy */
