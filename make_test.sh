@@ -12,6 +12,7 @@
 #		 4: Clang static analyzer
 #		 8: Generate documentation
 #		16: Check coding style
+#		32: Autoconf builds
 #
 # Examples:
 # ./make_test.sh    # Equivalent to ./make_test.sh 31
@@ -25,7 +26,7 @@
 # Released under the BSD 3-Clause License (see the doc/LICENSE)
 #
 
-if (($# == 1)) && (($1 >= 1 && $1 < 32)) ; then TMUX=$1 ; else TMUX=31 ; fi
+if (($# == 1)) && (($1 >= 1 && $1 < 64)) ; then TMUX=$1 ; else TMUX=63 ; fi
 if [ "$SKIP_FORCE32" == "1" ] ; then
 	FORCE32T=""
 else
@@ -282,5 +283,21 @@ fi
 
 $MAKE clean
 
-exit $((ERRORS > 0 ? 1 : 0))
 
+if (($TMUX & 32)) ; then
+	echo "Autoconf build:"
+	for j in ./bootstrap.sh ./configure "make -j $NPROCS" \
+		 "make check" "make clean" ; do
+		echo -n -e "\t$j: "
+		if $j >/dev/null 2>&1 ; then
+			echo "OK"
+		else
+			echo "ERROR"
+			ERRORS=$((ERRORS + 1))
+			break
+		fi
+	done
+	make clean >/dev/null 2>&1
+fi
+
+exit $((ERRORS > 0 ? 1 : 0))
