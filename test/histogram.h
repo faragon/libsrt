@@ -54,9 +54,9 @@ static int syntax_error(const char **argv, int exit_code)
 }
 
 #ifdef __cplusplus
-#define S_HIST_INC(f, m, key, inc) (*m)[key] += inc
+#define S_HIST_INC(f, m, key, inc, T) (*m)[key] += ((T)(inc))
 #else
-#define S_HIST_INC(f, m, key, inc) f(&m, key, inc)
+#define S_HIST_INC(f, m, key, inc, T) f(&m, key, ((T)(inc)))
 
 static srt_bool cb32(uint32_t k, uint32_t v, void *context)
 {
@@ -84,7 +84,7 @@ static srt_bool cb64(int64_t k, int64_t v, void *context)
  * repeated elements, we keep the count and set the counter for all the
  * repeated elements at once (3x speed-up for non random data)
  */
-#define CNTLOOP(i, l, csize, buf, rep_cnt, m, inc, k, ki, kip, f)              \
+#define CNTLOOP(i, l, csize, buf, rep_cnt, m, inc, k, ki, kip, f, T)           \
 	do {                                                                   \
 		l = fread(buf, 1, sizeof(buf), stdin);                         \
 		l = (l / (size_t)csize) * (size_t)csize;                       \
@@ -96,14 +96,14 @@ static srt_bool cb64(int64_t k, int64_t v, void *context)
 				continue;                                      \
 			}                                                      \
 			if (rep_cnt) {                                         \
-				S_HIST_INC(f, m, kip, rep_cnt);                \
+				S_HIST_INC(f, m, kip, rep_cnt, T);             \
 				rep_cnt = 0;                                   \
 			}                                                      \
 			kip = ki;                                              \
-			S_HIST_INC(f, m, ki, 1);                               \
+			S_HIST_INC(f, m, ki, 1, T);                            \
 		}                                                              \
 		if (rep_cnt)                                                   \
-			S_HIST_INC(f, m, kip, rep_cnt);                        \
+			S_HIST_INC(f, m, kip, rep_cnt, T);                     \
 	} while (l > 0)
 
 enum eHistMode { HM_Map, HM_HashMap };
@@ -125,7 +125,7 @@ int main(int argc, const char **argv)
 	enum eHistMode mode = HM_HashMap;
 	size_t i, l, rep_cnt = 0;
 	uint32_t k32 = 0, kp32 = 0;
-	uint64_t k64 = 0, kp64 = 0;
+	int64_t k64 = 0, kp64 = 0;
 	uint8_t buf[2 * 3 * 4 * 5 * 7 * 16]; /* buffer size: LCM(1..8) */
 	if (argc < 2)
 		return syntax_error(argv, 5);
@@ -166,79 +166,79 @@ int main(int argc, const char **argv)
 		m = sm_alloc(csize <= 4 ? SM_UU32 : SM_II, 0);
 #endif
 	}
-	switch (csize << 4 | mode) {
+	switch ((unsigned)csize << 4 | mode) {
 	case 1 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, m, 1, buf[i], k32, kp32,
-			sm_inc_uu32);
+			sm_inc_uu32, uint32_t);
 		break;
 	case 2 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, m, 2, S_LD_LE_U16(buf + i),
-			k32, kp32, sm_inc_uu32);
+			k32, kp32, sm_inc_uu32, uint32_t);
 		break;
 	case 3 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, m, 3,
 			S_LD_LE_U32(buf + i) & 0xffffff, k32, kp32,
-			sm_inc_uu32);
+			sm_inc_uu32, uint32_t);
 		break;
 	case 4 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, m, 4, S_LD_LE_U32(buf + i),
-			k32, kp32, sm_inc_uu32);
+			k32, kp32, sm_inc_uu32, uint32_t);
 		break;
 	case 5 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 5,
-			S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
-			sm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
+			sm_inc_ii, int64_t);
 		break;
 	case 6 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 6,
-			S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
-			sm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
+			sm_inc_ii, int64_t);
 		break;
 	case 7 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 7,
-			S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
-			sm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
+			sm_inc_ii, int64_t);
 		break;
 	case 8 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 8,
-			S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii, int64_t);
 		break;
 #if !defined(__cplusplus) || defined(S_HISTOGRAM_CPP_HM)
 	case 1 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, hm, 1, buf[i], k32, kp32,
-			shm_inc_uu32);
+			shm_inc_uu32, uint32_t);
 		break;
 	case 2 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, hm, 2, S_LD_LE_U16(buf + i),
-			k32, kp32, shm_inc_uu32);
+			k32, kp32, shm_inc_uu32, uint32_t);
 		break;
 	case 3 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, hm, 3,
 			S_LD_LE_U32(buf + i) & 0xffffff, k32, kp32,
-			shm_inc_uu32);
+			shm_inc_uu32, uint32_t);
 		break;
 	case 4 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, hm, 4, S_LD_LE_U32(buf + i),
-			k32, kp32, shm_inc_uu32);
+			k32, kp32, shm_inc_uu32, uint32_t);
 		break;
 	case 5 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 5,
-			S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
-			shm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
+			shm_inc_ii, int64_t);
 		break;
 	case 6 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 6,
-			S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
-			shm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
+			shm_inc_ii, int64_t);
 		break;
 	case 7 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 7,
-			S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
-			shm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
+			shm_inc_ii, int64_t);
 		break;
 	case 8 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 8,
-			S_LD_LE_U64(buf + i), k64, kp64, shm_inc_ii);
+			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, shm_inc_ii, int64_t);
 		break;
 #endif
 	default:

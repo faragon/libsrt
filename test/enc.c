@@ -175,7 +175,8 @@ int main(int argc, const char **argv)
 			lmax = ss_size(out);
 			dlep = dle;
 			s_st_pk_u64(&dlep, lmax);
-			l = (dlep - dle); /* dyn LE size */
+			/* dyn LE size */
+			l = (size_t)(dlep > dle ? dlep - dle : 0);
 			if (!fwrite(dle, 1, l, stdout) || ferror(stdout)) {
 				fprintf(stderr, "Write error\n");
 				exit_code = 6;
