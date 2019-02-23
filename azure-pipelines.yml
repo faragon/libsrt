@@ -1,0 +1,12 @@
+trigger:
+- master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+steps:
+- script: |
+    ./bootstrap.sh && ./configure && \
+    make -j $(grep processor /proc/cpuinfo | wc -l) && \
+    make check && make clean
+  displayName: 'make'
