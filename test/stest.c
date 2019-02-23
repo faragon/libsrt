@@ -327,7 +327,7 @@ static int test_ss_resize_x()
  */
 #define TEST_SS_OPCHK_VARS                                                     \
 	int res = 0;                                                           \
-	size_t i = 0;                                                          \
+	int i = 0;                                                             \
 	srt_string *sa = NULL, *sb = NULL, *se
 #define TEST_SS_OPCHK(f, a, b, e)                                              \
 	se = ss_dup_c(e);                                                      \
@@ -4557,7 +4557,7 @@ static int test_shs()
 	 * Insert elements
 	 */
 	for (i = 0; i < tcount; i++) {
-		shs_insert_i32(&s_i32, i + 10);
+		shs_insert_i32(&s_i32, (uint32_t)i + 10);
 		shs_insert_u32(&s_u32, (uint32_t)i + 20);
 		shs_insert_i(&s_i, i);
 		shs_insert_s(&s_s, k[i]);

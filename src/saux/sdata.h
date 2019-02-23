@@ -471,6 +471,8 @@ S_INLINE int sdx_chk_st_change(const srt_data *d, size_t new_max_size)
 S_INLINE size_t sd_alloc_size_raw(size_t header_size, size_t elem_size,
 				  size_t size, srt_bool dyn_st)
 {
+	S_ASSERT(header_size != 0);
+	RETURN_IF(!header_size, 0);
 	if (dyn_st && size < 255) {
 		S_ASSERT(elem_size == 1);
 		header_size = sizeof(struct SDataSmall);

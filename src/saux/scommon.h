@@ -26,10 +26,10 @@ extern "C" {
  * and "multi-byte character set" compile mode.
  */
 #define S_NOT_UTF8_SPRINTF
-#define s_alloca _malloca
+#define s_alloca(size) ((size) > 0 ? _malloca(size) : NULL)
 #else
 #include <sys/types.h>
-#define s_alloca alloca
+#define s_alloca(size) ((size) > 0 ? alloca(size) : NULL)
 #endif
 
 #ifdef S_MINIMAL /* microcontroller-related */

@@ -233,12 +233,13 @@ S_INLINE size_t sh_hdr0_size()
 	return (sizeof(srt_hmap) / as) * as + (sizeof(srt_hmap) % as ? as : 0);
 }
 
-S_INLINE size_t sh_hdr_size(int t, size_t np2_elems)
+S_INLINE size_t sh_hdr_size(int t, uint64_t np2_elems)
 {
-	size_t h0s = sh_hdr0_size(),
-	       es = shm_elem_size(t),
-	       hs = h0s + np2_elems * sizeof(struct SHMBucket),
-	       hsr = es ? hs % es : 0;
+	size_t h0s = sh_hdr0_size(), hs, es = shm_elem_size(t), hsr;
+	uint64_t hs64 = h0s + np2_elems * sizeof(struct SHMBucket);
+	hs = (size_t)hs64;
+	RETURN_IF((uint64_t)hs != hs64, 0);
+	hsr = es ? hs % es : 0;
 	return hsr ? hs - hsr + es : hs;
 }
 
@@ -266,7 +267,7 @@ srt_hmap *shm_alloca(enum eSHM_Type t, size_t n);
 		     s_alloca(sd_alloc_size_raw(			       \
 				sh_hdr_size(type, snextpow2(max_size)),	       \
 				shm_elem_size(type), max_size, S_FALSE)),      \
-		     sh_hdr_size(type, snextpow2(max_size)),		       \
+		     sh_hdr_size(type, (size_t)snextpow2(max_size)),	       \
 		     shm_elem_size(type), max_size, shm_s2hb(max_size))
 
 srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,

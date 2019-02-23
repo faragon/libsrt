@@ -176,7 +176,7 @@
     <ClInclude Include="..\..\src\saux\shash.h" />
     <ClInclude Include="..\..\src\saux\ssearch.h" />
     <ClInclude Include="..\..\src\saux\ssort.h" />
-    <ClCompile Include="..\..\src\saux\sstringo.h" />
+    <ClInclude Include="..\..\src\saux\sstringo.h" />
     <ClInclude Include="..\..\src\saux\stree.h" />
     <ClInclude Include="..\..\src\sbitset.h" />
     <ClInclude Include="..\..\src\shmap.h" />

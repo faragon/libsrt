@@ -216,8 +216,8 @@ void s_memset64(void *o0, const void *s0, size_t n8)
 {
 	uint8_t *o;
 	const uint8_t *s;
-	uint64_t data, *o64;
 	size_t i, head, tail;
+	uint64_t data, d[2], *o64;
 	if (!o0 || !s0 || !n8)
 		return;
 	head = (intptr_t)o0 & 7;
@@ -228,10 +228,11 @@ void s_memset64(void *o0, const void *s0, size_t n8)
 		n8--;
 		memcpy(o, s, tail);
 		o += tail;
-		memcpy(&data, s + tail, head);
-		memcpy((uint8_t *)&data + head, s, tail);
+		memcpy(&d, s0, sizeof(data));
+		d[1] = d[0];
+		memcpy(&data, (uint8_t *)&d + tail, sizeof(data));
 	} else {
-		memcpy(&data, s, 8);
+		memcpy(&data, s, sizeof(data));
 	}
 	o64 = (uint64_t *)o;
 	for (i = 0; i < n8; i++, o64++)

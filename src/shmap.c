@@ -242,7 +242,9 @@ static void aux_rehash(srt_hmap *hm)
 	uint8_t *data = shm_get_buffer(hm);
 	struct SHMBucket *b = shm_get_buckets(hm);
 	size_t nbuckets, elem_size = hm->d.elem_size, nelems = shm_size(hm);
-	nbuckets = 1 << hm->hbits;
+	uint64_t nb64 = (uint64_t)1 << hm->hbits;
+	nbuckets = (size_t)nb64;
+	S_ASSERT((uint64_t)nbuckets == nb64);
 	hm->hmask = hm->hbits == 32 ? (uint32_t)-1 : (uint32_t)(nbuckets - 1);
 	hm->rh_threshold = s_size_t_pct(nbuckets, hm->rh_threshold_pct);
 	/*
@@ -294,7 +296,7 @@ static srt_bool aux_insert_check(srt_hmap **hm)
 	sxzm = shm_max_size(*hm) * (*hm)->d.elem_size;
 	hs1 = (*hm)->d.header_size;
 	h2bits = (*hm)->hbits + 1;
-	hs2 = sh_hdr_size((*hm)->d.sub_type, 1 << h2bits);
+	hs2 = sh_hdr_size((*hm)->d.sub_type, (uint64_t)1 << h2bits);
 	h2 = (srt_hmap *)s_realloc(*hm, hs2 + sxzm);
 	RETURN_IF(!h2, S_FALSE); /* Not enough memory */
 	*hm = h2;
@@ -492,7 +494,7 @@ srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,
 srt_hmap *shm_alloc_aux(int t, size_t init_size)
 {
 	size_t elem_size = shm_elem_size(t), hbits = shm_s2hb(init_size),
-	       hs = sh_hdr_size(t, 1 << hbits),
+	       hs = sh_hdr_size(t, (uint64_t)1 << hbits),
 	       as = sd_alloc_size_raw(hs, elem_size, init_size, S_FALSE);
 	void *buf = s_malloc(as);
 	srt_hmap *h =
