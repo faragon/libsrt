@@ -102,7 +102,6 @@ def fundoc2html( doc ) :
 		i += 1
 	proto += ')<br><br>'
 	params = ''
-	nfparams = len(fun_params)
 	i = 0
 	params += '<ul>'
 	params += '<li>' + fun_desc + '</li>'

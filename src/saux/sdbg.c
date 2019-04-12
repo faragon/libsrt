@@ -189,8 +189,7 @@ void sm_log_obj(srt_string **log, const srt_map *m)
 
 void shm_log_obj(srt_string **log, const srt_hmap *h)
 {
-	size_t es;
-	unsigned i;
+	size_t es, i;
 	const struct SHMBucket *b;
 	const struct SHMapii *e;
 	if (!log)
@@ -201,17 +200,18 @@ void shm_log_obj(srt_string **log, const srt_hmap *h)
 	case SHM0_UU32:
 		b = shm_get_buckets_r(h);
 		e = (const struct SHMapii *)shm_get_buffer_r(h);
-		ss_cat_printf(log, 128, "hbits: %u, size: %u, max_size: %u\n",
+		ss_cat_printf(log, 128, "hbits: %u, size: " FMT_ZU
+			      ", max_size: " FMT_ZU "\n",
 			      h->hbits, shm_size(h), shm_max_size(h));
-		for (i = 0; i < h->hmask + 1; i++) {
+		for (i = 0; i < (size_t)h->hmask + 1; i++) {
 			ss_cat_printf(log, 128,
-				      "b[%u] h: %08x "
+				      "b[" FMT_ZU "] h: %08x "
 				      "l: %u cnt: %u\n",
 				      i, b[i].hash, b[i].loc, b[i].cnt);
 		}
 		es = shm_size(h);
 		for (i = 0; i < es; i++)
-			ss_cat_printf(log, 128, "e[%u] kv: %u, %u\n", i,
+			ss_cat_printf(log, 128, "e[" FMT_ZU "] kv: %u, %u\n", i,
 				      e[i].x.k, e[i].v);
 		break;
 	default:
