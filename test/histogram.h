@@ -186,22 +186,23 @@ int main(int argc, const char **argv)
 		break;
 	case 5 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 5,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
-			sm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64,
+			kp64, sm_inc_ii, int64_t);
 		break;
 	case 6 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 6,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
-			sm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64,
+			kp64, sm_inc_ii, int64_t);
 		break;
 	case 7 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 7,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
-			sm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64,
+			kp64, sm_inc_ii, int64_t);
 		break;
 	case 8 << 4 | HM_Map:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_M64, 8,
-			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, sm_inc_ii,
+			int64_t);
 		break;
 #if !defined(__cplusplus) || defined(S_HISTOGRAM_CPP_HM)
 	case 1 << 4 | HM_HashMap:
@@ -223,22 +224,23 @@ int main(int argc, const char **argv)
 		break;
 	case 5 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 5,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64, kp64,
-			shm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffLL, k64,
+			kp64, shm_inc_ii, int64_t);
 		break;
 	case 6 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 6,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64, kp64,
-			shm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffLL, k64,
+			kp64, shm_inc_ii, int64_t);
 		break;
 	case 7 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 7,
-			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64, kp64,
-			shm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i) & 0xffffffffffffffLL, k64,
+			kp64, shm_inc_ii, int64_t);
 		break;
 	case 8 << 4 | HM_HashMap:
 		CNTLOOP(i, l, csize, buf, rep_cnt, S_HM64, 8,
-			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, shm_inc_ii, int64_t);
+			(int64_t)S_LD_LE_U64(buf + i), k64, kp64, shm_inc_ii,
+			int64_t);
 		break;
 #endif
 	default:
