@@ -1002,10 +1002,9 @@ S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
 	return off;
 }
 
-S_INLINE uint32_t senc_lz_hash(uint32_t a, size_t hash_size)
+S_INLINE size_t senc_lz_hash(size_t a)
 {
-	return ((a >> (32 - hash_size)) + (a >> (32 / 3)) + a)
-	       & S_NBITMASK(hash_size);
+	return (a >> 24) + (a >> 20) + (a >> 13) + a;
 }
 
 static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
@@ -1014,7 +1013,8 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	uint8_t *o;
 	const uint8_t *src, *tgt;
 	size_t dist, h, hash_elems, hash_size, hash_size0, i, j, last, len,
-		lens[S_LZ_LUTS_MAX], plit, *refs, *refsx, sm4, w32, winner, xl;
+		lens[S_LZ_LUTS_MAX], plit, *refs, *refsx, sm4, w32, winner, xl,
+		hash_mask;
 	/*
 	 * Max out bytes = (input size) * 1.125 + 32
 	 * (0 in case of edge case size_t overflow)
@@ -1043,6 +1043,7 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 		hash_size0 -= 2;
 	hash_size = S_RANGE(hash_size0, 3, hash_max_bits);
 	hash_elems = (size_t)1 << hash_size;
+	hash_mask = hash_elems - 1;
 	/*
 	 * LUT allocation and initialization
 	 */
@@ -1067,7 +1068,7 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 		 * Load 32-bit chunk and locate it into the LUT
 		 */
 		w32 = S_LD_U32(s + i);
-		h = senc_lz_hash((uint32_t)w32, hash_size) * nluts;
+		h = senc_lz_hash(w32) & hash_mask;
 		/*
 		 * Locate matches in the LUT[s]
 		 */
