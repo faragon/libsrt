@@ -11,9 +11,7 @@
 #include "shash.h"
 #include <stdlib.h>
 
-#define SDEBUG_LZ 0
-#if !defined(SDEBUG_LZ_STATS) && SDEBUG_LZ
-#undef SDEBUG_LZ
+#ifndef SDEBUG_LZ
 #define SDEBUG_LZ 0
 #endif
 
@@ -42,42 +40,31 @@
 #endif
 #endif
 
-/*
- * Programmable number of LUTs from the outside. Default is one LUT. Increasing
- * the number of LUTs over 4 is not recommended (with every LUT added the
- * compression ratio gains are smaller). The "z" method is limited to 2 LUTs,
- * and the "zh" to 40.
- */
-#define S_LZ_LUTS_MAX 40
-#define S_LZ_LUTS_MZ_MAX 2
-#define S_LZ_LUTS_MZH_MAX S_LZ_LUTS_MAX
-#ifndef S_LZ_LUTS
-#define S_LZ_LUTS 1
-#endif
-#if S_LZ_LUTS == 0
-#undef S_LZ_LUTS
-#define S_LZ_LUTS 1
-#elif S_LZ_LUTS > S_LZ_LUTS_MAX
-#undef S_LZ_LUTS
-#define S_LZ_LUTS S_LZ_LUTS_MAX
-#endif
-#if S_LZ_LUTS < S_LZ_LUTS_MZ_MAX
-#define S_LZ_LUTS_MZ S_LZ_LUTS
+#if SDEBUG_LZ
+#define SZLOG(...) fprintf(stderr, __VA_ARGS__)
 #else
-#define S_LZ_LUTS_MZ S_LZ_LUTS_MZ_MAX
+#define SZLOG(...)
 #endif
-#if S_LZ_LUTS < S_LZ_LUTS_MZH_MAX
-#define S_LZ_LUTS_MZH S_LZ_LUTS
-#else
-#define S_LZ_LUTS_MZH S_LZ_LUTS_MZH_MAX
-#endif
+#define DBG_LZLIT(w, l) SZLOG("LIT%i:%06i\n", (int)(w), (int)(l))
 
-#define S_LZ_SHIFT_LUTS(r, h, i, nl)                                           \
-	do {                                                                   \
-		if (nl > 1)                                                    \
-			memmove(&r[h + 1], &r[h], sizeof(*r) * (nl - 1));      \
-		r[h] = i;                                                      \
-	} while (0)
+#define DBG_LZREF(w, d, l, s)                                                  \
+	SZLOG("REF%i:%06i.%06i %s\n", (int)(w), (int)(d), (int)(l), s)
+
+/* LZ77 custom opcodes */
+#define LZOP_BITS 2
+#define LZOP_MASK ((1 << LZOP_BITS) - 1)
+#define LZOP_RV_LS_MASK 0x01
+#define LZOP_RV_LS 0x00 /* variable-size ref, short-size length */
+#define LZOP_RV_LV 0x01 /* var-size ref, var-size length */
+#define LZOP_LV 0x03    /* var-size literals */
+#define LZOP_RV_LS_LBITS 2
+#define LZOP_RV_LS_LMASK (((uint64_t)1 << LZOP_RV_LS_LBITS) - 1)
+#define LZOP_RV_LS_LSHIFT LZOP_BITS
+#define LZOP_RV_LS_LRANGE (LZOP_RV_LS_LBITS ? LZOP_RV_LS_LMASK + 1 : 0)
+#define LZOP_RV_LS_DBITS (64 - LZOP_RV_LS_LBITS - LZOP_BITS)
+#define LZOP_RV_LS_DMASK (((uint64_t)1 << LZOP_RV_LS_DBITS) - 1)
+#define LZOP_RV_LS_DSHIFT (LZOP_RV_LS_LBITS + LZOP_BITS)
+#define LZOP_RV_LS_DRANGE (LZOP_RV_LS_DBITS ? LZOP_RV_LS_DMASK + 1 : 0)
 
 /*
  * Constants
@@ -639,350 +626,38 @@ size_t sdec_esc_squote(const uint8_t *s, size_t ss, uint8_t *o)
 	return sdec_esc_byte(s, ss, '\'', o);
 }
 
-#if SDEBUG_LZ_STATS
-size_t lz_st_lit[9] = {0}, lz_st_lit_bytes = 0;
-size_t lz_st_ref[9] = {0}, lz_st_ref_bytes = 0;
-#if SDEBUG_LZ
-#define SZLOG(...) fprintf(stderr, __VA_ARGS__)
-#else
-#define SZLOG(...)
-#endif
-#define DBG_INC_LZLIT(ndx, cnt)                                                \
-	{                                                                      \
-		lz_st_lit[ndx]++;                                              \
-		lz_st_lit_bytes += cnt;                                        \
-		SZLOG("LIT%i:%06i\n", (int)(ndx + 1), (int)(cnt));             \
-	}
-#define DBG_INC_LZREF(ndx, cnt, dist, len)                                     \
-	{                                                                      \
-		lz_st_ref[ndx]++;                                              \
-		lz_st_ref_bytes += cnt;                                        \
-		SZLOG("REF%i:%06i.%08i\n", (int)(ndx + 1), (int)(len + 4),     \
-		      (int)(dist + 1));                                        \
-	}
-#else
-#define DBG_INC_LZLIT(ndx, cnt)
-#define DBG_INC_LZREF(ndx, cnt, dist, len)
-#endif
-
-/*
- * LZ opcodes
- *   x.00 R16   2
- * x.0001 R24   4
- * x.0101 R24S3 4
- * x.1001 R16S  4
- * x.1101 R16S2 4
- * x.0010 R32   4
- * x.0110 R24S  4
- * x.1010 R24S2 4
- * x.1110 L16   4
- * x.0011 R40   4
- * x.0111 R64   4
- * x.1011 L8    4
- * x.1111 L32   4
- */
-
-#define LZOPR_HDR_16_BITS 2
-#define LZOPR_HDR_16S_BITS 4
-#define LZOPR_HDR_16S2_BITS 4
-#define LZOPR_HDR_24_BITS 4
-#define LZOPR_HDR_32_BITS 4
-#define LZOPR_HDR_24S_BITS 4
-#define LZOPR_HDR_24S2_BITS 4
-#define LZOPR_HDR_24S3_BITS 4
-#define LZOPR_HDR_40_BITS 4
-#define LZOPR_HDR_64_BITS 4
-#define LZOPL_HDR_8_BITS 4
-#define LZOPL_HDR_16_BITS 4
-#define LZOPL_HDR_32_BITS 4
-
-#define LZOP_MASK2 0x03
-#define LZOP_MASK4 0x0f
-
-/* Short-range references: */
-#define LZOPR_16_ID 0x00
-#define LZOPR_16S_ID 0x09
-#define LZOPR_16S2_ID 0x0d
-/* Mid-range references: */
-#define LZOPR_24_ID 0x01
-#define LZOPR_32_ID 0x02
-#define LZOPR_40_ID 0x03
-#define LZOPR_24S_ID 0x06
-#define LZOPR_24S2_ID 0x0a
-#define LZOPR_24S3_ID 0x05
-/* Long-range ireferences: */
-#define LZOPR_64_ID 0x07
-/* Literal data: */
-#define LZOPL_8_ID 0x0b
-#define LZOPL_16_ID 0x0e
-#define LZOPL_32_ID 0x0f
-
-/* Max run: 2^28 bytes (256MB) */
-#define LZOPL_8_BITS (8 - LZOPL_HDR_8_BITS)
-#define LZOPL_16_BITS (16 - LZOPL_HDR_16_BITS)
-#define LZOPL_32_BITS (32 - LZOPL_HDR_32_BITS)
-#define LZOPL_8_RANGE (1 << LZOPL_8_BITS)
-#define LZOPL_16_RANGE (1 << LZOPL_16_BITS)
-#define LZOPL_32_RANGE (1 << LZOPL_32_BITS)
-
-/* 16-bit chunk: 14 bits */
-#define LZOPR_D16_BITS 13
-#define LZOPR_L16_BITS (16 - LZOPR_HDR_16_BITS - LZOPR_D16_BITS)
-
-/* 16-bit chunk "S": 12 bits */
-#define LZOPR_D16S_BITS 8
-#define LZOPR_L16S_BITS (16 - LZOPR_HDR_16S_BITS - LZOPR_D16S_BITS)
-
-/* 16-bit chunk "S2": 12 bits */
-#define LZOPR_D16S2_BITS 10
-#define LZOPR_L16S2_BITS (16 - LZOPR_HDR_16S2_BITS - LZOPR_D16S2_BITS)
-
-/* 24-bit chunk: 20 */
-#define LZOPR_D24_BITS 20
-#define LZOPR_L24_BITS (24 - LZOPR_HDR_24_BITS - LZOPR_D24_BITS)
-
-/* 24-bit chunk "S": 20 bits */
-#define LZOPR_D24S_BITS 14
-#define LZOPR_L24S_BITS (24 - LZOPR_HDR_24S_BITS - LZOPR_D24S_BITS)
-
-/* 24-bit chunk "S2": 20 bits */
-#define LZOPR_D24S2_BITS 16
-#define LZOPR_L24S2_BITS (24 - LZOPR_HDR_24S2_BITS - LZOPR_D24S2_BITS)
-
-/* 24-bit chunk "S3": 20 bits */
-#define LZOPR_D24S3_BITS 18
-#define LZOPR_L24S3_BITS (24 - LZOPR_HDR_24S3_BITS - LZOPR_D24S3_BITS)
-
-/* 32-bit chunk: 30 bits */
-#define LZOPR_D32_BITS 22
-#define LZOPR_L32_BITS (32 - LZOPR_HDR_32_BITS - LZOPR_D32_BITS)
-/* 40-bit chunk: 36 bits */
-#define LZOPR_D40_BITS 26
-#define LZOPR_L40_BITS (40 - LZOPR_HDR_40_BITS - LZOPR_D40_BITS)
-/* 64-bit chunk: 60 bits */
-#define LZOPR_D64_BITS 36
-#define LZOPR_L64_BITS (64 - LZOPR_HDR_64_BITS - LZOPR_D64_BITS)
-/* Range: */
-#define LZOPR_D16_RANGE (1 << LZOPR_D16_BITS)
-#define LZOPR_L16_RANGE (1 << LZOPR_L16_BITS)
-#define LZOPR_D16S_RANGE (1 << LZOPR_D16S_BITS)
-#define LZOPR_L16S_RANGE (1 << LZOPR_L16S_BITS)
-#define LZOPR_D16S2_RANGE (1 << LZOPR_D16S2_BITS)
-#define LZOPR_L16S2_RANGE (1 << LZOPR_L16S2_BITS)
-#define LZOPR_D24_RANGE (1 << LZOPR_D24_BITS)
-#define LZOPR_L24_RANGE (1 << LZOPR_L24_BITS)
-#define LZOPR_D24S_RANGE (1 << LZOPR_D24S_BITS)
-#define LZOPR_L24S_RANGE (1 << LZOPR_L24S_BITS)
-#define LZOPR_D24S2_RANGE (1 << LZOPR_D24S2_BITS)
-#define LZOPR_L24S2_RANGE (1 << LZOPR_L24S2_BITS)
-#define LZOPR_D24S3_RANGE (1 << LZOPR_D24S3_BITS)
-#define LZOPR_L24S3_RANGE (1 << LZOPR_L24S3_BITS)
-#define LZOPR_D32_RANGE (1 << LZOPR_D32_BITS)
-#define LZOPR_L32_RANGE (1 << LZOPR_L32_BITS)
-#define LZOPR_D40_RANGE (1 << LZOPR_D40_BITS)
-#define LZOPR_L40_RANGE (1 << LZOPR_L40_BITS)
-#if SIZE_MAX <= 0xffffffff
-#define LZOPR_D64_RANGE SIZE_MAX
-#else
-#define LZOPR_D64_RANGE (1LL << LZOPR_D64_BITS)
-#endif
-#define LZOPR_L64_RANGE (1 << LZOPR_L64_BITS)
-
 S_INLINE void senc_lz_store_lit(uint8_t **o, const uint8_t *in, size_t size)
 {
-	size_t sm1 = size - 1;
-	if (sm1 < LZOPL_8_RANGE) {
-		*((*o)++) = (uint8_t)((sm1 << LZOPL_HDR_8_BITS) | LZOPL_8_ID);
-		DBG_INC_LZLIT(0, 1 + size);
-		memcpy(*o, in, size);
-		(*o) += size;
-	} else if (sm1 < LZOPL_16_RANGE) {
-		S_ST_LE_U16(*o, (uint16_t)((sm1 << LZOPL_HDR_16_BITS)
-					   | LZOPL_16_ID));
-		DBG_INC_LZLIT(1, 2 + size);
-		(*o) += 2;
-		memcpy(*o, in, size);
-		(*o) += size;
-	} else {
-		do {
-			size_t s = size;
-			if (s >= LZOPL_32_RANGE)
-				s = LZOPL_32_RANGE;
-			S_ST_LE_U32(*o, (uint32_t)((s - 1) << LZOPL_HDR_32_BITS)
-						| LZOPL_32_ID);
-			(*o) += 4;
-			DBG_INC_LZLIT(3, 4 + s);
-			memcpy(*o, in, s);
-			(*o) += s;
-			in += s;
-			size -= s;
-		} while (size > 0);
-	}
+#if SDEBUG_LZ
+	uint8_t *o0 = *o;
+#endif
+	uint64_t op64 = ((uint64_t)(size - 1) << LZOP_BITS) | LZOP_LV;
+	s_st_pk_u64(o, op64);
+
+	DBG_LZLIT(*o - o0, size);
+
+	memcpy(*o, in, size);
+	(*o) += size;
 }
 
-S_INLINE srt_bool senc_lz_store_ref(uint8_t **o, const uint8_t *slit,
-				    size_t nlit, size_t dist0, size_t *len0)
+S_INLINE void senc_lz_store_ref(uint8_t **o, size_t dist, size_t len)
 {
+#if SDEBUG_LZ
+	uint8_t *o0 = *o;
+#endif
 	uint64_t v64;
-	size_t dist = dist0 - 1, len = *len0 - 4, leni, v = dist;
-	if (dist < LZOPR_D24_RANGE) {
-		if (dist < LZOPR_D16S_RANGE)
-			goto senc_lz_store_ref_l16s;
-		if (dist < LZOPR_D16S2_RANGE)
-			goto senc_lz_store_ref_l16s2;
-		else if (dist < LZOPR_D16_RANGE)
-			goto senc_lz_store_ref_l16;
-		else if (dist < LZOPR_D24S_RANGE)
-			goto senc_lz_store_ref_l24s;
-		else if (dist < LZOPR_D24S2_RANGE)
-			goto senc_lz_store_ref_l24s2;
-		else if (dist < LZOPR_D24S3_RANGE)
-			goto senc_lz_store_ref_l24s3;
-		else
-			goto senc_lz_store_ref_l24;
+	size_t dm1 = dist - 1, lm4 = len - 4;
+	if ((uint64_t)dm1 < LZOP_RV_LS_DRANGE && lm4 < LZOP_RV_LS_LRANGE) {
+		v64 = ((uint64_t)dm1 << LZOP_RV_LS_DSHIFT)
+		      | ((uint64_t)lm4 << LZOP_RV_LS_LSHIFT) | LZOP_RV_LS;
+		s_st_pk_u64(o, v64);
+		DBG_LZREF(*o - o0, dist, len, "[RV_LS]");
 	} else {
-		if (dist < LZOPR_D32_RANGE) {
-			if (*len0 <= 4)
-				return S_FALSE;
-			goto senc_lz_store_ref_l32;
-		} else if (dist < LZOPR_D40_RANGE) {
-			if (*len0 <= 5)
-				return S_FALSE;
-			goto senc_lz_store_ref_l40;
-		} else
-			goto senc_lz_store_ref_l64;
+		v64 = ((uint64_t)lm4 << LZOP_BITS) | LZOP_RV_LV;
+		s_st_pk_u64(o, v64);
+		s_st_pk_u64(o, dm1);
+		DBG_LZREF(*o - o0, dist, len, "[RV_LV]");
 	}
-senc_lz_store_ref_l16s:
-	if (len < LZOPR_L16S_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D16S_BITS);
-		S_ST_LE_U16(*o, (uint16_t)((v << LZOPR_HDR_16S_BITS)
-					   | LZOPR_16S_ID));
-		(*o) += 2;
-		DBG_INC_LZREF(1, 2, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l16s2:
-	if (len < LZOPR_L16S2_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D16S2_BITS);
-		S_ST_LE_U16(*o, (uint16_t)((v << LZOPR_HDR_16S2_BITS)
-					   | LZOPR_16S2_ID));
-		(*o) += 2;
-		DBG_INC_LZREF(1, 2, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l16:
-	if (len < LZOPR_L16_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D16_BITS);
-		S_ST_LE_U16(*o,
-			    (uint16_t)((v << LZOPR_HDR_16_BITS) | LZOPR_16_ID));
-		(*o) += 2;
-		DBG_INC_LZREF(1, 2, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l24s:
-	if (len < LZOPR_L24S_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D24S_BITS);
-		S_ST_LE_U32(*o,
-			    (uint32_t)(v << LZOPR_HDR_24S_BITS) | LZOPR_24S_ID);
-		(*o) += 3;
-		DBG_INC_LZREF(2, 3, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l24s2:
-	if (len < LZOPR_L24S2_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D24S2_BITS);
-		S_ST_LE_U32(*o, (uint32_t)(v << LZOPR_HDR_24S2_BITS)
-					| LZOPR_24S2_ID);
-		(*o) += 3;
-		DBG_INC_LZREF(2, 3, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l24s3:
-	if (len < LZOPR_L24S3_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D24S3_BITS);
-		S_ST_LE_U32(*o, (uint32_t)(v << LZOPR_HDR_24S3_BITS)
-					| LZOPR_24S3_ID);
-		(*o) += 3;
-		DBG_INC_LZREF(2, 3, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l24:
-	if (len < LZOPR_L24_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D24_BITS);
-		S_ST_LE_U32(*o,
-			    (uint32_t)(v << LZOPR_HDR_24_BITS) | LZOPR_24_ID);
-		(*o) += 3;
-		DBG_INC_LZREF(2, 3, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l32:
-	if (len < LZOPR_L32_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v |= (len << LZOPR_D32_BITS);
-		S_ST_LE_U32(*o,
-			    (uint32_t)(v << LZOPR_HDR_32_BITS) | LZOPR_32_ID);
-		(*o) += 4;
-		DBG_INC_LZREF(3, 4, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l40:
-	if (len < LZOPR_L40_RANGE) {
-		if (nlit > 0)
-			senc_lz_store_lit(o, slit, nlit);
-		v64 = ((uint64_t)(v | ((uint64_t)len << LZOPR_D40_BITS))
-		       << LZOPR_HDR_40_BITS)
-		      | LZOPR_40_ID;
-		*(*o) = (uint8_t)v64;
-		S_ST_LE_U32(*o + 1, (uint32_t)(v64 >> 8));
-		(*o) += 5;
-		DBG_INC_LZREF(4, 5, dist, len);
-		return S_TRUE;
-	}
-senc_lz_store_ref_l64:
-	if (*len0 <= 8) /* Not worth encoding too small references */
-		return S_FALSE;
-	if (dist0 > LZOPR_D64_RANGE) /* Out of range */
-		return S_FALSE;
-	if (nlit > 0)
-		senc_lz_store_lit(o, slit, nlit);
-	leni = *len0;
-	*len0 = 0;
-	do {
-		if (leni >= (LZOPR_L64_RANGE + 4)) {
-			len = LZOPR_L64_RANGE - 1;
-			*len0 += (len + 4);
-			leni -= (len + 4);
-		} else {
-			if (leni < 4)
-				break;
-			*len0 += leni;
-			len = leni - 4;
-			leni = 0;
-		}
-		v64 = ((uint64_t)(v | ((uint64_t)len << LZOPR_D64_BITS))
-		       << LZOPR_HDR_64_BITS)
-		      | LZOPR_64_ID;
-		S_ST_LE_U64(*o, v64);
-		(*o) += 8;
-		DBG_INC_LZREF(7, 8, dist, len);
-		dist += (len + 4);
-	} while (leni);
-	return S_TRUE;
 }
 
 S_INLINE size_t senc_lz_match(const uint8_t *a, const uint8_t *b,
@@ -1008,18 +683,17 @@ S_INLINE size_t senc_lz_hash(size_t a)
 }
 
 static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
-			  size_t hash_max_bits, size_t nluts)
+			  size_t hash_max_bits)
 {
 	uint8_t *o;
 	const uint8_t *src, *tgt;
-	size_t dist, h, hash_elems, hash_size, hash_size0, i, j, last, len,
-		lens[S_LZ_LUTS_MAX], plit, *refs, *refsx, sm4, w32, winner, xl,
-		hash_mask;
+	size_t dist, h, hash_elems, hash_size, hash_size0, i, last, len,
+		plit, *refs, *refsx, sm4, w32, xl, hash_mask;
 	/*
-	 * Max out bytes = (input size) * 1.125 + 32
+	 * Max out bytes = (input size) * 1.125
 	 * (0 in case of edge case size_t overflow)
 	 */
-	RETURN_IF(!o0 && ss > 0, s_size_t_add(ss, (ss / 8) + 32, 0));
+	RETURN_IF(!o0 && ss > 0, s_size_t_add(ss, ((ss / 8) * 10) + 32, 0));
 	RETURN_IF(!s || !o0 || !ss, 0);
 	/*
 	 * Header: unpacked length (compressed u64)
@@ -1039,8 +713,7 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	 * inputs.
 	 */
 	hash_size0 = slog2((uint64_t)ss);
-	if (hash_size0 >= 2)
-		hash_size0 -= 2;
+	hash_size0 = S_MAX(10, hash_size0) - 2;
 	hash_size = S_RANGE(hash_size0, 3, hash_max_bits);
 	hash_elems = (size_t)1 << hash_size;
 	hash_mask = hash_elems - 1;
@@ -1048,16 +721,16 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	 * LUT allocation and initialization
 	 */
 	/* If using more than 4 LUTs, avoid stack allocation */
-	if (nluts > 4 || hash_size > S_LZ_MAX_HASH_BITS_STACK) {
-		refsx = (size_t *)s_malloc(sizeof(*refs) * hash_elems * nluts);
+	if (hash_size > S_LZ_MAX_HASH_BITS_STACK) {
+		refsx = (size_t *)s_malloc(sizeof(*refs) * hash_elems);
 		RETURN_IF(!refsx, 0); /* BEHAVIOR: out of memory */
 	} else {
 		refsx = NULL;
 	}
 	refs = refsx ? refsx
-		     : (size_t *)s_alloca(sizeof(*refs) * hash_elems * nluts);
+		     : (size_t *)s_alloca(sizeof(*refs) * hash_elems);
 	RETURN_IF(!refs, 0);
-	memset(refs, 0, sizeof(*refs) * hash_elems * nluts);
+	memset(refs, 0, sizeof(*refs) * hash_elems);
 	/*
 	 * Compression loop
 	 */
@@ -1069,42 +742,32 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 		 */
 		w32 = S_LD_U32(s + i);
 		h = senc_lz_hash(w32) & hash_mask;
+		last = refs[h];
+		refs[h] = i;
 		/*
 		 * Locate matches in the LUT[s]
 		 */
-		memset(lens, 0, sizeof(*lens) * nluts);
+		if (w32 != S_LD_U32(s + last)) {
+			i++;
+			continue;
+		}
+		/*
+		 * Match found: find match length
+		 */
 		src = s + i + 4;
 		tgt = s + 4;
 		xl = ss - i - 4;
-		for (j = winner = 0; j < nluts; j++) {
-			if (w32 != S_LD_U32(s + refs[h + j]))
-				continue;
-			lens[j] = senc_lz_match(src, tgt + refs[h + j], xl) + 4;
-			if (nluts > 1 && lens[j] > lens[winner])
-				winner = j;
-		}
-		if (lens[winner] == 0) { /* Not found? */
-			S_LZ_SHIFT_LUTS(refs, h, i, nluts);
-			i++;
-			continue;
-		}
-		/*
-		 * Match found
-		 */
-		last = refs[h + winner];
-		len = lens[winner];
-		S_LZ_SHIFT_LUTS(refs, h, i, nluts);
+		len = senc_lz_match(src, tgt + last, xl) + 4;
 		dist = i - last;
 		/*
-		 * Write the reference (and pending literals, if any)
+		 * Flush literals
 		 */
-		if (!senc_lz_store_ref(&o, s + plit, i - plit, dist, &len)) {
-			i++;
-			continue;
-		}
+		if (i - plit > 0)
+			senc_lz_store_lit(&o, s + plit, i - plit);
 		/*
-		 * Reset the offset for literals
+		 * Write the reference
 		 */
+		senc_lz_store_ref(&o, dist, len);
 		i += len;
 		plit = i;
 	}
@@ -1117,12 +780,12 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 
 size_t senc_lz(const uint8_t *s, size_t ss, uint8_t *o0)
 {
-	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS_STACK, S_LZ_LUTS_MZ);
+	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS_STACK);
 }
 
 size_t senc_lzh(const uint8_t *s, size_t ss, uint8_t *o0)
 {
-	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS, S_LZ_LUTS_MZH);
+	return senc_lz_aux(s, ss, o0, S_LZ_MAX_HASH_BITS);
 }
 
 S_INLINE void s_reccpy1(uint8_t *o, size_t dist, size_t n)
@@ -1185,15 +848,12 @@ S_INLINE void s_reccpy(uint8_t *o, size_t dist, size_t n)
 
 S_INLINE void sdec_lz_load_ref(uint8_t **o, size_t dist, size_t len)
 {
-	dist++;
-	len += 4;
 	s_reccpy(*o, dist, len);
 	(*o) += len;
 }
 
 S_INLINE void sdec_lz_load_lit(const uint8_t **s, uint8_t **o, size_t cnt)
 {
-	cnt++;
 	memcpy(*o, *s, cnt);
 	(*s) += cnt;
 	(*o) += cnt;
@@ -1208,11 +868,14 @@ S_INLINE void sdec_lz_load_lit(const uint8_t **s, uint8_t **o, size_t cnt)
 
 size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 {
+#if SDEBUG_LZ
+	const uint8_t *s_bk;
+#endif
 	uint8_t *o;
-	uint64_t mix64;
+	uint64_t op64;
 	const uint8_t *s, *s_top, *o_top;
-	size_t cnt, dist, len, mix, op, expected_ss;
-	RETURN_IF(!s0 || ss < 4, 0); /* too small input (min hdr + opcode) */
+	size_t dist, len, op, expected_ss;
+	RETURN_IF(!s0 || ss < 3, 0); /* too small input (min hdr + opcode) */
 	s = s0;
 	expected_ss = (size_t)s_ld_pk_u64(&s, ss);
 	RETURN_IF(ss <= (size_t)(s - s0), 0); /* invalid: incomplete header */
@@ -1221,171 +884,35 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 	o = o0;
 	o_top = o + expected_ss;
 	while (s < s_top) {
-		if ((*s & LZOP_MASK2) == LZOPR_16_ID) {
-			mix = S_LD_LE_U16(s) >> LZOPR_HDR_16_BITS;
-			dist = mix & S_NBITMASK(LZOPR_D16_BITS);
-			len = mix >> LZOPR_D16_BITS;
-			s += 2;
 #if SDEBUG_LZ
-			fprintf(stderr, "R2:%06i.%08i\n", 4 + (int)len,
-				1 + (int)dist);
+		s_bk = s;
 #endif
+		op64 = s_ld_pk_u64(&s, s_top - s);
+		op = op64 & LZOP_MASK;
+
+		if ((op & LZOP_RV_LS_MASK) == LZOP_RV_LS) {
+			len = ((op64 >> LZOP_RV_LS_LSHIFT) & LZOP_RV_LS_LMASK)
+			      + 4;
+			dist = ((op64 >> LZOP_RV_LS_DSHIFT) & LZOP_RV_LS_DMASK)
+			       + 1;
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
+			DBG_LZREF(s - s_bk, dist, len, "[RV_LS]");
 			continue;
 		}
-		op = *s & LZOP_MASK4;
-		switch (op) {
-		case LZOPR_16S2_ID:
-			mix = S_LD_LE_U16(s) >> LZOPR_HDR_16S2_BITS;
-			dist = mix & S_NBITMASK(LZOPR_D16S2_BITS);
-			len = mix >> LZOPR_D16S2_BITS;
-			s += 2;
-#if SDEBUG_LZ
-			fprintf(stderr, "R2:%06i.%08i [S2]\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
+		if ((op & LZOP_MASK) == LZOP_LV) {
+			len = (op64 >> LZOP_BITS) + 1;
+			DBG_LZLIT(s - s_bk, len);
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_16S_ID:
-			mix = S_LD_LE_U16(s) >> LZOPR_HDR_16S_BITS;
-			dist = mix & S_NBITMASK(LZOPR_D16S_BITS);
-			len = mix >> LZOPR_D16S_BITS;
-			s += 2;
-#if SDEBUG_LZ
-			fprintf(stderr, "R2:%06i.%08i [S1]\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_24S3_ID:
-			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
-			      >> LZOPR_HDR_24S3_BITS;
-			dist = (mix & S_NBITMASK(LZOPR_D24S3_BITS));
-			len = mix >> LZOPR_D24S3_BITS;
-			s += 3;
-#if SDEBUG_LZ
-			fprintf(stderr, "R3:%06i.%08i [S2]\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_24S2_ID:
-			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
-			      >> LZOPR_HDR_24S2_BITS;
-			dist = (mix & S_NBITMASK(LZOPR_D24S2_BITS));
-			len = mix >> LZOPR_D24S2_BITS;
-			s += 3;
-#if SDEBUG_LZ
-			fprintf(stderr, "R3:%06i.%08i [S3]\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_24S_ID:
-			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
-			      >> LZOPR_HDR_24S_BITS;
-			dist = (mix & S_NBITMASK(LZOPR_D24S_BITS));
-			len = mix >> LZOPR_D24S_BITS;
-			s += 3;
-#if SDEBUG_LZ
-			fprintf(stderr, "R3:%06i.%08i [S1]\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_24_ID:
-			mix = (size_t)(*s | (S_LD_LE_U16(s + 1) << 8))
-			      >> LZOPR_HDR_24_BITS;
-			dist = (mix & S_NBITMASK(LZOPR_D24_BITS));
-			len = mix >> LZOPR_D24_BITS;
-			s += 3;
-#if SDEBUG_LZ
-			fprintf(stderr, "R3:%06i.%08i\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_32_ID:
-			mix = S_LD_LE_U32(s) >> LZOPR_HDR_32_BITS;
-			dist = (mix & S_NBITMASK(LZOPR_D32_BITS));
-			len = mix >> LZOPR_D32_BITS;
-			s += 4;
-#if SDEBUG_LZ
-			fprintf(stderr, "R4:%06i.%08i\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPL_8_ID:
-			cnt = *s >> LZOPL_HDR_8_BITS;
-			s++;
-#if SDEBUG_LZ
-			fprintf(stderr, "L8:%06i\n", 1 + (int)cnt);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
-			sdec_lz_load_lit(&s, &o, cnt);
+			sdec_lz_load_lit(&s, &o, len);
 			continue;
 		}
-		switch (op) {
-		case LZOPR_40_ID:
-			mix64 = (*s | (((uint64_t)S_LD_LE_U32(s + 1)) << 8))
-				>> LZOPR_HDR_40_BITS;
-			dist = (uint32_t)mix64 & S_NBITMASK(LZOPR_D40_BITS);
-			len = (uint32_t)(mix64 >> LZOPR_D40_BITS);
-			s += 5;
-#if SDEBUG_LZ
-			fprintf(stderr, "R5:%06i.%08i\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPR_64_ID:
-			mix64 = S_LD_LE_U64(s) >> LZOPR_HDR_64_BITS;
-			dist = (uint32_t)(mix64 & S_NBITMASK64(LZOPR_D64_BITS));
-			len = (uint32_t)(mix64 >> LZOPR_D64_BITS);
-			s += 8;
-#if SDEBUG_LZ
-			fprintf(stderr, "R8:%06i.%08i\n", 4 + (int)len,
-				1 + (int)dist);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
-			sdec_lz_load_ref(&o, dist, len);
-			continue;
-		case LZOPL_16_ID:
-			cnt = S_LD_LE_U16(s) >> LZOPL_HDR_16_BITS;
-			s += 2;
-#if SDEBUG_LZ
-			fprintf(stderr, "L16:%06i\n", 1 + (int)cnt);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
-			sdec_lz_load_lit(&s, &o, cnt);
-			continue;
-		case LZOPL_32_ID:
-			cnt = S_LD_LE_U32(s) >> LZOPL_HDR_32_BITS;
-			s += 4;
-#if SDEBUG_LZ
-			fprintf(stderr, "L32:%06i\n", 1 + (int)cnt);
-#endif
-			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, cnt);
-			sdec_lz_load_lit(&s, &o, cnt);
-			continue;
-		default:
-#if SDEBUG_LZ
-			fprintf(stderr, "UNKNOWN OPCODE (%02X): aborting!\n",
-				(unsigned)op);
-#endif
-			s = s_top;
-			continue;
-		}
+		/* LZOP_RV_LV */
+		len = (op64 >> LZOP_BITS) + 4;
+		dist = s_ld_pk_u64(&s, s_top - s) + 1;
+		SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
+		sdec_lz_load_ref(&o, dist, len);
+		DBG_LZREF(s - s_bk, dist, len, "[RV_LV]");
 	}
 	return (size_t)(o - o0);
 }

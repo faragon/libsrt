@@ -200,12 +200,14 @@ void shm_log_obj(srt_string **log, const srt_hmap *h)
 	case SHM0_UU32:
 		b = shm_get_buckets_r(h);
 		e = (const struct SHMapii *)shm_get_buffer_r(h);
-		ss_cat_printf(log, 128, "hbits: %u, size: " FMT_ZU
-			      ", max_size: " FMT_ZU "\n",
+		ss_cat_printf(log, 128,
+			      "hbits: %u, size: " FMT_ZU ", max_size: " FMT_ZU
+			      "\n",
 			      h->hbits, shm_size(h), shm_max_size(h));
 		for (i = 0; i < (size_t)h->hmask + 1; i++) {
 			ss_cat_printf(log, 128,
-				      "b[" FMT_ZU "] h: %08x "
+				      "b[" FMT_ZU
+				      "] h: %08x "
 				      "l: %u cnt: %u\n",
 				      i, b[i].hash, b[i].loc, b[i].cnt);
 		}

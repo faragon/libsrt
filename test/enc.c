@@ -15,11 +15,6 @@
 #define IBUF_SIZE (3 * 4 * 2 * 1024) /* 3 * 4 because of LCM for base64 */
 #define ESC_MAX_SIZE 16 /* maximum size for an escape sequence: 16 bytes */
 
-#if SDEBUG_LZ_STATS
-extern size_t lz_st_lit[9], lz_st_lit_bytes;
-extern size_t lz_st_ref[9], lz_st_ref_bytes;
-#endif
-
 static int syntax_error(const char **argv, const int exit_code)
 {
 	const char *v0 = argv[0];
@@ -238,21 +233,6 @@ int main(int argc, const char **argv)
 	}
 	fprintf(stderr, "in: " FMT_ZU " bytes, out: " FMT_ZU " bytes\n", li,
 		lo);
-#if SDEBUG_LZ_STATS
-	fprintf(stderr,
-		"lzlit: [8: " FMT_ZU "] [16: " FMT_ZU "] [24: " FMT_ZU
-		"] [32: " FMT_ZU "] [bytes: " FMT_ZU "]\n",
-		lz_st_lit[0], lz_st_lit[1], lz_st_lit[2], lz_st_lit[3],
-		lz_st_lit_bytes);
-	fprintf(stderr,
-		"lzref: [8: " FMT_ZU "] [16: " FMT_ZU "] [24: " FMT_ZU
-		"] [32: " FMT_ZU "] [40: " FMT_ZU "] [48: " FMT_ZU
-		"] [56: " FMT_ZU "] [64: " FMT_ZU "] [72: " FMT_ZU
-		"] [bytes: " FMT_ZU "]\n",
-		lz_st_ref[0], lz_st_ref[1], lz_st_ref[2], lz_st_ref[3],
-		lz_st_ref[4], lz_st_ref[5], lz_st_ref[6], lz_st_ref[7],
-		lz_st_ref[8], lz_st_ref_bytes);
-#endif
 #ifdef S_USE_VA_ARGS
 	ss_free(&in, &out);
 #else
