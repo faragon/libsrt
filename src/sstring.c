@@ -2143,9 +2143,8 @@ int ss_ncmpi(const srt_string *s1, size_t s1off, const srt_string *s2, size_t n)
 				/* BEHAVIOR: ignore last cutted chars */
 				break;
 			}
-			if ((res = (int)(towlower((wint_t)u1)
-					 - towlower((wint_t)u2)))
-			    != 0) {
+			if ((res = (int)(fsc_tolower((int32_t)u1) -
+					 fsc_tolower((int32_t)u2))) != 0) {
 				break; /* difference found */
 			}
 			i += chs1;
