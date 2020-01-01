@@ -11,8 +11,33 @@ extern "C" {
  *
  * #DOC Vector handling functions for managing integer data and
  * #DOC generic data.
+ * #DOC
+ * #DOC Supported vector types (enum eSV_Type):
+ * #DOC
+ * #DOC
+ * #DOC SV_I8: int8_t
+ * #DOC
+ * #DOC SV_U8: uint8_t
+ * #DOC
+ * #DOC SV_I16: int16_t
+ * #DOC
+ * #DOC SV_U16: uint16_t
+ * #DOC
+ * #DOC SV_I32: int32_t
+ * #DOC
+ * #DOC SV_U32: uint32_t
+ * #DOC
+ * #DOC SV_I64: int64_t
+ * #DOC
+ * #DOC SV_U64: uint64_t
+ * #DOC
+ * #DOC SV_F: float
+ * #DOC
+ * #DOC SV_D: double
+ * #DOC
+ * #DOC SV_GEN: generic-data (user defined)
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -23,8 +48,7 @@ extern "C" {
  */
 
 enum eSV_Type {
-	SV_FIRST,
-	SV_I8 = SV_FIRST,
+	SV_I8 = 0,
 	SV_U8,
 	SV_I16,
 	SV_U16,
@@ -32,7 +56,9 @@ enum eSV_Type {
 	SV_U32,
 	SV_I64,
 	SV_U64,
-	SV_LAST_INT = SV_U64,
+	SV_F,
+	SV_D,
+	SV_LAST_NUM = SV_D,
 	SV_GEN
 };
 
@@ -70,13 +96,6 @@ typedef struct SVector
  * Allocation
  */
 
-/*
-#API: |Allocate typed vector (stack)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2|
-srt_vector *sv_alloca_t(enum eSV_Type t, size_t initial_num_elems_reserve)
-
-#API: |Allocate generic vector (stack)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2|
-srt_vector *sv_alloca(size_t elem_size, size_t initial_num_elems_reserve, const srt_vector_cmp f)
-*/
 #define sv_alloca(elem_size, max_size, cmp_f)                                  \
 	sv_alloc_raw(SV_GEN, S_TRUE,                                           \
 		     s_alloca(sd_alloc_size_raw(sizeof(srt_vector), elem_size, \
@@ -93,16 +112,19 @@ srt_vector *sv_alloc_raw(enum eSV_Type t, srt_bool ext_buf,
 			 void *buffer, size_t elem_size,
 			 size_t max_size, const srt_vector_cmp f);
 
-/* #API: |Allocate generic vector (heap)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2| */
+/* #API: |Allocate SV_GEN vector (heap)|element size; space preallocated to store n elements; compare function (used for sorting, pass NULL for none)|vector|O(1)|1;2| */
 srt_vector *sv_alloc(size_t elem_size, size_t initial_num_elems_reserve, const srt_vector_cmp f);
 
-/* #API: |Allocate typed vector (heap)|Vector type: SV_I8/SV_U8/SV_I16/SV_U16/SV_I32/SV_U32/SV_I64/SV_U64; space preallocated to store n elements|vector|O(1)|1;2| */
+/* #API: |Allocate typed vector (heap)|Vector type; space preallocated to store n elements|vector|O(1)|1;2| */
 srt_vector *sv_alloc_t(enum eSV_Type t, size_t initial_num_elems_reserve);
 
 SD_BUILDFUNCS_FULL(sv, srt_vector, 0)
 
 /*
-#API: |Allocate vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|
+#API: |Allocate typed vector (stack)|Vector type; space preallocated to store n elements|vector|O(1)|1;2|
+srt_vector *sv_alloca_t(enum eSV_Type t, size_t initial_num_elems_reserve)
+
+#API: |Allocate SV_GEN vector (stack)|space preallocated to store n elements|allocated vector|O(1)|1;2|
 srt_vector *sv_alloca(size_t initial_reserve)
 
 #API: |Free one or more vectors (heap)|vector;more vectors (optional)|-|O(1)|1;2|
@@ -214,14 +236,38 @@ srt_vector *sv_sort(srt_vector *v);
  * Search
  */
 
-/* #API: |Find value in vector (generic data)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+/* #API: |Find value in vector (SV_GEN)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
 size_t sv_find(const srt_vector *v, size_t off, const void *target);
 
-/* #API: |Find value in vector (integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
-size_t sv_find_i(const srt_vector *v, size_t off, int64_t target);
+/* #API: |Find value in vector (SV_I8)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_i8(const srt_vector *v, size_t off, int8_t target);
 
-/* #API: |Find value in vector (unsigned integer)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
-size_t sv_find_u(const srt_vector *v, size_t off, uint64_t target);
+/* #API: |Find value in vector (SV_U8)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_u8(const srt_vector *v, size_t off, uint8_t target);
+
+/* #API: |Find value in vector (SV_I16)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_i16(const srt_vector *v, size_t off, int16_t target);
+
+/* #API: |Find value in vector (SV_U16)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_u16(const srt_vector *v, size_t off, uint16_t target);
+
+/* #API: |Find value in vector (SV_I32)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_i32(const srt_vector *v, size_t off, int32_t target);
+
+/* #API: |Find value in vector (SV_U32)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_u32(const srt_vector *v, size_t off, uint32_t target);
+
+/* #API: |Find value in vector (SV_I64)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_i64(const srt_vector *v, size_t off, int64_t target);
+
+/* #API: |Find value in vector (SV_U64)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_u64(const srt_vector *v, size_t off, uint64_t target);
+
+/* #API: |Find value in vector (SV_F)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_f(const srt_vector *v, size_t off, float target);
+
+/* #API: |Find value in vector (SV_D)|vector; search offset start; target to be located|offset: >=0 found; S_NPOS: not found|O(n)|1;2| */
+size_t sv_find_d(const srt_vector *v, size_t off, double target);
 
 /*
  * Compare
@@ -237,61 +283,158 @@ int sv_cmp(const srt_vector *v, size_t a_off, size_t b_off);
  * Vector "at": element access to given position
  */
 
-/* #API: |Vector random access (generic data)|vector; location|NULL: not found; != NULL: element reference|O(1)|1;2| */
+/* #API: |Vector random access (SV_GEN)|vector; location|NULL: not found; != NULL: element reference|O(1)|1;2| */
 const void *sv_at(const srt_vector *v, size_t index);
 
-/* #API: |Vector random access (integer)|vector; location|Element value|O(1)|1;2| */
-int64_t sv_at_i(const srt_vector *v, size_t index);
+/* #API: |Vector random access (SV_I8)|vector; location|Element value|O(1)|1;2| */
+int8_t sv_at_i8(const srt_vector *v, size_t index);
 
-/* #API: |Vector random access (unsigned integer)|vector; location|Element value|O(1)|1;2| */
-uint64_t sv_at_u(const srt_vector *v, size_t index);
+/* #API: |Vector random access (SV_U8)|vector; location|Element value|O(1)|1;2| */
+uint8_t sv_at_u8(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_I16)|vector; location|Element value|O(1)|1;2| */
+int16_t sv_at_i16(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_U16)|vector; location|Element value|O(1)|1;2| */
+uint16_t sv_at_u16(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_I32)|vector; location|Element value|O(1)|1;2| */
+int32_t sv_at_i32(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_U32)|vector; location|Element value|O(1)|1;2| */
+uint32_t sv_at_u32(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_I64)|vector; location|Element value|O(1)|1;2| */
+int64_t sv_at_i64(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_U64)|vector; location|Element value|O(1)|1;2| */
+uint64_t sv_at_u64(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_F)|vector; location|Element value|O(1)|1;2| */
+float sv_at_f(const srt_vector *v, size_t index);
+
+/* #API: |Vector random access (SV_D)|vector; location|Element value|O(1)|1;2| */
+double sv_at_d(const srt_vector *v, size_t index);
 
 /*
  * Vector "set": set element value at given position
  */
 
-/* #API: |Vector random access write (generic data)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+/* #API: |Vector random access write (SV_GEN)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
 srt_bool sv_set(srt_vector **v, size_t index, const void *value);
 
-/* #API: |Vector random access write (integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
-srt_bool sv_set_i(srt_vector **v, size_t index, int64_t value);
+/* #API: |Vector random access write (SV_I8)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_i8(srt_vector **v, size_t index, int8_t value);
 
-/* #API: |Vector random access write (unsigned integer)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
-srt_bool sv_set_u(srt_vector **v, size_t index, uint64_t value);
+/* #API: |Vector random access write (SV_U8)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_u8(srt_vector **v, size_t index, uint8_t value);
+
+/* #API: |Vector random access write (SV_I16)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_i16(srt_vector **v, size_t index, int16_t value);
+
+/* #API: |Vector random access write (SV_U16)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_u16(srt_vector **v, size_t index, uint16_t value);
+
+/* #API: |Vector random access write (SV_I32)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_i32(srt_vector **v, size_t index, int32_t value);
+
+/* #API: |Vector random access write (SV_U32)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_u32(srt_vector **v, size_t index, uint32_t value);
+
+/* #API: |Vector random access write (SV_I64)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_i64(srt_vector **v, size_t index, int64_t value);
+
+/* #API: |Vector random access write (SV_U64)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_u64(srt_vector **v, size_t index, uint64_t value);
+
+/* #API: |Vector random access write (SV_F)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_f(srt_vector **v, size_t index, float value);
+
+/* #API: |Vector random access write (SV_D)|vector; location; value|S_TRUE: OK, S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_set_d(srt_vector **v, size_t index, double value);
 
 /*
  * Vector "push": add element in the last position
  */
 
-/* #API: |Push/add element (generic data)|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(n)|1;2| */
+/* #API: |Push/add element|vector; data source; number of elements|S_TRUE: added OK; S_FALSE: not enough memory|O(n)|1;2| */
 srt_bool sv_push_raw(srt_vector **v, const void *src, size_t n);
 
 /*
-#API: |Push/add multiple elements (generic data)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2|
+#API: |Push/add multiple elements (SV_GEN)|vector; new element to be added; more elements to be added (optional)|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2|
 srt_bool sv_push(srt_vector **v, const void *c1, ...)
 */
 size_t sv_push_aux(srt_vector **v, const void *c1, ...);
 
-/* #API: |Push/add element (integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
-srt_bool sv_push_i(srt_vector **v, int64_t c);
+/* #API: |Push/add element (SV_I8)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_i8(srt_vector **v, int8_t c);
 
-/* #API: |Push/add element (unsigned integer)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
-srt_bool sv_push_u(srt_vector **v, uint64_t c);
+/* #API: |Push/add element (SV_U8)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_u8(srt_vector **v, uint8_t c);
+
+/* #API: |Push/add element (SV_I16)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_i16(srt_vector **v, int16_t c);
+
+/* #API: |Push/add element (SV_U16)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_u16(srt_vector **v, uint16_t c);
+
+/* #API: |Push/add element (SV_I32)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_i32(srt_vector **v, int32_t c);
+
+/* #API: |Push/add element (SV_U32)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_u32(srt_vector **v, uint32_t c);
+
+/* #API: |Push/add element (SV_I64)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_i64(srt_vector **v, int64_t c);
+
+/* #API: |Push/add element (SV_U64)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_u64(srt_vector **v, uint64_t c);
+
+/* #API: |Push/add element (SV_F)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_f(srt_vector **v, float c);
+
+/* #API: |Push/add element (SV_D)|vector; data source|S_TRUE: added OK; S_FALSE: not enough memory|O(1)|1;2| */
+srt_bool sv_push_d(srt_vector **v, double c);
 
 /*
  * Vector "pop": extract element from last position
  */
 
-/* #API: |Pop/extract element (generic data)|vector|Element reference|O(1)|1;2| */
+/* #API: |Pop/extract element (SV_GEN)|vector|Element reference|O(1)|1;2| */
 void *sv_pop(srt_vector *v);
 
-/* #API: |Pop/extract element (integer)|vector|Integer element|O(1)|1;2| */
-int64_t sv_pop_i(srt_vector *v);
+/* #API: |Pop/extract element (SV_I8)|vector|Integer element|O(1)|1;2| */
+int8_t sv_pop_i8(srt_vector *v);
 
-/* #API: |Pop/extract element (unsigned integer)|vector|Integer element|O(1)|1;2| */
-uint64_t sv_pop_u(srt_vector *v);
+/* #API: |Pop/extract element (SV_U8)|vector|Integer element|O(1)|1;2| */
+uint8_t sv_pop_u8(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_I16)|vector|Integer element|O(1)|1;2| */
+int16_t sv_pop_i16(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_U16)|vector|Integer element|O(1)|1;2| */
+uint16_t sv_pop_u16(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_I32)|vector|Integer element|O(1)|1;2| */
+int32_t sv_pop_i32(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_U32)|vector|Integer element|O(1)|1;2| */
+uint32_t sv_pop_u32(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_I64)|vector|Integer element|O(1)|1;2| */
+int64_t sv_pop_i64(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_U64)|vector|Integer element|O(1)|1;2| */
+uint64_t sv_pop_u64(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_F)|vector|Integer element|O(1)|1;2| */
+float sv_pop_f(srt_vector *v);
+
+/* #API: |Pop/extract element (SV_D)|vector|Integer element|O(1)|1;2| */
+double sv_pop_d(srt_vector *v);
 
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
 #endif /* SVECTOR_H */
+

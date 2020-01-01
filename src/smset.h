@@ -16,11 +16,15 @@ extern "C" {
  * #DOC Supported set modes (enum eSMS_Type):
  * #DOC
  * #DOC
- * #DOC 	SMS_I32: 32-bit integer key
+ * #DOC 	SMS_I32: int32_t key
  * #DOC
- * #DOC 	SMS_U32: 32-bit unsigned int key
+ * #DOC 	SMS_U32: uint32_t key
  * #DOC
- * #DOC 	SMS_I: 64-bit int key
+ * #DOC 	SMS_I: int64_t key
+ * #DOC
+ * #DOC 	SMS_F: float (single-precision floating point) key
+ * #DOC
+ * #DOC 	SMS_D: double (double-precision floating point) key
  * #DOC
  * #DOC 	SMS_S: string key
  * #DOC
@@ -34,9 +38,13 @@ extern "C" {
  * #DOC
  * #DOC	typedef srt_bool (*srt_set_it_i)(int64_t k, void *context);
  * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_f)(float k, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_set_it_d)(double k, void *context);
+ * #DOC
  * #DOC	typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -51,6 +59,8 @@ enum eSMS_Type {
 	SMS_I = SM0_I,
 	SMS_I32 = SM0_I32,
 	SMS_U32 = SM0_U32,
+	SMS_F = SM0_F,
+	SMS_D = SM0_D,
 	SMS_S = SM0_S
 };
 
@@ -60,6 +70,8 @@ typedef srt_map srt_set; /* Opaque structure (accessors are provided) */
 typedef srt_bool (*srt_set_it_i32)(int32_t k, void *context);
 typedef srt_bool (*srt_set_it_u32)(uint32_t k, void *context);
 typedef srt_bool (*srt_set_it_i)(int64_t k, void *context);
+typedef srt_bool (*srt_set_it_f)(float k, void *context);
+typedef srt_bool (*srt_set_it_d)(double k, void *context);
 typedef srt_bool (*srt_set_it_s)(const srt_string *, void *context);
 
 /*
@@ -155,20 +167,38 @@ S_INLINE srt_set *sms_cpy(srt_set **s, const srt_set *src)
  * Existence check
  */
 
-/* #API: |Set element count/check|set; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
-S_INLINE srt_bool sms_count_u(const srt_set *s, uint32_t k)
+/* #API: |Set element count/check (SMS_U32)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_u32(const srt_set *s, uint32_t k)
 {
-	return sm_count_u(s, k);
+	return sm_count_u32(s, k);
 }
 
-/* #API: |Set element count/check|set; integer key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
-S_INLINE srt_bool sms_count_i(const srt_set *s, int64_t k)
+/* #API: |Set element count/check (SMS_I32)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_i32(const srt_set *s, int32_t k)
+{
+	return sm_count_i32(s, k);
+}
+
+/* #API: |Set element count/check (SMS_I)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_i(const srt_set *s, int64_t k)
 {
 	return sm_count_i(s, k);
 }
 
-/* #API: |Set element count/check|set; string key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
-S_INLINE srt_bool sms_count_s(const srt_set *s, const srt_string *k)
+/* #API: |Set element count/check (SMS_F)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_f(const srt_set *s, float k)
+{
+	return sm_count_f(s, k);
+}
+
+/* #API: |Set element count/check (SMS_D)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_d(const srt_set *s, double k)
+{
+	return sm_count_d(s, k);
+}
+
+/* #API: |Set element count/check (SMS_S)|set; key|S_TRUE: element found; S_FALSE: not in the set|O(log n)|1;2| */
+S_INLINE size_t sms_count_s(const srt_set *s, const srt_string *k)
 {
 	return sm_count_s(s, k);
 }
@@ -177,7 +207,7 @@ S_INLINE srt_bool sms_count_s(const srt_set *s, const srt_string *k)
  * Insert
  */
 
-/* #API: |Insert into int32-int32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert element (SMS_I32)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_i32(srt_set **s, int32_t k)
 {
 	struct SMapi n;
@@ -186,7 +216,7 @@ S_INLINE srt_bool sms_insert_i32(srt_set **s, int32_t k)
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
-/* #API: |Insert into uint32-uint32 set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert element (SMS_U32)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_u32(srt_set **s, uint32_t k)
 {
 	struct SMapu n;
@@ -195,7 +225,7 @@ S_INLINE srt_bool sms_insert_u32(srt_set **s, uint32_t k)
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
-/* #API: |Insert into int-int set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert element (SMS_I)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_i(srt_set **s, int64_t k)
 {
 	struct SMapI n;
@@ -204,7 +234,25 @@ S_INLINE srt_bool sms_insert_i(srt_set **s, int64_t k)
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
 
-/* #API: |Insert into string-string set|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert element (SMS_F)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+S_INLINE srt_bool sms_insert_f(srt_set **s, float k)
+{
+	struct SMapF n;
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_F, S_FALSE);
+	n.k = k;
+	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
+}
+
+/* #API: |Insert element (SMS_D)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+S_INLINE srt_bool sms_insert_d(srt_set **s, double k)
+{
+	struct SMapD n;
+	RETURN_IF(!s || (*s)->d.sub_type != SMS_D, S_FALSE);
+	n.k = k;
+	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
+}
+
+/* #API: |Insert element (SMS_S)|set; key|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 {
 	struct SMapS n;
@@ -228,13 +276,37 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
  * Delete
  */
 
-/* #API: |Delete set element|set; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+/* #API: |Delete element (SMS_I32)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+S_INLINE srt_bool sms_delete_i32(srt_set *s, int32_t k)
+{
+	return sm_delete_i32(s, k);
+}
+
+/* #API: |Delete element (SMS_U32)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+S_INLINE srt_bool sms_delete_u32(srt_set *s, uint32_t k)
+{
+	return sm_delete_u32(s, k);
+}
+
+/* #API: |Delete element (SMS_I)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 S_INLINE srt_bool sms_delete_i(srt_set *s, int64_t k)
 {
 	return sm_delete_i(s, k);
 }
 
-/* #API: |Delete set element|set; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+/* #API: |Delete element (SMS_F)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+S_INLINE srt_bool sms_delete_f(srt_set *s, float k)
+{
+	return sm_delete_f(s, k);
+}
+
+/* #API: |Delete element (SMS_D)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+S_INLINE srt_bool sms_delete_d(srt_set *s, double k)
+{
+	return sm_delete_d(s, k);
+}
+
+/* #API: |Delete element (SMS_S)|set; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 S_INLINE srt_bool sms_delete_s(srt_set *s, const srt_string *k)
 {
 	return sm_delete_s(s, k);
@@ -244,16 +316,22 @@ S_INLINE srt_bool sms_delete_s(srt_set *s, const srt_string *k)
  * Enumeration
  */
 
-/* #API: |Enumerate set elements in a given key range|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate elements in a given key range (SMS_I32)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sms_itr_i32(const srt_set *s, int32_t key_min, int32_t key_max, srt_set_it_i32 f, void *context);
 
-/* #API: |Enumerate set elements in a given key range|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate elements in a given key range (SMS_U32)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sms_itr_u32(const srt_set *s, uint32_t key_min, uint32_t key_max, srt_set_it_u32 f, void *context);
 
-/* #API: |Enumerate set elements in a given key range|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate elements in a given key range (SMS_I)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sms_itr_i(const srt_set *s, int64_t key_min, int64_t key_max, srt_set_it_i f, void *context);
 
-/* #API: |Enumerate set elements in a given key range|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate elements in a given key range (SMS_F)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sms_itr_f(const srt_set *s, float key_min, float key_max, srt_set_it_f f, void *context);
+
+/* #API: |Enumerate elements in a given key range (SMS_D)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sms_itr_d(const srt_set *s, double key_min, double key_max, srt_set_it_d f, void *context);
+
+/* #API: |Enumerate elements in a given key range (SMS_S)|set; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sms_itr_s(const srt_set *s, const srt_string *key_min, const srt_string *key_max, srt_set_it_s f, void *context);
 
 /*
@@ -261,22 +339,32 @@ size_t sms_itr_s(const srt_set *s, const srt_string *key_min, const srt_string *
  * as array access after compiler optimization.
  */
 
-/* #API: |Enumerate int32 set|set; element, 0 to n - 1|int32_t|O(1)|1;2|
+/* #API: |Enumerate elements (SMS_I32)|set; element, 0 to n - 1|int32_t|O(1)|1;2|
 int32_t sms_it_i32(const srt_set *s, srt_tndx i);
 */
 #define sms_it_i32(s, i) sm_it_i32_k(s, i)
 
-/* #API: |Enumerate uint32 set|set; element, 0 to n - 1|uint32_t|O(1)|1;2|
+/* #API: |Enumerate elements (SMS_U32)|set; element, 0 to n - 1|uint32_t|O(1)|1;2|
 uint32_t sms_it_u32(const srt_set *s, srt_tndx i);
 */
 #define sms_it_u32(s, i) sm_it_u32_k(s, i)
 
-/* #API: |Enumerate int64 set|set; element, 0 to n - 1|int64_t|O(1)|1;2|
-int32_t sms_it_i32(const srt_set *s, srt_tndx i);
+/* #API: |Enumerate elements (SMS_I)|set; element, 0 to n - 1|int64_t|O(1)|1;2|
+int32_t sms_it_i(const srt_set *s, srt_tndx i);
 */
 #define sms_it_i(s, i) sm_it_i_k(s, i)
 
-/* #API: |Enumerate string set|set; element, 0 to n - 1|string|O(1)|1;2|
+/* #API: |Enumerate elements (SMS_F)|set; element, 0 to n - 1|float|O(1)|1;2|
+float sms_it_f(const srt_set *s, srt_tndx i);
+*/
+#define sms_it_f(s, i) sm_it_f_k(s, i)
+
+/* #API: |Enumerate elements (SMS_D)|set; element, 0 to n - 1|double|O(1)|1;2|
+double sms_it_d(const srt_set *s, srt_tndx i);
+*/
+#define sms_it_d(s, i) sm_it_d_k(s, i)
+
+/* #API: |Enumerate elements (SMS_S)|set; element, 0 to n - 1|string|O(1)|1;2|
 int32_t sms_it_s(const srt_set *s, srt_tndx i);
 */
 #define sms_it_s(s, i) sm_it_s_k(s, i)

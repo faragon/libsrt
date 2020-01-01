@@ -16,17 +16,27 @@ extern "C" {
  * #DOC Supported key/value modes (enum eSM_Type):
  * #DOC
  * #DOC
- * #DOC	SM_II32: 32-bit integer key, 32-bit integer value
+ * #DOC	SM_II32: int32_t key, int32_t value
  * #DOC
- * #DOC	SM_UU32: 32-bit unsigned int key, 32-bit unsigned int value
+ * #DOC	SM_UU32: uint32_t key, uint32_t value
  * #DOC
- * #DOC	SM_II: 64-bit int key, 64-bit int value
+ * #DOC	SM_II: int64_t key, int64_t value
  * #DOC
- * #DOC	SM_IS: 64-bit int key, string value
+ * #DOC	SM_FF: float (single-precision floating point) key, float value
  * #DOC
- * #DOC	SM_IP: 64-bit int key, pointer value
+ * #DOC	SM_DD: double (double-precision floating point) key, double value
  * #DOC
- * #DOC	SM_SI: 64-bit string key, 64-bit int value
+ * #DOC	SM_IS: int64_t key, string value
+ * #DOC
+ * #DOC	SM_IP: int64_t key, pointer value
+ * #DOC
+ * #DOC	SM_SI: string key, int64_t value
+ * #DOC
+ * #DOC	SM_DS: double key, string value
+ * #DOC
+ * #DOC	SM_DP: double key, pointer value
+ * #DOC
+ * #DOC	SM_SD: string key, double value
  * #DOC
  * #DOC	SM_SS: string key, string value
  * #DOC
@@ -42,17 +52,27 @@ extern "C" {
  * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_ii)(int64_t k, int64_t v, void *context);
  * #DOC
+ * #DOC	typedef srt_bool (*srt_map_it_ff)(float k, float v, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_map_it_dd)(double k, double v, void *context);
+ * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_is)(int64_t k, const srt_string *, void *context);
  * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_ip)(int64_t k, const void *, void *context);
  * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_si)(const srt_string *, int64_t v, void *context);
  * #DOC
+ * #DOC	typedef srt_bool (*srt_map_it_ds)(double k, const srt_string *, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_map_it_dp)(double k, const void *, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_map_it_sd)(const srt_string *, double v, void *context);
+ * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_ss)(const srt_string *, const srt_string *, void *context);
  * #DOC
  * #DOC	typedef srt_bool (*srt_map_it_sp)(const srt_string *, const void *, void *context);
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -77,7 +97,14 @@ enum eSM_Type0 {
 	SM0_I,
 	SM0_I32,
 	SM0_U32,
-	SM0_S
+	SM0_S,
+	SM0_F,
+	SM0_D,
+	SM0_FF,
+	SM0_DD,
+	SM0_DP,
+	SM0_DS,
+	SM0_SD
 };
 
 enum eSM_Type {
@@ -88,7 +115,12 @@ enum eSM_Type {
 	SM_IP = SM0_IP,
 	SM_SI = SM0_SI,
 	SM_SS = SM0_SS,
-	SM_SP = SM0_SP
+	SM_SP = SM0_SP,
+	SM_FF = SM0_FF,
+	SM_DD = SM0_DD,
+	SM_DS = SM0_DS,
+	SM_DP = SM0_DP,
+	SM_SD = SM0_SD
 };
 
 struct SMapI {
@@ -151,6 +183,41 @@ struct SMapSP {
 	const void *v;
 };
 
+struct SMapF {
+	srt_tnode n;
+	float k;
+};
+
+struct SMapD {
+	srt_tnode n;
+	double k;
+};
+
+struct SMapFF {
+	struct SMapF x;
+	float v;
+};
+
+struct SMapDD {
+	struct SMapD x;
+	double v;
+};
+
+struct SMapDS {
+	struct SMapD x;
+	srt_stringo1 v;
+};
+
+struct SMapDP {
+	struct SMapD x;
+	const void *v;
+};
+
+struct SMapSD {
+	struct SMapS x;
+	double v;
+};
+
 typedef srt_tree srt_map; /* Opaque structure (accessors are provided) */
 			  /* (map is implemented as a tree)	     */
 
@@ -162,6 +229,11 @@ typedef srt_bool (*srt_map_it_ip)(int64_t k, const void *, void *context);
 typedef srt_bool (*srt_map_it_si)(const srt_string *, int64_t v, void *context);
 typedef srt_bool (*srt_map_it_ss)(const srt_string *, const srt_string *, void *context);
 typedef srt_bool (*srt_map_it_sp)(const srt_string *, const void *, void *context);
+typedef srt_bool (*srt_map_it_ff)(float k, float v, void *context);
+typedef srt_bool (*srt_map_it_dd)(double k, double v, void *context);
+typedef srt_bool (*srt_map_it_ds)(double k, const srt_string *, void *context);
+typedef srt_bool (*srt_map_it_dp)(double k, const void *, void *context);
+typedef srt_bool (*srt_map_it_sd)(const srt_string *, double v, void *context);
 
 /*
  * Allocation
@@ -226,6 +298,20 @@ S_INLINE uint8_t sm_elem_size(int t)
 		return sizeof(struct SMapI);
 	case SM0_S:
 		return sizeof(struct SMapS);
+	case SM0_F:
+		return sizeof(struct SMapF);
+	case SM0_D:
+		return sizeof(struct SMapD);
+	case SM0_FF:
+		return sizeof(struct SMapFF);
+	case SM0_DD:
+		return sizeof(struct SMapDD);
+	case SM0_DS:
+		return sizeof(struct SMapDS);
+	case SM0_DP:
+		return sizeof(struct SMapDP);
+	case SM0_SD:
+		return sizeof(struct SMapSD);
 	default:
 		break;
 	}
@@ -285,122 +371,197 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src);
  * Random access
  */
 
-/* #API: |Access to int32-int32 map|map; int32 key|int32|O(log n)|1;2| */
+/* #API: |Access to map element (SM_II32)|map; key|value|O(log n)|1;2| */
 int32_t sm_at_ii32(const srt_map *m, int32_t k);
 
-/* #API: |Access to uint32-uint32 map|map; uint32 key|uint32|O(log n)|1;2| */
+/* #API: |Access to map element (SM_UU32)|map; key|value|O(log n)|1;2| */
 uint32_t sm_at_uu32(const srt_map *m, uint32_t k);
 
-/* #API: |Access to integer-interger map|map; integer key|integer|O(log n)|1;2| */
+/* #API: |Access to map element (SM_II)|map; key|value|O(log n)|1;2| */
 int64_t sm_at_ii(const srt_map *m, int64_t k);
 
-/* #API: |Access to integer-string map|map; integer key|string|O(log n)|1;2| */
+/* #API: |Access to map element (SM_FF)|map; key|value|O(log n)|1;2| */
+float sm_at_ff(const srt_map *m, float k);
+
+/* #API: |Access to map element (SM_DD)|map; key|value|O(log n)|1;2| */
+double sm_at_dd(const srt_map *m, double k);
+
+/* #API: |Access to map element (SM_IS)|map; key|value|O(log n)|1;2| */
 const srt_string *sm_at_is(const srt_map *m, int64_t k);
 
-/* #API: |Access to integer-pointer map|map; integer key|pointer|O(log n)|1;2| */
+/* #API: |Access to map element (SM_IP)|map; key|value|O(log n)|1;2| */
 const void *sm_at_ip(const srt_map *m, int64_t k);
 
-/* #API: |Access to string-integer map|map; string key|integer|O(log n)|1;2| */
+/* #API: |Access to map element (SM_SI)|map; key|value|O(log n)|1;2| */
 int64_t sm_at_si(const srt_map *m, const srt_string *k);
 
-/* #API: |Access to string-string map|map; string key|string|O(log n)|1;2| */
+/* #API: |Access to map element (SM_SS)|map; key|value|O(log n)|1;2| */
 const srt_string *sm_at_ss(const srt_map *m, const srt_string *k);
 
-/* #API: |Access to string-pointer map|map; string key|pointer|O(log n)|1;2| */
+/* #API: |Access to map element (SM_SP)|map; key|value|O(log n)|1;2| */
 const void *sm_at_sp(const srt_map *m, const srt_string *k);
+
+/* #API: |Access to map element (SM_DS)|map; key|value|O(log n)|1;2| */
+const srt_string *sm_at_ds(const srt_map *m, double k);
+
+/* #API: |Access to map element (SM_DP)|map; key|value|O(log n)|1;2| */
+const void *sm_at_dp(const srt_map *m, double k);
+
+/* #API: |Access to map element (SM_SD)|map; key|value|O(log n)|1;2| */
+double sm_at_sd(const srt_map *m, const srt_string *k);
 
 /*
  * Existence check
  */
 
-/* #API: |Map element count/check|map; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-srt_bool sm_count_u(const srt_map *m, uint32_t k);
+/* #API: |Map element count/check (SM_II32)|map; key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_i32(const srt_map *m, int32_t k);
 
-/* #API: |Map element count/check|map; integer key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-srt_bool sm_count_i(const srt_map *m, int64_t k);
+/* #API: |Map element count/check|map (SM_UU32); key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_u32(const srt_map *m, uint32_t k);
 
-/* #API: |Map element count/check|map; string key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
-srt_bool sm_count_s(const srt_map *m, const srt_string *k);
+/* #API: |Map element count/check|map (SM_II); key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_i(const srt_map *m, int64_t k);
+
+/* #API: |Map element count/check|map (SM_FF); key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_f(const srt_map *m, float k);
+
+/* #API: |Map element count/check|map (SM_D*); key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_d(const srt_map *m, double k);
+
+/* #API: |Map element count/check|map (SM_S*); key|S_TRUE: element found; S_FALSE: not in the map|O(log n)|1;2| */
+size_t sm_count_s(const srt_map *m, const srt_string *k);
 
 /*
  * Insert
  */
 
-/* #API: |Insert into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_II32)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_ii32(srt_map **m, int32_t k, int32_t v);
 
-/* #API: |Insert into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_UU32)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_uu32(srt_map **m, uint32_t k, uint32_t v);
 
-/* #API: |Insert into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element|map (SM_II); key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_ii(srt_map **m, int64_t k, int64_t v);
 
-/* #API: |Insert into int-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_FF)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_insert_ff(srt_map **m, float k, float v);
+
+/* #API: |Insert map element (SM_DD)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_insert_dd(srt_map **m, double k, double v);
+
+/* #API: |Insert map element (SM_IS)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_is(srt_map **m, int64_t k, const srt_string *v);
 
-/* #API: |Insert into int-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_IP)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_ip(srt_map **m, int64_t k, const void *v);
 
-/* #API: |Insert into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_SI)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_si(srt_map **m, const srt_string *k, int64_t v);
 
-/* #API: |Insert into string-string map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_DS)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_insert_ds(srt_map **m, double k, const srt_string *v);
+
+/* #API: |Insert map element (SM_DP)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_insert_dp(srt_map **m, double k, const void *v);
+
+/* #API: |Insert map element (SM_SD)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_insert_sd(srt_map **m, const srt_string *k, double v);
+
+/* #API: |Insert map element (SM_SS)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_ss(srt_map **m, const srt_string *k, const srt_string *v);
 
-/* #API: |Insert into string-pointer map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Insert map element (SM_SP)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_insert_sp(srt_map **m, const srt_string *k, const void *v);
 
-/* #API: |Increment value into int32-int32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Increment map element (SM_II32)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_inc_ii32(srt_map **m, int32_t k, int32_t v);
 
-/* #API: |Increment into uint32-uint32 map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Increment map element (SM_UU32)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_inc_uu32(srt_map **m, uint32_t k, uint32_t v);
 
-/* #API: |Increment into int-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Increment map element (SM_II)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_inc_ii(srt_map **m, int64_t k, int64_t v);
 
-/* #API: |Increment into string-int map|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+/* #API: |Increment map element (SM_FF)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_inc_ff(srt_map **m, float k, float v);
+
+/* #API: |Increment map element (SM_DD)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_inc_dd(srt_map **m, double k, double v);
+
+/* #API: |Increment map element (SM_SI)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
 srt_bool sm_inc_si(srt_map **m, const srt_string *k, int64_t v);
+
+/* #API: |Increment map element (SM_SD)|map; key; value|S_TRUE: OK, S_FALSE: insertion error|O(log n)|1;2| */
+srt_bool sm_inc_sd(srt_map **m, const srt_string *k, double v);
 
 /*
  * Delete
  */
 
-/* #API: |Delete map element|map; integer key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+/* #API: |Delete map element (SM_II32)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+srt_bool sm_delete_i32(srt_map *m, int32_t k);
+
+/* #API: |Delete map element (SM_UU32)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+srt_bool sm_delete_u32(srt_map *m, uint32_t k);
+
+/* #API: |Delete map element (SM_I*)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 srt_bool sm_delete_i(srt_map *m, int64_t k);
 
-/* #API: |Delete map element|map; string key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
+/* #API: |Delete map element (SM_FF)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
+srt_bool sm_delete_f(srt_map *m, float k);
+
+/* #API: |Delete map element (SM_D*)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|0;1| */
+srt_bool sm_delete_d(srt_map *m, double k);
+
+/* #API: |Delete map element (SM_S*)|map; key|S_TRUE: found and deleted; S_FALSE: not found|O(log n)|1;2| */
 srt_bool sm_delete_s(srt_map *m, const srt_string *k);
 
 /*
  * Enumeration / export data
  */
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_II32)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ii32(const srt_map *m, int32_t key_min, int32_t key_max, srt_map_it_ii32 f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_UU32)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_uu32(const srt_map *m, uint32_t key_min, uint32_t key_max, srt_map_it_uu32 f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_II)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ii(const srt_map *m, int64_t key_min, int64_t key_max, srt_map_it_ii f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_FF)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_itr_ff(const srt_map *m, float key_min, float key_max, srt_map_it_ff f, void *context);
+
+/* #API: |Enumerate map elements in a given key range (SM_DD)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_itr_dd(const srt_map *m, double key_min, double key_max, srt_map_it_dd f, void *context);
+
+/* #API: |Enumerate map elements in a given key range (SM_IS)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_is(const srt_map *m, int64_t key_min, int64_t key_max, srt_map_it_is f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_IP)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ip(const srt_map *m, int64_t key_min, int64_t key_max, srt_map_it_ip f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_SI)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_si(const srt_map *m, const srt_string *key_min, const srt_string *key_max, srt_map_it_si f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_DS)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_itr_ds(const srt_map *m, double key_min, double key_max, srt_map_it_ds f, void *context);
+
+/* #API: |Enumerate map elements in a given key range (SM_DP)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_itr_dp(const srt_map *m, double key_min, double key_max, srt_map_it_dp f, void *context);
+
+/* #API: |Enumerate map elements in a given key range (SM_SD)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+size_t sm_itr_sd(const srt_map *m, const srt_string *key_min, const srt_string *key_max, srt_map_it_sd f, void *context);
+
+/* #API: |Enumerate map elements in a given key range (SM_SS)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_ss(const srt_map *m, const srt_string *key_min, const srt_string *key_max, srt_map_it_ss f, void *context);
 
-/* #API: |Enumerate map elements in a given key range|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
+/* #API: |Enumerate map elements in a given key range (SM_SP)|map; key lower bound; key upper bound; callback function; callback function context|Elements processed|O(log n) + O(log m); additional 2 * O(log n) space required, allocated on the stack, i.e. fast|1;2| */
 size_t sm_itr_sp(const srt_map *m, const srt_string *key_min, const srt_string *key_max, srt_map_it_sp f, void *context);
 
-/* #NOTAPI: |Sort map to vector (used for test coverage, not as documented API)|map; output vector for keys; output vector for values|Number of map elements|O(n)|1;2| */
+/* #NOTAPI: |Sort map to vector (used for test coverage, not as documented API)|map; output vector for keys; output vector for values|Number of map elements|O(n)|0;1| */
 ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv);
 
 /*
@@ -424,75 +585,118 @@ ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv);
 	RETURN_IF(!n, def_v);                                                  \
 	return n_v
 
-/* #API: |Enumerate int32-* map keys|map; element, 0 to n - 1|int32_t|O(1)|1;2| */
+/* #API: |Enumerate map keys (SM_II32)|map; element, 0 to n - 1|int32_t|O(1)|1;2| */
 S_INLINE int32_t sm_it_i32_k(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_K(struct SMapi, m, i, n->k, 0);
 }
 
-/* #API: |Enumerate int32-int32 map values|map; element, 0 to n - 1|int32_t|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_II32)|map; element, 0 to n - 1|int32_t|O(1)|1;2| */
 S_INLINE int32_t sm_it_ii32_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_II32, struct SMapii, m, i, n->v, 0);
 }
 
-/* #API: |Enumerate uint32-* map keys|map; element, 0 to n - 1|uint32_t|O(1)|1;2| */
+/* #API: |Enumerate map keys (SM_UU32)|map; element, 0 to n - 1|uint32_t|O(1)|1;2| */
 S_INLINE uint32_t sm_it_u32_k(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_K(struct SMapu, m, i, n->k, 0);
 }
 
-/* #API: |Enumerate uint32-uint32 map values|map; element, 0 to n - 1|uint32_t|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_UU32)|map; element, 0 to n - 1|uint32_t|O(1)|1;2| */
 S_INLINE uint32_t sm_it_uu32_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_UU32, struct SMapuu, m, i, n->v, 0);
 }
 
-/* #API: |Enumerate integer-* map keys|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
+/* #API: |Enumerate map keys (SM_I*)|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
 S_INLINE int64_t sm_it_i_k(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_K(struct SMapI, m, i, n->k, 0);
 }
 
-/* #API: |Enumerate integer-interger map values|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_II)|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
 S_INLINE int64_t sm_it_ii_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_II, struct SMapII, m, i, n->v, 0);
 }
 
-/* #API: |Enumerate integer-string map values|map; element, 0 to n - 1|string|O(1)|1;2| */
+/* #API: |Enumerate map keys (SM_FF)|map; element, 0 to n - 1|float|O(1)|1;2| */
+S_INLINE float sm_it_f_k(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_K(struct SMapF, m, i, n->k, 0);
+}
+
+/* #API: |Enumerate map values (SM_FF)|map; element, 0 to n - 1|float|O(1)|1;2| */
+S_INLINE float sm_it_ff_v(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_V(SM_FF, struct SMapFF, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate map keys (SM_D*)|map; element, 0 to n - 1|double|O(1)|1;2| */
+S_INLINE double sm_it_d_k(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_K(struct SMapD, m, i, n->k, 0);
+}
+
+/* #API: |Enumerate map values (SM_DD)|map; element, 0 to n - 1|double|O(1)|1;2| */
+S_INLINE double sm_it_dd_v(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_V(SM_DD, struct SMapDD, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate map values (SM_IS)|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *sm_it_is_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_IS, struct SMapIS, m, i,
 			sso_get((const srt_stringo *)&n->v), ss_void);
 }
 
-/* #API: |Enumerate integer-pointer map values|map; element, 0 to n - 1|pointer|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_IP)|map; element, 0 to n - 1|pointer|O(1)|1;2| */
 S_INLINE const void *sm_it_ip_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_IP, struct SMapIP, m, i, n->v, NULL);
 }
 
-/* #API: |Enumerate string-* map keys|map; element, 0 to n - 1|string|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_DS)|map; element, 0 to n - 1|string|O(1)|1;2| */
+S_INLINE const srt_string *sm_it_ds_v(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_V(SM_DS, struct SMapDS, m, i,
+			sso_get((const srt_stringo *)&n->v), ss_void);
+}
+
+/* #API: |Enumerate map values (SM_DP)|map; element, 0 to n - 1|pointer|O(1)|1;2| */
+S_INLINE const void *sm_it_dp_v(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_V(SM_DP, struct SMapDP, m, i, n->v, NULL);
+}
+
+/* #API: |Enumerate map keys (SM_S*)|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *sm_it_s_k(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_K(struct SMapS, m, i, sso_get((const srt_stringo *)&n->k),
 			ss_void);
 }
 
-/* #API: |Enumerate string-integer map values|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_SI)|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
 S_INLINE int64_t sm_it_si_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_SI, struct SMapSI, m, i, n->v, 0);
 }
 
-/* #API: |Enumerate string-string map values|map; element, 0 to n - 1|string|O(1)|1;2| */
+/* #API: |Enumerate map values (SM_SD)|map; element, 0 to n - 1|int64_t|O(1)|1;2| */
+S_INLINE double sm_it_sd_v(const srt_map *m, srt_tndx i)
+{
+	S_SM_ENUM_AUX_V(SM_SD, struct SMapSD, m, i, n->v, 0);
+}
+
+/* #API: |Enumerate map values (SM_SS)|map; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *sm_it_ss_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_SS, struct SMapSS, m, i, sso_get_s2(&n->s), ss_void);
 }
 
-/* #API: |Enumerate string-pointer map|map; element, 0 to n - 1|pointer|O(1)|1;2| */
+/* #API: |Enumerate map (SM_SP)|map; element, 0 to n - 1|pointer|O(1)|1;2| */
 S_INLINE const void *sm_it_sp_v(const srt_map *m, srt_tndx i)
 {
 	S_SM_ENUM_AUX_V(SM_SP, struct SMapSP, m, i, n->v, NULL);
@@ -591,20 +795,16 @@ S_INLINE const void *sm_it_sp_v(const srt_map *m, srt_tndx i)
 		return nelems;                                                 \
 	}
 
-S_INLINE int cmp_ni_i(const struct SMapi *a, int32_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
-}
+#define BUILD_SMAP_CMPN(FN, TS, TK)				\
+	S_INLINE int FN(const TS *a, TK b) {			\
+		return a->k > b ? 1 : a->k < b ? -1 : 0;	\
+	}
 
-S_INLINE int cmp_nu_u(const struct SMapu *a, uint32_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
-}
-
-S_INLINE int cmp_nI_I(const struct SMapI *a, int64_t b)
-{
-	return a->k > b ? 1 : a->k < b ? -1 : 0;
-}
+BUILD_SMAP_CMPN(cmp_ni_i, struct SMapi, int32_t)
+BUILD_SMAP_CMPN(cmp_nu_u, struct SMapu, uint32_t)
+BUILD_SMAP_CMPN(cmp_nI_I, struct SMapI, int64_t)
+BUILD_SMAP_CMPN(cmp_nF_F, struct SMapF, float)
+BUILD_SMAP_CMPN(cmp_nD_D, struct SMapD, double)
 
 S_INLINE int cmp_ns_s(const struct SMapS *a, const srt_string *b)
 {

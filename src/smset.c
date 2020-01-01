@@ -3,7 +3,7 @@
  *
  * Set handling.
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -31,3 +31,13 @@ SM_ENUM_INORDER_XX(
 	cmp_ns_s((const struct SMapS *)cn, kmax),
 	f(sso_get((const srt_stringo *)&((const struct SMapS *)cn)->k),
 	  context))
+
+SM_ENUM_INORDER_XX(sms_itr_f, srt_set_it_f, SM0_F, float,
+		   cmp_nF_F((const struct SMapF *)cn, kmin),
+		   cmp_nF_F((const struct SMapF *)cn, kmax),
+		   f(((const struct SMapF *)cn)->k, context))
+
+SM_ENUM_INORDER_XX(sms_itr_d, srt_set_it_d, SM0_D, double,
+		   cmp_nD_D((const struct SMapD *)cn, kmin),
+		   cmp_nD_D((const struct SMapD *)cn, kmax),
+		   f(((const struct SMapD *)cn)->k, context))

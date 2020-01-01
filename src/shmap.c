@@ -3,8 +3,8 @@
  *
  * Hash map handling
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "shmap.h"
@@ -36,6 +36,16 @@ static srt_bool eq_64(const void *key, const void *node)
 static srt_bool eq_32(const void *key, const void *node)
 {
 	return memcmp(key, node, sizeof(int32_t)) ? S_FALSE : S_TRUE;
+}
+
+static srt_bool eq_f(const void *key, const void *node)
+{
+	return memcmp(key, node, sizeof(float)) ? S_FALSE : S_TRUE;
+}
+
+static srt_bool eq_d(const void *key, const void *node)
+{
+	return memcmp(key, node, sizeof(double)) ? S_FALSE : S_TRUE;
 }
 
 static srt_bool eq_sso(const void *key, const void *node)
@@ -127,6 +137,53 @@ static void shmcb_set_s(void *loc, const void *key)
 	sso1_set(&e->k, (const srt_string *)key);
 }
 
+static void shmcb_set_f(void *loc, const void *key)
+{
+	struct SHMapF *e = (struct SHMapF *)loc;
+	memcpy(&e->k, key, sizeof(e->k));
+}
+
+static void shmcb_set_d(void *loc, const void *key)
+{
+	struct SHMapD *e = (struct SHMapD *)loc;
+	memcpy(&e->k, key, sizeof(e->k));
+}
+
+static void shmcb_set_ff(void *loc, const void *key, const void *value)
+{
+	struct SHMapFF *e = (struct SHMapFF *)loc;
+	memcpy(&e->x.k, key, sizeof(e->x.k));
+	memcpy(&e->v, value, sizeof(e->v));
+}
+
+static void shmcb_set_dd(void *loc, const void *key, const void *value)
+{
+	struct SHMapDD *e = (struct SHMapDD *)loc;
+	memcpy(&e->x.k, key, sizeof(e->x.k));
+	memcpy(&e->v, value, sizeof(e->v));
+}
+
+static void shmcb_set_ds(void *loc, const void *key, const void *value)
+{
+	struct SHMapDS *e = (struct SHMapDS *)loc;
+	memcpy(&e->x.k, key, sizeof(e->x.k));
+	sso1_set(&e->v, (const srt_string *)value);
+}
+
+static void shmcb_set_dp(void *loc, const void *key, const void *value)
+{
+	struct SHMapDP *e = (struct SHMapDP *)loc;
+	memcpy(&e->x.k, key, sizeof(e->x.k));
+	e->v = value;
+}
+
+static void shmcb_set_sd(void *loc, const void *key, const void *value)
+{
+	struct SHMapSD *e = (struct SHMapSD *)loc;
+	sso1_set(&e->x.k, (const srt_string *)key);
+	memcpy(&e->v, value, sizeof(e->v));
+}
+
 static void shmcb_inc_ii32(void *loc, const void *value)
 {
 	int32_t vi;
@@ -159,9 +216,38 @@ static void shmcb_inc_si(void *loc, const void *value)
 	e->v += vi;
 }
 
+static void shmcb_inc_ff(void *loc, const void *value)
+{
+	float vi;
+	struct SHMapFF *e = (struct SHMapFF *)loc;
+	memcpy(&vi, value, sizeof(vi));
+	e->v += vi;
+}
+
+static void shmcb_inc_dd(void *loc, const void *value)
+{
+	double vi;
+	struct SHMapDD *e = (struct SHMapDD *)loc;
+	memcpy(&vi, value, sizeof(vi));
+	e->v += vi;
+}
+
+static void shmcb_inc_sd(void *loc, const void *value)
+{
+	double vi;
+	struct SHMapSD *e = (struct SHMapSD *)loc;
+	memcpy(&vi, value, sizeof(vi));
+	e->v += vi;
+}
+
 static void del_is(void *node)
 {
 	sso1_free((srt_stringo1 *)&((struct SHMapIS *)node)->v);
+}
+
+static void del_ds(void *node)
+{
+	sso1_free((srt_stringo1 *)&((struct SHMapDS *)node)->v);
 }
 
 static void del_sx(void *node)
@@ -181,22 +267,32 @@ static void del_nop(void *node)
 
 static uint32_t hash_32(const void *node)
 {
-	return sh_hash32(S_LD_U32(node));
+	return SHM_HASH_32(S_LD_U32(node));
 }
 
 static uint32_t hash_64(const void *node)
 {
-	return sh_hash64(S_LD_U64(node));
+	return SHM_HASH_64(S_LD_U64(node));
 }
 
-static uint32_t hash_sx(const void *node)
+static uint32_t hash_fp(const void *node)
 {
-	return SHM_SHASH(sso1_get((const srt_stringo1 *)node));
+	return SHM_HASH_F(S_LD_F(node));
+}
+
+static uint32_t hash_dfp(const void *node)
+{
+	return SHM_HASH_D(S_LD_D(node));
+}
+
+static uint32_t hash_s1(const void *node)
+{
+	return SHM_HASH_S(sso1_get((const srt_stringo1 *)node));
 }
 
 static uint32_t hash_ss(const void *node)
 {
-	return SHM_SHASH(sso_get((const srt_stringo *)node));
+	return SHM_HASH_S(sso_get((const srt_stringo *)node));
 }
 
 static const void *n2key_direct(const void *node)
@@ -204,7 +300,7 @@ static const void *n2key_direct(const void *node)
 	return node;
 }
 
-static const void *n2key_sx(const void *node)
+static const void *n2key_s1(const void *node)
 {
 	return sso1_get((const srt_stringo1 *)node);
 }
@@ -251,32 +347,15 @@ static void aux_rehash(srt_hmap *hm)
 	 * Reset the hash table buckets, and rehash all elements
 	 */
 	memset(b, 0, sizeof(struct SHMBucket) * nbuckets);
-	switch (hm->ksize) {
-	case 4:
-		for (i = 0; i < nelems; i++, data += elem_size)
-			aux_reg_hash(hm, data, sh_hash32(S_LD_U32(data)), i);
-		break;
-	case 8:
-		for (i = 0; i < nelems; i++, data += elem_size)
-			aux_reg_hash(hm, data, sh_hash64(S_LD_U64(data)), i);
-		break;
-	case 0:
-		for (i = 0; i < nelems; i++, data += elem_size) {
-			s = sso_get((const srt_stringo *)data);
-			aux_reg_hash(hm, s, SHM_SHASH(s), i);
-		}
-		break;
-	default:
-		/* this should not happen */
-		return;
-	}
+	for (i = 0; i < nelems; i++, data += elem_size)
+		aux_reg_hash(hm, data, hm->hashf(data), i);
 }
 
 static srt_bool aux_insert_check(srt_hmap **hm)
 {
 	srt_hmap *h2;
 	size_t h2bits, hs1, hs2, hsd, sxz, sxzm, sz;
-	RETURN_IF(!shm_grow(hm, 1), S_FALSE);
+	RETURN_IF(!shm_grow(hm, 1) || !hm || !*hm, S_FALSE);
 	sz = shm_size(*hm);
 	/* Check if rehash is not required */
 	if (sz < (*hm)->rh_threshold)
@@ -434,7 +513,6 @@ S_INLINE void shm_tsetup(srt_hmap *h, int t)
 	case SHM0_U32:
 	case SHM0_II32:
 	case SHM0_UU32:
-		h->ksize = 4;
 		h->eqf = eq_32;
 		h->delf = del_nop;
 		h->hashf = hash_32;
@@ -444,27 +522,41 @@ S_INLINE void shm_tsetup(srt_hmap *h, int t)
 	case SHM0_II:
 	case SHM0_IS:
 	case SHM0_IP:
-		h->ksize = 8;
 		h->eqf = eq_64;
 		h->delf = t == SHM0_IS ? del_is : del_nop;
 		h->hashf = hash_64;
 		h->n2kf = n2key_direct;
 		break;
 	case SHM0_SI:
+	case SHM0_SD:
 	case SHM0_SP:
 	case SHM0_S:
-		h->ksize = 0;
 		h->eqf = eq_sso1;
 		h->delf = del_sx;
-		h->hashf = hash_sx;
-		h->n2kf = n2key_sx;
+		h->hashf = hash_s1;
+		h->n2kf = n2key_s1;
 		break;
 	case SHM0_SS:
-		h->ksize = 0;
 		h->eqf = eq_sso;
 		h->delf = del_ss;
 		h->hashf = hash_ss;
 		h->n2kf = n2key_ss;
+		break;
+	case SHM0_F:
+	case SHM0_FF:
+		h->eqf = eq_f;
+		h->delf = del_nop;
+		h->hashf = hash_fp;
+		h->n2kf = n2key_direct;
+		break;
+	case SHM0_D:
+	case SHM0_DD:
+	case SHM0_DS:
+	case SHM0_DP:
+		h->eqf = eq_d;
+		h->delf = t == SHM0_DS ? del_ds : del_nop;
+		h->hashf = hash_dfp;
+		h->n2kf = n2key_direct;
 		break;
 	default:
 		break;
@@ -513,16 +605,9 @@ void shm_clear(srt_hmap *hm)
 	p = shm_get_buffer(hm);
 	es = hm->d.elem_size;
 	pt = p + shm_size(hm) * es;
-	switch (hm->d.sub_type) {
-	case SHM0_SI:
-	case SHM0_IS:
-	case SHM0_SP:
-	case SHM0_SS:
-	case SHM0_S:
+	if (hm->delf && hm->delf != del_nop)
 		for (; p < pt; p += es)
 			hm->delf(p);
-		break;
-	}
 	shm_set_size(hm, 0);
 }
 
@@ -555,12 +640,18 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 	srt_hmap *hra;
 	uint8_t t = src->d.sub_type;
 	uint64_t hs64 = snextpow2(shm_size(src));
-	size_t tgt0_cas = shm_current_alloc_size(*hm),
-	       src0_cas = shm_current_alloc_size(src), np2 = (size_t)hs64,
-	       hbits = slog2(np2), hdr_size = sh_hdr_size(t, np2),
-	       es = src->d.elem_size, elems = shm_size(src),
-	       data_size = es * elems, min_alloc_size = hdr_size + data_size;
-	RETURN_IF((uint64_t)np2 != hs64, S_FALSE);
+	size_t tgt0_cas, src0_cas, np2, hbits, hdr_size, es, elems, data_size,
+		min_alloc_size;
+	np2 = (size_t)hs64;
+	hbits = slog2(np2);
+	RETURN_IF(!hm || (uint64_t)np2 != hs64, S_FALSE);
+	tgt0_cas = shm_current_alloc_size(*hm);
+	src0_cas = shm_current_alloc_size(src);
+	hdr_size = sh_hdr_size(t, np2);
+	es = src->d.elem_size;
+	elems = shm_size(src);
+	data_size = es * elems;
+	min_alloc_size = hdr_size + data_size;
 	/* Target cleanup, before the copy */
 	shm_clear(*hm);
 	/* Make room for the copy */
@@ -588,7 +679,6 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 	(*hm)->eqf = src->eqf;
 	(*hm)->delf = src->delf;
 	(*hm)->n2kf = src->n2kf;
-	(*hm)->ksize = src->ksize;
 	return S_TRUE;
 }
 
@@ -603,6 +693,8 @@ srt_hmap *shm_cpy(srt_hmap **hm, const srt_hmap *src)
 	struct SHMapSI *h_si;
 	struct SHMapSP *h_sp;
 	struct SHMapSS *h_ss;
+	struct SHMapDS *h_ds;
+	struct SHMapSD *h_sd;
 	RETURN_IF(!hm || !src, NULL); /* BEHAVIOR */
 	RETURN_IF(*hm == src, *hm);
 	t = src->d.sub_type;
@@ -649,6 +741,16 @@ srt_hmap *shm_cpy(srt_hmap **hm, const srt_hmap *src)
 	case SHM0_SS:
 		h_ss = (struct SHMapSS *)data_tgt;
 		for (i = 0; i < ss; sso_dupa(&h_ss[i++].kv))
+			;
+		break;
+	case SHM0_DS:
+		h_ds = (struct SHMapDS *)data_tgt;
+		for (i = 0; i < ss; sso_dupa1(&h_ds[i++].v))
+			;
+		break;
+	case SHM0_SD:
+		h_sd = (struct SHMapSD *)data_tgt;
+		for (i = 0; i < ss; sso_dupa1(&h_sd[i++].x.k))
 			;
 		break;
 	default:
@@ -737,46 +839,69 @@ static srt_bool shm_inc(srt_hmap **hm, int t, const void *k, uint32_t h32,
 
 srt_bool shm_insert_ii32(srt_hmap **hm, int32_t k, int32_t v)
 {
-	return shm_insert(hm, SHM0_II32, &k, sh_hash32((uint32_t)k), &v,
+	return shm_insert(hm, SHM0_II32, &k, SHM_HASH_32(k), &v,
 			  shmcb_set_ii32);
 }
 
 srt_bool shm_insert_uu32(srt_hmap **hm, uint32_t k, uint32_t v)
 {
-	return shm_insert(hm, SHM0_UU32, &k, sh_hash32(k), &v, shmcb_set_uu32);
+	return shm_insert(hm, SHM0_UU32, &k, SHM_HASH_32(k), &v,
+			  shmcb_set_uu32);
 }
 
 srt_bool shm_insert_ii(srt_hmap **hm, int64_t k, int64_t v)
 {
-	return shm_insert(hm, SHM0_II, &k, sh_hash64((uint64_t)k), &v,
-			  shmcb_set_ii64);
+	return shm_insert(hm, SHM0_II, &k, SHM_HASH_64(k), &v, shmcb_set_ii64);
 }
 
 srt_bool shm_insert_is(srt_hmap **hm, int64_t k, const srt_string *v)
 {
-	return shm_insert(hm, SHM0_IS, &k, sh_hash64((uint64_t)k), v,
-			  shmcb_set_is);
+	return shm_insert(hm, SHM0_IS, &k, SHM_HASH_64(k), v, shmcb_set_is);
 }
 
 srt_bool shm_insert_ip(srt_hmap **hm, int64_t k, const void *v)
 {
-	return shm_insert(hm, SHM0_IP, &k, sh_hash64((uint64_t)k), v,
-			  shmcb_set_ip);
+	return shm_insert(hm, SHM0_IP, &k, SHM_HASH_64(k), v, shmcb_set_ip);
 }
 
 srt_bool shm_insert_si(srt_hmap **hm, const srt_string *k, int64_t v)
 {
-	return shm_insert(hm, SHM0_SI, k, SHM_SHASH(k), &v, shmcb_set_si);
+	return shm_insert(hm, SHM0_SI, k, SHM_HASH_S(k), &v, shmcb_set_si);
 }
 
 srt_bool shm_insert_ss(srt_hmap **hm, const srt_string *k, const srt_string *v)
 {
-	return shm_insert(hm, SHM0_SS, k, SHM_SHASH(k), v, shmcb_set_ss);
+	return shm_insert(hm, SHM0_SS, k, SHM_HASH_S(k), v, shmcb_set_ss);
 }
 
 srt_bool shm_insert_sp(srt_hmap **hm, const srt_string *k, const void *v)
 {
-	return shm_insert(hm, SHM0_SP, k, SHM_SHASH(k), v, shmcb_set_sp);
+	return shm_insert(hm, SHM0_SP, k, SHM_HASH_S(k), v, shmcb_set_sp);
+}
+
+srt_bool shm_insert_ff(srt_hmap **hm, float k, float v)
+{
+	return shm_insert(hm, SHM0_FF, &k, SHM_HASH_F(k), &v, shmcb_set_ff);
+}
+
+srt_bool shm_insert_dd(srt_hmap **hm, double k, double v)
+{
+	return shm_insert(hm, SHM0_DD, &k, SHM_HASH_D(k), &v, shmcb_set_dd);
+}
+
+srt_bool shm_insert_ds(srt_hmap **hm, double k, const srt_string *v)
+{
+	return shm_insert(hm, SHM0_DS, &k, SHM_HASH_D(k), v, shmcb_set_ds);
+}
+
+srt_bool shm_insert_dp(srt_hmap **hm, double k, const void *v)
+{
+	return shm_insert(hm, SHM0_DP, &k, SHM_HASH_D(k), v, shmcb_set_dp);
+}
+
+srt_bool shm_insert_sd(srt_hmap **hm, const srt_string *k, double v)
+{
+	return shm_insert(hm, SHM0_SD, k, SHM_HASH_S(k), &v, shmcb_set_sd);
 }
 
 /*
@@ -785,188 +910,164 @@ srt_bool shm_insert_sp(srt_hmap **hm, const srt_string *k, const void *v)
 
 srt_bool shm_inc_ii32(srt_hmap **hm, int32_t k, int32_t v)
 {
-	return shm_inc(hm, SHM0_II32, &k, sh_hash32((uint32_t)k), &v,
-		       shmcb_set_ii32, shmcb_inc_ii32);
+	return shm_inc(hm, SHM0_II32, &k, SHM_HASH_32(k), &v, shmcb_set_ii32,
+		       shmcb_inc_ii32);
 }
 
 srt_bool shm_inc_uu32(srt_hmap **hm, uint32_t k, uint32_t v)
 {
-	return shm_inc(hm, SHM0_UU32, &k, sh_hash32(k), &v, shmcb_set_uu32,
+	return shm_inc(hm, SHM0_UU32, &k, SHM_HASH_32(k), &v, shmcb_set_uu32,
 		       shmcb_inc_uu32);
 }
 
 srt_bool shm_inc_ii(srt_hmap **hm, int64_t k, int64_t v)
 {
-	return shm_inc(hm, SHM0_II, &k, sh_hash64((uint64_t)k), &v,
-		       shmcb_set_ii64, shmcb_inc_ii64);
+	return shm_inc(hm, SHM0_II, &k, SHM_HASH_64(k), &v, shmcb_set_ii64,
+		       shmcb_inc_ii64);
 }
 
 srt_bool shm_inc_si(srt_hmap **hm, const srt_string *k, int64_t v)
 {
-	return shm_inc(hm, SHM0_SI, k, SHM_SHASH(k), &v, shmcb_set_si,
+	return shm_inc(hm, SHM0_SI, k, SHM_HASH_S(k), &v, shmcb_set_si,
 		       shmcb_inc_si);
 }
 
+srt_bool shm_inc_ff(srt_hmap **hm, float k, float v)
+{
+	return shm_inc(hm, SHM0_FF, &k, SHM_HASH_F(k), &v, shmcb_set_ff,
+		       shmcb_inc_ff);
+}
+
+srt_bool shm_inc_dd(srt_hmap **hm, double k, double v)
+{
+	return shm_inc(hm, SHM0_DD, &k, SHM_HASH_D(k), &v, shmcb_set_dd,
+		       shmcb_inc_dd);
+}
+
+srt_bool shm_inc_sd(srt_hmap **hm, const srt_string *k, double v)
+{
+	return shm_inc(hm, SHM0_SD, k, SHM_HASH_S(k), &v, shmcb_set_sd,
+		       shmcb_inc_sd);
+}
+
+/*
+ * Insertion
+ */
+
 srt_bool shm_insert_i32(srt_hmap **hm, int32_t k)
 {
-	return shm_insert1(hm, SHM0_I32, &k, sh_hash32((uint32_t)k),
-			   shmcb_set_i32);
+	return shm_insert1(hm, SHM0_I32, &k, SHM_HASH_32(k), shmcb_set_i32);
 }
 
 srt_bool shm_insert_u32(srt_hmap **hm, uint32_t k)
 {
-	return shm_insert1(hm, SHM0_U32, &k, sh_hash32((uint32_t)k),
-			   shmcb_set_u32);
+	return shm_insert1(hm, SHM0_U32, &k, SHM_HASH_32(k), shmcb_set_u32);
 }
 
 srt_bool shm_insert_i(srt_hmap **hm, int64_t k)
 {
-	return shm_insert1(hm, SHM0_I, &k, sh_hash64((uint64_t)k),
-			   shmcb_set_i64);
+	return shm_insert1(hm, SHM0_I, &k, SHM_HASH_64(k), shmcb_set_i64);
 }
 
 srt_bool shm_insert_s(srt_hmap **hm, const srt_string *k)
 {
-	return shm_insert1(hm, SHM0_S, k, SHM_SHASH(k), shmcb_set_s);
+	return shm_insert1(hm, SHM0_S, k, SHM_HASH_S(k), shmcb_set_s);
+}
+
+srt_bool shm_insert_f(srt_hmap **hm, float k)
+{
+	return shm_insert1(hm, SHM0_F, &k, SHM_HASH_F(k), shmcb_set_f);
+}
+
+srt_bool shm_insert_d(srt_hmap **hm, double k)
+{
+	return shm_insert1(hm, SHM0_D, &k, SHM_HASH_D(k), shmcb_set_d);
 }
 
 /*
  * Delete
  */
 
+srt_bool shm_delete_i32(srt_hmap *hm, int32_t k)
+{
+	return del(hm, SHM_HASH_32(k), &k);
+}
+
+srt_bool shm_delete_u32(srt_hmap *hm, uint32_t k)
+{
+	return del(hm, SHM_HASH_32(k), &k);
+}
+
 srt_bool shm_delete_i(srt_hmap *hm, int64_t k)
 {
-	uint32_t k32;
-	if (hm->ksize == 4) {
-		k32 = (uint32_t)k;
-		return del(hm, sh_hash32(k32), &k32);
-	}
-	return del(hm, sh_hash64((uint64_t)k), &k);
+	return del(hm, SHM_HASH_64(k), &k);
+}
+
+srt_bool shm_delete_f(srt_hmap *hm, float k)
+{
+	return del(hm, SHM_HASH_F(k), &k);
+}
+
+srt_bool shm_delete_d(srt_hmap *hm, double k)
+{
+	return del(hm, SHM_HASH_D(k), &k);
 }
 
 srt_bool shm_delete_s(srt_hmap *hm, const srt_string *k)
 {
-	return del(hm, SHM_SHASH(k), k);
+	return del(hm, SHM_HASH_S(k), k);
 }
 
 	/*
 	 * Enumeration
 	 */
 
-#define SHM_ITP_X(t, hm, f, begin, end)                                        \
-	size_t cnt = 0, ms;                                                    \
-	const uint8_t *d0, *db, *de;                                           \
-	RETURN_IF(!hm || t != hm->d.sub_type, 0);                              \
-	ms = shm_size(hm);                                                     \
-	RETURN_IF(begin > ms || begin >= end, 0);                              \
-	if (end > ms)                                                          \
-		end = ms;                                                      \
-	RETURN_IF(!f, end - begin);                                            \
-	d0 = shm_get_buffer_r(hm);                                             \
-	db = d0 + hm->d.elem_size * begin;                                     \
-	de = d0 + hm->d.elem_size * end;                                       \
-	for (; db < de; db += hm->d.elem_size, cnt++)
-
-size_t shm_itp_ii32(const srt_hmap *m, size_t begin, size_t end,
-		    srt_hmap_it_ii32 f, void *context)
-{
-	const struct SHMapii *e;
-	SHM_ITP_X(SHM_II32, m, f, begin, end)
-	{
-		e = (const struct SHMapii *)db;
-		if (!f(e->x.k, e->v, context))
-			break;
+#define BUILD_SHM_ITP_X(FN, TID, TS, ITF, COND)                                \
+	size_t FN(const srt_hmap *hm, size_t begin, size_t end, ITF f,         \
+		  void *context)                                               \
+	{                                                                      \
+		const TS *e;                                                   \
+		size_t cnt = 0, ms;                                            \
+		const uint8_t *d0, *db, *de;                                   \
+		RETURN_IF(!hm || TID != hm->d.sub_type, 0);                    \
+		ms = shm_size(hm);                                             \
+		RETURN_IF(begin > ms || begin >= end, 0);                      \
+		if (end > ms)                                                  \
+			end = ms;                                              \
+		RETURN_IF(!f, end - begin);                                    \
+		d0 = shm_get_buffer_r(hm);                                     \
+		db = d0 + hm->d.elem_size * begin;                             \
+		de = d0 + hm->d.elem_size * end;                               \
+		for (; db < de; db += hm->d.elem_size, cnt++) {                \
+			e = (const TS *)db;                                    \
+			if (!(COND))                                           \
+				break;                                         \
+		}                                                              \
+		return cnt;                                                    \
 	}
-	return cnt;
-}
-
-size_t shm_itp_uu32(const srt_hmap *m, size_t begin, size_t end,
-		    srt_hmap_it_uu32 f, void *context)
-{
-	const struct SHMapuu *e;
-	SHM_ITP_X(SHM_UU32, m, f, begin, end)
-	{
-		e = (const struct SHMapuu *)db;
-		if (!f(e->x.k, e->v, context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_ii(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_ii f,
-		  void *context)
-{
-	const struct SHMapii *e;
-	SHM_ITP_X(SHM_II, m, f, begin, end)
-	{
-		e = (const struct SHMapii *)db;
-		if (!f(e->x.k, e->v, context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_is(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_is f,
-		  void *context)
-{
-	const struct SHMapIS *e;
-	SHM_ITP_X(SHM_IS, m, f, begin, end)
-	{
-		e = (const struct SHMapIS *)db;
-		if (!f(e->x.k, sso1_get((const srt_stringo1 *)&e->v), context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_ip(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_ip f,
-		  void *context)
-{
-	const struct SHMapIP *e;
-	SHM_ITP_X(SHM_IP, m, f, begin, end)
-	{
-		e = (const struct SHMapIP *)db;
-		if (!f(e->x.k, e->v, context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_si(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_si f,
-		  void *context)
-{
-	const struct SHMapSI *e;
-	SHM_ITP_X(SHM_SI, m, f, begin, end)
-	{
-		e = (const struct SHMapSI *)db;
-		if (!f(sso1_get((const srt_stringo1 *)&e->x.k), e->v, context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_ss(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_ss f,
-		  void *context)
-{
-	const struct SHMapSS *e;
-	SHM_ITP_X(SHM_SS, m, f, begin, end)
-	{
-		e = (const struct SHMapSS *)db;
-		if (!f(sso_get(&e->kv), sso_get_s2(&e->kv), context))
-			break;
-	}
-	return cnt;
-}
-
-size_t shm_itp_sp(const srt_hmap *m, size_t begin, size_t end, srt_hmap_it_sp f,
-		  void *context)
-{
-	const struct SHMapSP *e;
-	SHM_ITP_X(SHM_SP, m, f, begin, end)
-	{
-		e = (const struct SHMapSP *)db;
-		if (!f(sso1_get((const srt_stringo1 *)&e->x.k), e->v, context))
-			break;
-	}
-	return cnt;
-}
+BUILD_SHM_ITP_X(shm_itp_ii32, SHM_II32, struct SHMapii, srt_hmap_it_ii32,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_uu32, SHM_UU32, struct SHMapuu, srt_hmap_it_uu32,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_ii, SHM_II, struct SHMapII, srt_hmap_it_ii,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_ff, SHM_FF, struct SHMapFF, srt_hmap_it_ff,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_dd, SHM_DD, struct SHMapDD, srt_hmap_it_dd,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_is, SHM_IS, struct SHMapIS, srt_hmap_it_is,
+		f(e->x.k, sso1_get((const srt_stringo1 *)&e->v), context))
+BUILD_SHM_ITP_X(shm_itp_ip, SHM_IP, struct SHMapIP, srt_hmap_it_ip,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_si, SHM_SI, struct SHMapSI, srt_hmap_it_si,
+		f(sso1_get((const srt_stringo1 *)&e->x.k), e->v, context))
+BUILD_SHM_ITP_X(shm_itp_ds, SHM_DS, struct SHMapDS, srt_hmap_it_ds,
+		f(e->x.k, sso1_get((const srt_stringo1 *)&e->v), context))
+BUILD_SHM_ITP_X(shm_itp_dp, SHM_DP, struct SHMapDP, srt_hmap_it_dp,
+		f(e->x.k, e->v, context))
+BUILD_SHM_ITP_X(shm_itp_sd, SHM_SD, struct SHMapSD, srt_hmap_it_sd,
+		f(sso1_get((const srt_stringo1 *)&e->x.k), e->v, context))
+BUILD_SHM_ITP_X(shm_itp_ss, SHM_SS, struct SHMapSS, srt_hmap_it_ss,
+		f(sso_get(&e->kv), sso_get_s2(&e->kv), context))
+BUILD_SHM_ITP_X(shm_itp_sp, SHM_SP, struct SHMapSP, srt_hmap_it_sp,
+		f(sso1_get((const srt_stringo1 *)&e->x.k), e->v, context))
