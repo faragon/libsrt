@@ -17,11 +17,15 @@ extern "C" {
  * #DOC Supported set modes (enum eSHS_Type):
  * #DOC
  * #DOC
- * #DOC 	SHS_I32: 32-bit integer key
+ * #DOC 	SHS_I32: int32_t key
  * #DOC
- * #DOC 	SHS_U32: 32-bit unsigned int key
+ * #DOC 	SHS_U32: uint32_t key
  * #DOC
- * #DOC 	SHS_I: 64-bit int key
+ * #DOC 	SHS_I: int64_t key
+ * #DOC
+ * #DOC 	SHS_F: float (single-precision floating point) key
+ * #DOC
+ * #DOC 	SHS_D: double (double-precision floating point) key
  * #DOC
  * #DOC 	SHS_S: string key
  * #DOC
@@ -35,10 +39,14 @@ extern "C" {
  * #DOC
  * #DOC	typedef srt_bool (*srt_hset_it_i)(int64_t k, void *context);
  * #DOC
+ * #DOC	typedef srt_bool (*srt_hset_it_f)(float k, void *context);
+ * #DOC
+ * #DOC	typedef srt_bool (*srt_hset_it_d)(double k, void *context);
+ * #DOC
  * #DOC	typedef srt_bool (*srt_hset_it_s)(const srt_string *, void *context);
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "shmap.h"
@@ -51,6 +59,8 @@ enum eSHS_Type {
 	SHS_I32 = SHM0_I32,
 	SHS_U32 = SHM0_U32,
 	SHS_I = SHM0_I,
+	SHS_F = SHM0_F,
+	SHS_D = SHM0_D,
 	SHS_S = SHM0_S
 };
 
@@ -156,19 +166,37 @@ S_INLINE srt_hset *shs_cpy(srt_hset **hs, const srt_hset *src)
  * Existence check
  */
 
-/* #API: |Map element count/check|hash set; 32-bit unsigned integer key|S_TRUE: element found; S_FALSE: not in the hash setO(n), O(1) average amortized|1;2| */
-S_INLINE size_t shs_count_u(const srt_hset *hs, uint32_t k)
+/* #API: |Map element count/check (SHS_U32)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
+S_INLINE size_t shs_count_u32(const srt_hset *hs, uint32_t k)
 {
-	return shm_count_u(hs, k);
+	return shm_count_u32(hs, k);
 }
 
-/* #API: |Map element count/check|hash set; integer key|S_TRUE: element found; S_FALSE: not in the hash setO(n), O(1) average amortized|1;2| */
+/* #API: |Map element count/check (SHS_I32)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
+S_INLINE size_t shs_count_i32(const srt_hset *hs, int32_t k)
+{
+	return shm_count_i32(hs, k);
+}
+
+/* #API: |Map element count/check (SHS_I)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
 S_INLINE size_t shs_count_i(const srt_hset *hs, int64_t k)
 {
 	return shm_count_i(hs, k);
 }
 
-/* #API: |Map element count/check|hash set; string key|S_TRUE: element found; S_FALSE: not in the hash setO(n), O(1) average amortized|1;2| */
+/* #API: |Map element count/check (SHS_F)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
+S_INLINE size_t shs_count_f(const srt_hset *hs, float k)
+{
+	return shm_count_f(hs, k);
+}
+
+/* #API: |Map element count/check (SHS_D)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
+S_INLINE size_t shs_count_d(const srt_hset *hs, double k)
+{
+	return shm_count_d(hs, k);
+}
+
+/* #API: |Map element count/check (SHS_S)|hash set; key|S_TRUE: element found; S_FALSE: not in the hash set | O(n), O(1) average amortized|1;2| */
 S_INLINE size_t shs_count_s(const srt_hset *hs, const srt_string *k)
 {
 	return shm_count_s(hs, k);
@@ -178,25 +206,37 @@ S_INLINE size_t shs_count_s(const srt_hset *hs, const srt_string *k)
  * Insert
  */
 
-/* #API: |Insert into int32-int32 hash set|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+/* #API: |Insert into hash set (SHS_I32)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_insert_i32(srt_hset **hs, int32_t k)
 {
 	return shm_insert_i32(hs, k);
 }
 
-/* #API: |Insert into uint32-uint32 hash set|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+/* #API: |Insert into hash set (SHS_U32)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_insert_u32(srt_hset **hs, uint32_t k)
 {
 	return shm_insert_u32(hs, k);
 }
 
-/* #API: |Insert into int-int hash set|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+/* #API: |Insert into hash set (SHS_I)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_insert_i(srt_hset **hs, int64_t k)
 {
 	return shm_insert_i(hs, k);
 }
 
-/* #API: |Insert into string-int hash set|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+/* #API: |Insert into hash set (SHS_F)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_insert_f(srt_hset **hs, float k)
+{
+	return shm_insert_f(hs, k);
+}
+
+/* #API: |Insert into hash set (SHS_D)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_insert_d(srt_hset **hs, double k)
+{
+	return shm_insert_d(hs, k);
+}
+
+/* #API: |Insert into hash set (SHS_S)|hash set; key|S_TRUE: OK, S_FALSE: insertion error|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_insert_s(srt_hset **hs, const srt_string *k)
 {
 	return shm_insert_s(hs, k);
@@ -206,13 +246,37 @@ S_INLINE srt_bool shs_insert_s(srt_hset **hs, const srt_string *k)
  * Delete
  */
 
-/* #API: |Delete map element|hash set; int64_t key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+/* #API: |Delete map element (SHS_U32)|hash set; int32_t key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_delete_u32(srt_hset *hs, uint32_t k)
+{
+	return shm_delete_u32(hs, k);
+}
+
+/* #API: |Delete map element (SHS_I32)|hash set; int32_t key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_delete_i32(srt_hset *hs, int32_t k)
+{
+	return shm_delete_i32(hs, k);
+}
+
+/* #API: |Delete map element (SHS_I)|hash set; int64_t key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_delete_i(srt_hset *hs, int64_t k)
 {
 	return shm_delete_i(hs, k);
 }
 
-/* #API: |Delete map element|hash set; string key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+/* #API: |Delete map element (SHS_F)|hash set; float key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_delete_f(srt_hset *hs, float k)
+{
+	return shm_delete_f(hs, k);
+}
+
+/* #API: |Delete map element (SHS_D)|hash set; double key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
+S_INLINE srt_bool shs_delete_d(srt_hset *hs, double k)
+{
+	return shm_delete_d(hs, k);
+}
+
+/* #API: |Delete map element (SHS_S)|hash set; string key|S_TRUE: found and deleted; S_FALSE: not found|O(n), O(1) average amortized|1;2| */
 S_INLINE srt_bool shs_delete_s(srt_hset *hs, const srt_string *k)
 {
 	return shm_delete_s(hs, k);
@@ -222,25 +286,37 @@ S_INLINE srt_bool shs_delete_s(srt_hset *hs, const srt_string *k)
  * Enumeration
  */
 
-/* #API: |Enumerate int32-* map keys|hash set; element, 0 to n - 1|int32_t|O(1)|1;2| */
+/* #API: |Enumerate set keys (SHS_I32)|hash set; element, 0 to n - 1|int32_t|O(1)|1;2| */
 S_INLINE int32_t shs_it_i32(const srt_hset *hs, size_t i)
 {
 	return shm_it_i32_k(hs, i);
 }
 
-/* #API: |Enumerate uint32-* map keys|hash set; element, 0 to n - 1|uint32_t|O(1)|1;2| */
+/* #API: |Enumerate set keys (SHS_U32)|hash set; element, 0 to n - 1|uint32_t|O(1)|1;2| */
 S_INLINE uint32_t shs_it_u32(const srt_hset *hs, size_t i)
 {
 	return shm_it_u32_k(hs, i);
 }
 
-/* #API: |Enumerate integer-* map keys|hash set; element, 0 to n - 1|int64_t|O(1)|1;2| */
+/* #API: |Enumerate set keys (SHS_I)|hash set; element, 0 to n - 1|int64_t|O(1)|1;2| */
 S_INLINE int64_t shs_it_i(const srt_hset *hs, size_t i)
 {
 	return shm_it_i_k(hs, i);
 }
 
-/* #API: |Enumerate string-* map keys|hash set; element, 0 to n - 1|string|O(1)|1;2| */
+/* #API: |Enumerate set keys (SHS_F)|hash set; element, 0 to n - 1|int64_t|O(1)|0;1| */
+S_INLINE float shs_it_f(const srt_hset *hs, size_t i)
+{
+	return shm_it_f_k(hs, i);
+}
+
+/* #API: |Enumerate set keys (SHS_D)|hash set; element, 0 to n - 1|int64_t|O(1)|0;1| */
+S_INLINE double shs_it_d(const srt_hset *hs, size_t i)
+{
+	return shm_it_d_k(hs, i);
+}
+
+/* #API: |Enumerate set keys (SHS_S)|hash set; element, 0 to n - 1|string|O(1)|1;2| */
 S_INLINE const srt_string *shs_it_s(const srt_hset *hs, size_t i)
 {
 	return shm_it_s_k(hs, i);
@@ -253,18 +329,26 @@ S_INLINE const srt_string *shs_it_s(const srt_hset *hs, size_t i)
 typedef srt_bool (*srt_hset_it_i32)(int32_t k, void *context);
 typedef srt_bool (*srt_hset_it_u32)(uint32_t k, void *context);
 typedef srt_bool (*srt_hset_it_i)(int64_t k, void *context);
+typedef srt_bool (*srt_hset_it_f)(float k, void *context);
+typedef srt_bool (*srt_hset_it_d)(double k, void *context);
 typedef srt_bool (*srt_hset_it_s)(const srt_string *, void *context);
 
-/* #API: |Enumerate set elements in portions|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+/* #API: |Enumerate set elements in portions (SHS_I32)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
 size_t shs_itp_i32(const srt_hset *s, size_t begin, size_t end, srt_hset_it_i32 f, void *context);
 
-/* #API: |Enumerate set elements in portions|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+/* #API: |Enumerate set elements in portions (SHS_U32)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
 size_t shs_itp_u32(const srt_hset *s, size_t begin, size_t end, srt_hset_it_u32 f, void *context);
 
-/* #API: |Enumerate set elements in portions|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+/* #API: |Enumerate set elements in portions (SHS_I)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
 size_t shs_itp_i(const srt_hset *s, size_t begin, size_t end, srt_hset_it_i f, void *context);
 
-/* #API: |Enumerate set elements in portions|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+/* #API: |Enumerate set elements in portions (SHS_F)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+size_t shs_itp_f(const srt_hset *s, size_t begin, size_t end, srt_hset_it_f f, void *context);
+
+/* #API: |Enumerate set elements in portions (SHS_D)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
+size_t shs_itp_d(const srt_hset *s, size_t begin, size_t end, srt_hset_it_d f, void *context);
+
+/* #API: |Enumerate set elements in portions (SHS_S)|set; index start; index end; callback function; callback function context|Elements processed|O(n)|1;2| */
 size_t shs_itp_s(const srt_hset *s, size_t begin, size_t end, srt_hset_it_s f, void *context);
 
 #ifdef __cplusplus

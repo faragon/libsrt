@@ -3,7 +3,7 @@
  *
  * Debug helpers (data formatting, etc.).
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -23,6 +23,8 @@ const char *sv_type_to_label(const enum eSV_Type t)
 		CXSV(SV_U32);
 		CXSV(SV_I64);
 		CXSV(SV_U64);
+		CXSV(SV_F);
+		CXSV(SV_D);
 		CXSV(SV_GEN);
 	}
 	return "?";

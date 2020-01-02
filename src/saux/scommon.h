@@ -9,7 +9,7 @@ extern "C" {
  *
  * Common stuff
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -425,6 +425,16 @@ S_INLINE uint64_t S_LD_U64(const void *a)
 S_INLINE size_t S_LD_SZT(const void *a)
 {
 	RS_LD_X(a, size_t);
+}
+
+S_INLINE float S_LD_F(const void *a)
+{
+	RS_LD_X(a, float);
+}
+
+S_INLINE double S_LD_D(const void *a)
+{
+	RS_LD_X(a, double);
 }
 
 S_INLINE void S_ST_U16(void *a, uint16_t v)

@@ -12,7 +12,7 @@
  *   suitable for memory-mapped storage when using nodes without references
  *   (e.g. key and value being integers, or constant-size containers).
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -101,9 +101,12 @@ S_INLINE void copy_node(const srt_tree *t, srt_tnode *tgt, const srt_tnode *src)
 }
 
 S_INLINE void new_node(const srt_tree *t, srt_tnode *tgt, const srt_tnode *src,
-		       srt_bool ir)
+		       srt_bool ir, srt_tree_rewrite rw_f, srt_bool existing)
 {
-	update_node_data(t, tgt, src);
+	if (!rw_f)
+		update_node_data(t, tgt, src);
+	else
+		rw_f(tgt, src, existing);
 	tgt->x.l = tgt->r = ST_NIL;
 	tgt->x.is_red = ir;
 }
@@ -290,9 +293,7 @@ srt_bool st_insert_rw(srt_tree **tt, const srt_tnode *n, srt_tree_rewrite rw_f)
 	 */
 	if (!ts) {
 		srt_tnode *node = get_node(t, 0);
-		new_node(t, node, n, S_FALSE);
-		if (rw_f)
-			rw_f(node, n, S_FALSE);
+		new_node(t, node, n, S_FALSE, rw_f, S_FALSE);
 		t->root = 0;
 		st_set_size(t, 1);
 		return S_TRUE;
@@ -327,9 +328,7 @@ srt_bool st_insert_rw(srt_tree **tt, const srt_tnode *n, srt_tree_rewrite rw_f)
 			/* New node: */
 			w[c].x = (srt_tndx)ts;
 			w[c].n = get_node(t, (srt_tndx)ts);
-			new_node(t, w[c].n, n, S_TRUE);
-			if (rw_f)
-				rw_f(w[c].n, n, S_FALSE);
+			new_node(t, w[c].n, n, S_TRUE, rw_f, S_FALSE);
 			/* Update parent node: */
 			set_lr(w[cp].n, d, w[c].x);
 			if (get_lr(w[cp].n, cd(d)) != ST_NIL)
@@ -719,7 +718,7 @@ ssize_t st_traverse_levelorder(const srt_tree *t, st_traverse f, void *context)
 	RETURN_IF(!ts, 0); /* empty */
 	curr = sv_alloc_t(SV_U32, ts / 2);
 	next = sv_alloc_t(SV_U32, ts / 2);
-	sv_push_u(&curr, t->root);
+	sv_push_u32(&curr, t->root);
 	for (;; tp.max_level = ++tp.level) {
 		if (f) {
 			tp.c = ST_NIL; /* report starting new tree level */
@@ -727,16 +726,16 @@ ssize_t st_traverse_levelorder(const srt_tree *t, st_traverse f, void *context)
 		}
 		le = sv_size(curr);
 		for (i = 0; i < le; i++) {
-			n = (srt_tndx)sv_at_u(curr, i);
+			n = (srt_tndx)sv_at_u32(curr, i);
 			node = get_node_r(t, n);
 			if (f) {
 				tp.c = n;
 				f(&tp);
 			}
 			if (node->x.l != ST_NIL)
-				sv_push_u(&next, node->x.l);
+				sv_push_u32(&next, node->x.l);
 			if (node->r != ST_NIL)
-				sv_push_u(&next, node->r);
+				sv_push_u32(&next, node->r);
 		}
 		ne = sv_size(next);
 		if (ne == 0) /* next level is empty */

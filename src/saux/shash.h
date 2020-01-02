@@ -9,7 +9,7 @@ extern "C" {
  *
  * Buffer hashing
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  *
  * Features:
@@ -53,6 +53,24 @@ S_INLINE uint32_t sh_hash32(uint32_t v)
 S_INLINE uint32_t sh_hash64(uint64_t v)
 {
         return (uint32_t)(v * S_GR64);
+}
+
+// Floating point hashing: if matches the size of integers, use the
+// integer hash. Otherwise, use FNV-1A hashing.
+
+S_INLINE uint32_t sh_hash_f(float v)
+{
+	uint32_t v32;
+	if (sizeof(v) == sizeof(v32)) {
+		memcpy(&v32, &v, sizeof(v));
+		return sh_hash32(v32);
+	}
+	return sh_fnv1a(S_FNV1_INIT, &v, sizeof(v));
+}
+
+S_INLINE uint32_t sh_hash_d(double v)
+{
+	return sh_fnv1a(S_FNV1_INIT, &v, sizeof(v));
 }
 
 #ifdef __cplusplus

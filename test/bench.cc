@@ -3,8 +3,8 @@
  *
  * Benchmarks of libsrt vs C++ STL
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved. Released under
- * the BSD 3-Clause License (see the doc/LICENSE file included).
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
 #include "../src/libsrt.h"
@@ -15,6 +15,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <sstream>
 
 #if __cplusplus >= 201103L || defined(__GXX_EXPERIMENTAL_CXX0X__)
 #define S_BENCH_CPP_HM
@@ -36,7 +37,7 @@
 #define BENCH_TIME_US				\
 	((tb.tv_sec - ta.tv_sec) * 1000000 +	\
 	 (tb.tv_nsec - ta.tv_nsec) / 1000)
-#define BENCH_FN(test_fn, count, tid	)			\
+#define BENCH_FN(test_fn, count, tid)			\
 	clock_gettime(CLOCK_REALTIME, &ta);			\
 	t_res = test_fn(count, tid);				\
 	clock_gettime(CLOCK_REALTIME, &tb);			\
@@ -71,750 +72,495 @@
 #define TId2Count(id) ((id & TId_Read10Times) != 0 ? 10 : 0)
 #define TIdTest(id, key) ((id & key) == key)
 
-bool libsrt_map_ii32(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_map *m = sm_alloc(SM_II32, 0);
-	for (size_t i = 0; i < count; i++)
-		sm_insert_ii32(&m, (int32_t)i, (int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)sm_at_ii32(m, (int32_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			sm_delete_i(m, (int32_t)i);
-	HOLD_EXEC(tid);
-	sm_free(&m);
-	return true;
-}
+#define LIBSRTM_BENCH(FN, TID, TK, TV, INSF, ATF, DELF)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_map *m = sm_alloc(TID, 0); \
+		for (size_t i = 0; i < count; i++) \
+			INSF(&m, (TK)i, (TV)i); \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) \
+				(void)ATF(m, (TK)i); \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) \
+				DELF(m, (TK)i); \
+		HOLD_EXEC(tid); \
+		sm_free(&m); \
+		return true; \
+	}
 
-bool cxx_map_ii32(size_t count, int tid)
+LIBSRTM_BENCH(libsrt_map_ii32, SM_II32, int32_t, int32_t, sm_insert_ii32,
+	      sm_at_ii32, sm_delete_i)
+LIBSRTM_BENCH(libsrt_map_uu32, SM_UU32, uint32_t, uint32_t, sm_insert_uu32,
+	      sm_at_uu32, sm_delete_i)
+LIBSRTM_BENCH(libsrt_map_ii64, SM_II, int64_t, int64_t, sm_insert_ii,
+	      sm_at_ii, sm_delete_i)
+LIBSRTM_BENCH(libsrt_map_ff, SM_FF, float, float, sm_insert_ff,
+	      sm_at_ff, sm_delete_f)
+LIBSRTM_BENCH(libsrt_map_dd, SM_DD, double, double, sm_insert_dd,
+	      sm_at_dd, sm_delete_d)
+
+template <class TK, class TV>
+bool cxx_map_ii(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::map <int32_t, int32_t> m;
+	std::map <TK, TV> m;
 	for (size_t i = 0; i < count; i++)
-		m[i] = (int32_t)i;
+		m[(TK)i] = (TV)i;
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
 			(void)m[i];
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
-			m.erase((int32_t)i);
+			m.erase((TK)i);
 	HOLD_EXEC(tid);
 	return true;
 }
 
-bool libsrt_map_ii64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_map *m = sm_alloc(SM_II, 0);
-	for (size_t i = 0; i < count; i++)
-		sm_insert_ii(&m, (int64_t)i, (int64_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)sm_at_ii(m, (int64_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			sm_delete_i(m, (int64_t)i);
-	HOLD_EXEC(tid);
-	sm_free(&m);
-	return true;
-}
+#define cxx_map_ii32 cxx_map_ii<int32_t, int32_t>
+#define cxx_map_uu32 cxx_map_ii<uint32_t, uint32_t>
+#define cxx_map_ii64 cxx_map_ii<int64_t, int64_t>
+#define cxx_map_ff cxx_map_ii<float, float>
+#define cxx_map_dd cxx_map_ii<double, double>
 
-bool cxx_map_ii64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::map <int64_t, int64_t> m;
-	for (size_t i = 0; i < count; i++)
-		m[i] = (int64_t)i;
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)m[i];
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			m.erase((int64_t)i);
-	HOLD_EXEC(tid);
-	return true;
-}
-
-bool libsrt_map_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_map *m = sm_alloc(SM_SS, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%016i", (int)i);
-		sm_insert_ss(&m, btmp, btmp);
+#define LIBSRTMS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_string *btmp = ss_alloca(512); \
+		srt_map *m = sm_alloc(SM_SS, 0); \
+		for (size_t i = 0; i < count; i++) { \
+			ss_printf(&btmp, 512, FMT, (int)i); \
+			sm_insert_ss(&m, btmp, btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, "%016i", (int)i); \
+				(void)sm_at_ss(m, btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, "%016i", (int)i); \
+				sm_delete_s(m, btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		sm_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			(void)sm_at_ss(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			sm_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	sm_free(&m);
-	return true;
-}
 
-bool cxx_map_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::map <std::string, std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%016i", (int)i);
-		m[btmp] = btmp;
+LIBSRTMS_BENCH(libsrt_map_s16, "%016i")
+LIBSRTMS_BENCH(libsrt_map_s64, "%064i")
+
+#define CXXMS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		char btmp[512]; \
+		std::map <std::string, std::string> m; \
+		for (size_t i = 0; i < count; i++) { \
+			sprintf(btmp, FMT, (int)i); \
+			m[btmp] = btmp; \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, FMT, (int)i); \
+				(void)m[btmp]; \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, "%016i", (int)i); \
+				m.erase(btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			(void)m[btmp];
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-bool libsrt_map_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_map *m = sm_alloc(SM_SS, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%064i", (int)i);
-		sm_insert_ss(&m, btmp, btmp);
+CXXMS_BENCH(cxx_map_s16, "%016i")
+CXXMS_BENCH(cxx_map_s64, "%064i")
+
+#define LIBSRTHM_BENCH(FN, TID, TK, TV, INSF, ATF, DELF)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_hmap *m = shm_alloc(TID, 0); \
+		for (size_t i = 0; i < count; i++) \
+			INSF(&m, (TK)i, (TV)i); \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) \
+				(void)ATF(m, (TK)i); \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) \
+				DELF(m, (TK)i); \
+		HOLD_EXEC(tid); \
+		shm_free(&m); \
+		return true;\
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			(void)sm_at_ss(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			sm_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	sm_free(&m);
-	return true;
-}
 
-bool cxx_map_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::map <std::string, std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%064i", (int)i);
-		m[btmp] = btmp;
+LIBSRTHM_BENCH(libsrt_hmap_ii32, SHM_II32, int32_t, int32_t, shm_insert_ii32,
+		shm_at_ii32, shm_delete_i32)
+LIBSRTHM_BENCH(libsrt_hmap_uu32, SHM_UU32, uint32_t, uint32_t, shm_insert_uu32,
+		shm_at_uu32, shm_delete_i32)
+LIBSRTHM_BENCH(libsrt_hmap_ii64, SHM_II, int64_t, int64_t, shm_insert_ii,
+		shm_at_ii, shm_delete_i)
+LIBSRTHM_BENCH(libsrt_hmap_ff, SHM_FF, float, float, shm_insert_ff,
+		shm_at_ff, shm_delete_f)
+LIBSRTHM_BENCH(libsrt_hmap_dd, SHM_DD, double, double, shm_insert_dd,
+		shm_at_dd, shm_delete_d)
+
+#define LIBSRTHMS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_string *btmp = ss_alloca(512); \
+		srt_hmap *m = shm_alloc(SHM_SS, 0); \
+		for (size_t i = 0; i < count; i++) { \
+			ss_printf(&btmp, 512, FMT, (int)i); \
+			shm_insert_ss(&m, btmp, btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				(void)shm_at_ss(m, btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				shm_delete_s(m, btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		shm_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			(void)m[btmp];
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-bool libsrt_hmap_ii32(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_hmap *m = shm_alloc(SHM_II32, 0);
-	for (size_t i = 0; i < count; i++)
-		shm_insert_ii32(&m, (int32_t)i, (int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)shm_at_ii32(m, (int32_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			shm_delete_i(m, (int32_t)i);
-	HOLD_EXEC(tid);
-	shm_free(&m);
-	return true;
-}
-
-bool libsrt_hmap_ii64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_hmap *m = shm_alloc(SHM_II, 0);
-	for (size_t i = 0; i < count; i++)
-		shm_insert_ii(&m, (int64_t)i, (int64_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)shm_at_ii(m, (int64_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			shm_delete_i(m, (int64_t)i);
-	HOLD_EXEC(tid);
-	shm_free(&m);
-	return true;
-}
-
-bool libsrt_hmap_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_hmap *m = shm_alloc(SHM_SS, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%016i", (int)i);
-		shm_insert_ss(&m, btmp, btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			(void)shm_at_ss(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			shm_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	shm_free(&m);
-	return true;
-}
-
-bool libsrt_hmap_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_hmap *m = shm_alloc(SHM_SS, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%064i", (int)i);
-		shm_insert_ss(&m, btmp, btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			(void)shm_at_ss(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			shm_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	shm_free(&m);
-	return true;
-}
+LIBSRTHMS_BENCH(libsrt_hmap_s16, "%016i")
+LIBSRTHMS_BENCH(libsrt_hmap_s64, "%064i")
 
 #ifdef S_BENCH_CPP_HM
 
-bool cxx_umap_ii32(size_t count, int tid)
+template <class TK, class TV>
+bool cxx_umap_ii(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::unordered_map <int32_t, int32_t> m;
+	std::unordered_map <TK, TV> m;
 	for (size_t i = 0; i < count; i++)
-		m[i] = (int32_t)i;
+		m[(TK)i] = (TV)i;
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
 			(void)m.count(i);
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
-			m.erase((int32_t)i);
+			m.erase((TK)i);
 	HOLD_EXEC(tid);
 	return true;
 }
 
-bool cxx_umap_ii64(size_t count, int tid)
+#define cxx_umap_ii32 cxx_umap_ii<int32_t, int32_t>
+#define cxx_umap_uu32 cxx_umap_ii<uint32_t, uint32_t>
+#define cxx_umap_ii64 cxx_umap_ii<int64_t, int64_t>
+#define cxx_umap_ff cxx_umap_ii<float, float>
+#define cxx_umap_dd cxx_umap_ii<double, double>
+
+#define CXXHMS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		char btmp[512]; \
+		std::unordered_map <std::string, std::string> m; \
+		for (size_t i = 0; i < count; i++) { \
+			sprintf(btmp, "%016i", (int)i); \
+			m[btmp] = btmp; \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, "%016i", (int)i); \
+				(void)m.count(btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, "%016i", (int)i); \
+				m.erase(btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		return true; \
+	}
+
+CXXHMS_BENCH(cxx_umap_s16, "%016i")
+CXXHMS_BENCH(cxx_umap_s64, "%064i")
+
+template <class T>
+bool cxx_uset_i(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::unordered_map <int64_t, int64_t> m;
+	std::unordered_set <T> m;
 	for (size_t i = 0; i < count; i++)
-		m[i] = (int64_t)i;
+		m.insert((T)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
-			(void)m.count(i);
+			(void)m.count((T)i);
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
-			m.erase((int64_t)i);
+			m.erase((T)i);
 	HOLD_EXEC(tid);
 	return true;
 }
 
-bool cxx_umap_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::unordered_map <std::string, std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%016i", (int)i);
-		m[btmp] = btmp;
+#define cxx_uset_i32 cxx_uset_i<int32_t>
+#define cxx_uset_u32 cxx_uset_i<uint32_t>
+#define cxx_uset_i64 cxx_uset_i<int64_t>
+#define cxx_uset_f cxx_uset_i<float>
+#define cxx_uset_d cxx_uset_i<double>
+
+#define CXXHSS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		char btmp[512]; \
+		std::unordered_set <std::string> m; \
+		for (size_t i = 0; i < count; i++) { \
+			sprintf(btmp, FMT, (int)i); \
+			m.insert(btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, FMT, (int)i); \
+				(void)m.count(btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, FMT, (int)i); \
+				m.erase(btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-bool cxx_umap_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::unordered_map <std::string, std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%064i", (int)i);
-		m[btmp] = btmp;
+CXXHSS_BENCH(cxx_uset_s16, "%016i")
+CXXHSS_BENCH(cxx_uset_s64, "%064i")
+
+#endif // #ifdef S_BENCH_CPP_HM
+
+#define LIBSRTS_BENCH(FN, TID, TK, INSF, COUNTF, DELF)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_set *m = sms_alloc(TID, 0); \
+		for (size_t i = 0; i < count; i++) \
+			INSF(&m, (TK)i); \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) \
+				(void)COUNTF(m, (TK)i); \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) \
+				DELF(m, (TK)i); \
+		HOLD_EXEC(tid); \
+		sms_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-bool cxx_uset_i32(size_t count, int tid)
+LIBSRTS_BENCH(libsrt_set_i32, SMS_I32, int32_t, sms_insert_i32,
+		sms_count_i32, sms_delete_i)
+LIBSRTS_BENCH(libsrt_set_u32, SMS_U32, uint32_t, sms_insert_u32,
+		sms_count_u32, sms_delete_i)
+LIBSRTS_BENCH(libsrt_set_i64, SMS_I, int64_t, sms_insert_i,
+		sms_count_i, sms_delete_i)
+LIBSRTS_BENCH(libsrt_set_f, SMS_F, float, sms_insert_f,
+		sms_count_f, sms_delete_f)
+LIBSRTS_BENCH(libsrt_set_d, SMS_D, double, sms_insert_d,
+		sms_count_d, sms_delete_d)
+
+template <class T>
+bool cxx_set_i(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
 		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::unordered_set <int32_t> m;
+	std::set <T> m;
 	for (size_t i = 0; i < count; i++)
-		m.insert(i);
+		m.insert((T)i);
 	for (size_t j = 0; j < TId2Count(tid); j++)
 		for (size_t i = 0; i < count; i++)
-			(void)m.count(i);
+			(void)m.count((T)i);
 	if (TIdTest(tid, TId_DeleteOneByOne))
 		for (size_t i = 0; i < count; i++)
-			m.erase((int32_t)i);
+			m.erase((T)i);
 	HOLD_EXEC(tid);
 	return true;
 }
 
-bool cxx_uset_i64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::unordered_set <int64_t> m;
-	for (size_t i = 0; i < count; i++)
-		m.insert(i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)m.count(i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			m.erase((int64_t)i);
-	HOLD_EXEC(tid);
-	return true;
-}
+#define cxx_set_i32 cxx_set_i<int32_t>
+#define cxx_set_u32 cxx_set_i<uint32_t>
+#define cxx_set_i64 cxx_set_i<int64_t>
+#define cxx_set_f cxx_set_i<float>
+#define cxx_set_d cxx_set_i<double>
 
-bool cxx_uset_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::unordered_set <std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%016i", (int)i);
-		m.insert(btmp);
+#define LIBSRTSS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_string *btmp = ss_alloca(512); \
+		srt_set *m = sms_alloc(SMS_S, 0); \
+		for (size_t i = 0; i < count; i++) { \
+			ss_printf(&btmp, 512, FMT, (int)i); \
+			sms_insert_s(&m, btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				(void)sms_count_s(m, btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				sms_delete_s(m, btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		sms_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-bool cxx_uset_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::unordered_set <std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%064i", (int)i);
-		m.insert(btmp);
+LIBSRTSS_BENCH(libsrt_set_s16, "%016i")
+LIBSRTSS_BENCH(libsrt_set_s64, "%064i")
+
+#define CXXS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		char btmp[512]; \
+		std::set <std::string> m; \
+		for (size_t i = 0; i < count; i++) { \
+			sprintf(btmp, FMT, (int)i); \
+			m.insert(btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, FMT, (int)i); \
+				(void)m.count(btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				sprintf(btmp, FMT, (int)i); \
+				m.erase(btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
 
-#endif
+CXXS_BENCH(cxx_set_s16, "%016i")
+CXXS_BENCH(cxx_set_s64, "%064i")
 
-bool libsrt_set_i32(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_set *m = sms_alloc(SMS_I32, 0);
-	for (size_t i = 0; i < count; i++)
-		sms_insert_i32(&m, (int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)sms_count_i(m, (int32_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			sms_delete_i(m, (int32_t)i);
-	HOLD_EXEC(tid);
-	sms_free(&m);
-	return true;
-}
-
-bool cxx_set_i32(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::set <int32_t> m;
-	for (size_t i = 0; i < count; i++)
-		m.insert((int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)m.count(i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			m.erase((int32_t)i);
-	HOLD_EXEC(tid);
-	return true;
-}
-
-bool libsrt_set_i64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_set *m = sms_alloc(SMS_I, 0);
-	for (size_t i = 0; i < count; i++)
-		sms_insert_i(&m, (int64_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)sms_count_i(m, (int64_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			sms_delete_i(m, (int64_t)i);
-	HOLD_EXEC(tid);
-	sms_free(&m);
-	return true;
-}
-
-bool cxx_set_i64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	std::set <int64_t> m;
-	for (size_t i = 0; i < count; i++)
-		m.insert((int64_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)m.count(i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			m.erase((int64_t)i);
-	HOLD_EXEC(tid);
-	return true;
-}
-
-bool libsrt_set_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_set *m = sms_alloc(SMS_S, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%016i", (int)i);
-		sms_insert_s(&m, btmp);
+#define LIBSRTHS_BENCH(FN, TID, TK, INSF, COUNTF, DELF)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_hset *m = shs_alloc(TID, 0); \
+		for (size_t i = 0; i < count; i++) \
+			INSF(&m, (TK)i); \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) \
+				(void)COUNTF(m, (TK)i); \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) \
+				DELF(m, (TK)i); \
+		HOLD_EXEC(tid); \
+		shs_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			(void)sms_count_s(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			sms_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	sms_free(&m);
-	return true;
-}
 
-bool cxx_set_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::set <std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%016i", (int)i);
-		m.insert(btmp);
+LIBSRTHS_BENCH(libsrt_hset_i32, SHS_I32, int32_t, shs_insert_i32, shs_count_i32,
+		shs_delete_i32)
+LIBSRTHS_BENCH(libsrt_hset_u32, SHS_U32, uint32_t, shs_insert_u32,
+		shs_count_u32, shs_delete_u32)
+LIBSRTHS_BENCH(libsrt_hset_i64, SHS_I, int64_t, shs_insert_i, shs_count_i,
+		shs_delete_i)
+LIBSRTHS_BENCH(libsrt_hset_f, SHS_F, float, shs_insert_f, shs_count_f,
+		shs_delete_f)
+LIBSRTHS_BENCH(libsrt_hset_d, SHS_D, double, shs_insert_d, shs_count_d,
+		shs_delete_d)
+
+#define LIBSRTHSS_BENCH(FN, FMT)	\
+	bool FN(size_t count, int tid) { \
+		RETURN_IF(!TIdTest(tid, TId_Base) && \
+			  !TIdTest(tid, TId_Read10Times) && \
+			  !TIdTest(tid, TId_DeleteOneByOne), false); \
+		srt_string *btmp = ss_alloca(512); \
+		srt_hset *m = shs_alloc(SHS_S, 0); \
+		for (size_t i = 0; i < count; i++) { \
+			ss_printf(&btmp, 512, FMT, (int)i); \
+			shs_insert_s(&m, btmp); \
+		} \
+		for (size_t j = 0; j < TId2Count(tid); j++) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				(void)shs_count_s(m, btmp); \
+			} \
+		if (TIdTest(tid, TId_DeleteOneByOne)) \
+			for (size_t i = 0; i < count; i++) { \
+				ss_printf(&btmp, 512, FMT, (int)i); \
+				shs_delete_s(m, btmp); \
+			} \
+		HOLD_EXEC(tid); \
+		shs_free(&m); \
+		return true; \
 	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%016i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
+
+LIBSRTHSS_BENCH(libsrt_hset_s16, "%016i")
+LIBSRTHSS_BENCH(libsrt_hset_s64, "%064i")
+
+#define LIBSRTV_BENCH(FN, t, PUSH, POP, AT)	\
+	bool FN(size_t count, int tid) {	\
+	RETURN_IF(!TIdTest(tid, TId_Base) &&			\
+		  !TIdTest(tid, TId_Read10Times) &&		\
+		  !TIdTest(tid, TId_DeleteOneByOne) &&		\
+		  !TIdTest(tid, TId_Sort10Times) &&		\
+		  !TIdTest(tid, TId_Sort10000Times), false);	\
+	srt_vector *v = sv_alloc_t(t, 0);			\
+	if (TIdTest(tid, TId_ReverseSort))			\
+		for (size_t i = 0; i < count; i++)		\
+			PUSH(&v, (int32_t)count - 1 - (int32_t)i);	\
+	else								\
+		for (size_t i = 0; i < count; i++)			\
+			PUSH(&v, (int32_t)i);				\
+	for (size_t j = 0; j < TId2Count(tid); j++)			\
+		for (size_t i = 0; i < count; i++)			\
+			(void)AT(v, i);					\
+	if (TIdTest(tid, TId_DeleteOneByOne))				\
+		for (size_t i = 0; i < count; i++)			\
+			(void)POP(v);					\
+	if (TIdTest(tid, TId_Sort10Times) ||				\
+	    TIdTest(tid, TId_Sort10000Times)) {				\
+		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;\
+		for (size_t i = 0; i < cnt; i++)			\
+			sv_sort(v);					\
+	}								\
+	HOLD_EXEC(tid);							\
+	sv_free(&v);							\
+	return true;							\
 }
 
-bool libsrt_set_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_set *m = sms_alloc(SMS_S, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%064i", (int)i);
-		sms_insert_s(&m, btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			(void)sms_count_s(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			sms_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	sms_free(&m);
-	return true;
-}
-
-bool cxx_set_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	char btmp[512];
-	std::set <std::string> m;
-	for (size_t i = 0; i < count; i++) {
-		sprintf(btmp, "%064i", (int)i);
-		m.insert(btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			(void)m.count(btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			sprintf(btmp, "%064i", (int)i);
-			m.erase(btmp);
-		}
-	HOLD_EXEC(tid);
-	return true;
-}
-
-bool libsrt_hset_i32(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_hset *m = shs_alloc(SHS_I32, 0);
-	for (size_t i = 0; i < count; i++)
-		shs_insert_i32(&m, (int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)shs_count_i(m, (int32_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			shs_delete_i(m, (int32_t)i);
-	HOLD_EXEC(tid);
-	shs_free(&m);
-	return true;
-}
-
-bool libsrt_hset_i64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_hset *m = shs_alloc(SHS_I, 0);
-	for (size_t i = 0; i < count; i++)
-		shs_insert_i(&m, (int64_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)shs_count_i(m, (int64_t)i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			shs_delete_i(m, (int64_t)i);
-	HOLD_EXEC(tid);
-	shs_free(&m);
-	return true;
-}
-
-bool libsrt_hset_s16(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_hset *m = shs_alloc(SHS_S, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%016i", (int)i);
-		shs_insert_s(&m, btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			(void)shs_count_s(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%016i", (int)i);
-			shs_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	shs_free(&m);
-	return true;
-}
-
-bool libsrt_hset_s64(size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne), false);
-	srt_string *btmp = ss_alloca(512);
-	srt_hset *m = shs_alloc(SHS_S, 0);
-	for (size_t i = 0; i < count; i++) {
-		ss_printf(&btmp, 512, "%064i", (int)i);
-		shs_insert_s(&m, btmp);
-	}
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			(void)shs_count_s(m, btmp);
-		}
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++) {
-			ss_printf(&btmp, 512, "%064i", (int)i);
-			shs_delete_s(m, btmp);
-		}
-	HOLD_EXEC(tid);
-	shs_free(&m);
-	return true;
-}
-
-bool libsrt_vector_i(enum eSV_Type t, size_t count, int tid)
-{
-	RETURN_IF(!TIdTest(tid, TId_Base) && !TIdTest(tid, TId_Read10Times) &&
-		  !TIdTest(tid, TId_DeleteOneByOne) &&
-		  !TIdTest(tid, TId_Sort10Times) &&
-		  !TIdTest(tid, TId_Sort10000Times), false);
-	srt_vector *v = sv_alloc_t(t, 0);
-	if (TIdTest(tid, TId_ReverseSort))
-		for (size_t i = 0; i < count; i++)
-			sv_push_i(&v, (int32_t)count - 1 - (int32_t)i);
-	else
-		for (size_t i = 0; i < count; i++)
-			sv_push_i(&v, (int32_t)i);
-	for (size_t j = 0; j < TId2Count(tid); j++)
-		for (size_t i = 0; i < count; i++)
-			(void)sv_at_i(v, i);
-	if (TIdTest(tid, TId_DeleteOneByOne))
-		for (size_t i = 0; i < count; i++)
-			(void)sv_pop_i(v);
-	if (TIdTest(tid, TId_Sort10Times) || TIdTest(tid, TId_Sort10000Times)) {
-		size_t cnt = TIdTest(tid, TId_Sort10Times) ? 10 : 10000;
-		for (size_t i = 0; i < cnt; i++)
-			sv_sort(v);
-	}
-	HOLD_EXEC(tid);
-	sv_free(&v);
-	return true;
-}
-
-bool libsrt_vector_i8(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_I8, count, tid);
-}
-
-bool libsrt_vector_u8(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_U8, count, tid);
-}
-
-bool libsrt_vector_i16(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_I16, count, tid);
-}
-
-bool libsrt_vector_u16(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_U16, count, tid);
-}
-
-bool libsrt_vector_i32(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_I32, count, tid);
-}
-
-bool libsrt_vector_u32(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_U32, count, tid);
-}
-
-bool libsrt_vector_i64(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_I64, count, tid);
-}
-
-bool libsrt_vector_u64(size_t count, int tid)
-{
-	return libsrt_vector_i(SV_U64, count, tid);
-}
+LIBSRTV_BENCH(libsrt_vector_i8, SV_I8, sv_push_i8, sv_pop_i8, sv_at_i8)
+LIBSRTV_BENCH(libsrt_vector_u8, SV_U8, sv_push_u8, sv_pop_u8, sv_at_u8)
+LIBSRTV_BENCH(libsrt_vector_i16, SV_I16, sv_push_i16, sv_pop_i16, sv_at_i16)
+LIBSRTV_BENCH(libsrt_vector_u16, SV_U16, sv_push_u16, sv_pop_u16, sv_at_u16)
+LIBSRTV_BENCH(libsrt_vector_i32, SV_I32, sv_push_i32, sv_pop_i32, sv_at_i32)
+LIBSRTV_BENCH(libsrt_vector_u32, SV_U32, sv_push_u32, sv_pop_u32, sv_at_u32)
+LIBSRTV_BENCH(libsrt_vector_i64, SV_I64, sv_push_i64, sv_pop_i64, sv_at_i64)
+LIBSRTV_BENCH(libsrt_vector_u64, SV_U64, sv_push_u64, sv_pop_u64, sv_at_u64)
+LIBSRTV_BENCH(libsrt_vector_f, SV_F, sv_push_f, sv_pop_f, sv_at_f)
+LIBSRTV_BENCH(libsrt_vector_d, SV_D, sv_push_d, sv_pop_d, sv_at_d)
 
 template <typename T>
 bool cxx_vector(size_t count, int tid)
@@ -845,45 +591,16 @@ bool cxx_vector(size_t count, int tid)
 	return true;
 }
 
-bool cxx_vector_i8(size_t count, int tid)
-{
-	return cxx_vector<int8_t>(count, tid);
-}
-
-bool cxx_vector_u8(size_t count, int tid)
-{
-	return cxx_vector<uint8_t>(count, tid);
-}
-
-bool cxx_vector_i16(size_t count, int tid)
-{
-	return cxx_vector<int16_t>(count, tid);
-}
-
-bool cxx_vector_u16(size_t count, int tid)
-{
-	return cxx_vector<uint16_t>(count, tid);
-}
-
-bool cxx_vector_i32(size_t count, int tid)
-{
-	return cxx_vector<int32_t>(count, tid);
-}
-
-bool cxx_vector_u32(size_t count, int tid)
-{
-	return cxx_vector<uint32_t>(count, tid);
-}
-
-bool cxx_vector_i64(size_t count, int tid)
-{
-	return cxx_vector<int64_t>(count, tid);
-}
-
-bool cxx_vector_u64(size_t count, int tid)
-{
-	return cxx_vector<uint64_t>(count, tid);
-}
+#define cxx_vector_i8 cxx_vector<int8_t>
+#define cxx_vector_u8 cxx_vector<uint8_t>
+#define cxx_vector_i16 cxx_vector<int16_t>
+#define cxx_vector_u16 cxx_vector<uint16_t>
+#define cxx_vector_i32 cxx_vector<int32_t>
+#define cxx_vector_u32 cxx_vector<uint32_t>
+#define cxx_vector_i64 cxx_vector<int64_t>
+#define cxx_vector_u64 cxx_vector<uint64_t>
+#define cxx_vector_f cxx_vector<float>
+#define cxx_vector_d cxx_vector<double>
 
 struct StrGenTest
 {
@@ -1359,7 +1076,6 @@ bool cxx_string_cat(size_t count, int tid)
 	return true;
 }
 
-#if 0 /* it is too low (2 orders of magnitude slower tan plain std::string) */
 bool cxx_stringstream_cat(size_t count, int tid)
 {
 	RETURN_IF(!TIdTest(tid, TId_Base), false);
@@ -1368,12 +1084,13 @@ bool cxx_stringstream_cat(size_t count, int tid)
 	for (size_t i = 0; i < cat_test_ops; i++)
 		s[i] = cat_test[i];
 	for (size_t i = 0; i < count; i++) {
+		ss.clear();
+		ss.str("");
 		ss << s[0] << s[1] << s[2] << s[3] << s[4] << s[5] << s[6];
 		out = ss.str();
 	}
 	return true;
 }
-#endif
 
 bool libsrt_bitset(size_t count, int tid)
 {
@@ -1490,11 +1207,29 @@ int main(int argc, char *argv[])
 #ifdef S_BENCH_CPP_HM
 		BENCH_FN(cxx_umap_ii32, count[i], tid[i]);
 #endif
+		BENCH_FN(libsrt_map_uu32, count[i], tid[i]);
+		BENCH_FN(cxx_map_uu32, count[i], tid[i]);
+		BENCH_FN(libsrt_hmap_uu32, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_umap_uu32, count[i], tid[i]);
+#endif
 		BENCH_FN(libsrt_map_ii64, count[i], tid[i]);
 		BENCH_FN(cxx_map_ii64, count[i], tid[i]);
 		BENCH_FN(libsrt_hmap_ii64, count[i], tid[i]);
 #ifdef S_BENCH_CPP_HM
 		BENCH_FN(cxx_umap_ii64, count[i], tid[i]);
+#endif
+		BENCH_FN(libsrt_map_ff, count[i], tid[i]);
+		BENCH_FN(cxx_map_ff, count[i], tid[i]);
+		BENCH_FN(libsrt_hmap_ff, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_umap_ff, count[i], tid[i]);
+#endif
+		BENCH_FN(libsrt_map_dd, count[i], tid[i]);
+		BENCH_FN(cxx_map_dd, count[i], tid[i]);
+		BENCH_FN(libsrt_hmap_dd, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_umap_dd, count[i], tid[i]);
 #endif
 		BENCH_FN(libsrt_map_s16, count[i], tid[i]);
 		BENCH_FN(cxx_map_s16, count[i], tid[i]);
@@ -1514,11 +1249,29 @@ int main(int argc, char *argv[])
 #ifdef S_BENCH_CPP_HM
 		BENCH_FN(cxx_uset_i32, count[i], tid[i]);
 #endif
+		BENCH_FN(libsrt_set_u32, count[i], tid[i]);
+		BENCH_FN(cxx_set_u32, count[i], tid[i]);
+		BENCH_FN(libsrt_hset_u32, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_uset_u32, count[i], tid[i]);
+#endif
 		BENCH_FN(libsrt_set_i64, count[i], tid[i]);
 		BENCH_FN(cxx_set_i64, count[i], tid[i]);
 		BENCH_FN(libsrt_hset_i64, count[i], tid[i]);
 #ifdef S_BENCH_CPP_HM
 		BENCH_FN(cxx_uset_i64, count[i], tid[i]);
+#endif
+		BENCH_FN(libsrt_set_f, count[i], tid[i]);
+		BENCH_FN(cxx_set_f, count[i], tid[i]);
+		BENCH_FN(libsrt_hset_f, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_uset_f, count[i], tid[i]);
+#endif
+		BENCH_FN(libsrt_set_d, count[i], tid[i]);
+		BENCH_FN(cxx_set_d, count[i], tid[i]);
+		BENCH_FN(libsrt_hset_d, count[i], tid[i]);
+#ifdef S_BENCH_CPP_HM
+		BENCH_FN(cxx_uset_d, count[i], tid[i]);
 #endif
 		BENCH_FN(libsrt_set_s16, count[i], tid[i]);
 		BENCH_FN(cxx_set_s16, count[i], tid[i]);
@@ -1548,6 +1301,10 @@ int main(int argc, char *argv[])
 		BENCH_FN(cxx_vector_i64, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_u64, count[i], tid[i]);
 		BENCH_FN(cxx_vector_u64, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_f, count[i], tid[i]);
+		BENCH_FN(cxx_vector_f, count[i], tid[i]);
+		BENCH_FN(libsrt_vector_d, count[i], tid[i]);
+		BENCH_FN(cxx_vector_d, count[i], tid[i]);
 		BENCH_FN(libsrt_vector_gen, count[i], tid[i]);
 		BENCH_FN(cxx_vector_gen, count[i], tid[i]);
 		BENCH_FN(libsrt_string_search_easymatch_long_1a, count[i],
@@ -1607,6 +1364,7 @@ int main(int argc, char *argv[])
 		BENCH_FN(libsrt_string_cat, count[i] / 10, tid[i]);
 		BENCH_FN(c_string_cat, count[i] / 10, tid[i]);
 		BENCH_FN(cxx_string_cat, count[i] / 10, tid[i]);
+		BENCH_FN(cxx_stringstream_cat, count[i] / 10, tid[i]);
 	}
 	return 0;
 }
