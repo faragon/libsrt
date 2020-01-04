@@ -17,16 +17,16 @@ extern "C" {
  * Heap allocation
  */
 
-#ifndef S_MALLOC
+#ifndef _s_malloc
 #define _s_malloc malloc
 #endif
-#ifndef S_CALLOC
+#ifndef _s_calloc
 #define _s_calloc calloc
 #endif
-#ifndef S_REALLOC
+#ifndef _s_realloc
 #define _s_realloc realloc
 #endif
-#ifndef S_FREE
+#ifndef _s_free
 #define _s_free free
 #endif
 
