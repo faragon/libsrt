@@ -436,12 +436,15 @@ static srt_string *aux_toXcase(srt_string **s, srt_bool cat,
 		 * Alignment is handled into sc_parallel_toX(),
 		 * so the cast to 32-bit container is not a problem.
 		 */
-		i2 = sc_parallel_toX(ps, i, ss, po, towX);
-		if (i != i2) {
-			po += (i2 - i);
-			i = i2;
-			if (i >= ss)
-				break;
+		if (fsc_tolower == sc_tolower) { // because it doesn't apply for
+						 // Turkish mode
+			i2 = sc_parallel_toX(ps, i, ss, po, towX);
+			if (i != i2) {
+				po += (i2 - i);
+				i = i2;
+				if (i >= ss)
+					break;
+			}
 		}
 #endif
 		csize = ss_utf8_to_wc(ps, i, ss, &c, *s);
@@ -2142,8 +2145,9 @@ int ss_ncmpi(const srt_string *s1, size_t s1off, const srt_string *s2, size_t n)
 				/* BEHAVIOR: ignore last cutted chars */
 				break;
 			}
-			if ((res = (int)(fsc_tolower((int32_t)u1) -
-					 fsc_tolower((int32_t)u2))) != 0) {
+			if ((res = (int)(fsc_tolower((int32_t)u1)
+					 - fsc_tolower((int32_t)u2)))
+			    != 0) {
 				break; /* difference found */
 			}
 			i += chs1;

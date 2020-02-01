@@ -3,7 +3,7 @@
  *
  * Unicode processing helper functions.
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -347,8 +347,8 @@ int32_t sc_tolower(int32_t c)
 			RR(c, 0x150, 0x176, c + !(c % 2));
 			RE(c, 0x178, 0xff);
 			RR(c, 0x179, 0x17d, c + (c % 2));
-			RE(c, 0x181, 0x253);
 			RR(c, 0x182, 0x184, c + !(c % 2));
+			RE(c, 0x181, 0x253);
 			return c;
 		}
 		RE(c, 0x186, 0x254);
@@ -931,10 +931,8 @@ int32_t sc_toupper(int32_t c)
 
 int32_t sc_tolower_tr(int32_t c)
 {
-	RE(c, 0x49, 0x131);  /* 'I' to dotless 'i' */
-	RE(c, 0x130, 0x69);  /* 'I' with dot to 'i' */
-	RE(c, 0x11e, 0x11f); /* 'G' with accent to 'g' with accent */
-	RE(c, 0x15e, 0x15f); /* 'S' with cedilla to 's' with cedilla */
+	RE(c, 0x49, 0x131); /* 'I' to dotless 'i' */
+	RE(c, 0x130, 0x69); /* 'I' with dot to 'i' */
 	return sc_tolower(c);
 }
 
@@ -942,8 +940,6 @@ int32_t sc_toupper_tr(int32_t c)
 {
 	RE(c, 0x131, 0x49);
 	RE(c, 0x69, 0x130);
-	RE(c, 0x11f, 0x11e);
-	RE(c, 0x15f, 0x15e);
 	return sc_toupper(c);
 }
 
