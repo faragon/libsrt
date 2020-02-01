@@ -677,6 +677,7 @@ static size_t rgb_info(const srt_string *rgb, const struct RGB_Info *ri)
 			       (unsigned)ua);
 		}
 		printf("\n");
+		sb_free(&bs);
 	} else {
 		fprintf(stderr, "Error: no pixel data\n");
 	}
