@@ -3,7 +3,7 @@
  *
  * Buffer encoding/decoding
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -687,8 +687,8 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 {
 	uint8_t *o;
 	const uint8_t *src, *tgt;
-	size_t dist, h, hash_elems, hash_size, hash_size0, i, last, len,
-		plit, *refs, *refsx, sm4, w32, xl, hash_mask;
+	size_t dist, h, hash_elems, hash_size, hash_size0, i, last, len, plit,
+		*refs, *refsx, sm4, w32, xl, hash_mask;
 	/*
 	 * Max out bytes = (input size) * 1.125
 	 * (0 in case of edge case size_t overflow)
@@ -727,8 +727,7 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	} else {
 		refsx = NULL;
 	}
-	refs = refsx ? refsx
-		     : (size_t *)s_alloca(sizeof(*refs) * hash_elems);
+	refs = refsx ? refsx : (size_t *)s_alloca(sizeof(*refs) * hash_elems);
 	RETURN_IF(!refs, 0);
 	memset(refs, 0, sizeof(*refs) * hash_elems);
 	/*
@@ -881,15 +880,15 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 	RETURN_IF(ss <= (size_t)(s - s0), 0); /* invalid: incomplete header */
 	RETURN_IF(!o0, expected_ss + 16);     /* max out size */
 	s_top = s0 + ss;
+	RETURN_IF(s_top < s0, 0); /* BEHAVIOR: error on overflow */
 	o = o0;
 	o_top = o + expected_ss;
 	while (s < s_top) {
 #if SDEBUG_LZ
 		s_bk = s;
 #endif
-		op64 = s_ld_pk_u64(&s, s_top - s);
+		op64 = s_ld_pk_u64(&s, (size_t)(s_top - s));
 		op = op64 & LZOP_MASK;
-
 		if ((op & LZOP_RV_LS_MASK) == LZOP_RV_LS) {
 			len = ((op64 >> LZOP_RV_LS_LSHIFT) & LZOP_RV_LS_LMASK)
 			      + 4;
@@ -909,7 +908,7 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 		}
 		/* LZOP_RV_LV */
 		len = (op64 >> LZOP_BITS) + 4;
-		dist = s_ld_pk_u64(&s, s_top - s) + 1;
+		dist = s_ld_pk_u64(&s, (size_t)(s_top - s)) + 1;
 		SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 		sdec_lz_load_ref(&o, dist, len);
 		DBG_LZREF(s - s_bk, dist, len, "[RV_LV]");
