@@ -3,7 +3,7 @@
  *
  * String handling.
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -448,8 +448,7 @@ static srt_string *aux_toXcase(srt_string **s, srt_bool cat,
 		c2 = towX(c);
 		if (c2 == c) {
 			csize2 = csize;
-			if (!aliasing)
-				memcpy(po, ps + i, csize2);
+			memmove(po, ps + i, csize2);
 		} else {
 			csize2 = sc_wc_to_utf8(c2, u8, 0, SSU8_MAX_SIZE);
 			memcpy(po, u8, csize2);
