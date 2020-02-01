@@ -26,7 +26,7 @@ static int syntax_error(const char **argv, const int exit_code)
 		"%s -eh <in >out.hex\n%s -eH <in >out.HEX\n"
 		"%s -dh <in.hex >out\n%s -dh <in.HEX >out\n"
 		"%s -ex <in >out.xml.esc\n%s -dx <in.xml.esc >out\n"
-		"%s -ej <in >out.json.esc\n%s -dx <in.json.esc >out\n"
+		"%s -ej <in >out.json.esc\n%s -dj <in.json.esc >out\n"
 		"%s -eu <in >out.url.esc\n%s -du <in.url.esc >out\n"
 		"%s -ez <in >in.lz\n%s -dz <in.lz >out\n"
 		"%s -ezh <in >in.lz\n%s -dz <in.lz >out\n"
