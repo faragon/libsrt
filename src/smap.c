@@ -11,6 +11,17 @@
 #include "saux/scommon.h"
 
 /*
+ * Internal constants
+ */
+
+struct SMapCtx {
+	enum eSV_Type sort_kt, sort_vt;
+	st_traverse sort_tr;
+	srt_tree_callback delete_callback;
+	srt_cmp cmpf;
+};
+
+/*
  * Internal functions
  */
 
@@ -60,32 +71,19 @@ static void rw_add_SM_S(srt_tnode *node, const srt_tnode *new_data,
 		sso1_update(&n->k, sso_get((const srt_stringo *)&m->k));
 }
 
-static void rw_add_SM_SI(srt_tnode *node, const srt_tnode *new_data,
-			 srt_bool existing)
-{
-	struct SMapSI *n = (struct SMapSI *)node;
-	const struct SMapSI *m = (const struct SMapSI *)new_data;
-	rw_add_SM_S(node, new_data, existing);
-	n->v = m->v;
-}
+#define BUILD_SMAP_RW_ADD_SX(FN, T)                                            \
+	static void FN(srt_tnode *node, const srt_tnode *new_data,             \
+		       srt_bool existing)                                      \
+	{                                                                      \
+		T *n = (T *)node;                                              \
+		const T *m = (const T *)new_data;                              \
+		rw_add_SM_S(node, new_data, existing);                         \
+		n->v = m->v;                                                   \
+	}
 
-static void rw_add_SM_SD(srt_tnode *node, const srt_tnode *new_data,
-			 srt_bool existing)
-{
-	struct SMapSD *n = (struct SMapSD *)node;
-	const struct SMapSD *m = (const struct SMapSD *)new_data;
-	rw_add_SM_S(node, new_data, existing);
-	n->v = m->v;
-}
-
-static void rw_add_SM_SP(srt_tnode *node, const srt_tnode *new_data,
-			 srt_bool existing)
-{
-	struct SMapSP *n = (struct SMapSP *)node;
-	const struct SMapSP *m = (const struct SMapSP *)new_data;
-	rw_add_SM_S(node, new_data, existing);
-	n->v = m->v;
-}
+BUILD_SMAP_RW_ADD_SX(rw_add_SM_SI, struct SMapSI)
+BUILD_SMAP_RW_ADD_SX(rw_add_SM_SD, struct SMapSD)
+BUILD_SMAP_RW_ADD_SX(rw_add_SM_SP, struct SMapSP)
 
 static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
 			 srt_bool existing)
@@ -98,29 +96,21 @@ static void rw_add_SM_SS(srt_tnode *node, const srt_tnode *new_data,
 		sso_update(&n->s, sso_get(&m->s), sso_get_s2(&m->s));
 }
 
-static void rw_add_SM_IS(srt_tnode *node, const srt_tnode *new_data,
-			 srt_bool existing)
-{
-	struct SMapIS *n = (struct SMapIS *)node;
-	const struct SMapIS *nd = (const struct SMapIS *)new_data;
-	n->x.k = nd->x.k;
-	if (!existing)
-		sso1_set(&n->v, sso1_get(&nd->v));
-	else
-		sso1_update(&n->v, sso1_get(&nd->v));
-}
+#define BUILD_SMAP_RW_ADD_XS(FN, T)                                            \
+	static void FN(srt_tnode *node, const srt_tnode *new_data,             \
+		       srt_bool existing)                                      \
+	{                                                                      \
+		T *n = (T *)node;                                              \
+		const T *nd = (const T *)new_data;                             \
+		n->x.k = nd->x.k;                                              \
+		if (!existing)                                                 \
+			sso1_set(&n->v, sso1_get(&nd->v));                     \
+		else                                                           \
+			sso1_update(&n->v, sso1_get(&nd->v));                  \
+	}
 
-static void rw_add_SM_DS(srt_tnode *node, const srt_tnode *new_data,
-			 srt_bool existing)
-{
-	struct SMapDS *n = (struct SMapDS *)node;
-	const struct SMapDS *nd = (const struct SMapDS *)new_data;
-	n->x.k = nd->x.k;
-	if (!existing)
-		sso1_set(&n->v, sso1_get(&nd->v));
-	else
-		sso1_update(&n->v, sso1_get(&nd->v));
-}
+BUILD_SMAP_RW_ADD_XS(rw_add_SM_IS, struct SMapIS)
+BUILD_SMAP_RW_ADD_XS(rw_add_SM_DS, struct SMapDS)
 
 #define BUILD_SMAP_RW_INC_Sx(FN, T, ADDF)                                      \
 	static void FN(srt_tnode *node, const srt_tnode *new_data,             \
@@ -164,7 +154,34 @@ struct SV2X {
 	srt_vector *kv, *vv;
 };
 
-#define BUILD_SORT(FN, T, PUSHK, PUSHV)                                        \
+#define BUILD_SORT_K(FN, T, PUSHK)                                             \
+	static int FN(struct STraverseParams *tp)                              \
+	{                                                                      \
+		const T *cn = (const T *)get_node_r(tp->t, tp->c);             \
+		if (cn) {                                                      \
+			struct SV2X *v2x = (struct SV2X *)tp->context;         \
+			PUSHK(&v2x->kv, cn->k);                                \
+		}                                                              \
+		return 0;                                                      \
+	}
+
+BUILD_SORT_K(aux_i32_sort, struct SMapi, sv_push_i32)
+BUILD_SORT_K(aux_u32_sort, struct SMapu, sv_push_u32)
+BUILD_SORT_K(aux_i_sort, struct SMapI, sv_push_i64)
+BUILD_SORT_K(aux_f_sort, struct SMapF, sv_push_f)
+BUILD_SORT_K(aux_d_sort, struct SMapD, sv_push_d)
+
+static int aux_s_sort(struct STraverseParams *tp)
+{
+	const struct SMapS *cn = (const struct SMapS *)get_node_r(tp->t, tp->c);
+	if (cn) {
+		struct SV2X *v2x = (struct SV2X *)tp->context;
+		sv_push(&v2x->kv, sso1_get(&cn->k));
+	}
+	return 0;
+}
+
+#define BUILD_SORT_KV(FN, T, PUSHK, PUSHV)                                     \
 	static int FN(struct STraverseParams *tp)                              \
 	{                                                                      \
 		const T *cn = (const T *)get_node_r(tp->t, tp->c);             \
@@ -176,13 +193,13 @@ struct SV2X {
 		return 0;                                                      \
 	}
 
-BUILD_SORT(aux_ii32_sort, struct SMapii, sv_push_i32, sv_push_i32)
-BUILD_SORT(aux_uu32_sort, struct SMapuu, sv_push_u32, sv_push_u32)
-BUILD_SORT(aux_ii_sort, struct SMapII, sv_push_i64, sv_push_i64)
-BUILD_SORT(aux_ff_sort, struct SMapFF, sv_push_f, sv_push_f)
-BUILD_SORT(aux_dd_sort, struct SMapDD, sv_push_d, sv_push_d)
-BUILD_SORT(aux_ip_sort, struct SMapIP, sv_push_i64, sv_push)
-BUILD_SORT(aux_dp_sort, struct SMapDP, sv_push_d, sv_push)
+BUILD_SORT_KV(aux_ii32_sort, struct SMapii, sv_push_i32, sv_push_i32)
+BUILD_SORT_KV(aux_uu32_sort, struct SMapuu, sv_push_u32, sv_push_u32)
+BUILD_SORT_KV(aux_ii_sort, struct SMapII, sv_push_i64, sv_push_i64)
+BUILD_SORT_KV(aux_ff_sort, struct SMapFF, sv_push_f, sv_push_f)
+BUILD_SORT_KV(aux_dd_sort, struct SMapDD, sv_push_d, sv_push_d)
+BUILD_SORT_KV(aux_ip_sort, struct SMapIP, sv_push_i64, sv_push)
+BUILD_SORT_KV(aux_dp_sort, struct SMapDP, sv_push_d, sv_push)
 
 #define BUILD_xS_SORT(FN, T, PUSHK)                                            \
 	static int FN(struct STraverseParams *tp)                              \
@@ -216,7 +233,7 @@ BUILD_xS_SORT(aux_is_sort, struct SMapIS, sv_push_i64)
 BUILD_Sx_SORT(aux_si_sort, struct SMapSI, sv_push_i64)
 BUILD_Sx_SORT(aux_sd_sort, struct SMapSD, sv_push_d)
 
-static int aux_sp_ss_sort(struct STraverseParams *tp)
+static int aux_ss_sort(struct STraverseParams *tp)
 {
 	/* clang-format on */
 	const struct SMapSS *cn =
@@ -229,36 +246,42 @@ static int aux_sp_ss_sort(struct STraverseParams *tp)
 	return 0;
 }
 
-static srt_cmp type2cmpf(enum eSM_Type0 t)
+static int aux_sp_sort(struct STraverseParams *tp)
 {
-	switch (t) {
-	case SM0_U32:
-	case SM0_UU32:
-		return (srt_cmp)cmp_u;
-	case SM0_I32:
-	case SM0_II32:
-		return (srt_cmp)cmp_i;
-	case SM0_I:
-	case SM0_II:
-	case SM0_IS:
-	case SM0_IP:
-		return (srt_cmp)cmp_I;
-	case SM0_F:
-	case SM0_FF:
-		return (srt_cmp)cmp_F;
-	case SM0_D:
-	case SM0_DD:
-	case SM0_DS:
-	case SM0_DP:
-		return (srt_cmp)cmp_D;
-	case SM0_S:
-	case SM0_SI:
-	case SM0_SD:
-	case SM0_SS:
-	case SM0_SP:
-		return (srt_cmp)cmp_s;
+	const struct SMapSP *cn =
+		(const struct SMapSP *)get_node_r(tp->t, tp->c);
+	if (cn) {
+		struct SV2X *v2x = (struct SV2X *)tp->context;
+		sv_push(&v2x->kv, sso1_get(&cn->x.k));
+		sv_push(&v2x->vv, cn->v);
 	}
-	return NULL;
+	return 0;
+}
+
+const struct SMapCtx sm_ctx[SM0_NumTypes] = {
+	{SV_I32, SV_I32, aux_ii32_sort, NULL, (srt_cmp)cmp_i}, /*SM0_II32*/
+	{SV_U32, SV_U32, aux_uu32_sort, NULL, (srt_cmp)cmp_u}, /*SM0_UU32*/
+	{SV_I64, SV_I64, aux_ii_sort, NULL, (srt_cmp)cmp_I},   /*SM0_II*/
+	{SV_I64, SV_GEN, aux_is_sort, aux_is_delete, (srt_cmp)cmp_I}, /*SM0_IS*/
+	{SV_I64, SV_GEN, aux_ip_sort, NULL, (srt_cmp)cmp_I},	  /*SM0_IP*/
+	{SV_GEN, SV_I64, aux_si_sort, aux_sx_delete, (srt_cmp)cmp_s}, /*SM0_SI*/
+	{SV_GEN, SV_GEN, aux_ss_sort, aux_ss_delete, (srt_cmp)cmp_s}, /*SM0_SS*/
+	{SV_GEN, SV_GEN, aux_sp_sort, aux_sx_delete, (srt_cmp)cmp_s}, /*SM0_SP*/
+	{SV_I64, SV_I64, aux_i_sort, NULL, (srt_cmp)cmp_I},	   /*SM0_I*/
+	{SV_I32, SV_I32, aux_i32_sort, NULL, (srt_cmp)cmp_i},	/*SM0_I32*/
+	{SV_U32, SV_U32, aux_u32_sort, NULL, (srt_cmp)cmp_u},	/*SM0_U32*/
+	{SV_GEN, SV_GEN, aux_s_sort, aux_sx_delete, (srt_cmp)cmp_s}, /*SM0_S*/
+	{SV_F, SV_F, aux_f_sort, NULL, (srt_cmp)cmp_F},		     /*SM0_F*/
+	{SV_D, SV_D, aux_d_sort, NULL, (srt_cmp)cmp_D},		     /*SM0_D*/
+	{SV_F, SV_F, aux_ff_sort, NULL, (srt_cmp)cmp_F},	     /*SM0_FF*/
+	{SV_D, SV_D, aux_dd_sort, NULL, (srt_cmp)cmp_D},	     /*SM0_DD*/
+	{SV_D, SV_GEN, aux_dp_sort, NULL, (srt_cmp)cmp_D},	   /*SM0_DP*/
+	{SV_D, SV_GEN, aux_ds_sort, aux_ds_delete, (srt_cmp)cmp_D},  /*SM0_DS*/
+	{SV_GEN, SV_D, aux_sd_sort, aux_sx_delete, (srt_cmp)cmp_s}}; /*SM0_SD*/
+
+S_INLINE srt_cmp type2cmpf(enum eSM_Type0 t)
+{
+	return t < SM0_NumTypes ? sm_ctx[t].cmpf : NULL;
 }
 
 S_INLINE srt_bool sm_chk_t(const srt_map *m, int t)
@@ -433,26 +456,12 @@ srt_map *sm_dup(const srt_map *src)
 
 void sm_clear(srt_map *m)
 {
-	srt_tree_callback delete_callback = NULL;
+	int t;
 	if (!m || !m->d.size)
 		return;
-	switch (m->d.sub_type) {
-	case SM0_IS:
-		delete_callback = aux_is_delete;
-		break;
-	case SM0_DS:
-		delete_callback = aux_ds_delete;
-		break;
-	case SM0_SS:
-		delete_callback = aux_ss_delete;
-		break;
-	case SM0_S:
-	case SM0_SI:
-	case SM0_SD:
-	case SM0_SP:
-		delete_callback = aux_sx_delete;
-		break;
-	}
+	t = m->d.sub_type;
+	srt_tree_callback delete_callback =
+		t < SM0_NumTypes ? sm_ctx[t].delete_callback : NULL;
 	if (delete_callback) { /* deletion of dynamic memory elems */
 		srt_tndx i = 0;
 		for (; i < (srt_tndx)m->d.size; i++) {
@@ -543,18 +552,7 @@ srt_map *sm_cpy(srt_map **m, const srt_map *src)
 			sso_set(&mt->s, sso_get(&ms->s), sso_get_s2(&ms->s));
 		}
 		break;
-	case SM0_II32:
-	case SM0_UU32:
-	case SM0_II:
-	case SM0_IP:
-	case SM0_I:
-	case SM0_I32:
-	case SM0_U32:
-	case SM0_F:
-	case SM0_FF:
-	case SM0_D:
-	case SM0_DD:
-	case SM0_DP:
+	default:
 		/* no additional action required */
 		break;
 	}
@@ -924,41 +922,24 @@ ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv)
 {
 	ssize_t r;
 	struct SV2X v2x;
-	st_traverse traverse_f = NULL;
+	uint8_t t;
 	enum eSV_Type kt, vt;
-	RETURN_IF(!m || !kv || !vv, 0);
+	st_traverse traverse_f = NULL;
+	RETURN_IF(!m || !kv || !vv || m->d.sub_type >= SM0_NumTypes, 0);
 	v2x.kv = *kv;
 	v2x.vv = *vv;
-	switch (m->d.sub_type) {
-	case SM_II32:
-		kt = vt = SV_I32;
-		break;
-	case SM_UU32:
-		kt = vt = SV_U32;
-		break;
-	case SM_II:
-	case SM_IS:
-	case SM_IP:
-		kt = SV_I64;
-		vt = sm_chk_t(m, SM_II) ? SV_I64 : SV_GEN;
-		break;
-	case SM_SI:
-	case SM_SS:
-	case SM_SP:
-		kt = SV_GEN;
-		vt = sm_chk_t(m, SM_SI) ? SV_I64 : SV_GEN;
-		break;
-	default:
-		return 0; /* BEHAVIOR: invalid type */
-	}
+	t = m->d.sub_type;
+	kt = sm_ctx[t].sort_kt;
+	vt = sm_ctx[t].sort_vt;
+	traverse_f = sm_ctx[t].sort_tr;
 	if (v2x.kv) {
-		if (v2x.kv->d.sub_type != (uint8_t)kt)
+		if (v2x.kv->d.sub_type != kt)
 			sv_free(&v2x.kv);
 		else
 			sv_reserve(&v2x.kv, m->d.size);
 	}
 	if (v2x.vv) {
-		if (v2x.vv->d.sub_type != (uint8_t)vt)
+		if (v2x.vv->d.sub_type != vt)
 			sv_free(&v2x.vv);
 		else
 			sv_reserve(&v2x.vv, m->d.size);
@@ -967,45 +948,6 @@ ssize_t sm_sort_to_vectors(const srt_map *m, srt_vector **kv, srt_vector **vv)
 		v2x.kv = sv_alloc_t(kt, m->d.size);
 	if (!v2x.vv)
 		v2x.vv = sv_alloc_t(vt, m->d.size);
-	switch (m->d.sub_type) {
-	case SM_II32:
-		traverse_f = aux_ii32_sort;
-		break;
-	case SM_UU32:
-		traverse_f = aux_uu32_sort;
-		break;
-	case SM_II:
-		traverse_f = aux_ii_sort;
-		break;
-	case SM_FF:
-		traverse_f = aux_ff_sort;
-		break;
-	case SM_DD:
-		traverse_f = aux_dd_sort;
-		break;
-	case SM_IS:
-		traverse_f = aux_is_sort;
-		break;
-	case SM_IP:
-		traverse_f = aux_ip_sort;
-		break;
-	case SM_SI:
-		traverse_f = aux_si_sort;
-		break;
-	case SM_DS:
-		traverse_f = aux_ds_sort;
-		break;
-	case SM_DP:
-		traverse_f = aux_dp_sort;
-		break;
-	case SM_SD:
-		traverse_f = aux_sd_sort;
-		break;
-	case SM_SS:
-	case SM_SP:
-		traverse_f = aux_sp_ss_sort;
-		break;
-	}
 	r = st_traverse_inorder((const srt_tree *)m, traverse_f, (void *)&v2x);
 	*kv = v2x.kv;
 	*vv = v2x.vv;

@@ -104,7 +104,8 @@ enum eSM_Type0 {
 	SM0_DD,
 	SM0_DP,
 	SM0_DS,
-	SM0_SD
+	SM0_SD,
+	SM0_NumTypes
 };
 
 enum eSM_Type {
