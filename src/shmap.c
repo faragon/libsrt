@@ -12,6 +12,17 @@
 #include "saux/sstringo.h"
 
 /*
+ * Internal constants
+ */
+
+struct SHMapCtx {
+	shm_eq_f eqf;
+	shm_del_f delf;
+	shm_hash_f hashf;
+	shm_n2key_f n2kf;
+};
+
+/*
  * Constants and macros
  */
 #define SHM_MAX_ELEMS 0xffffffff
@@ -310,19 +321,41 @@ static const void *n2key_ss(const void *node)
 	return sso_get((const srt_stringo *)node);
 }
 
+const struct SHMapCtx shm_ctx[SHM0_NumTypes] = {
+	{eq_32, del_nop, hash_32, n2key_direct},  /*SHM0_II32*/
+	{eq_32, del_nop, hash_32, n2key_direct},  /*SHM0_UU32*/
+	{eq_64, del_nop, hash_64, n2key_direct},  /*SHM0_II*/
+	{eq_64, del_is, hash_64, n2key_direct},   /*SHM0_IS*/
+	{eq_64, del_nop, hash_64, n2key_direct},  /*SHM0_IP*/
+	{eq_sso1, del_sx, hash_s1, n2key_s1},     /*SHM0_SI*/
+	{eq_sso, del_ss, hash_ss, n2key_ss},      /*SHM0_SS*/
+	{eq_sso1, del_sx, hash_s1, n2key_s1},     /*SHM0_SP*/
+	{eq_32, del_nop, hash_32, n2key_direct},  /*SHM0_I32*/
+	{eq_32, del_nop, hash_32, n2key_direct},  /*SHM0_U32*/
+	{eq_64, del_nop, hash_64, n2key_direct},  /*SHM0_I*/
+	{eq_sso1, del_sx, hash_s1, n2key_s1},     /*SHM0_S*/
+	{eq_f, del_nop, hash_fp, n2key_direct},   /*SHM0_FF*/
+	{eq_d, del_nop, hash_dfp, n2key_direct},  /*SHM0_DD*/
+	{eq_d, del_ds, hash_dfp, n2key_direct},   /*SHM0_DS*/
+	{eq_d, del_nop, hash_dfp, n2key_direct},  /*SHM0_DP*/
+	{eq_sso1, del_sx, hash_s1, n2key_s1},     /*SHM0_SD*/
+	{eq_f, del_nop, hash_fp, n2key_direct},   /*SHM0_F*/
+	{eq_d, del_nop, hash_dfp, n2key_direct}}; /*SHM0_D*/
+
 static void aux_reg_hash(srt_hmap *hm, const void *key, uint32_t h32,
 			 uint32_t loc)
 {
 	uint8_t *eloc;
 	size_t bid, l, hmask;
 	struct SHMBucket *b = shm_get_buckets(hm);
+	shm_eq_f eqf = shm_ctx[hm->d.sub_type].eqf;
 	bid = h2bid(h32, hm->hbits);
 	hmask = hm->hmask;
 	for (l = bid; b[l].loc; l = (l + 1) & hmask)
 		if (b[l].hash == h32) {
 			eloc = shm_get_buffer(hm)
 			       + (b[l].loc - 1) * hm->d.elem_size;
-			if (hm->eqf(key, eloc))
+			if (eqf(key, eloc))
 				goto skip_bucket_inc; /* found, overwrite */
 		}
 	b[bid].cnt++;
@@ -334,6 +367,7 @@ skip_bucket_inc:
 static void aux_rehash(srt_hmap *hm)
 {
 	shm_eloc_t_ i;
+	shm_hash_f hashf;
 	const srt_string *s;
 	uint8_t *data = shm_get_buffer(hm);
 	struct SHMBucket *b = shm_get_buckets(hm);
@@ -343,12 +377,13 @@ static void aux_rehash(srt_hmap *hm)
 	S_ASSERT((uint64_t)nbuckets == nb64);
 	hm->hmask = hm->hbits == 32 ? (uint32_t)-1 : (uint32_t)(nbuckets - 1);
 	hm->rh_threshold = s_size_t_pct(nbuckets, hm->rh_threshold_pct);
+	hashf = shm_ctx[hm->d.sub_type].hashf;
 	/*
 	 * Reset the hash table buckets, and rehash all elements
 	 */
 	memset(b, 0, sizeof(struct SHMBucket) * nbuckets);
 	for (i = 0; i < nelems; i++, data += elem_size)
-		aux_reg_hash(hm, data, hm->hashf(data), i);
+		aux_reg_hash(hm, data, hashf(data), i);
 }
 
 static srt_bool aux_insert_check(srt_hmap **hm)
@@ -425,6 +460,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 	const uint8_t *data, *eloc;
 	size_t bid = h2bid(h, hm->hbits), eoff, es, hbits, hcnt, hmask, hmax, l;
 	const struct SHMBucket *b = shm_get_buckets_r(hm);
+	shm_eq_f eqf = shm_ctx[hm->d.sub_type].eqf;
 	RETURN_IF(!b[bid].cnt, NULL); /* Hash not in the HT */
 	hmax = b[bid].cnt;
 	data = shm_get_buffer_r(hm);
@@ -439,7 +475,7 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 		if (b[l].hash == h) {
 			eoff = b[l].loc - 1;
 			eloc = data + eoff * es;
-			if (hm->eqf(key, eloc)) {
+			if (eqf(key, eloc)) {
 				if (tl)
 					*tl = (uint32_t)l;
 				return eloc;
@@ -451,12 +487,20 @@ const void *shm_at(const srt_hmap *hm, uint32_t h, const void *key,
 
 static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 {
+	shm_eq_f eqf;
+	shm_del_f delf;
+	shm_hash_f hashf;
+	shm_n2key_f n2kf;
 	struct SHMBucket *b;
 	const uint8_t *tloc;
 	uint32_t ht, l0, tl = 0;
 	size_t bid, e_off, es, hcnt, hmax, l, ss, hbits, hmask;
 	uint8_t *data, *dloc, *hole, *tail;
-	RETURN_IF(!hm, S_FALSE);
+	RETURN_IF(!hm || hm->d.sub_type >= SHM0_NumTypes, S_FALSE);
+	delf = shm_ctx[hm->d.sub_type].delf;
+	eqf = shm_ctx[hm->d.sub_type].eqf;
+	hashf = shm_ctx[hm->d.sub_type].hashf;
+	n2kf = shm_ctx[hm->d.sub_type].n2kf;
 	hbits = hm->hbits;
 	bid = h2bid(h, hbits);
 	b = shm_get_buckets(hm);
@@ -473,19 +517,19 @@ static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 		if (b[l].hash == h) {
 			e_off = b[l].loc - 1;
 			dloc = data + e_off * es;
-			if (hm->eqf(key, dloc)) {
+			if (eqf(key, dloc)) {
 				l0 = b[l].loc;
 				b[bid].cnt--;
 				b[l].loc = 0;
-				hm->delf(dloc);
+				delf(dloc);
 				/* Fill the hole with the latest elem */
 				ss = shm_size(hm);
 				if (ss > 1 && ss != l0) {
 					hole = data + e_off * es;
 					tail = data + (ss - 1) * es;
-					ht = hm->hashf(tail);
+					ht = hashf(tail);
 					tloc = (const uint8_t *)shm_at(
-						hm, ht, hm->n2kf(tail), &tl);
+						hm, ht, n2kf(tail), &tl);
 					(void)tloc;
 #if 0
 					/*
@@ -506,63 +550,6 @@ static srt_bool del(srt_hmap *hm, uint32_t h, const void *key)
 	return S_FALSE;
 }
 
-S_INLINE void shm_tsetup(srt_hmap *h, int t)
-{
-	switch (t) {
-	case SHM0_I32:
-	case SHM0_U32:
-	case SHM0_II32:
-	case SHM0_UU32:
-		h->eqf = eq_32;
-		h->delf = del_nop;
-		h->hashf = hash_32;
-		h->n2kf = n2key_direct;
-		break;
-	case SHM0_I:
-	case SHM0_II:
-	case SHM0_IS:
-	case SHM0_IP:
-		h->eqf = eq_64;
-		h->delf = t == SHM0_IS ? del_is : del_nop;
-		h->hashf = hash_64;
-		h->n2kf = n2key_direct;
-		break;
-	case SHM0_SI:
-	case SHM0_SD:
-	case SHM0_SP:
-	case SHM0_S:
-		h->eqf = eq_sso1;
-		h->delf = del_sx;
-		h->hashf = hash_s1;
-		h->n2kf = n2key_s1;
-		break;
-	case SHM0_SS:
-		h->eqf = eq_sso;
-		h->delf = del_ss;
-		h->hashf = hash_ss;
-		h->n2kf = n2key_ss;
-		break;
-	case SHM0_F:
-	case SHM0_FF:
-		h->eqf = eq_f;
-		h->delf = del_nop;
-		h->hashf = hash_fp;
-		h->n2kf = n2key_direct;
-		break;
-	case SHM0_D:
-	case SHM0_DD:
-	case SHM0_DS:
-	case SHM0_DP:
-		h->eqf = eq_d;
-		h->delf = t == SHM0_DS ? del_ds : del_nop;
-		h->hashf = hash_dfp;
-		h->n2kf = n2key_direct;
-		break;
-	default:
-		break;
-	}
-}
-
 /*
  * Public functions
  */
@@ -576,7 +563,6 @@ srt_hmap *shm_alloc_raw(int t, srt_bool ext_buf, void *buffer, size_t hdr_size,
 	sd_reset((srt_data *)h, hdr_size, elem_size, max_size, ext_buf,
 		 S_FALSE);
 	h->d.sub_type = (uint8_t)t;
-	shm_tsetup(h, t);
 	h->rh_threshold_pct = SHM_REHASH_DEFAULT_THRESHOLD_PCT;
 	h->hbits = (uint32_t)hbits;
 	aux_rehash(h);
@@ -599,15 +585,18 @@ srt_hmap *shm_alloc_aux(int t, size_t init_size)
 void shm_clear(srt_hmap *hm)
 {
 	size_t es;
-	uint8_t *p, *pt;
+	shm_del_f delf;
+	uint8_t *p, *pt, t;
 	if (!hm)
 		return;
 	p = shm_get_buffer(hm);
 	es = hm->d.elem_size;
 	pt = p + shm_size(hm) * es;
-	if (hm->delf && hm->delf != del_nop)
+	t = hm->d.sub_type;
+	delf = t < SHM0_NumTypes ? shm_ctx[t].delf : NULL;
+	if (delf && delf != del_nop)
 		for (; p < pt; p += es)
-			hm->delf(p);
+			delf(p);
 	shm_set_size(hm, 0);
 }
 
@@ -676,9 +665,6 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 	}
 	(*hm)->d.header_size = hdr_size;
 	(*hm)->hbits = (uint32_t)hbits;
-	(*hm)->eqf = src->eqf;
-	(*hm)->delf = src->delf;
-	(*hm)->n2kf = src->n2kf;
 	return S_TRUE;
 }
 

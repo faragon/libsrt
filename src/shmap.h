@@ -103,7 +103,8 @@ enum eSHM_Type0 {
 	SHM0_DP,
 	SHM0_SD,
 	SHM0_F,
-	SHM0_D
+	SHM0_D,
+	SHM0_NumTypes
 };
 
 enum eSHM_Type {
@@ -231,10 +232,6 @@ struct S_HMap {
 	uint32_t hmask; /* hash table bitmask */
 	size_t rh_threshold; /* (1 << hbits) * rh_threshold_pct) / 100 */
 	size_t rh_threshold_pct;
-	shm_eq_f eqf;
-	shm_del_f delf;
-	shm_hash_f hashf;
-	shm_n2key_f n2kf;
 };
 
 /*
