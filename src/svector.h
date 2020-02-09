@@ -59,7 +59,8 @@ enum eSV_Type {
 	SV_F,
 	SV_D,
 	SV_LAST_NUM = SV_D,
-	SV_GEN
+	SV_GEN,
+	SV_NumTypes
 };
 
 typedef int (*srt_vector_cmp)(const void *a, const void *b);

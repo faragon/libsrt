@@ -25,6 +25,30 @@
 #endif
 
 /*
+ * Internal constants
+ */
+
+#ifndef S_MINIMAL
+struct SVecCtx {
+	ssort_f sortf;
+};
+
+struct SVecCtx vec_ctx[SV_NumTypes] = {
+	{(ssort_f)ssort_i8},  /*SV_I8*/
+	{(ssort_f)ssort_u8},  /*SV_U8*/
+	{(ssort_f)ssort_i16}, /*SV_I16*/
+	{(ssort_f)ssort_u16}, /*SV_U16*/
+	{(ssort_f)ssort_i32}, /*SV_I32*/
+	{(ssort_f)ssort_u32}, /*SV_U32*/
+	{(ssort_f)ssort_i64}, /*SV_I64*/
+	{(ssort_f)ssort_u64}, /*SV_U64*/
+	{NULL},		      /*SV_F*/
+	{NULL},		      /*SV_D*/
+	{NULL}		      /*SV_GEN*/
+};
+#endif
+
+/*
  * Static functions forward declaration
  */
 
@@ -407,34 +431,10 @@ srt_vector *sv_sort(srt_vector *v)
 	buf_size = sv_size(v);
 	elem_size = v->d.elem_size;
 #ifndef S_MINIMAL
-	switch (v->d.sub_type) {
-	case SV_I8:
-		ssort_i8((int8_t *)buf, buf_size);
-		break;
-	case SV_U8:
-		ssort_u8((uint8_t *)buf, buf_size);
-		break;
-	case SV_I16:
-		ssort_i16((int16_t *)buf, buf_size);
-		break;
-	case SV_U16:
-		ssort_u16((uint16_t *)buf, buf_size);
-		break;
-	case SV_I32:
-		ssort_i32((int32_t *)buf, buf_size);
-		break;
-	case SV_U32:
-		ssort_u32((uint32_t *)buf, buf_size);
-		break;
-	case SV_I64:
-		ssort_i64((int64_t *)buf, buf_size);
-		break;
-	case SV_U64:
-		ssort_u64((uint64_t *)buf, buf_size);
-		break;
-	default:
+	if (v->d.sub_type <= SV_U64)
+		vec_ctx[v->d.sub_type].sortf(buf, buf_size);
+	else
 		qsort(buf, buf_size, elem_size, v->vx.cmpf);
-	}
 #else
 	qsort(buf, buf_size, elem_size, v->vx.cmpf);
 #endif
