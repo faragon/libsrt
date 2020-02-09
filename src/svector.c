@@ -470,9 +470,10 @@ size_t sv_find(const srt_vector *v, size_t off, const void *target)
 }
 
 #define SV_BUILD_FIND(FN, T)                                                   \
-	size_t FN(const srt_vector *v, size_t off, const T target)             \
+	size_t FN(const srt_vector *v, size_t off, T target)                   \
 	{                                                                      \
-		return sv_find_aux(v, off, &target, sizeof(target));           \
+		return sv_find_aux(v, off, (const void *)&target,              \
+				   sizeof(target));                            \
 	}
 
 SV_BUILD_FIND(sv_find_i8, int8_t)
@@ -579,7 +580,7 @@ srt_bool sv_set(srt_vector **v, size_t index, const void *value)
 }
 
 #define SV_BUILD_SET(FN, T)                                                    \
-	srt_bool FN(srt_vector **v, size_t index, const T value)               \
+	srt_bool FN(srt_vector **v, size_t index, T value)                     \
 	{                                                                      \
 		return sv_set_aux(v, index, &value, sizeof(value));            \
 	}
@@ -637,9 +638,10 @@ size_t sv_push_aux(srt_vector **v, const void *c1, ...)
 }
 
 #define SV_BUILD_PUSH(FN, T)                                                   \
-	srt_bool FN(srt_vector **v, const T value)                             \
+	srt_bool FN(srt_vector **v, T value)                                   \
 	{                                                                      \
-		return sv_push_raw0(v, &value, 1, sizeof(value));              \
+		return sv_push_raw0(v, (const void *)&value, 1,                \
+				    sizeof(value));                            \
 	}
 
 SV_BUILD_PUSH(sv_push_i8, int8_t)

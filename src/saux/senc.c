@@ -890,25 +890,27 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 		op64 = s_ld_pk_u64(&s, (size_t)(s_top - s));
 		op = op64 & LZOP_MASK;
 		if ((op & LZOP_RV_LS_MASK) == LZOP_RV_LS) {
-			len = ((op64 >> LZOP_RV_LS_LSHIFT) & LZOP_RV_LS_LMASK)
-			      + 4;
-			dist = ((op64 >> LZOP_RV_LS_DSHIFT) & LZOP_RV_LS_DMASK)
-			       + 1;
+			len = (size_t)(
+				((op64 >> LZOP_RV_LS_LSHIFT) & LZOP_RV_LS_LMASK)
+				+ 4);
+			dist = (size_t)(
+				((op64 >> LZOP_RV_LS_DSHIFT) & LZOP_RV_LS_DMASK)
+				+ 1);
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
 			DBG_LZREF(s - s_bk, dist, len, "[RV_LS]");
 			continue;
 		}
 		if ((op & LZOP_MASK) == LZOP_LV) {
-			len = (op64 >> LZOP_BITS) + 1;
+			len = (size_t)((op64 >> LZOP_BITS) + 1);
 			DBG_LZLIT(s - s_bk, len);
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_lit(&s, &o, len);
 			continue;
 		}
 		/* LZOP_RV_LV */
-		len = (op64 >> LZOP_BITS) + 4;
-		dist = s_ld_pk_u64(&s, (size_t)(s_top - s)) + 1;
+		len = (size_t)((op64 >> LZOP_BITS) + 4);
+		dist = (size_t)(s_ld_pk_u64(&s, (size_t)(s_top - s)) + 1);
 		SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 		sdec_lz_load_ref(&o, dist, len);
 		DBG_LZREF(s - s_bk, dist, len, "[RV_LV]");

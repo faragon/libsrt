@@ -3163,8 +3163,8 @@ static int test_sv_sort()
 			sv_push_u32(&v32u, i);
 			sv_push_i64(&v64i, i);
 			sv_push_u64(&v64u, i);
-			sv_push_f(&vf, i);
-			sv_push_d(&vd, i);
+			sv_push_f(&vf, (float)i);
+			sv_push_d(&vd, (double)i);
 			r8i[i] = i & 0xff;
 			r8u[i] = i & 0xff;
 			r16i[i] = i;
@@ -3173,8 +3173,8 @@ static int test_sv_sort()
 			r32u[i] = i;
 			r64i[i] = i;
 			r64u[i] = i;
-			rf[i] = i;
-			rd[i] = i;
+			rf[i] = (float)i;
+			rd[i] = (double)i;
 		}
 		for (i = 1; i < nelems; i += 2) {
 			sv_push_i8(&v8i, i & 0xff);
@@ -3185,8 +3185,8 @@ static int test_sv_sort()
 			sv_push_u32(&v32u, i);
 			sv_push_i64(&v64i, i);
 			sv_push_u64(&v64u, i);
-			sv_push_f(&vf, i);
-			sv_push_d(&vd, i);
+			sv_push_f(&vf, (float)i);
+			sv_push_d(&vd, (double)i);
 			r8i[i] = i & 0xff;
 			r8u[i] = i & 0xff;
 			r16i[i] = i;
@@ -3195,8 +3195,8 @@ static int test_sv_sort()
 			r32u[i] = i;
 			r64i[i] = i;
 			r64u[i] = i;
-			rf[i] = i;
-			rd[i] = i;
+			rf[i] = (float)i;
+			rd[i] = (double)i;
 		}
 		sv_sort(v8i);
 		sv_sort(v8u);
@@ -4071,10 +4071,10 @@ static int test_sm_inc_sd()
 	int res;
 	srt_map *m = sm_alloc(SM_SD, 0);
 	const srt_string *k = ss_crefa("hello");
-	sm_inc_sd(&m, k, -7);
-	sm_inc_sd(&m, k, S_MAX_I64);
-	sm_inc_sd(&m, k, 3);
-	res = !m ? 1 : (sm_at_sd(m, k) == S_MAX_I64 - 4 ? 0 : 2);
+	sm_inc_sd(&m, k, (double)-7);
+	sm_inc_sd(&m, k, (double)S_MAX_I64);
+	sm_inc_sd(&m, k, (double)3);
+	res = !m ? 1 : (sm_at_sd(m, k) == (double)(S_MAX_I64 - 4) ? 0 : 2);
 	sm_free(&m);
 	return res;
 }
@@ -4371,8 +4371,8 @@ static int test_sm_itr()
 			sm_insert_ii32(&m_ii32, -i, -i);
 			sm_insert_uu32(&m_uu32, (uint32_t)i, (uint32_t)i);
 			sm_insert_ii(&m_ii, -i, -i);
-			sm_insert_ff(&m_ff, -i, -i);
-			sm_insert_dd(&m_dd, -i, -i);
+			sm_insert_ff(&m_ff, (float)-i, (float)-i);
+			sm_insert_dd(&m_dd, (double)-i, (double)-i);
 			ss_printf(&ktmp, 200, "k%04i", i);
 			ss_printf(&vtmp, 200, "v%04i", i);
 			sm_insert_is(&m_is, -i, vtmp);
@@ -4380,9 +4380,9 @@ static int test_sm_itr()
 			sm_insert_si(&m_si, ktmp, i);
 			sm_insert_ss(&m_ss, ktmp, vtmp);
 			sm_insert_sp(&m_sp, ktmp, (void *)(intptr_t)i);
-			sm_insert_ds(&m_ds, -i, vtmp);
-			sm_insert_dp(&m_dp, -i, (void *)(intptr_t)i);
-			sm_insert_sd(&m_sd, ktmp, i);
+			sm_insert_ds(&m_ds, (double)-i, vtmp);
+			sm_insert_dp(&m_dp, (double)-i, (void *)(intptr_t)i);
+			sm_insert_sd(&m_sd, ktmp, (double)i);
 		}
 		cnt1 = cnt2 = 0;
 		lower_i32 = -20;
@@ -4645,8 +4645,8 @@ static int test_sms()
 		sms_insert_i32(&s_i32, i + 10);
 		sms_insert_u32(&s_u32, (uint32_t)i + 20);
 		sms_insert_i(&s_i, i);
-		sms_insert_f(&s_f, i);
-		sms_insert_d(&s_d, i);
+		sms_insert_f(&s_f, (float)i);
+		sms_insert_d(&s_d, (double)i);
 		sms_insert_s(&s_s, k[i]);
 	}
 	res |= (!sms_empty(s_i32) && !sms_empty(s_u32) && !sms_empty(s_i)
@@ -4662,9 +4662,12 @@ static int test_sms()
 				&& sms_count_u32(s_u32, 22)
 				&& sms_count_i(s_i, 0) && sms_count_i(s_i, 1)
 				&& sms_count_i(s_i, 2) && sms_count_f(s_f, 0)
-				&& sms_count_f(s_f, 1) && sms_count_f(s_f, 2)
-				&& sms_count_d(s_d, 0) && sms_count_d(s_d, 1)
-				&& sms_count_d(s_d, 2) && sms_count_s(s_s, k[0])
+				&& sms_count_f(s_f, (float)1)
+				&& sms_count_f(s_f, (float)2)
+				&& sms_count_d(s_d, (double)0)
+				&& sms_count_d(s_d, (double)1)
+				&& sms_count_d(s_d, (double)2)
+				&& sms_count_s(s_s, k[0])
 				&& sms_count_s(s_s, k[1])
 				&& sms_count_s(s_s, k[2])
 			? 0
@@ -5539,16 +5542,16 @@ static int test_shm_itp()
 			shm_insert_ii32(&hm_ii32, -i, -i);
 			shm_insert_uu32(&hm_uu32, (uint32_t)i, (uint32_t)i);
 			shm_insert_ii(&hm_ii, -i, -i);
-			shm_insert_ff(&hm_ff, -i, -i);
-			shm_insert_dd(&hm_dd, -i, -i);
+			shm_insert_ff(&hm_ff, (float)-i, (float)-i);
+			shm_insert_dd(&hm_dd, (double)-i, (double)-i);
 			ss_printf(&ktmp, 200, "k%04i", i);
 			ss_printf(&vtmp, 200, "v%04i", i);
 			shm_insert_is(&hm_is, -i, vtmp);
 			shm_insert_ip(&hm_ip, -i, (void *)(intptr_t)i);
 			shm_insert_si(&hm_si, ktmp, i);
-			shm_insert_ds(&hm_ds, -i, vtmp);
-			shm_insert_dp(&hm_dp, -i, (void *)(intptr_t)i);
-			shm_insert_sd(&hm_sd, ktmp, i);
+			shm_insert_ds(&hm_ds, (double)-i, vtmp);
+			shm_insert_dp(&hm_dp, (double)-i, (void *)(intptr_t)i);
+			shm_insert_sd(&hm_sd, ktmp, (double)i);
 			shm_insert_ss(&hm_ss, ktmp, vtmp);
 			shm_insert_sp(&hm_sp, ktmp, (void *)(intptr_t)i);
 		}
@@ -5708,42 +5711,42 @@ static int test_tree_vs_hash()
 		sms_insert_i32(&s_i32, -i);
 		sms_insert_u32(&s_u32, (uint32_t)i);
 		sms_insert_i(&s_i, -i);
-		sms_insert_f(&s_f, -i);
-		sms_insert_d(&s_d, -i);
+		sms_insert_f(&s_f, (float)-i);
+		sms_insert_d(&s_d, (double)-i);
 		sms_insert_s(&s_s, ktmp);
 		/* hash sets */
 		shs_insert_i32(&hs_i32, -i);
 		shs_insert_u32(&hs_u32, (uint32_t)i);
 		shs_insert_i(&hs_i, -i);
-		shs_insert_f(&hs_f, -i);
-		shs_insert_d(&hs_d, -i);
+		shs_insert_f(&hs_f, (float)-i);
+		shs_insert_d(&hs_d, (double)-i);
 		shs_insert_s(&hs_s, ktmp);
 		/* maps */
 		sm_insert_ii32(&m_ii32, -i, -i);
 		sm_insert_uu32(&m_uu32, (uint32_t)i, (uint32_t)i);
 		sm_insert_ii(&m_ii, -i, -i);
-		sm_insert_ff(&m_ff, -i, -i);
-		sm_insert_dd(&m_dd, -i, -i);
+		sm_insert_ff(&m_ff, (float)-i, (float)-i);
+		sm_insert_dd(&m_dd, (double)-i, (double)-i);
 		sm_insert_is(&m_is, -i, vtmp);
 		sm_insert_ip(&m_ip, -i, (void *)(intptr_t)i);
 		sm_insert_si(&m_si, ktmp, i);
-		sm_insert_ds(&m_ds, -i, vtmp);
-		sm_insert_dp(&m_dp, -i, (void *)(intptr_t)i);
-		sm_insert_sd(&m_sd, ktmp, i);
+		sm_insert_ds(&m_ds, (double)-i, vtmp);
+		sm_insert_dp(&m_dp, (double)-i, (void *)(intptr_t)i);
+		sm_insert_sd(&m_sd, ktmp, (double)i);
 		sm_insert_ss(&m_ss, ktmp, vtmp);
 		sm_insert_sp(&m_sp, ktmp, (void *)(intptr_t)i);
 		/* hash maps */
 		shm_insert_ii32(&hm_ii32, -i, -i);
 		shm_insert_uu32(&hm_uu32, (uint32_t)i, (uint32_t)i);
 		shm_insert_ii(&hm_ii, -i, -i);
-		shm_insert_ff(&hm_ff, -i, -i);
-		shm_insert_dd(&hm_dd, -i, -i);
+		shm_insert_ff(&hm_ff, (float)-i, (float)-i);
+		shm_insert_dd(&hm_dd, (double)-i, (double)-i);
 		shm_insert_is(&hm_is, -i, vtmp);
 		shm_insert_ip(&hm_ip, -i, (void *)(intptr_t)i);
 		shm_insert_si(&hm_si, ktmp, i);
-		shm_insert_ds(&hm_ds, -i, vtmp);
-		shm_insert_dp(&hm_dp, -i, (void *)(intptr_t)i);
-		shm_insert_sd(&hm_sd, ktmp, i);
+		shm_insert_ds(&hm_ds, (double)-i, vtmp);
+		shm_insert_dp(&hm_dp, (double)-i, (void *)(intptr_t)i);
+		shm_insert_sd(&hm_sd, ktmp, (double)i);
 		shm_insert_ss(&hm_ss, ktmp, vtmp);
 		shm_insert_sp(&hm_sp, ktmp, (void *)(intptr_t)i);
 	}
@@ -5754,42 +5757,42 @@ static int test_tree_vs_hash()
 		sms_insert_i32(&sa_i32, -i);
 		sms_insert_u32(&sa_u32, (uint32_t)i);
 		sms_insert_i(&sa_i, -i);
-		sms_insert_f(&sa_f, -i);
-		sms_insert_d(&sa_d, -i);
+		sms_insert_f(&sa_f, (float)-i);
+		sms_insert_d(&sa_d, (double)-i);
 		sms_insert_s(&sa_s, ktmp);
 		/* hash sets */
 		shs_insert_i32(&hsa_i32, -i);
 		shs_insert_u32(&hsa_u32, (uint32_t)i);
 		shs_insert_i(&hsa_i, -i);
-		shs_insert_f(&hsa_f, -i);
-		shs_insert_d(&hsa_d, -i);
+		shs_insert_f(&hsa_f, (float)-i);
+		shs_insert_d(&hsa_d, (double)-i);
 		shs_insert_s(&hsa_s, ktmp);
 		/* maps */
 		sm_insert_ii32(&ma_ii32, -i, -i);
 		sm_insert_uu32(&ma_uu32, (uint32_t)i, (uint32_t)i);
 		sm_insert_ii(&ma_ii, -i, -i);
-		sm_insert_ff(&ma_ff, -i, -i);
-		sm_insert_dd(&ma_dd, -i, -i);
+		sm_insert_ff(&ma_ff, (float)-i, (float)-i);
+		sm_insert_dd(&ma_dd, (double)-i, (double)-i);
 		sm_insert_is(&ma_is, -i, vtmp);
 		sm_insert_ip(&ma_ip, -i, (void *)(intptr_t)i);
 		sm_insert_si(&ma_si, ktmp, i);
-		sm_insert_ds(&ma_ds, -i, vtmp);
-		sm_insert_dp(&ma_dp, -i, (void *)(intptr_t)i);
-		sm_insert_sd(&ma_sd, ktmp, i);
+		sm_insert_ds(&ma_ds, (double)-i, vtmp);
+		sm_insert_dp(&ma_dp, (double)-i, (void *)(intptr_t)i);
+		sm_insert_sd(&ma_sd, ktmp, (double)i);
 		sm_insert_ss(&ma_ss, ktmp, vtmp);
 		sm_insert_sp(&ma_sp, ktmp, (void *)(intptr_t)i);
 		/* hash maps */
 		shm_insert_ii32(&hma_ii32, -i, -i);
 		shm_insert_uu32(&hma_uu32, (uint32_t)i, (uint32_t)i);
 		shm_insert_ii(&hma_ii, -i, -i);
-		shm_insert_ff(&hma_ff, -i, -i);
-		shm_insert_dd(&hma_dd, -i, -i);
+		shm_insert_ff(&hma_ff, (float)-i, (float)-i);
+		shm_insert_dd(&hma_dd, (double)-i, (double)-i);
 		shm_insert_is(&hma_is, -i, vtmp);
 		shm_insert_ip(&hma_ip, -i, (void *)(intptr_t)i);
 		shm_insert_si(&hma_si, ktmp, i);
-		shm_insert_ds(&hma_ds, -i, vtmp);
-		shm_insert_dp(&hma_dp, -i, (void *)(intptr_t)i);
-		shm_insert_sd(&hma_sd, ktmp, i);
+		shm_insert_ds(&hma_ds, (double)-i, vtmp);
+		shm_insert_dp(&hma_dp, (double)-i, (void *)(intptr_t)i);
+		shm_insert_sd(&hma_sd, ktmp, (double)i);
 		shm_insert_ss(&hma_ss, ktmp, vtmp);
 		shm_insert_sp(&hma_sp, ktmp, (void *)(intptr_t)i);
 	}
@@ -5806,9 +5809,10 @@ static int test_tree_vs_hash()
 			res |= 0x04000000;
 		if (sms_count_i(s_i, -i) != shs_count_i(hs_i, -i))
 			res |= 0x02000000;
-		if (sms_count_f(s_f, -i) != shs_count_f(hs_f, -i))
+		if (sms_count_f(s_f, (float)-i) != shs_count_f(hs_f, (float)-i))
 			res |= 0x02000000;
-		if (sms_count_d(s_d, -i) != shs_count_d(hs_d, -i))
+		if (sms_count_d(s_d, (double)-i)
+		    != shs_count_d(hs_d, (double)-i))
 			res |= 0x02000000;
 		if (sms_count_s(s_s, ktmp) != shs_count_s(hs_s, ktmp))
 			res |= 0x01000000;
@@ -5819,9 +5823,11 @@ static int test_tree_vs_hash()
 			res |= 0x00000002;
 		if (sm_count_i(m_ii, -i) != shm_count_i(hm_ii, -i))
 			res |= 0x00000004;
-		if (sm_count_f(m_ff, -i) != shm_count_f(hm_ff, -i))
+		if (sm_count_f(m_ff, (float)-i)
+		    != shm_count_f(hm_ff, (float)-i))
 			res |= 0x00000004;
-		if (sm_count_d(m_dd, -i) != shm_count_d(hm_dd, -i))
+		if (sm_count_d(m_dd, (double)-i)
+		    != shm_count_d(hm_dd, (double)-i))
 			res |= 0x00000004;
 		if (sm_count_i(m_is, -i) != shm_count_i(hm_is, -i))
 			res |= 0x00000008;
@@ -5829,9 +5835,11 @@ static int test_tree_vs_hash()
 			res |= 0x00000010;
 		if (sm_count_s(m_si, ktmp) != shm_count_s(hm_si, ktmp))
 			res |= 0x00000020;
-		if (sm_count_d(m_ds, -i) != shm_count_d(hm_ds, -i))
+		if (sm_count_d(m_ds, (double)-i)
+		    != shm_count_d(hm_ds, (double)-i))
 			res |= 0x00000008;
-		if (sm_count_d(m_dp, -i) != shm_count_d(hm_dp, -i))
+		if (sm_count_d(m_dp, (double)-i)
+		    != shm_count_d(hm_dp, (double)-i))
 			res |= 0x00000010;
 		if (sm_count_s(m_sd, ktmp) != shm_count_s(hm_sd, ktmp))
 			res |= 0x00000020;
@@ -5846,9 +5854,9 @@ static int test_tree_vs_hash()
 			res |= 0x00000200;
 		if (sm_at_ii(m_ii, -i) != shm_at_ii(hm_ii, -i))
 			res |= 0x00000400;
-		if (sm_at_ff(m_ff, -i) != shm_at_ff(hm_ff, -i))
+		if (sm_at_ff(m_ff, (float)-i) != shm_at_ff(hm_ff, (float)-i))
 			res |= 0x00000400;
-		if (sm_at_dd(m_dd, -i) != shm_at_dd(hm_dd, -i))
+		if (sm_at_dd(m_dd, (double)-i) != shm_at_dd(hm_dd, (double)-i))
 			res |= 0x00000400;
 		if (ss_cmp(sm_at_is(m_is, -i), shm_at_is(hm_is, -i)))
 			res |= 0x00000800;
@@ -5858,7 +5866,7 @@ static int test_tree_vs_hash()
 			res |= 0x00002000;
 		if (ss_cmp(sm_at_ds(m_ds, -i), shm_at_ds(hm_ds, -i)))
 			res |= 0x00000800;
-		if (sm_at_dp(m_dp, -i) != shm_at_dp(hm_dp, -i))
+		if (sm_at_dp(m_dp, (double)-i) != shm_at_dp(hm_dp, (double)-i))
 			res |= 0x00001000;
 		if (sm_at_sd(m_sd, ktmp) != shm_at_sd(hm_sd, ktmp))
 			res |= 0x00002000;
@@ -5877,9 +5885,11 @@ static int test_tree_vs_hash()
 			res |= 0x84000000;
 		if (sms_count_i(sa_i, -i) != shs_count_i(hsa_i, -i))
 			res |= 0x82000000;
-		if (sms_count_f(sa_f, -i) != shs_count_f(hsa_f, -i))
+		if (sms_count_f(sa_f, (float)-i)
+		    != shs_count_f(hsa_f, (float)-i))
 			res |= 0x82000000;
-		if (sms_count_d(sa_d, -i) != shs_count_d(hsa_d, -i))
+		if (sms_count_d(sa_d, (double)-i)
+		    != shs_count_d(hsa_d, (double)-i))
 			res |= 0x82000000;
 		if (sms_count_s(sa_s, ktmp) != shs_count_s(hsa_s, ktmp))
 			res |= 0x81000000;
@@ -5890,9 +5900,11 @@ static int test_tree_vs_hash()
 			res |= 0x40000002;
 		if (sm_count_i(ma_ii, -i) != shm_count_i(hma_ii, -i))
 			res |= 0x40000004;
-		if (sm_count_f(ma_ff, -i) != shm_count_f(hma_ff, -i))
+		if (sm_count_f(ma_ff, (float)-i)
+		    != shm_count_f(hma_ff, (float)-i))
 			res |= 0x40000004;
-		if (sm_count_d(ma_dd, -i) != shm_count_d(hma_dd, -i))
+		if (sm_count_d(ma_dd, (double)-i)
+		    != shm_count_d(hma_dd, (double)-i))
 			res |= 0x40000004;
 		if (sm_count_i(ma_is, -i) != shm_count_i(hma_is, -i))
 			res |= 0x40000008;
@@ -5900,9 +5912,11 @@ static int test_tree_vs_hash()
 			res |= 0x40000010;
 		if (sm_count_s(ma_si, ktmp) != shm_count_s(hma_si, ktmp))
 			res |= 0x40000020;
-		if (sm_count_d(ma_ds, -i) != shm_count_d(hma_ds, -i))
+		if (sm_count_d(ma_ds, (double)-i)
+		    != shm_count_d(hma_ds, (double)-i))
 			res |= 0x40000008;
-		if (sm_count_d(ma_dp, -i) != shm_count_d(hma_dp, -i))
+		if (sm_count_d(ma_dp, (double)-i)
+		    != shm_count_d(hma_dp, (double)-i))
 			res |= 0x40000010;
 		if (sm_count_s(ma_sd, ktmp) != shm_count_s(hma_sd, ktmp))
 			res |= 0x40000020;
@@ -5917,9 +5931,10 @@ static int test_tree_vs_hash()
 			res |= 0x20000200;
 		if (sm_at_ii(ma_ii, -i) != shm_at_ii(hma_ii, -i))
 			res |= 0x20000400;
-		if (sm_at_ff(ma_ff, -i) != shm_at_ff(hma_ff, -i))
+		if (sm_at_ff(ma_ff, (float)-i) != shm_at_ff(hma_ff, (float)-i))
 			res |= 0x20000400;
-		if (sm_at_dd(ma_dd, -i) != shm_at_dd(hma_dd, -i))
+		if (sm_at_dd(ma_dd, (double)-i)
+		    != shm_at_dd(hma_dd, (double)-i))
 			res |= 0x20000400;
 		if (ss_cmp(sm_at_is(ma_is, -i), shm_at_is(hma_is, -i)))
 			res |= 0x20000800;
@@ -5927,9 +5942,11 @@ static int test_tree_vs_hash()
 			res |= 0x20001000;
 		if (sm_at_si(ma_si, ktmp) != shm_at_si(hma_si, ktmp))
 			res |= 0x20002000;
-		if (ss_cmp(sm_at_ds(ma_ds, -i), shm_at_ds(hma_ds, -i)))
+		if (ss_cmp(sm_at_ds(ma_ds, (double)-i),
+			   shm_at_ds(hma_ds, (double)-i)))
 			res |= 0x20000800;
-		if (sm_at_dp(ma_dp, -i) != shm_at_dp(hma_dp, -i))
+		if (sm_at_dp(ma_dp, (double)-i)
+		    != shm_at_dp(hma_dp, (double)-i))
 			res |= 0x20001000;
 		if (sm_at_sd(ma_sd, ktmp) != shm_at_sd(hma_sd, ktmp))
 			res |= 0x20002000;

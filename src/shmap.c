@@ -368,7 +368,6 @@ static void aux_rehash(srt_hmap *hm)
 {
 	shm_eloc_t_ i;
 	shm_hash_f hashf;
-	const srt_string *s;
 	uint8_t *data = shm_get_buffer(hm);
 	struct SHMBucket *b = shm_get_buckets(hm);
 	size_t nbuckets, elem_size = hm->d.elem_size, nelems = shm_size(hm);
