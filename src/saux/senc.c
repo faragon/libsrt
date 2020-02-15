@@ -51,20 +51,24 @@
 	SZLOG("REF%i:%06i.%06i %s\n", (int)(w), (int)(d), (int)(l), s)
 
 /* LZ77 custom opcodes */
-#define LZOP_BITS 2
-#define LZOP_MASK ((1 << LZOP_BITS) - 1)
-#define LZOP_RV_LS_MASK 0x01
-#define LZOP_RV_LS 0x00 /* variable-size ref, short-size length */
-#define LZOP_RV_LV 0x01 /* var-size ref, var-size length */
-#define LZOP_LV 0x03    /* var-size literals */
-#define LZOP_RV_LS_LBITS 2
-#define LZOP_RV_LS_LMASK (((uint64_t)1 << LZOP_RV_LS_LBITS) - 1)
-#define LZOP_RV_LS_LSHIFT LZOP_BITS
-#define LZOP_RV_LS_LRANGE (LZOP_RV_LS_LBITS ? LZOP_RV_LS_LMASK + 1 : 0)
-#define LZOP_RV_LS_DBITS (64 - LZOP_RV_LS_LBITS - LZOP_BITS)
-#define LZOP_RV_LS_DMASK (((uint64_t)1 << LZOP_RV_LS_DBITS) - 1)
-#define LZOP_RV_LS_DSHIFT (LZOP_RV_LS_LBITS + LZOP_BITS)
-#define LZOP_RV_LS_DRANGE (LZOP_RV_LS_DBITS ? LZOP_RV_LS_DMASK + 1 : 0)
+
+#define LZOP_REFVX 0x00 /* variable-size ref, 2-bit for length */
+#define LZOP_REFVV 0x01 /* var-size ref, var-size length */
+#define LZOP_LITV 0x03  /* var-size literals */
+#define LZOP_REFVX_NBITS 1
+#define LZOP_REFVV_NBITS 2
+#define LZOP_LITV_NBITS 2
+#define LZOP_REFVX_MASK S_NBITMASK(LZOP_REFVX_NBITS)
+#define LZOP_REFVV_MASK S_NBITMASK(LZOP_REFVV_NBITS)
+#define LZOP_LITV_MASK S_NBITMASK(LZOP_LITV_NBITS)
+#define LZOP_REFVX_LBITS 2
+#define LZOP_REFVX_LMASK S_NBITMASK64(LZOP_REFVX_LBITS)
+#define LZOP_REFVX_LSHIFT LZOP_REFVX_NBITS
+#define LZOP_REFVX_LRANGE (LZOP_REFVX_LMASK + 1)
+#define LZOP_REFVX_DBITS (64 - LZOP_REFVX_LBITS - LZOP_REFVX_NBITS)
+#define LZOP_REFVX_DMASK S_NBITMASK64(LZOP_REFVX_DBITS)
+#define LZOP_REFVX_DSHIFT (LZOP_REFVX_LBITS + LZOP_REFVX_NBITS)
+#define LZOP_REFVX_DRANGE (LZOP_REFVX_DMASK + 1)
 
 /*
  * Constants
@@ -631,7 +635,7 @@ S_INLINE void senc_lz_store_lit(uint8_t **o, const uint8_t *in, size_t size)
 #if SDEBUG_LZ
 	uint8_t *o0 = *o;
 #endif
-	uint64_t op64 = ((uint64_t)(size - 1) << LZOP_BITS) | LZOP_LV;
+	uint64_t op64 = ((uint64_t)(size - 1) << LZOP_LITV_NBITS) | LZOP_LITV;
 	s_st_pk_u64(o, op64);
 
 	DBG_LZLIT(*o - o0, size);
@@ -647,16 +651,16 @@ S_INLINE void senc_lz_store_ref(uint8_t **o, size_t dist, size_t len)
 #endif
 	uint64_t v64;
 	size_t dm1 = dist - 1, lm4 = len - 4;
-	if ((uint64_t)dm1 < LZOP_RV_LS_DRANGE && lm4 < LZOP_RV_LS_LRANGE) {
-		v64 = ((uint64_t)dm1 << LZOP_RV_LS_DSHIFT)
-		      | ((uint64_t)lm4 << LZOP_RV_LS_LSHIFT) | LZOP_RV_LS;
+	if ((uint64_t)dm1 < LZOP_REFVX_DRANGE && lm4 < LZOP_REFVX_LRANGE) {
+		v64 = ((uint64_t)dm1 << LZOP_REFVX_DSHIFT)
+		      | ((uint64_t)lm4 << LZOP_REFVX_LSHIFT) | LZOP_REFVX;
 		s_st_pk_u64(o, v64);
-		DBG_LZREF(*o - o0, dist, len, "[RV_LS]");
+		DBG_LZREF(*o - o0, dist, len, "[REFVX]");
 	} else {
-		v64 = ((uint64_t)lm4 << LZOP_BITS) | LZOP_RV_LV;
+		v64 = ((uint64_t)lm4 << LZOP_REFVV_NBITS) | LZOP_REFVV;
 		s_st_pk_u64(o, v64);
 		s_st_pk_u64(o, dm1);
-		DBG_LZREF(*o - o0, dist, len, "[RV_LV]");
+		DBG_LZREF(*o - o0, dist, len, "[REFVV]");
 	}
 }
 
@@ -758,6 +762,13 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 		xl = ss - i - 4;
 		len = senc_lz_match(src, tgt + last, xl) + 4;
 		dist = i - last;
+		/*
+		 * Avoid storing distant short references
+		 */
+		if (dist > 500000 && len == 4) {
+			i++;
+			continue;
+		}
 		/*
 		 * Flush literals
 		 */
@@ -870,10 +881,10 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 #if SDEBUG_LZ
 	const uint8_t *s_bk;
 #endif
-	uint8_t *o;
 	uint64_t op64;
+	uint8_t *o, op8;
 	const uint8_t *s, *s_top, *o_top;
-	size_t dist, len, op, expected_ss;
+	size_t dist, len, expected_ss;
 	RETURN_IF(!s0 || ss < 3, 0); /* too small input (min hdr + opcode) */
 	s = s0;
 	expected_ss = (size_t)s_ld_pk_u64(&s, ss);
@@ -888,32 +899,32 @@ size_t sdec_lz(const uint8_t *s0, size_t ss, uint8_t *o0)
 		s_bk = s;
 #endif
 		op64 = s_ld_pk_u64(&s, (size_t)(s_top - s));
-		op = op64 & LZOP_MASK;
-		if ((op & LZOP_RV_LS_MASK) == LZOP_RV_LS) {
+		op8 = op64 & 0xff;
+		if ((op8 & LZOP_REFVX_MASK) == LZOP_REFVX) {
 			len = (size_t)(
-				((op64 >> LZOP_RV_LS_LSHIFT) & LZOP_RV_LS_LMASK)
+				((op64 >> LZOP_REFVX_LSHIFT) & LZOP_REFVX_LMASK)
 				+ 4);
 			dist = (size_t)(
-				((op64 >> LZOP_RV_LS_DSHIFT) & LZOP_RV_LS_DMASK)
+				((op64 >> LZOP_REFVX_DSHIFT) & LZOP_REFVX_DMASK)
 				+ 1);
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_ref(&o, dist, len);
-			DBG_LZREF(s - s_bk, dist, len, "[RV_LS]");
+			DBG_LZREF(s - s_bk, dist, len, "[REFVX]");
 			continue;
 		}
-		if ((op & LZOP_MASK) == LZOP_LV) {
-			len = (size_t)((op64 >> LZOP_BITS) + 1);
+		if ((op8 & LZOP_LITV_MASK) == LZOP_LITV) {
+			len = (size_t)((op64 >> LZOP_LITV_NBITS) + 1);
 			DBG_LZLIT(s - s_bk, len);
 			SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 			sdec_lz_load_lit(&s, &o, len);
 			continue;
 		}
-		/* LZOP_RV_LV */
-		len = (size_t)((op64 >> LZOP_BITS) + 4);
+		/* LZOP_REFVV */
+		len = (size_t)((op64 >> LZOP_REFVV_NBITS) + 4);
 		dist = (size_t)(s_ld_pk_u64(&s, (size_t)(s_top - s)) + 1);
 		SDEC_LZ_ILOOP_OVERFLOW_CHECK(s, s_top, o, o_top, len);
 		sdec_lz_load_ref(&o, dist, len);
-		DBG_LZREF(s - s_bk, dist, len, "[RV_LV]");
+		DBG_LZREF(s - s_bk, dist, len, "[REFVV]");
 	}
 	return (size_t)(o - o0);
 }
