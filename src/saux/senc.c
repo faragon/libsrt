@@ -705,9 +705,9 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	o = o0;
 	s_st_pk_u64(&o, ss);
 	/*
-	 * Case of small input: store uncompresed if smaller than 8 bytes
+	 * Case of small input: store uncompresed if smaller than 5 bytes
 	 */
-	if (ss < 8) {
+	if (ss < 5) {
 		senc_lz_store_lit(&o, s, ss);
 		return (size_t)(o - o0);
 	}
@@ -739,7 +739,11 @@ static size_t senc_lz_aux(const uint8_t *s, size_t ss, uint8_t *o0,
 	 */
 	plit = 0;
 	sm4 = ss - 4;
-	for (i = 4; i <= sm4;) {
+	i = 0;
+	w32 = S_LD_U32(s + i);
+	h = senc_lz_hash(w32) & hash_mask;
+	refs[h] = i;
+	for (i = 1; i <= sm4;) {
 		/*
 		 * Load 32-bit chunk and locate it into the LUT
 		 */
