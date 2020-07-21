@@ -318,7 +318,7 @@ static size_t ss_utf8_to_wc(const char *s, size_t off, size_t max_off,
 			    int32_t *unicode_out,
 			    srt_string *s_unicode_error_out)
 {
-	int encoding_errors = 0;
+	size_t encoding_errors = 0;
 	size_t csize =
 		sc_utf8_to_wc(s, off, max_off, unicode_out, &encoding_errors);
 	if (encoding_errors && s_unicode_error_out) {

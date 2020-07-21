@@ -26,6 +26,8 @@ const char *sv_type_to_label(const enum eSV_Type t)
 		CXSV(SV_F);
 		CXSV(SV_D);
 		CXSV(SV_GEN);
+	default:
+		break;
 	}
 	return "?";
 }

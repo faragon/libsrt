@@ -1933,14 +1933,14 @@ static int test_ss_csum32()
 	return res;
 }
 
-static int test_sc_utf8_to_wc(const char *utf8_char, int unicode32_expected)
+static int test_sc_utf8_to_wc(const char *utf8_char, int32_t unicode32_expected)
 {
-	int uc_out = 0;
+	int32_t uc_out = 0;
 	size_t char_size = sc_utf8_to_wc(utf8_char, 0, 6, &uc_out, NULL);
 	return !char_size ? 1 : (uc_out == unicode32_expected ? 0 : 2);
 }
 
-static int test_sc_wc_to_utf8(int unicode32, const char *utf8_char_expected)
+static int test_sc_wc_to_utf8(int32_t unicode32, const char *utf8_char_expected)
 {
 	char utf8[6];
 	size_t char_size = sc_wc_to_utf8(unicode32, utf8, 0, 6);

@@ -202,7 +202,7 @@ size_t sc_wc_to_utf8(int32_t c, char *s, size_t off, size_t max_off)
 /* BEHAVIOR: always return a character. For broken UTF-8, return the first
    byte as character. */
 size_t sc_utf8_to_wc(const char *s, size_t off, size_t max_off,
-		     int32_t *unicode_out, int *encoding_errors)
+		     int32_t *unicode_out, size_t *encoding_errors)
 {
 	int32_t c;
 	if (s && off < max_off && unicode_out) {

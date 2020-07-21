@@ -77,7 +77,7 @@ size_t sc_utf8_count_chars(const char *s, size_t s_size, size_t *enc_errors);
 size_t sc_wc_to_utf8_size(int32_t c);
 size_t sc_wc_to_utf8(int32_t c, char *s, size_t off, size_t max_off);
 size_t sc_utf8_to_wc(const char *s, size_t off, size_t max_off,
-		     int *unicode_out, int32_t *encoding_errors);
+		     int32_t *unicode_out, size_t *encoding_errors);
 size_t sc_unicode_count_to_utf8_size(const char *, size_t off, size_t max_off,
 				     size_t unicode_count,
 				     size_t *actual_unicode_count);
