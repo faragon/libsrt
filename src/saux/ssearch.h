@@ -22,7 +22,7 @@ extern "C" {
  * O(n) string search using a rolling hash. Two hashes are used, one more
  * complex ((f(t-1) + 1) * 2 + f(t)), to ensure O(n) time, and othersimple
  * (sum of bytes), so the algorithm can start in the "fast" mode, and switch
- * to the O(n) compliant when collisons for a given period are above an
+ * to the O(n) compliant when collisions for a given period are above an
  * specific threshold.
  *
  * Being n the elements of the string and m the elements of the pattern to
