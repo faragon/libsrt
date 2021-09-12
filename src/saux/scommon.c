@@ -3,7 +3,7 @@
  *
  * Common stuff
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2021 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -208,94 +208,3 @@ uint64_t snextpow2(uint64_t i)
 #endif
 }
 
-/*
- * Custom "memset" functions
- */
-
-void s_memset64(void *o0, const void *s0, size_t n8)
-{
-	uint8_t *o;
-	const uint8_t *s;
-	size_t i, head, tail;
-	uint64_t data, d[2], *o64;
-	if (!o0 || !s0 || !n8)
-		return;
-	head = (intptr_t)o0 & 7;
-	tail = 8 - head;
-	o = (uint8_t *)o0;
-	s = (const uint8_t *)s0;
-	if (head) {
-		n8--;
-		memcpy(o, s, tail);
-		o += tail;
-		memcpy(&d, s0, sizeof(data));
-		d[1] = d[0];
-		memcpy(&data, (uint8_t *)&d + tail, sizeof(data));
-	} else {
-		memcpy(&data, s, sizeof(data));
-	}
-	o64 = (uint64_t *)o;
-	for (i = 0; i < n8; i++, o64++)
-		memcpy(o64, &data, sizeof(data));
-	if (head)
-		memcpy(o64, s + tail, head);
-}
-
-void s_memset32(void *o, const void *s, size_t n4)
-{
-	size_t n8;
-	uint64_t s64;
-	if (!o || !s || !n4)
-		return;
-	n8 = n4 / 2;
-	memcpy(&s64, s, 4);
-	memcpy((uint8_t *)&s64 + 4, s, 4);
-	s_memset64(o, &s64, n8);
-	if (n4 % 2)
-		memcpy((uint8_t *)o + n8 * 8, s, 4);
-}
-
-void s_memset24(void *o0, const void *s0, size_t n3)
-{
-	size_t n = n3 * 3;
-	uint8_t *o = (uint8_t *)o0;
-	const uint8_t *s = (const uint8_t *)s0;
-	size_t k = 0, i, j, copy_size, c12;
-	uint32_t *o32;
-	union s_u32 d[3];
-	if (n >= 15) {
-		size_t ua_head = (intptr_t)o & 3;
-		if (ua_head) {
-			memcpy(o + k, s, 3);
-			k = 4 - ua_head;
-		}
-		o32 = (uint32_t *)(o + k);
-		copy_size = n - k;
-		c12 = (copy_size / 12);
-		for (i = 0; i < 3; i++)
-			for (j = 0; j < 4; j++)
-				d[i].b[j] = s[(j + k + i * 4) % 3];
-		for (i = 0; i < c12; i++) {
-			*o32++ = d[0].a32;
-			*o32++ = d[1].a32;
-			*o32++ = d[2].a32;
-		}
-		k = c12 * 12;
-	}
-	for (; k < n; k += 3)
-		memcpy(o + k, s, 3);
-}
-
-void s_memset16(void *o, const void *s, size_t n2)
-{
-	size_t n4;
-	uint32_t s32;
-	if (!o || !s || !n2)
-		return;
-	memcpy(&s32, s, 2);
-	memcpy((uint8_t *)&s32 + 2, s, 2);
-	n4 = n2 / 2;
-	s_memset32(o, &s32, n4);
-	if (n2 % 2)
-		memcpy((uint8_t *)o + n4 * 4, s, 2);
-}

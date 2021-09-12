@@ -9,7 +9,7 @@ extern "C" {
  *
  * Common stuff
  *
- * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2021 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -624,15 +624,6 @@ S_INLINE void s_copy_elems(void *t, size_t t_off, const void *s, size_t s_off,
 		memcpy((char *)t + t_off * e_size,
 		       (const char *)s + s_off * e_size, n * e_size);
 }
-
-/*
- * Custom "memset" functions
- */
-
-void s_memset64(void *o, const void *s, size_t n);
-void s_memset32(void *o, const void *s, size_t n);
-void s_memset24(void *o, const void *s, size_t n);
-void s_memset16(void *o, const void *s, size_t n);
 
 /*
  * Least/most significant bit

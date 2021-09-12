@@ -3,7 +3,7 @@
  *
  * libsrt API tests
  *
- * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2021 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -6195,35 +6195,6 @@ static int test_slog2()
 	return res;
 }
 
-static int test_smemset()
-{
-	int res = 0, i;
-	uint8_t p64[64];
-	uint8_t v16[2] = {0x01, 0x23};
-	uint8_t v24[3] = {0x01, 0x23, 0x45};
-	uint32_t v32 = 0x01234567;
-	uint64_t v64 = 0x0123456789abcdefLL;
-	for (i = 0; i < 32; i++) {
-		memset(p64, 0, sizeof(p64));
-		s_memset64(&p64[i], &v64, 2);
-		if (S_LD_U64(&p64[i]) != v64)
-			res |= 1 << i;
-		memset(p64, 0, sizeof(p64));
-		s_memset32(&p64[i], &v32, 2);
-		if (S_LD_U32(&p64[i]) != v32)
-			res |= 1 << i;
-		memset(p64, 0, sizeof(p64));
-		s_memset24(&p64[i], v24, 2);
-		if (!memcpy(&p64[i], v24, 3) && !memcpy(&p64[i] + 3, v24, 3))
-			res |= 1 << i;
-		memset(p64, 0, sizeof(p64));
-		s_memset16(&p64[i], v16, 2);
-		if (!memcpy(&p64[i], v16, 2) && !memcpy(&p64[i] + 2, v16, 2))
-			res |= 1 << i;
-	}
-	return res;
-}
-
 /*
  * Test execution
  */
@@ -6762,7 +6733,6 @@ int main()
 	STEST_ASSERT(test_lsb_msb());
 	STEST_ASSERT(test_pk_u64());
 	STEST_ASSERT(test_slog2());
-	STEST_ASSERT(test_smemset());
 	/*
 	 * Report
 	 */

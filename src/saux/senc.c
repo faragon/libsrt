@@ -3,7 +3,7 @@
  *
  * Buffer encoding/decoding
  *
- * Copyright (c) 2015-2020 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2021 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -813,49 +813,25 @@ S_INLINE void s_reccpy(uint8_t *o, size_t dist, size_t n)
 {
 	size_t i, n2, chunk;
 	const uint8_t *s = o - dist;
-	if (dist > n) {
-		/* non-overlapped */
-		if (n <= 16) {
-			if (n == 1)
-				*o = o[0 - dist];
-			else
-				memcpy(o, s, 16);
-		} else {
-			memcpy(o, s, n);
-		}
+	/* non-overlapped copy */
+	if (dist >= n) {
+		memcpy(o, s, n <= 16 ? 16 : n);
 		return;
 	}
-	/* overlapped copy: run length */
-	switch (dist) {
-	case 1:
-		memset(o, *s, n);
-		return;
-	case 2:
-		s_reccpy1(o, dist, 4);
-		s_memset32(o + 4, s, (n / 4));
-		return;
-	case 3:
-	case 6:
-		if (dist == 6 && memcmp(s, s + 3, 3))
-			break;
-		s_memset24(o, s, (n / 3) + 1);
-		return;
-	case 4:
-		s_memset32(o, s, (n / 4) + 1);
-		return;
-	case 8:
-		s_memset64(o, s, (n / 8) + 1);
-		return;
+	/* overlapped/recursive copy: repeat 'dist' segment filling 'n' bytes */
+	chunk = dist;
+	memcpy(o, s, chunk);
+	i = chunk;
+	/* fast block duplication so it takes at least 8KB */
+	while (chunk < 8192 && i + chunk < n) {
+		memcpy(o + i, s, chunk);
+		i += chunk;
+		chunk += chunk;
 	}
-	/* overlapped copy: generic */
-	memcpy(o, s, dist);
-	chunk = dist * 2;
-	i = dist;
-	if (i + chunk < n) {
-		n2 = n - dist;
-		for (; i < n2; i += chunk)
-			memcpy(o + i, s, chunk);
-	}
+	/* copy using blocks of 'chunk' size */
+	n2 = n - chunk;
+	for (; i < n2; i += chunk)
+		memcpy(o + i, s, chunk);
 	if (i < n)
 		memcpy(o + i, s, n - i);
 }
