@@ -3,7 +3,7 @@
  *
  * Buffer hashing
  *
- * Copyright (c) 2015-2019 F. Aragon. All rights reserved.
+ * Copyright (c) 2015-2021 F. Aragon. All rights reserved.
  * Released under the BSD 3-Clause License (see the doc/LICENSE)
  */
 
@@ -24,16 +24,42 @@
 
 #ifndef S_BUILD_CRC32_TABLES
 
-#if defined(S_MINIMAL) || (defined(S_CRC32_SLC) && S_CRC32_SLC == 0)
+#if defined __ARM_FEATURE_CRC32 && __ARM_FEATURE_CRC32
+
+#define ARMv8_CRC32X(crc, u64) \
+	__asm__("crc32x %w[c], %w[c], %x[v]":[c]"+r"(crc):[v]"r"(u64))
+#define ARMv8_CRC32W(crc, u32) \
+	__asm__("crc32w %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(u32))
+#define ARMv8_CRC32B(crc, u8) \
+	__asm__("crc32b %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(u8))
+
+uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
+{
+	size_t i, bs4, bs8;
+	const uint8_t *p = (const uint8_t *)buf;
+	RETURN_IF(!buf, S_CRC32_INIT);
+	crc = ~crc;
+	bs8 = (buf_size / 8) * 8;
+	for (i = 0; i < bs8; i += 8)
+		ARMv8_CRC32X(crc, *((uint64_t *)(p + i)));
+	bs4 = (buf_size / 4) * 4;
+	for (; i < bs4; i += 4)
+		ARMv8_CRC32W(crc, *((uint32_t *)(p + i)));
+	for (; i < buf_size; i++)
+		ARMv8_CRC32B(crc, p[i]);
+	return ~crc;
+}
+
+#elif defined(S_MINIMAL) || (defined(S_CRC32_SLC) && S_CRC32_SLC == 0)
 
 /*
  * Compact implementation, without hash tables (one bit per loop)
  */
 uint32_t sh_crc32(uint32_t crc, const void *buf, size_t buf_size)
 {
-	RETURN_IF(!buf, S_CRC32_INIT);
-	const uint8_t *p = (const uint8_t *)buf;
 	size_t i, j;
+	const uint8_t *p = (const uint8_t *)buf;
+	RETURN_IF(!buf, S_CRC32_INIT);
 	crc = ~crc;
 	for (i = 0; i < buf_size; i++) {
 		crc ^= p[i];
