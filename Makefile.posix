@@ -104,10 +104,10 @@ ifndef OCTEON
 	endif
 endif
 
-CFLAGS =
-CXXFLAGS =
-LDLIBS =
-LDFLAGS =
+CFLAGS ?=
+CXXFLAGS ?=
+LDLIBS ?=
+LDFLAGS ?=
 COMMON_FLAGS = -pipe
 CPP_MODE = 0
 GNUC = 0
