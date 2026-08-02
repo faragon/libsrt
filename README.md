@@ -55,6 +55,9 @@ How to build
   * make -f Makefile.posix ADD\_FLAGS=-DSD\_DISABLE\_HEURISTIC\_GROWTH		# Build with growth heuristics disabled (not recommended)
   * make -f Makefile.posix ADD\_FLAGS=-DS\_DISABLE\_SM\_STRING\_OPTIMIZATION	# Build without map string optimizations (not recommended, except for benchmarking)
   * make -f Makefile.posix HAS\_PNG=1 HAS\_JPG=1		# Build enabling PNG and JPG usage so the 'imgc' example can convert import/export those formats (libpng and jpeg 6b -e.g. libjpegturbo- compatible dev libs and headers must be installed in the system)
+  * ./bootstrap.sh && ./configure && make -j $(grep processor /proc/cpuinfo | wc -l) && make check
+  * cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cd build && make && ./stest
+  * cmake -S . -B build -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release && cd build && make && ./stest
 
 * Observations
   * Every make call, in addition to building the targets, it does a full test for that build (unit tests covering all the API function calls -'stest' executable-)

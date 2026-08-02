@@ -18,6 +18,7 @@
 # Executables
 *.exe
 bench
+build
 counter
 enc
 histogram
