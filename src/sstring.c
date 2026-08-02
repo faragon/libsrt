@@ -632,7 +632,7 @@ static srt_string *aux_replace(srt_string **s, srt_bool cat,
 	ssize_t size_delta;
 	const char *p0, *p2;
 	size_t at, l1, l2, i, l, out_size, nfound, i_next;
-	typedef void (*memcpy_t)(void *, const void *, size_t);
+	typedef void *(*memcpy_t)(void *, const void *, size_t);
 	memcpy_t f_cpy;
 	ASSERT_RETURN_IF(!s, ss_void);
 	if (!s1)
@@ -923,7 +923,7 @@ static ssize_t aux_read(srt_string **s, srt_bool cat, FILE *h, size_t max_bytes)
 	char *sc;
 	ssize_t l = 0;
 	size_t ss, off, max_off, def_buf, buf_size, cap, l0;
-	if (h && max_bytes > 0) {
+	if (s && h && max_bytes > 0) {
 		ss = ss_size(*s);
 		off = cat ? ss : 0;
 		max_off = s_size_t_overflow(off, max_bytes) ? S_NPOS
@@ -934,7 +934,7 @@ static ssize_t aux_read(srt_string **s, srt_bool cat, FILE *h, size_t max_bytes)
 						   && off + def_buf < max_off
 					   ? def_buf
 					   : max_off - off;
-			if (cat && (*s)->d.f.ext_buffer) {
+			if (cat && *s && (*s)->d.f.ext_buffer) {
 				cap = ss_capacity_left(*s);
 				buf_size = S_MIN(buf_size, cap);
 			}
@@ -958,11 +958,12 @@ static ssize_t aux_read(srt_string **s, srt_bool cat, FILE *h, size_t max_bytes)
 			}
 		}
 	}
-	if (l <= 0) {
+	if (l <= 0 && s) {
 		if (cat)
 			ss_check(s);
 		else
-			ss_clear(*s);
+			if (*s)
+				ss_clear(*s);
 	}
 	return l;
 }

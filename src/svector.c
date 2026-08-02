@@ -137,7 +137,7 @@ void sv_clear(srt_vector *v)
 static srt_vector *aux_dup(const srt_vector *src, size_t n_elems)
 {
 	size_t ss = sv_size(src), size = n_elems < ss ? n_elems : ss;
-	srt_vector *v =
+	srt_vector *v = src == NULL ? NULL :
 		src->d.sub_type == SV_GEN
 			? sv_alloc(src->d.elem_size, ss, src->vx.cmpf)
 			: sv_alloc_t((enum eSV_Type)src->d.sub_type, ss);
@@ -285,6 +285,7 @@ static srt_vector *aux_resize(srt_vector **v, srt_bool cat,
 
 static char *ptr_to_elem(srt_vector *v, size_t i)
 {
+	ASSERT_RETURN_IF(!v, NULL);
 	return (char *)sv_get_buffer(v) + i * v->d.elem_size;
 }
 
@@ -292,6 +293,7 @@ static char *ptr_to_elem(srt_vector *v, size_t i)
  */
 static const char *ptr_to_elem_r(const srt_vector *v, size_t i)
 {
+	ASSERT_RETURN_IF(!v, NULL);
 	return (const char *)sv_get_buffer_r(v) + i * v->d.elem_size;
 }
 
@@ -568,6 +570,7 @@ static srt_bool sv_set_aux(srt_vector **v, size_t index, const void *value,
 	if (index >= sv_size(*v)) {
 		size_t new_size = index + 1;
 		RETURN_IF(sv_reserve(v, new_size) < new_size, S_FALSE);
+		RETURN_IF(!*v, S_FALSE);
 		sv_set_size(*v, new_size);
 	}
 	memcpy(ptr_to_elem(*v, index), value, (*v)->d.elem_size);
@@ -605,7 +608,7 @@ static srt_bool sv_push_raw0(srt_vector **v, const void *src, size_t n,
 {
 	char *p;
 	size_t sz;
-	RETURN_IF(!src || !n || !v || !sv_grow(v, n), S_FALSE);
+	RETURN_IF(!src || !n || !v || !sv_grow(v, n) || !*v, S_FALSE);
 	sz = sv_size(*v);
 	p = ptr_to_elem(*v, sz);
 	sv_set_size(*v, sz + n);

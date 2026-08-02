@@ -470,6 +470,7 @@ void sm_clear(srt_map *m)
 		}
 	}
 	st_set_size((srt_tree *)m, 0);
+	((srt_tree *)m)->root = ST_NIL;
 }
 
 /*

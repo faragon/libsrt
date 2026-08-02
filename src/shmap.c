@@ -632,7 +632,7 @@ static srt_bool shm_cpy_reconfig(srt_hmap **hm, const srt_hmap *src)
 		min_alloc_size;
 	np2 = (size_t)hs64;
 	hbits = slog2(np2);
-	RETURN_IF(!hm || (uint64_t)np2 != hs64, S_FALSE);
+	RETURN_IF(!hm || !*hm || (uint64_t)np2 != hs64, S_FALSE);
 	tgt0_cas = shm_current_alloc_size(*hm);
 	src0_cas = shm_current_alloc_size(src);
 	hdr_size = sh_hdr_size(t, np2);

@@ -66,6 +66,7 @@ S_INLINE void set_lr(srt_tnode *n, enum STNDir d, srt_tndx v)
 
 S_INLINE srt_tndx get_lr(const srt_tnode *n, enum STNDir d)
 {
+	ASSERT_RETURN_IF(!n, ST_NIL);
 	return d == ST_Left ? n->x.l : n->r;
 }
 
@@ -236,7 +237,7 @@ srt_tree *st_alloc_raw(srt_cmp cmp_f, srt_bool ext_buf, void *buffer,
 	sd_reset((srt_data *)t, sizeof(srt_tree), elem_size, max_size, ext_buf,
 		 S_FALSE);
 	t->cmp_f = cmp_f;
-	t->root = 0;
+	t->root = ST_NIL;
 	return t;
 }
 
@@ -439,6 +440,7 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 				if (callback)
 					callback((void *)w[c].n);
 				st_set_size(t, 0);
+				t->root = ST_NIL;
 				return S_TRUE;
 			}
 			found = w[c];
@@ -556,6 +558,8 @@ srt_bool st_delete(srt_tree *t, const srt_tnode *n, srt_tree_callback callback)
 			}
 		}
 		st_set_size(t, ts - 1);
+		if (st_size(t) == 0)
+			t->root = ST_NIL;
 	}
 	/* Set root node as black */
 	set_red(t, t->root, S_FALSE);

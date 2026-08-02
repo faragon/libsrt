@@ -211,7 +211,7 @@ S_INLINE size_t sms_count_s(const srt_set *s, const srt_string *k)
 S_INLINE srt_bool sms_insert_i32(srt_set **s, int32_t k)
 {
 	struct SMapi n;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_I32, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_I32, S_FALSE);
 	n.k = k;
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
@@ -220,7 +220,7 @@ S_INLINE srt_bool sms_insert_i32(srt_set **s, int32_t k)
 S_INLINE srt_bool sms_insert_u32(srt_set **s, uint32_t k)
 {
 	struct SMapu n;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_U32, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_U32, S_FALSE);
 	n.k = k;
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
@@ -229,7 +229,7 @@ S_INLINE srt_bool sms_insert_u32(srt_set **s, uint32_t k)
 S_INLINE srt_bool sms_insert_i(srt_set **s, int64_t k)
 {
 	struct SMapI n;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_I, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_I, S_FALSE);
 	n.k = k;
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
@@ -238,7 +238,7 @@ S_INLINE srt_bool sms_insert_i(srt_set **s, int64_t k)
 S_INLINE srt_bool sms_insert_f(srt_set **s, float k)
 {
 	struct SMapF n;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_F, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_F, S_FALSE);
 	n.k = k;
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
@@ -247,7 +247,7 @@ S_INLINE srt_bool sms_insert_f(srt_set **s, float k)
 S_INLINE srt_bool sms_insert_d(srt_set **s, double k)
 {
 	struct SMapD n;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_D, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_D, S_FALSE);
 	n.k = k;
 	return st_insert((srt_tree **)s, (const srt_tnode *)&n);
 }
@@ -257,7 +257,7 @@ S_INLINE srt_bool sms_insert_s(srt_set **s, const srt_string *k)
 {
 	struct SMapS n;
 	srt_bool ins_ok;
-	RETURN_IF(!s || (*s)->d.sub_type != SMS_S, S_FALSE);
+	RETURN_IF(!s || !*s || (*s)->d.sub_type != SMS_S, S_FALSE);
 #if 1 /* workaround */
 	sso1_set(&n.k, k);
 	ins_ok = st_insert((srt_tree **)s, (const srt_tnode *)&n);
